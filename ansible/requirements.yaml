@@ -5,7 +5,7 @@ roles:
   - src: geerlingguy.containerd
     version: "1.3.1"
   - src: mprahl.lets-encrypt-route-53
-    version: "v5.1.2"
+    version: "v5.3.1"
   - src: anxs.generic-users
     version: v1.2.0
   - name: yannik.relaymail
