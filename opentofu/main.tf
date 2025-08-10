@@ -22,6 +22,10 @@ terraform {
       source  = "tailscale/tailscale"
       version = "~> 0.21"
     }
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
   }
 
   backend "s3" {
@@ -59,6 +63,10 @@ provider "b2" {
 provider "tailscale" {
   oauth_client_id     = local.tailscale_client_id
   oauth_client_secret = local.tailscale_client_secret
+}
+
+provider "github" {
+  token = local.github_token
 }
 
 module "dns" {

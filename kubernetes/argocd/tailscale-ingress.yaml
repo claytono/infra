@@ -5,6 +5,8 @@ kind: Ingress
 metadata:
   name: argocd-server-tailscale
   namespace: argocd
+  annotations:
+    tailscale.com/tags: tag:argocd
 
 spec:
   ingressClassName: tailscale

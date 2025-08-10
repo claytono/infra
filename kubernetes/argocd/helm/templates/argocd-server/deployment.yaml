@@ -24,7 +24,7 @@ spec:
     metadata:
       annotations:
         checksum/cmd-params: 274d84c337777348b38fb03aeeb8da53b12ca641fee72de42d3594df0b43cb23
-        checksum/cm: 16477c059fa5fbe617842f0ae43c9d2ce201819dd9667ed239a067602d676a53
+        checksum/cm: c77831ee8c7fba79e06df8d3f0891fee9fece40fce40ddb0ee25c1f524cd0d3a
       labels:
         helm.sh/chart: argo-cd-8.1.0
         app.kubernetes.io/name: argocd-server

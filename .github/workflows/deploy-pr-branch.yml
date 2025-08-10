@@ -1,0 +1,65 @@
+---
+name: Deploy PR Branch
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: argocd-deploy-pr-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-pr:
+    if: |
+      contains(github.event.comment.body, '/deploy') &&
+      github.event.comment.author_association == 'OWNER'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Connect to Tailscale
+      uses: tailscale/github-action@main
+      with:
+        oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get PR Info and Detect Changed Apps
+      id: pr-info
+      run: |
+        PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
+        echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+        echo "Deploying branch: $PR_BRANCH"
+
+        # Detect affected ArgoCD applications
+        ./scripts/detect-argocd-apps.sh --base-ref main --head-ref "$PR_BRANCH"
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Login to ArgoCD
+      if: steps.pr-info.outputs.app_count != '0'
+      uses: clowdhaus/argo-cd-action/@main
+      env:
+        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      with:
+        version: 2.12.3
+        command: login
+        options: argocd
+
+    - name: Deploy Applications to PR Branch
+      if: steps.pr-info.outputs.app_count != '0'
+      run: |
+        ./scripts/argocd-deploy.sh \
+          --apps "${{ steps.pr-info.outputs.apps }}" \
+          --target-revision "${{ steps.pr-info.outputs.branch }}" \
+          --comment-pr "${{ github.event.issue.number }}"
+      env:
+        GH_TOKEN: ${{ github.token }}

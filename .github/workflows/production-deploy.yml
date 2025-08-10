@@ -1,0 +1,54 @@
+---
+name: Production Deployment
+
+on:
+  push:
+    branches: [main]
+    paths: [kubernetes/**]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: argocd-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  production-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Connect to Tailscale
+      uses: tailscale/github-action@main
+      with:
+        oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+
+    - name: Detect Changed Apps
+      id: detect-apps
+      run: |
+        ./scripts/detect-argocd-apps.sh --base-ref HEAD~1 --head-ref HEAD
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Login to ArgoCD
+      if: steps.detect-apps.outputs.app_count != '0'
+      uses: clowdhaus/argo-cd-action/@main
+      env:
+        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      with:
+        version: 2.12.3
+        command: login
+        options: argocd
+
+    - name: Deploy Applications to Main
+      if: steps.detect-apps.outputs.app_count != '0'
+      run: |-
+        ./scripts/argocd-deploy.sh \
+          --apps "${{ steps.detect-apps.outputs.apps }}" \
+          --target-revision "main"
