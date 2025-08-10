@@ -1,0 +1,31 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tailscale
+
+resources:
+- namespace.yaml
+- externalsecret.yaml
+- helm/templates/apiserverproxy-rbac.yaml
+- helm/templates/connector.yaml
+- helm/templates/deployment.yaml
+- helm/templates/dnsconfig.yaml
+- helm/templates/ingressclass.yaml
+- helm/templates/oauth-secret.yaml
+- helm/templates/operator-rbac.yaml
+- helm/templates/proxy-rbac.yaml
+- helm/templates/proxyclass.yaml
+- helm/templates/proxygroup.yaml
+- helm/templates/recorder.yaml
+
+patches:
+
+- target:
+    kind: Deployment
+    name: operator
+  patch: |-
+    - op: add
+      path: /spec/template/metadata/annotations
+      value:
+        reloader.stakater.com/auto: "true"
