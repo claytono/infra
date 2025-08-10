@@ -1,0 +1,74 @@
+---
+# Source: tailscale-operator/templates/deployment.yaml
+# Copyright (c) Tailscale Inc & AUTHORS
+# SPDX-License-Identifier: BSD-3-Clause
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operator
+  namespace: default
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: operator
+  template:
+    metadata:
+      labels:
+        app: operator
+    spec:
+      serviceAccountName: operator
+      volumes:
+        - name: oauth
+          secret:
+            secretName: operator-oauth
+      containers:
+        - name: operator
+          image: tailscale/k8s-operator:v1.86.2
+          imagePullPolicy: Always
+          env:
+            - name: OPERATOR_INITIAL_TAGS
+              value: tag:k8s-operator
+            - name: OPERATOR_HOSTNAME
+              value: tailscale-operator
+            - name: OPERATOR_SECRET
+              value: operator
+            - name: OPERATOR_LOGGING
+              value: info
+            - name: OPERATOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPERATOR_LOGIN_SERVER
+              value: 
+            - name: OPERATOR_INGRESS_CLASS_NAME
+              value: tailscale
+            - name: CLIENT_ID_FILE
+              value: /oauth/client_id
+            - name: CLIENT_SECRET_FILE
+              value: /oauth/client_secret
+            - name: PROXY_IMAGE
+              value: tailscale/tailscale:v1.86.2
+            - name: PROXY_TAGS
+              value: tag:k8s
+            - name: APISERVER_PROXY
+              value: "false"
+            - name: PROXY_FIREWALL_MODE
+              value: auto
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+          volumeMounts:
+          - name: oauth
+            mountPath: /oauth
+            readOnly: true
+      nodeSelector:
+        kubernetes.io/os: linux

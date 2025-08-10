@@ -18,6 +18,10 @@ terraform {
       source  = "Backblaze/b2"
       version = "~> 0.10"
     }
+    tailscale = {
+      source  = "tailscale/tailscale"
+      version = "~> 0.21"
+    }
   }
 
   backend "s3" {
@@ -50,6 +54,11 @@ provider "vultr" {
 provider "b2" {
   application_key_id = local.b2_application_key_id
   application_key    = local.b2_application_key
+}
+
+provider "tailscale" {
+  oauth_client_id     = local.tailscale_client_id
+  oauth_client_secret = local.tailscale_client_secret
 }
 
 module "dns" {

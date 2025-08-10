@@ -15,6 +15,12 @@ data "onepassword_item" "terraform_b2" {
   title = "terraform-b2"
 }
 
+# Tailscale OpenTofu OAuth credentials from 1Password (for managing policy/ACLs/OAuth clients)
+data "onepassword_item" "tailscale_opentofu" {
+  vault = data.onepassword_vault.kubernetes.uuid
+  title = "tailscale-opentofu"
+}
+
 # Clean field mapping for B2 credentials
 locals {
   b2_fields = {
@@ -31,4 +37,14 @@ locals {
   # B2 credentials using clean field mapping
   b2_application_key_id = local.b2_fields["RCLONE_CONFIG_B2_ACCOUNT"]
   b2_application_key    = local.b2_fields["RCLONE_CONFIG_B2_KEY"]
+
+  # Tailscale OpenTofu credentials for policy and OAuth client management
+  tailscale_fields = {
+    for f in flatten([
+      for sec in data.onepassword_item.tailscale_opentofu.section : sec.field
+    ]) : f.label => f.value
+  }
+
+  tailscale_client_id     = local.tailscale_fields["client_id"]
+  tailscale_client_secret = local.tailscale_fields["client_secret"]
 }

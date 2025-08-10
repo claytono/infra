@@ -11,6 +11,7 @@ labels:
 
 resources:
 - namespace.yaml
+- tailscale-ingress.yaml
 # Generated helm resources - do not edit below this line
 - helm/templates/argocd-application-controller/clusterrole.yaml
 - helm/templates/argocd-application-controller/clusterrolebinding.yaml
