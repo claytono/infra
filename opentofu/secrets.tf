@@ -21,6 +21,18 @@ data "onepassword_item" "tailscale_opentofu" {
   title = "tailscale-opentofu"
 }
 
+# GitHub credentials from 1Password (for managing repository secrets)
+data "onepassword_item" "github_opentofu" {
+  vault = data.onepassword_vault.kubernetes.uuid
+  title = "github-opentofu"
+}
+
+# ArgoCD GitHub Actions token from 1Password
+data "onepassword_item" "argocd_github_actions_token" {
+  vault = data.onepassword_vault.kubernetes.uuid
+  title = "argocd-github-actions-token"
+}
+
 # Clean field mapping for B2 credentials
 locals {
   b2_fields = {
@@ -47,4 +59,7 @@ locals {
 
   tailscale_client_id     = local.tailscale_fields["client_id"]
   tailscale_client_secret = local.tailscale_fields["client_secret"]
+
+  # GitHub token for managing repository secrets
+  github_token = data.onepassword_item.github_opentofu.password
 }

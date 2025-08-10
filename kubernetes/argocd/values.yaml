@@ -30,5 +30,18 @@ server:
 configs:
   cm:
     url: https://argocd.k.oneill.net
+    # GitHub Actions service account configuration
+    accounts.github-actions: apiKey
+  rbac:
+    # RBAC policy for GitHub Actions service account - minimal required permissions
+    policy.csv: |
+      # Allow GitHub Actions to read application status
+      p, role:github-actions, applications, get, *, allow
+      # Allow GitHub Actions to trigger sync operations
+      p, role:github-actions, applications, sync, *, allow
+      # Allow GitHub Actions to update applications (needed for target revision changes)
+      p, role:github-actions, applications, update, *, allow
+      # Assign github-actions account to the role
+      g, github-actions, role:github-actions
   notifications:
     argocdUrl: https://argocd.k.oneill.net
