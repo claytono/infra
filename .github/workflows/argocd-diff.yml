@@ -1,10 +1,9 @@
 ---
-name: ArgoCD Diff
+name: ArgoCD Diff Command
 
 on:
-  pull_request:
-    paths: [kubernetes/**]
-    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -15,12 +14,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Check for diff command
+      id: diff
+      uses: xt0rted/slash-command-action@v2.0.0
+      with:
+        command: diff
+        permission-level: admin
+
     - name: Checkout code
+      if: steps.diff.outputs.command-name
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     - name: Connect to Tailscale
+      if: steps.diff.outputs.command-name
       uses: tailscale/github-action@main
       with:
         oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
@@ -28,6 +36,7 @@ jobs:
         tags: tag:github-actions
 
     - name: ArgoCD Diff
+      if: steps.diff.outputs.command-name
       uses: argocd-diff-action/argocd-diff-action@0.5.3
       with:
         argocd-server-fqdn: argocd.cow-banjo.ts.net
