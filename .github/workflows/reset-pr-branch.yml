@@ -31,6 +31,7 @@ jobs:
       with:
         oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        tags: tag:github-actions
 
     - name: Get PR Info and Detect Changed Apps
       id: pr-info

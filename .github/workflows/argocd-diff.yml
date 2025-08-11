@@ -25,11 +25,11 @@ jobs:
       with:
         oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        tags: tag:github-actions
 
     - name: ArgoCD Diff
       uses: argocd-diff-action/argocd-diff-action@0.5.3
-      env:
-        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       with:
-        argocd-server-url: https://argocd
+        argocd-server-fqdn: argocd.cow-banjo.ts.net
+        argocd-token: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         github-token: ${{ secrets.GITHUB_TOKEN }}

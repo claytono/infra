@@ -28,6 +28,7 @@ jobs:
       with:
         oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        tags: tag:github-actions
 
     - name: Detect Changed Apps
       id: detect-apps
