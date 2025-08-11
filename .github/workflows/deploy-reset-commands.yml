@@ -1,0 +1,86 @@
+---
+name: Deploy and Reset Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: argocd-pr-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-reset-commands:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check for deploy command
+      id: deploy
+      uses: xt0rted/slash-command-action@v2.0.0
+      with:
+        command: deploy
+        permission-level: admin
+
+    - name: Check for reset command
+      id: reset
+      uses: xt0rted/slash-command-action@v2.0.0
+      with:
+        command: reset
+        permission-level: admin
+
+    - name: Connect to Tailscale
+      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      uses: tailscale/github-action@main
+      with:
+        oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        tags: tag:github-actions
+
+    - name: Checkout PR
+      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get PR Info and Detect Changed Apps
+      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      id: pr-info
+      run: |
+        PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
+        echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+
+        if [[ "${{ steps.deploy.outputs.command-name }}" == "deploy" ]]; then
+          echo "Deploying branch: $PR_BRANCH"
+          TARGET_REVISION="$PR_BRANCH"
+        elif [[ "${{ steps.reset.outputs.command-name }}" == "reset" ]]; then
+          echo "Resetting branch: $PR_BRANCH to main"
+          TARGET_REVISION="main"
+        fi
+        echo "target-revision=$TARGET_REVISION" >> $GITHUB_OUTPUT
+
+        # Detect affected ArgoCD applications
+        ./scripts/detect-argocd-apps.sh --base-ref main --head-ref "$PR_BRANCH"
+
+    - name: Login to ArgoCD
+      if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
+        && steps.pr-info.outputs.app_count != '0'
+      uses: clowdhaus/argo-cd-action/@main
+      env:
+        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      with:
+        version: 2.12.3
+        command: login
+        options: argocd
+
+    - name: Execute Command
+      if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
+        && steps.pr-info.outputs.app_count != '0'
+      run: |-
+        ./scripts/argocd-deploy.sh \
+          --apps "${{ steps.pr-info.outputs.apps }}" \
+          --target-revision "${{ steps.pr-info.outputs.target-revision }}" \
+          --comment-pr "${{ github.event.issue.number }}"
