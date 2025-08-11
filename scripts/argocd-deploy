@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # argocd-deploy - Deploy ArgoCD applications with proper error handling
@@ -10,14 +10,10 @@ set -euo pipefail
 # 1. For each application: patch source to target revision, sync, and wait for healthy state
 # 2. Tracks which applications succeed vs fail during deployment
 # 3. Optionally comments deployment results on GitHub PRs
-# 4. Sets GitHub Actions outputs and exits with error code if any deployments fail
+# 4. Exits with error code if any deployments fail
 #
 # GITHUB ACTIONS INTEGRATION:
-# The script sets these outputs in $GITHUB_OUTPUT:
-# - success_apps: Space-separated list of successfully deployed applications
-# - failed_apps: Space-separated list of failed applications
-# - success_count: Number of successful deployments
-# - failed_count: Number of failed deployments
+# The script comments deployment results on PRs when --comment-pr is provided.
 #
 # EXAMPLES:
 # ./argocd-deploy --apps "app1 app2" --target-revision "main"
@@ -94,38 +90,51 @@ comment_pr() {
   fi
 }
 
-# Function to update target revision and sync apps
-deploy_apps() {
+# Function to patch all apps to update target revision
+patch_apps() {
   local -a apps_array
   read -ra apps_array <<< "$APPS"
-  local patched_apps=()
 
-  # First, patch all apps to update target revision
+  # Define JSON patch for target revision update
+  local patch_json
+  read -r -d '' patch_json <<-EOF || true
+	[
+	  {
+	    "op": "replace",
+	    "path": "/spec/source/targetRevision",
+	    "value": "$TARGET_REVISION"
+	  }
+	]
+	EOF
+
+  # Patch all apps to update target revision - fail fast if any fail
   for app in "${apps_array[@]}"; do
     echo "Updating $app to target revision: $TARGET_REVISION..."
-    if argocd app patch "$app" --patch "{\"spec\": {\"source\": {\"targetRevision\": \"$TARGET_REVISION\"}}}" --type merge 2>&1; then
-      patched_apps+=("$app")
-      echo "✅ Updated $app target revision"
-    else
-      FAILED_APPS+=("$app")
+    if ! argocd app patch "$app" --patch "$patch_json" 2>&1; then
       echo "❌ Failed to update target revision for $app"
+      FAILED_APPS=("${apps_array[@]}")
+      comment_pr "❌ Failed to update target revision for **$app** to \`$TARGET_REVISION\`. Check ArgoCD application configuration."
+      return 1
     fi
+    echo "✅ Updated $app target revision"
   done
+}
 
-  # Then sync all successfully patched apps at once
-  if [[ ${#patched_apps[@]} -gt 0 ]]; then
-    echo "Syncing apps: ${patched_apps[*]}"
-    # ArgoCD sync is blocking by default and can take multiple apps
-    if argocd app sync "${patched_apps[@]}" --timeout "$SYNC_TIMEOUT" 2>&1; then
-      SUCCESS_APPS+=("${patched_apps[@]}")
-      echo "✅ Successfully synced: ${patched_apps[*]}"
-    else
-      # If bulk sync fails, move all to failed
-      FAILED_APPS+=("${patched_apps[@]}")
-      # Remove them from success if they were there
-      SUCCESS_APPS=()
-      echo "❌ Failed to sync: ${patched_apps[*]}"
-    fi
+# Function to sync all apps
+sync_apps() {
+  local -a apps_array
+  read -ra apps_array <<< "$APPS"
+
+  echo "Syncing apps: ${apps_array[*]}"
+  if argocd app sync "${apps_array[@]}" --timeout "$SYNC_TIMEOUT" 2>&1; then
+    SUCCESS_APPS=("${apps_array[@]}")
+    echo "✅ Successfully synced: ${apps_array[*]}"
+    comment_pr "🚀 Successfully deployed **${apps_array[*]}** to \`$TARGET_REVISION\`"
+  else
+    FAILED_APPS=("${apps_array[@]}")
+    echo "❌ Failed to sync: ${apps_array[*]}"
+    comment_pr "❌ Deployment failed during sync phase for **${apps_array[*]}**. Apps were updated to \`$TARGET_REVISION\` but failed to sync. Check ArgoCD for details."
+    return 1
   fi
 }
 
@@ -133,48 +142,18 @@ deploy_apps() {
 echo "Starting deployment of apps: $APPS"
 echo "Target revision: $TARGET_REVISION"
 
-deploy_apps
-
-# Generate results
-TOTAL_APPS=$(echo "$APPS" | wc -w)
-SUCCESS_COUNT=${#SUCCESS_APPS[@]}
-FAILED_COUNT=${#FAILED_APPS[@]}
-
-echo ""
-echo "Deployment Summary:"
-echo "  Total: $TOTAL_APPS"
-echo "  Success: $SUCCESS_COUNT"
-echo "  Failed: $FAILED_COUNT"
-
-# Output for GitHub Actions
-if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-  {
-    echo "success_apps=${SUCCESS_APPS[*]}"
-    echo "failed_apps=${FAILED_APPS[*]}"
-    echo "success_count=$SUCCESS_COUNT"
-    echo "failed_count=$FAILED_COUNT"
-  } >> "$GITHUB_OUTPUT"
-fi
-
-# Comment on PR if requested
-if [[ -n "$PR_NUMBER" ]]; then
-  if [[ $FAILED_COUNT -eq 0 ]]; then
-    comment_pr "🚀 Successfully deployed **${SUCCESS_APPS[*]}** to \`$TARGET_REVISION\`"
-  else
-    COMMENT="⚠️ Deployment to \`$TARGET_REVISION\` completed with failures:"
-    if [[ $SUCCESS_COUNT -gt 0 ]]; then
-      COMMENT="$COMMENT"$'\n\n'"✅ **Succeeded:** ${SUCCESS_APPS[*]}"
-    fi
-    if [[ $FAILED_COUNT -gt 0 ]]; then
-      COMMENT="$COMMENT"$'\n'"❌ **Failed:** ${FAILED_APPS[*]}"
-    fi
-    comment_pr "$COMMENT"
-  fi
-fi
-
-# Exit with appropriate code
-if [[ $FAILED_COUNT -gt 0 ]]; then
+# Patch apps first (fail fast if any patch fails)
+if ! patch_apps; then
   exit 1
 fi
 
-exit 0
+# Then sync all apps (fail if sync fails)
+if ! sync_apps; then
+  exit 1
+fi
+
+echo ""
+echo "Deployment Summary:"
+echo "  Total: $(echo "$APPS" | wc -w)"
+echo "  Success: ${#SUCCESS_APPS[@]}"
+echo "  Failed: ${#FAILED_APPS[@]}"

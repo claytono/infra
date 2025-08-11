@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # argocd-detect-apps - Detect ArgoCD applications affected by file changes
@@ -42,6 +42,7 @@ set -euo pipefail
 
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$BASEDIR")"
+GITHUB_OUTPUT="${GITHUB_OUTPUT:-/dev/stdout}"
 
 # Default values
 BASE_REF="main"
@@ -77,7 +78,9 @@ done
 
 # Function to get changed files from git diff
 get_changed_files() {
-  git diff --name-only "$BASE_REF"..."$HEAD_REF" | grep -E '^kubernetes/|^argo-apps/' || true
+  git diff --name-only "$BASE_REF"..."$HEAD_REF" \
+    | grep -E '^kubernetes/|^argo-apps/' \
+    || true
 }
 
 # Function to extract app names from file paths
@@ -134,47 +137,32 @@ validate_apps() {
   printf '%s\n' "${valid_apps[@]}"
 }
 
-# Main logic
-main() {
-  cd "$REPO_ROOT"
+cd "$REPO_ROOT"
+changed_files=$(get_changed_files)
 
-  # Get changed files
-  local changed_files
-  changed_files=$(get_changed_files)
+if [[ -z "$changed_files" ]]; then
+  echo "No kubernetes files changed"
+  exit 0
+fi
 
-  if [[ -z "$changed_files" ]]; then
-    echo "No kubernetes files changed"
-    return 0
-  fi
+# Extract app names
+readarray -t app_names < <(extract_app_names "$changed_files")
 
-  # Extract app names
-  local app_names
-  readarray -t app_names < <(extract_app_names "$changed_files")
+if [[ ${#app_names[@]} -eq 0 ]]; then
+  echo "No ArgoCD applications detected in changed files"
+  exit 0
+fi
 
-  if [[ ${#app_names[@]} -eq 0 ]]; then
-    echo "No ArgoCD applications detected in changed files"
-    return 0
-  fi
+# Validate apps exist in argo-apps directory
+readarray -t valid_apps < <(validate_apps "${app_names[@]}")
 
-  # Validate apps exist in argo-apps directory
-  local valid_apps
-  readarray -t valid_apps < <(validate_apps "${app_names[@]}")
-
-  # Output results
-  if [[ ${#valid_apps[@]} -gt 0 ]]; then
-    echo "Detected applications: ${valid_apps[*]}"
-    # Output for GitHub Actions
-    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-      echo "apps=${valid_apps[*]}" >> "$GITHUB_OUTPUT"
-      echo "app_count=${#valid_apps[@]}" >> "$GITHUB_OUTPUT"
-    fi
-  else
-    echo "No valid ArgoCD applications found"
-    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-      echo "apps=" >> "$GITHUB_OUTPUT"
-      echo "app_count=0" >> "$GITHUB_OUTPUT"
-    fi
-  fi
-}
-
-main "$@"
+# Output results
+if [[ ${#valid_apps[@]} -gt 0 ]]; then
+  echo "Detected applications: ${valid_apps[*]}"
+  echo "apps=${valid_apps[*]}" >> "$GITHUB_OUTPUT"
+  echo "app_count=${#valid_apps[@]}" >> "$GITHUB_OUTPUT"
+else
+  echo "No valid ArgoCD applications found"
+  echo "apps=" >> "$GITHUB_OUTPUT"
+  echo "app_count=0" >> "$GITHUB_OUTPUT"
+fi
