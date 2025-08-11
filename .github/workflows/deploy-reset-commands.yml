@@ -63,7 +63,7 @@ jobs:
         echo "target-revision=$TARGET_REVISION" >> $GITHUB_OUTPUT
 
         # Detect affected ArgoCD applications
-        ./scripts/detect-argocd-apps --base-ref main --head-ref "$PR_BRANCH"
+        ./scripts/argocd-detect-apps --base-ref main --head-ref "$PR_BRANCH"
 
     - name: Login to ArgoCD
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
