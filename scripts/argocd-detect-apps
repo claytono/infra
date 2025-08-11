@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# detect-argocd-apps - Detect ArgoCD applications affected by file changes
+# argocd-detect-apps - Detect ArgoCD applications affected by file changes
 #
 # This script analyzes changed files in the kubernetes/ and argo-apps/ directories
 # to determine which ArgoCD applications are affected by those changes.
@@ -34,11 +34,11 @@ set -euo pipefail
 # - app_count: Number of applications detected
 #
 # EXAMPLES:
-# ./detect-argocd-apps --base-ref main       # Compare current branch to main
-# ./detect-argocd-apps --head-ref feature    # Compare feature branch to main
-# ./detect-argocd-apps --base-ref HEAD~1 --head-ref HEAD  # Compare last commit
+# ./argocd-detect-apps --base-ref main       # Compare current branch to main
+# ./argocd-detect-apps --head-ref feature    # Compare feature branch to main
+# ./argocd-detect-apps --base-ref HEAD~1 --head-ref HEAD  # Compare last commit
 #
-# Usage: ./detect-argocd-apps [--base-ref BASE_REF] [--head-ref HEAD_REF]
+# Usage: ./argocd-detect-apps [--base-ref BASE_REF] [--head-ref HEAD_REF]
 
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$BASEDIR")"
