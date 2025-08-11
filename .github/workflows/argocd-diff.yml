@@ -32,4 +32,5 @@ jobs:
       with:
         argocd-server-fqdn: argocd.cow-banjo.ts.net
         argocd-token: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+        argocd-headers: ''
         github-token: ${{ secrets.GITHUB_TOKEN }}
