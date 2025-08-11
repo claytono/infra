@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# argocd-deploy.sh - Deploy ArgoCD applications with proper error handling
+# argocd-deploy - Deploy ArgoCD applications with proper error handling
 #
 # This script deploys ArgoCD applications to a specified target revision and tracks
 # success/failure status for each application individually.
@@ -20,10 +20,10 @@ set -euo pipefail
 # - failed_count: Number of failed deployments
 #
 # EXAMPLES:
-# ./argocd-deploy.sh --apps "app1 app2" --target-revision "main"
-# ./argocd-deploy.sh --apps "webapp" --target-revision "feature-branch" --comment-pr 123
+# ./argocd-deploy --apps "app1 app2" --target-revision "main"
+# ./argocd-deploy --apps "webapp" --target-revision "feature-branch" --comment-pr 123
 #
-# Usage: ./argocd-deploy.sh --apps "app1 app2" --target-revision "branch-name" [--comment-pr PR_NUMBER]
+# Usage: ./argocd-deploy --apps "app1 app2" --target-revision "branch-name" [--comment-pr PR_NUMBER]
 
 # Default values
 APPS=""
