@@ -14,12 +14,15 @@ metadata:
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: "v3.0.6"
 data:
-  policy.csv: "# Allow GitHub Actions to read application status\np, role:github-actions,
-    applications, get, *, allow\n# Allow GitHub Actions to trigger sync operations  \np,
-    role:github-actions, applications, sync, *, allow\n# Allow GitHub Actions to update
-    applications (needed for target revision changes)\np, role:github-actions, applications,
-    update, *, allow\n# Assign github-actions account to the role\ng, github-actions,
-    role:github-actions\n"
+  policy.csv: |
+    # Allow GitHub Actions to read application status
+    p, role:github-actions, applications, get, *, allow
+    # Allow GitHub Actions to trigger sync operations
+    p, role:github-actions, applications, sync, *, allow
+    # Allow GitHub Actions to update applications (needed for target revision changes)
+    p, role:github-actions, applications, update, *, allow
+    # Assign github-actions account to the role
+    g, github-actions, role:github-actions
   policy.default: ""
   policy.matchMode: glob
   scopes: '[groups]'
