@@ -3,12 +3,14 @@ set -euo pipefail
 
 # detect-argocd-apps - Detect ArgoCD applications affected by file changes
 #
-# This script analyzes changed files in the kubernetes/ directory and determines
-# which ArgoCD applications are affected by those changes using git diff.
+# This script analyzes changed files in the kubernetes/ and argo-apps/ directories
+# to determine which ArgoCD applications are affected by those changes.
 #
 # HOW IT WORKS:
-# 1. Gets list of changed files in kubernetes/ directory via git diff
-# 2. Extracts application names from file paths using pattern kubernetes/APP_NAME/*
+# 1. Gets list of changed files in kubernetes/ and argo-apps/ directories via git diff
+# 2. Extracts application names from file paths using patterns:
+#    - kubernetes/APP_NAME/* (Kubernetes manifests)
+#    - argo-apps/APP_NAME.yaml (ArgoCD application definitions)
 # 3. Validates that detected apps exist in the argo-apps directory
 # 4. Outputs results for use in GitHub Actions workflows
 #
@@ -20,6 +22,11 @@ set -euo pipefail
 # ├── app2/
 # │   └── helm/
 # └── shared-resources/  # <- Would be detected as "shared-resources" app
+#
+# argo-apps/
+# ├── app1.yaml          # <- Changes here would detect "app1"
+# ├── app2.yaml          # <- Changes here would detect "app2"
+# └── shared-resources.yaml
 #
 # GITHUB ACTIONS INTEGRATION:
 # The script sets these outputs in $GITHUB_OUTPUT:
@@ -70,7 +77,7 @@ done
 
 # Function to get changed files from git diff
 get_changed_files() {
-  git diff --name-only "$BASE_REF"..."$HEAD_REF" | grep '^kubernetes/' || true
+  git diff --name-only "$BASE_REF"..."$HEAD_REF" | grep -E '^kubernetes/|^argo-apps/' || true
 }
 
 # Function to extract app names from file paths
@@ -79,10 +86,19 @@ extract_app_names() {
   local apps=()
 
   while read -r file; do
-    if [[ -n "$file" && "$file" =~ ^kubernetes/([^/]+)/ ]]; then
-      local app_name="${BASH_REMATCH[1]}"
-      # Add to array if not already present
-      if [[ ! " ${apps[*]} " =~ \ ${app_name}\  ]]; then
+    if [[ -n "$file" ]]; then
+      local app_name=""
+
+      # Extract from kubernetes/APP_NAME/ directory structure
+      if [[ "$file" =~ ^kubernetes/([^/]+)/ ]]; then
+        app_name="${BASH_REMATCH[1]}"
+      # Extract from argo-apps/APP_NAME.yaml file structure
+      elif [[ "$file" =~ ^argo-apps/([^/]+)\.yaml$ ]]; then
+        app_name="${BASH_REMATCH[1]}"
+      fi
+
+      # Add to array if not already present and not empty
+      if [[ -n "$app_name" && ! " ${apps[*]} " =~ \ ${app_name}\  ]]; then
         apps+=("$app_name")
       fi
     fi
