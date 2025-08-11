@@ -94,44 +94,46 @@ comment_pr() {
   fi
 }
 
-# Function to deploy a single app
-deploy_app() {
-  local app="$1"
-  echo "Deploying $app to $TARGET_REVISION..."
+# Function to update target revision and sync apps
+deploy_apps() {
+  local -a apps_array
+  read -ra apps_array <<< "$APPS"
+  local patched_apps=()
 
-  # Patch source
-  if ! argocd app patch-source "$app" --target-revision "$TARGET_REVISION" 2>&1; then
-    echo "❌ Failed to patch source for $app"
-    return 1
+  # First, patch all apps to update target revision
+  for app in "${apps_array[@]}"; do
+    echo "Updating $app to target revision: $TARGET_REVISION..."
+    if argocd app patch "$app" --patch "{\"spec\": {\"source\": {\"targetRevision\": \"$TARGET_REVISION\"}}}" --type merge 2>&1; then
+      patched_apps+=("$app")
+      echo "✅ Updated $app target revision"
+    else
+      FAILED_APPS+=("$app")
+      echo "❌ Failed to update target revision for $app"
+    fi
+  done
+
+  # Then sync all successfully patched apps at once
+  if [[ ${#patched_apps[@]} -gt 0 ]]; then
+    echo "Syncing apps: ${patched_apps[*]}"
+    # ArgoCD sync is blocking by default and can take multiple apps
+    if argocd app sync "${patched_apps[@]}" --timeout "$SYNC_TIMEOUT" 2>&1; then
+      SUCCESS_APPS+=("${patched_apps[@]}")
+      echo "✅ Successfully synced: ${patched_apps[*]}"
+    else
+      # If bulk sync fails, move all to failed
+      FAILED_APPS+=("${patched_apps[@]}")
+      # Remove them from success if they were there
+      SUCCESS_APPS=()
+      echo "❌ Failed to sync: ${patched_apps[*]}"
+    fi
   fi
-
-  # Sync with timeout
-  if ! timeout "$SYNC_TIMEOUT" argocd app sync "$app" --timeout "$SYNC_TIMEOUT" 2>&1; then
-    echo "❌ Failed to sync $app (timeout: ${SYNC_TIMEOUT}s)"
-    return 1
-  fi
-
-  # Wait for sync to complete
-  if ! argocd app wait "$app" --timeout "$SYNC_TIMEOUT" 2>&1; then
-    echo "❌ $app failed to reach healthy state"
-    return 1
-  fi
-
-  echo "✅ Successfully deployed $app"
-  return 0
 }
 
-# Main deployment loop
+# Main deployment
 echo "Starting deployment of apps: $APPS"
 echo "Target revision: $TARGET_REVISION"
 
-for app in $APPS; do
-  if deploy_app "$app"; then
-    SUCCESS_APPS+=("$app")
-  else
-    FAILED_APPS+=("$app")
-  fi
-done
+deploy_apps
 
 # Generate results
 TOTAL_APPS=$(echo "$APPS" | wc -w)
