@@ -4,6 +4,11 @@ kind: Kustomization
 
 namespace: argocd
 
+labels:
+
+- pairs:
+    app: argocd
+
 resources:
 - namespace.yaml
 - tailscale-ingress.yaml
