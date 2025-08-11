@@ -39,6 +39,7 @@ jobs:
         oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
         tags: tag:github-actions
+        use-cache: true
 
     - name: Checkout PR
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
@@ -74,7 +75,7 @@ jobs:
       with:
         version: 2.12.3
         command: login
-        options: argocd
+        options: argocd.cow-banjo.ts.net
 
     - name: Execute Command
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
