@@ -63,7 +63,7 @@ jobs:
         echo "target-revision=$TARGET_REVISION" >> $GITHUB_OUTPUT
 
         # Detect affected ArgoCD applications
-        ./scripts/detect-argocd-apps.sh --base-ref main --head-ref "$PR_BRANCH"
+        ./scripts/detect-argocd-apps --base-ref main --head-ref "$PR_BRANCH"
 
     - name: Login to ArgoCD
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
@@ -80,7 +80,7 @@ jobs:
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
         && steps.pr-info.outputs.app_count != '0'
       run: |-
-        ./scripts/argocd-deploy.sh \
+        ./scripts/argocd-deploy \
           --apps "${{ steps.pr-info.outputs.apps }}" \
           --target-revision "${{ steps.pr-info.outputs.target-revision }}" \
           --comment-pr "${{ github.event.issue.number }}"
