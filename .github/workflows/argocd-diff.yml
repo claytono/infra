@@ -150,10 +150,14 @@ jobs:
         done
 
         # Comment the diff results on the PR
+        PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+
         if [[ -n "$diff_output" ]]; then
-          PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+          # Always comment when there are diffs
           gh pr comment "$PR_NUMBER" --body "$(echo -e "$diff_output")"
-        else
-          PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+        elif [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+          # Only comment "no diffs" for slash commands, not automatic PR runs
           gh pr comment "$PR_NUMBER" --body "📋 No ArgoCD diffs to display."
+        else
+          echo "No ArgoCD diffs detected for this PR (not commenting since this is an automatic run)"
         fi
