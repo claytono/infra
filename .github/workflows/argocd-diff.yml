@@ -128,9 +128,11 @@ jobs:
         for app in "${APPS_ARRAY[@]}"; do
           echo "Generating diff for $app..."
 
-          # Run argocd diff and capture exit code
+          # Run argocd diff and capture exit code (disable set -e temporarily)
+          set +e
           app_diff=$(argocd app diff "$app" --revision "${{ steps.pr-branch.outputs.branch }}" 2>&1)
           exit_code=$?
+          set -e
 
           if [[ $exit_code -eq 0 ]]; then
             # No differences found
