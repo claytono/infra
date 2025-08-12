@@ -3,15 +3,15 @@ set -euo pipefail
 
 # argocd-detect-apps - Detect ArgoCD applications affected by file changes
 #
-# This script analyzes changed files in the kubernetes/ and argo-apps/ directories
+# This script analyzes changed files in the kubernetes/ and argocd-apps/ directories
 # to determine which ArgoCD applications are affected by those changes.
 #
 # HOW IT WORKS:
-# 1. Gets list of changed files in kubernetes/ and argo-apps/ directories via git diff
+# 1. Gets list of changed files in kubernetes/ and argocd-apps/ directories via git diff
 # 2. Extracts application names from file paths using patterns:
 #    - kubernetes/APP_NAME/* (Kubernetes manifests)
-#    - argo-apps/APP_NAME.yaml (ArgoCD application definitions)
-# 3. Validates that detected apps exist in the argo-apps directory
+#    - argocd-apps/APP_NAME.yaml (ArgoCD application definitions)
+# 3. Validates that detected apps exist in the argocd-apps directory
 # 4. Outputs results for use in GitHub Actions workflows
 #
 # DIRECTORY STRUCTURE ASSUMPTION:
@@ -23,7 +23,7 @@ set -euo pipefail
 # │   └── helm/
 # └── shared-resources/  # <- Would be detected as "shared-resources" app
 #
-# argo-apps/
+# argocd-apps/
 # ├── app1.yaml          # <- Changes here would detect "app1"
 # ├── app2.yaml          # <- Changes here would detect "app2"
 # └── shared-resources.yaml
@@ -79,7 +79,7 @@ done
 # Function to get changed files from git diff
 get_changed_files() {
   git diff --name-only "$BASE_REF"..."$HEAD_REF" \
-    | grep -E '^kubernetes/|^argo-apps/' \
+    | grep -E '^kubernetes/|^argocd-apps/' \
     || true
 }
 
@@ -95,8 +95,8 @@ extract_app_names() {
       # Extract from kubernetes/APP_NAME/ directory structure
       if [[ "$file" =~ ^kubernetes/([^/]+)/ ]]; then
         app_name="${BASH_REMATCH[1]}"
-      # Extract from argo-apps/APP_NAME.yaml file structure
-      elif [[ "$file" =~ ^argo-apps/([^/]+)\.yaml$ ]]; then
+      # Extract from argocd-apps/APP_NAME.yaml file structure
+      elif [[ "$file" =~ ^argocd-apps/([^/]+)\.yaml$ ]]; then
         app_name="${BASH_REMATCH[1]}"
       fi
 
@@ -111,26 +111,26 @@ extract_app_names() {
   printf '%s\n' "${apps[@]}"
 }
 
-# Function to validate apps exist in argo-apps directory
+# Function to validate apps exist in argocd-apps directory
 validate_apps() {
   local apps=("$@")
   local valid_apps=()
-  local argo_apps_dir="$REPO_ROOT/kubernetes/argo-apps"
+  local argo_apps_dir="$REPO_ROOT/kubernetes/argocd-apps"
 
-  # Check if argo-apps directory exists
+  # Check if argocd-apps directory exists
   if [[ ! -d "$argo_apps_dir" ]]; then
-    echo "Warning: argo-apps directory not found at $argo_apps_dir" >&2
+    echo "Warning: argocd-apps directory not found at $argo_apps_dir" >&2
     # Return all apps if we can't validate
     printf '%s\n' "${apps[@]}"
     return
   fi
 
   for app in "${apps[@]}"; do
-    # Look for corresponding yaml file in argo-apps directory
+    # Look for corresponding yaml file in argocd-apps directory
     if [[ -f "$argo_apps_dir/$app.yaml" ]]; then
       valid_apps+=("$app")
     else
-      echo "Warning: Application '$app' not found in argo-apps directory" >&2
+      echo "Warning: Application '$app' not found in argocd-apps directory" >&2
     fi
   done
 
@@ -153,7 +153,7 @@ if [[ ${#app_names[@]} -eq 0 ]]; then
   exit 0
 fi
 
-# Validate apps exist in argo-apps directory
+# Validate apps exist in argocd-apps directory
 readarray -t valid_apps < <(validate_apps "${app_names[@]}")
 
 # Output results
