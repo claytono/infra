@@ -8,6 +8,10 @@ resources:
 - pvc.yaml
 - service.yaml
 
+images:
+- name: tautulli/tautulli
+  newTag: v2.15.3
+
 labels:
 
 - pairs:
