@@ -77,6 +77,15 @@ jobs:
         tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
 
+    - name: Get PR branch name
+      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      id: pr-branch
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
+        echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+
     - name: ArgoCD Diff
       if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
       env:
@@ -87,12 +96,13 @@ jobs:
         IFS=' ' read -ra APPS_ARRAY <<< "${{ steps.detect.outputs.apps }}"
 
         echo "🔍 Running ArgoCD diff for apps: ${{ steps.detect.outputs.apps }}"
+        echo "Comparing against branch: ${{ steps.pr-branch.outputs.branch }}"
 
         # Create diff output for each app
         diff_output=""
         for app in "${APPS_ARRAY[@]}"; do
           echo "Generating diff for $app..."
-          if app_diff=$(argocd app diff "$app" --local-repo-root . 2>&1); then
+          if app_diff=$(argocd app diff "$app" --revision "${{ steps.pr-branch.outputs.branch }}" 2>&1); then
             if [[ -n "$app_diff" ]]; then
               diff_output="${diff_output}## 📋 $app\n\n\`\`\`diff\n$app_diff\n\`\`\`\n\n"
             else
