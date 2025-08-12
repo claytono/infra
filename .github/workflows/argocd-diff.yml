@@ -19,6 +19,7 @@ jobs:
 
     steps:
     - name: Ensure this is a PR comment
+      if: github.event_name == 'issue_comment'
       run: |
         if [ -z "${{ github.event.issue.pull_request.url }}" ]; then
           echo "Not a PR – skipping"
@@ -26,6 +27,7 @@ jobs:
         fi
 
     - name: Check for diff command
+      if: github.event_name == 'issue_comment'
       id: diff
       uses: xt0rted/slash-command-action@v2.0.0
       continue-on-error: true
@@ -33,45 +35,55 @@ jobs:
         command: diff
         permission-level: admin
 
+    - name: Set diff command for PR events
+      if: github.event_name == 'pull_request'
+      id: diff-pr
+      run: |
+        echo "command-name=diff" >> $GITHUB_OUTPUT
+
     - name: Checkout PR head
-      if: steps.diff.outputs.command-name
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name ||
+        steps.diff-pr.outputs.command-name
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        ref: refs/pull/${{ github.event.issue.number }}/head
+        ref: ${{ github.event_name == 'pull_request' && github.head_ref || format('refs/pull/{0}/head', github.event.issue.number) }}
 
     - name: Determine base ref
-      if: steps.diff.outputs.command-name
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name
       id: base
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # Query PR base dynamically instead of assuming 'main'
-        BASE=$(gh pr view ${{ github.event.issue.number }} --json baseRefName -q .baseRefName)
+        PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+        BASE=$(gh pr view $PR_NUMBER --json baseRefName -q .baseRefName)
         echo "base=$BASE" >> $GITHUB_OUTPUT
         git fetch origin "$BASE:$BASE"
 
     - name: Get PR head SHA
-      if: steps.diff.outputs.command-name
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name
       id: pr-head
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        PR_HEAD=$(gh pr view ${{ github.event.issue.number }} --json headRefOid -q .headRefOid)
+        PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+        PR_HEAD=$(gh pr view $PR_NUMBER --json headRefOid -q .headRefOid)
         echo "sha=$PR_HEAD" >> $GITHUB_OUTPUT
 
     - name: Detect Changed Apps
-      if: steps.diff.outputs.command-name
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name
       id: detect
       uses: ./.github/actions/detect-apps
       with:
         base_ref: ${{ steps.base.outputs.base }}
         head_ref: ${{ steps.pr-head.outputs.sha }}
-        pr_number: ${{ github.event.issue.number }}
+        pr_number: ${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
         action_type: diff
 
     - name: Setup ArgoCD environment
-      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&
+        steps.detect.outputs.app_count != '0'
       id: setup-argocd
       uses: ./.github/actions/setup-argocd
       with:
@@ -79,23 +91,27 @@ jobs:
         tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
 
     - name: Get PR branch name
-      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&
+        steps.detect.outputs.app_count != '0'
       id: pr-branch
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
+        PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+        PR_BRANCH=$(gh pr view $PR_NUMBER --json headRefName -q .headRefName)
         echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
 
     - name: Cache patchutils
-      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&
+        steps.detect.outputs.app_count != '0'
       uses: awalsh128/cache-apt-pkgs-action@v1.5.3
       with:
         packages: patchutils
         version: 1.0
 
     - name: ArgoCD Diff
-      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&
+        steps.detect.outputs.app_count != '0'
       env:
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -135,7 +151,9 @@ jobs:
 
         # Comment the diff results on the PR
         if [[ -n "$diff_output" ]]; then
-          gh pr comment "${{ github.event.issue.number }}" --body "$(echo -e "$diff_output")"
+          PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+          gh pr comment "$PR_NUMBER" --body "$(echo -e "$diff_output")"
         else
-          gh pr comment "${{ github.event.issue.number }}" --body "📋 No ArgoCD diffs to display."
+          PR_NUMBER=${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
+          gh pr comment "$PR_NUMBER" --body "📋 No ArgoCD diffs to display."
         fi
