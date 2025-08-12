@@ -28,7 +28,7 @@ PR_NUMBER=""
 SYNC_TIMEOUT="300"
 
 # ArgoCD command with standard flags
-ARGOCD="argocd --grpc-web"
+ARGOCD="argocd --server argocd.cow-banjo.ts.net --grpc-web"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
