@@ -1,0 +1,101 @@
+---
+name: Detect ArgoCD apps from changes
+description: Outputs app names that changed between two refs
+
+inputs:
+  base_ref:
+    required: false
+    description: Git ref or SHA to diff from (if empty, finds all apps)
+  head_ref:
+    required: false
+    description: Git ref or SHA to diff to (if empty, finds all apps)
+  apps_dir:
+    required: false
+    default: kubernetes/argocd-apps
+    description: Directory containing ArgoCD application YAML files
+  pr_number:
+    required: false
+    description: PR number for commenting (if empty, uses echo instead of gh pr comment)
+  action_type:
+    required: false
+    default: deploy
+    description: Action type for no-apps message (deploy, diff, reset)
+
+outputs:
+  apps:
+    description: Space-separated list of app names
+    value: ${{ steps.collect.outputs.apps }}
+  app_count:
+    description: Integer count of detected apps
+    value: ${{ steps.collect.outputs.app_count }}
+
+runs:
+  using: composite
+  steps:
+  - name: Fetch refs (if provided)
+    shell: bash
+    run: |
+      set -euo pipefail
+      if [[ -n "${{ inputs.base_ref }}" ]]; then
+        git fetch --no-tags --prune --depth=0 origin "+${{ inputs.base_ref }}:${{ inputs.base_ref }}" || true
+      fi
+      if [[ -n "${{ inputs.head_ref }}" ]]; then
+        git fetch --no-tags --prune --depth=0 origin "+${{ inputs.head_ref }}:${{ inputs.head_ref }}" || true
+      fi
+
+  - name: Collect apps
+    id: collect
+    shell: bash
+    run: |
+      set -euo pipefail
+      base='${{ inputs.base_ref }}'
+      head='${{ inputs.head_ref }}'
+      apps_dir='${{ inputs.apps_dir }}'
+
+      if [[ -z "$base" || -z "$head" ]]; then
+        # No refs provided - find all apps (for workflow_dispatch or similar)
+        echo "No refs provided - finding all ArgoCD applications"
+        apps=$(find "$apps_dir" -name "*.yaml" -exec basename {} .yaml \; | tr '\n' ' ' | sed 's/ $//')
+        count=$(echo "$apps" | wc -w)
+        echo "Found $count applications: $apps"
+      else
+        # Refs provided - detect changed apps
+        echo "Detecting changed applications between $base and $head"
+        mapfile -t files < <(git diff --name-only "$base" "$head" -- "kubernetes/**")
+
+        declare -A seen
+        apps_array=()
+        for f in "${files[@]}"; do
+          if [[ "$f" =~ ^${apps_dir}/([^/]+)\.ya?ml$ ]]; then
+            app="${BASH_REMATCH[1]}"
+            if [[ -z "${seen[$app]:-}" ]]; then
+              apps_array+=("$app")
+              seen[$app]=1
+            fi
+          fi
+        done
+
+        apps="${apps_array[*]}"
+        count=${#apps_array[@]}
+        echo "Detected $count changed apps: $apps"
+      fi
+
+      echo "apps=$apps" >> "$GITHUB_OUTPUT"
+      echo "app_count=$count" >> "$GITHUB_OUTPUT"
+
+  - name: Comment if no apps found
+    if: steps.collect.outputs.app_count == '0'
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+    run: |-
+      action_type="${{ inputs.action_type }}"
+      pr_number="${{ inputs.pr_number }}"
+
+      message="📋 No ArgoCD applications detected in changed files - nothing to ${action_type}."
+
+      if [[ -n "$pr_number" ]]; then
+        gh pr comment "$pr_number" --body "$message"
+      else
+        echo "$message"
+      fi

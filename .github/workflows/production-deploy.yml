@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
     paths: [kubernetes/**]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,6 +17,9 @@ concurrency:
 jobs:
   production-deploy:
     runs-on: ubuntu-latest
+    env:
+      ARGOCD_SERVER: argocd.cow-banjo.ts.net
+      ARGOCD_OPTS: --grpc-web
 
     steps:
     - name: Checkout code
@@ -23,33 +27,27 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Connect to Tailscale
-      uses: tailscale/github-action@main
-      with:
-        oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
-        oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
-        tags: tag:github-actions
-
     - name: Detect Changed Apps
-      id: detect-apps
-      run: |
-        ./scripts/detect-argocd-apps.sh --base-ref HEAD~1 --head-ref HEAD
-      env:
-        GH_TOKEN: ${{ github.token }}
-
-    - name: Login to ArgoCD
-      if: steps.detect-apps.outputs.app_count != '0'
-      uses: clowdhaus/argo-cd-action/@main
-      env:
-        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      id: detect
+      uses: ./.github/actions/detect-apps
       with:
-        version: 2.12.3
-        command: login
-        options: argocd
+        base_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.event.before }}
+        head_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.sha }}
+        action_type: deploy
+
+    - name: Setup ArgoCD environment
+      if: steps.detect.outputs.app_count != '0'
+      id: setup-argocd
+      uses: ./.github/actions/setup-argocd
+      with:
+        tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+        tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
 
     - name: Deploy Applications to Main
-      if: steps.detect-apps.outputs.app_count != '0'
+      if: steps.detect.outputs.app_count != '0'
+      env:
+        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       run: |-
-        ./scripts/argocd-deploy.sh \
-          --apps "${{ steps.detect-apps.outputs.apps }}" \
+        ./scripts/argocd-deploy \
+          --apps "${{ steps.detect.outputs.apps }}" \
           --target-revision "main"

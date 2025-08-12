@@ -44,21 +44,6 @@ jobs:
         command: reset
         permission-level: admin
 
-    - name: Connect to Tailscale
-      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
-      uses: tailscale/github-action@main
-      with:
-        oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
-        oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
-        tags: tag:github-actions
-        use-cache: true
-
-    - name: Test ArgoCD connectivity
-      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
-      run: |
-        echo "Testing connectivity to ArgoCD server..."
-        curl -v --connect-timeout 10 --max-time 30 https://argocd.cow-banjo.ts.net/api/version || echo "Curl failed with exit code $?"
-
     - name: Checkout PR head
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       uses: actions/checkout@v4
@@ -66,18 +51,18 @@ jobs:
         fetch-depth: 0
         ref: refs/pull/${{ github.event.issue.number }}/head
 
-    # Make sure the base branch ref exists locally for the script's diff
-    - name: Fetch base branch
+    - name: Determine base ref
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      id: base
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # Query PR base dynamically instead of assuming 'main'
         BASE=$(gh pr view ${{ github.event.issue.number }} --json baseRefName -q .baseRefName)
-        echo "BASE_REF=$BASE" >> $GITHUB_ENV
+        echo "base=$BASE" >> $GITHUB_OUTPUT
         git fetch origin "$BASE:$BASE"
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Get PR Info and Detect Changed Apps
+    - name: Get PR Info
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       id: pr-info
       env:
@@ -95,51 +80,33 @@ jobs:
         fi
         echo "target-revision=$TARGET_REVISION" >> $GITHUB_OUTPUT
 
-        # Detect affected ArgoCD applications
-        ./scripts/argocd-detect-apps --base-ref "$BASE_REF" --head-ref HEAD
-
-    - name: Comment No Apps Found
-      if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
-        && steps.pr-info.outputs.app_count == '0'
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh pr comment "${{ github.event.issue.number }}" \
-          --body "📋 No ArgoCD applications detected in changed files - nothing to deploy/reset."
-
-    - name: Cache ArgoCD CLI
-      if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
-        && steps.pr-info.outputs.app_count != '0'
-      id: cache-argocd
-      uses: actions/cache@v4
+    - name: Detect Changed Apps
+      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      id: detect
+      uses: ./.github/actions/detect-apps
       with:
-        path: ${{ github.workspace }}/.cache/argocd/cli
-        key: argocd-cli-${{ runner.os }}-v1
+        base_ref: ${{ steps.base.outputs.base }}
+        head_ref: HEAD
+        pr_number: ${{ github.event.issue.number }}
+        action_type: deploy/reset
 
-    - name: Install ArgoCD CLI
+    - name: Setup ArgoCD environment
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
-        && steps.pr-info.outputs.app_count != '0'
-      run: |
-        mkdir -p "${{ github.workspace }}/.cache/argocd"
-        if [[ "${{ steps.cache-argocd.outputs.cache-hit }}" != "true" ]]; then
-          echo "Cache miss - downloading ArgoCD CLI from server"
-          curl -sSL -o "${{ github.workspace }}/.cache/argocd/cli" https://argocd.cow-banjo.ts.net/download/argocd-linux-amd64
-          chmod +x "${{ github.workspace }}/.cache/argocd/cli"
-        else
-          echo "Cache hit - using cached ArgoCD CLI"
-        fi
-
-        # Copy binary to PATH
-        sudo cp "${{ github.workspace }}/.cache/argocd/cli" /usr/local/bin/argocd
+        && steps.detect.outputs.app_count != '0'
+      id: setup-argocd
+      uses: ./.github/actions/setup-argocd
+      with:
+        tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+        tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
 
     - name: Execute Command
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
-        && steps.pr-info.outputs.app_count != '0'
+        && steps.detect.outputs.app_count != '0'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       run: |-
         ./scripts/argocd-deploy \
-          --apps "${{ steps.pr-info.outputs.apps }}" \
+          --apps "${{ steps.detect.outputs.apps }}" \
           --target-revision "${{ steps.pr-info.outputs.target-revision }}" \
           --comment-pr "${{ github.event.issue.number }}"
