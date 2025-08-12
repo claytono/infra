@@ -18,6 +18,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Ensure this is a PR comment
+      run: |
+        if [ -z "${{ github.event.issue.pull_request.url }}" ]; then
+          echo "Not a PR – skipping"
+          exit 1
+        fi
+
     - name: Check for deploy command
       id: deploy
       uses: xt0rted/slash-command-action@v2.0.0
@@ -43,11 +50,23 @@ jobs:
         tags: tag:github-actions
         use-cache: true
 
-    - name: Checkout PR
+    - name: Checkout PR head
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: refs/pull/${{ github.event.issue.number }}/head
+
+    # Make sure the base branch ref exists locally for the script's diff
+    - name: Fetch base branch
+      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      run: |
+        # Query PR base dynamically instead of assuming 'main'
+        BASE=$(gh pr view ${{ github.event.issue.number }} --json baseRefName -q .baseRefName)
+        echo "BASE_REF=$BASE" >> $GITHUB_ENV
+        git fetch origin "$BASE:$BASE"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Get PR Info and Detect Changed Apps
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
@@ -68,7 +87,7 @@ jobs:
         echo "target-revision=$TARGET_REVISION" >> $GITHUB_OUTPUT
 
         # Detect affected ArgoCD applications
-        ./scripts/argocd-detect-apps --base-ref main --head-ref "$PR_BRANCH"
+        ./scripts/argocd-detect-apps --base-ref "$BASE_REF" --head-ref HEAD
 
     - name: Comment No Apps Found
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
