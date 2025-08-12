@@ -121,7 +121,10 @@ patch_apps() {
 
     echo "Refreshing $app to resolve new target revision..."
     if ! argocd app get "$app" --refresh 2>&1; then
-      echo "⚠️ Warning: Failed to refresh $app, continuing anyway..."
+      echo "❌ Failed to refresh $app"
+      FAILED_APPS=("${apps_array[@]}")
+      comment_pr "❌ Failed to refresh **$app** after updating target revision to \`$TARGET_REVISION\`. ArgoCD may not be able to resolve the branch."
+      return 1
     fi
   done
 }
