@@ -80,6 +80,7 @@ jobs:
         head_ref: ${{ steps.pr-head.outputs.sha }}
         pr_number: ${{ github.event_name == 'pull_request' && github.event.number || github.event.issue.number }}
         action_type: diff
+        event_name: ${{ github.event_name }}
 
     - name: Setup ArgoCD environment
       if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&

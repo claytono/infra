@@ -20,6 +20,10 @@ inputs:
     required: false
     default: deploy
     description: Action type for no-apps message (deploy, diff, reset)
+  event_name:
+    required: false
+    default: issue_comment
+    description: GitHub event name (pull_request or issue_comment)
 
 outputs:
   apps:
@@ -73,11 +77,18 @@ runs:
     run: |-
       action_type="${{ inputs.action_type }}"
       pr_number="${{ inputs.pr_number }}"
+      event_name="${{ inputs.event_name }}"
 
       message="📋 No ArgoCD applications detected in changed files - nothing to ${action_type}."
 
       if [[ -n "$pr_number" ]]; then
-        gh pr comment "$pr_number" --body "$message"
+        if [[ "$event_name" == "issue_comment" ]]; then
+          # Comment for slash commands
+          gh pr comment "$pr_number" --body "$message"
+        else
+          # Don't comment for automatic PR runs when no apps detected
+          echo "$message (not commenting since this is an automatic run)"
+        fi
       else
         echo "$message"
       fi
