@@ -50,6 +50,12 @@ jobs:
         tags: tag:github-actions
         use-cache: true
 
+    - name: Test ArgoCD connectivity
+      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      run: |
+        echo "Testing connectivity to ArgoCD server..."
+        curl -v --connect-timeout 10 --max-time 30 https://argocd.cow-banjo.ts.net/api/version || echo "Curl failed with exit code $?"
+
     - name: Checkout PR head
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       uses: actions/checkout@v4
