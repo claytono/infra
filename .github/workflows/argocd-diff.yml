@@ -42,5 +42,6 @@ jobs:
       with:
         argocd-server-fqdn: argocd.cow-banjo.ts.net
         argocd-token: ${{ secrets.ARGOCD_AUTH_TOKEN }}
-        argocd-headers: ''
+        # Workaround for assertion error with empty headers - https://github.com/argocd-diff-action/argocd-diff-action/issues/166
+        argocd-headers: 'Content-Type: application/json'
         github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -21,6 +21,7 @@ jobs:
     - name: Check for deploy command
       id: deploy
       uses: xt0rted/slash-command-action@v2.0.0
+      continue-on-error: true
       with:
         command: deploy
         permission-level: admin
@@ -28,6 +29,7 @@ jobs:
     - name: Check for reset command
       id: reset
       uses: xt0rted/slash-command-action@v2.0.0
+      continue-on-error: true
       with:
         command: reset
         permission-level: admin
