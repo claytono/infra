@@ -16,6 +16,9 @@ concurrency:
 jobs:
   deploy-reset-commands:
     runs-on: ubuntu-latest
+    env:
+      ARGOCD_SERVER: argocd.cow-banjo.ts.net
+      ARGOCD_OPTS: --grpc-web
 
     steps:
     - name: Ensure this is a PR comment
