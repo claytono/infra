@@ -27,8 +27,22 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Connect to Tailscale
+    - name: Detect Changed Apps
       if: steps.diff.outputs.command-name
+      id: detect-apps
+      run: |-
+        ./scripts/argocd-detect-apps --base-ref main --head-ref HEAD
+
+    - name: Comment No Apps Found
+      if: steps.diff.outputs.command-name && steps.detect-apps.outputs.app_count ==
+        '0'
+      run: |
+        gh pr comment "${{ github.event.issue.number }}" \
+          --body "📋 No ArgoCD applications detected in changed files - nothing to diff."
+
+    - name: Connect to Tailscale
+      if: steps.diff.outputs.command-name && steps.detect-apps.outputs.app_count !=
+        '0'
       uses: tailscale/github-action@main
       with:
         oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
@@ -37,7 +51,8 @@ jobs:
         use-cache: true
 
     - name: ArgoCD Diff
-      if: steps.diff.outputs.command-name
+      if: steps.diff.outputs.command-name && steps.detect-apps.outputs.app_count !=
+        '0'
       uses: argocd-diff-action/argocd-diff-action@0.5.3
       with:
         argocd-server-fqdn: argocd.cow-banjo.ts.net

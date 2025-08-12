@@ -68,6 +68,13 @@ jobs:
         # Detect affected ArgoCD applications
         ./scripts/argocd-detect-apps --base-ref main --head-ref "$PR_BRANCH"
 
+    - name: Comment No Apps Found
+      if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
+        && steps.pr-info.outputs.app_count == '0'
+      run: |
+        gh pr comment "${{ github.event.issue.number }}" \
+          --body "📋 No ArgoCD applications detected in changed files - nothing to deploy/reset."
+
     - name: Login to ArgoCD
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
         && steps.pr-info.outputs.app_count != '0'
