@@ -36,6 +36,8 @@ jobs:
     - name: Comment No Apps Found
       if: steps.diff.outputs.command-name && steps.detect-apps.outputs.app_count ==
         '0'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh pr comment "${{ github.event.issue.number }}" \
           --body "📋 No ArgoCD applications detected in changed files - nothing to diff."

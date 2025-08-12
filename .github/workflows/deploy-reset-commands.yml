@@ -71,6 +71,8 @@ jobs:
     - name: Comment No Apps Found
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
         && steps.pr-info.outputs.app_count == '0'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh pr comment "${{ github.event.issue.number }}" \
           --body "📋 No ArgoCD applications detected in changed files - nothing to deploy/reset."
