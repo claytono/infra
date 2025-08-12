@@ -52,6 +52,8 @@ jobs:
     - name: Get PR Info and Detect Changed Apps
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       id: pr-info
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
         echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
@@ -91,6 +93,8 @@ jobs:
     - name: Execute Command
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
         && steps.pr-info.outputs.app_count != '0'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |-
         ./scripts/argocd-deploy \
           --apps "${{ steps.pr-info.outputs.apps }}" \
