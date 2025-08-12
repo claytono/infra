@@ -58,41 +58,12 @@ runs:
         apps=$(find "$apps_dir" -name "*.yaml" -exec basename {} .yaml \; | tr '\n' ' ' | sed 's/ $//')
         count=$(echo "$apps" | wc -w)
         echo "Found $count applications: $apps"
+        echo "apps=$apps" >> "$GITHUB_OUTPUT"
+        echo "app_count=$count" >> "$GITHUB_OUTPUT"
       else
-        # Refs provided - detect changed apps
-        echo "Detecting changed applications between $base and $head"
-        # Ensure we have the refs available locally
-        if git rev-parse --verify "$base" >/dev/null 2>&1 && git rev-parse --verify "$head" >/dev/null 2>&1; then
-          mapfile -t files < <(git diff --name-only "$base" "$head" -- "kubernetes/**")
-        else
-          echo "Warning: Could not resolve refs $base or $head, finding all apps instead"
-          apps=$(find "$apps_dir" -name "*.yaml" -exec basename {} .yaml \; | tr '\n' ' ' | sed 's/ $//')
-          count=$(echo "$apps" | wc -w)
-          echo "Found $count applications: $apps"
-          echo "apps=$apps" >> "$GITHUB_OUTPUT"
-          echo "app_count=$count" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-
-        declare -A seen
-        apps_array=()
-        for f in "${files[@]}"; do
-          if [[ "$f" =~ ^${apps_dir}/([^/]+)\.ya?ml$ ]]; then
-            app="${BASH_REMATCH[1]}"
-            if [[ -z "${seen[$app]:-}" ]]; then
-              apps_array+=("$app")
-              seen[$app]=1
-            fi
-          fi
-        done
-
-        apps="${apps_array[*]}"
-        count=${#apps_array[@]}
-        echo "Detected $count changed apps: $apps"
+        # Use the argocd-detect-apps script for change detection
+        ./scripts/argocd-detect-apps --base-ref "$base" --head-ref "$head"
       fi
-
-      echo "apps=$apps" >> "$GITHUB_OUTPUT"
-      echo "app_count=$count" >> "$GITHUB_OUTPUT"
 
   - name: Comment if no apps found
     if: steps.collect.outputs.app_count == '0'
