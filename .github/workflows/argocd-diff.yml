@@ -2,6 +2,7 @@
 name: ArgoCD Diff Command
 
 on:
+  pull_request:
   issue_comment:
     types: [created]
 
@@ -86,6 +87,13 @@ jobs:
         PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
         echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
 
+    - name: Cache patchutils
+      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      uses: awalsh128/cache-apt-pkgs-action@v1.5.3
+      with:
+        packages: patchutils
+        version: 1.0
+
     - name: ArgoCD Diff
       if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
       env:
@@ -102,14 +110,26 @@ jobs:
         diff_output=""
         for app in "${APPS_ARRAY[@]}"; do
           echo "Generating diff for $app..."
-          if app_diff=$(argocd app diff "$app" --revision "${{ steps.pr-branch.outputs.branch }}" 2>&1); then
-            if [[ -n "$app_diff" ]]; then
-              diff_output="${diff_output}## 📋 $app\n\n\`\`\`diff\n$app_diff\n\`\`\`\n\n"
+
+          # Run argocd diff and capture exit code
+          app_diff=$(argocd app diff "$app" --revision "${{ steps.pr-branch.outputs.branch }}" 2>&1)
+          exit_code=$?
+
+          if [[ $exit_code -eq 0 ]]; then
+            # No differences found
+            diff_output="${diff_output}## 📋 $app\n\nNo changes detected.\n\n"
+          elif [[ $exit_code -eq 1 ]]; then
+            # Differences found (exit code 1 means diff found)
+            # Convert context diff to unified diff using filterdiff
+            if unified_diff=$(echo "$app_diff" | filterdiff --format=unified 2>/dev/null); then
+              diff_output="${diff_output}## 📋 $app\n\n\`\`\`diff\n$unified_diff\n\`\`\`\n\n"
             else
-              diff_output="${diff_output}## 📋 $app\n\nNo changes detected.\n\n"
+              # Fallback to original format if filterdiff fails
+              diff_output="${diff_output}## 📋 $app\n\n\`\`\`diff\n$app_diff\n\`\`\`\n\n"
             fi
           else
-            diff_output="${diff_output}## 📋 $app\n\n❌ Failed to generate diff: $app_diff\n\n"
+            # Actual error occurred (exit code 2 or other)
+            diff_output="${diff_output}## 📋 $app\n\n❌ Failed to generate diff (exit code $exit_code):\n\`\`\`\n$app_diff\n\`\`\`\n\n"
           fi
         done
 
