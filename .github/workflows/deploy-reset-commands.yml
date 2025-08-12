@@ -104,22 +104,37 @@ jobs:
         gh pr comment "${{ github.event.issue.number }}" \
           --body "📋 No ArgoCD applications detected in changed files - nothing to deploy/reset."
 
-    - name: Login to ArgoCD
+    - name: Cache ArgoCD CLI
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
         && steps.pr-info.outputs.app_count != '0'
-      uses: clowdhaus/argo-cd-action/@main
-      env:
-        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      id: cache-argocd
+      uses: actions/cache@v4
       with:
-        version: 2.12.3
-        command: login
-        options: argocd.cow-banjo.ts.net --grpc-web
+        path: ~/argocd-cli
+        key: argocd-cli-${{ runner.os }}
+
+    - name: Install ArgoCD CLI
+      if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
+        && steps.pr-info.outputs.app_count != '0'
+      run: |
+        # Download ArgoCD CLI if not cached
+        if [[ "${{ steps.cache-argocd.outputs.cache-hit }}" != "true" ]]; then
+          echo "Cache miss - downloading ArgoCD CLI from server"
+          curl -sSL -o ~/argocd-cli https://argocd.cow-banjo.ts.net/download/argocd-linux-amd64
+          chmod +x ~/argocd-cli
+        else
+          echo "Cache hit - using cached ArgoCD CLI"
+        fi
+
+        # Copy binary to PATH
+        sudo cp ~/argocd-cli /usr/local/bin/argocd
 
     - name: Execute Command
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
         && steps.pr-info.outputs.app_count != '0'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       run: |-
         ./scripts/argocd-deploy \
           --apps "${{ steps.pr-info.outputs.apps }}" \
