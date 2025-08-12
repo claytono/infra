@@ -1,0 +1,62 @@
+---
+name: Setup ArgoCD env
+description: Connect to Tailscale and ensure argocd CLI is available
+
+inputs:
+  tailscale_oauth_client_id:
+    required: true
+  tailscale_oauth_secret:
+    required: true
+
+outputs:
+  argocd_path:
+    description: Absolute path to installed ArgoCD CLI
+    value: ${{ steps.set-path.outputs.argocd_path }}
+
+runs:
+  using: composite
+  steps:
+  - name: Connect to Tailscale
+    uses: tailscale/github-action@main
+    with:
+      oauth-client-id: ${{ inputs.tailscale_oauth_client_id }}
+      oauth-secret: ${{ inputs.tailscale_oauth_secret }}
+      tags: tag:github-actions
+      use-cache: true
+
+  - name: Cache ArgoCD CLI
+    id: cache-argocd
+    uses: actions/cache@v4
+    with:
+      path: ${{ github.workspace }}/.cache/argocd/cli
+      key: argocd-cli-${{ runner.os }}-v1
+
+  - name: Install ArgoCD CLI
+    id: install
+    shell: bash
+    run: |
+      set -euo pipefail
+      CACHE="${{ github.workspace }}/.cache/argocd"
+      BIN="$CACHE/cli"
+      mkdir -p "$CACHE"
+      if [[ ! -f "$BIN" ]]; then
+        echo "Downloading ArgoCD CLI"
+        # Fixed-delay retries (non-exponential)
+        curl -fsSL \
+          --retry 5 \
+          --retry-all-errors \
+          --retry-connrefused \
+          --retry-delay 2 \
+          --retry-max-time 60 \
+          -o "$BIN" \
+          https://argocd.cow-banjo.ts.net/download/argocd-linux-amd64
+        chmod +x "$BIN"
+      else
+        echo "Using cached ArgoCD CLI"
+      fi
+      sudo cp "$BIN" /usr/local/bin/argocd
+
+  - name: Set ArgoCD path output
+    id: set-path
+    shell: bash
+    run: echo "argocd_path=/usr/local/bin/argocd" >> "$GITHUB_OUTPUT"
