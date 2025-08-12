@@ -102,7 +102,7 @@ resource "tailscale_oauth_client" "k8s_operator" {
 # Create OAuth client for GitHub Actions (ephemeral nodes)
 resource "tailscale_oauth_client" "github_actions" {
   description = "github-actions"
-  scopes      = ["devices:read"]
+  scopes      = ["auth_keys"]
   tags        = ["tag:github-actions"]
 }
 
