@@ -37,10 +37,10 @@ runs:
     run: |
       set -euo pipefail
       if [[ -n "${{ inputs.base_ref }}" ]]; then
-        git fetch --no-tags --prune --depth=0 origin "+${{ inputs.base_ref }}:${{ inputs.base_ref }}" || true
+        git fetch --no-tags --prune origin "+${{ inputs.base_ref }}:${{ inputs.base_ref }}" || true
       fi
       if [[ -n "${{ inputs.head_ref }}" ]]; then
-        git fetch --no-tags --prune --depth=0 origin "+${{ inputs.head_ref }}:${{ inputs.head_ref }}" || true
+        git fetch --no-tags --prune origin "+${{ inputs.head_ref }}:${{ inputs.head_ref }}" || true
       fi
 
   - name: Collect apps
