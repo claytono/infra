@@ -50,13 +50,22 @@ jobs:
         echo "base=$BASE" >> $GITHUB_OUTPUT
         git fetch origin "$BASE:$BASE"
 
+    - name: Get PR head SHA
+      if: steps.diff.outputs.command-name
+      id: pr-head
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PR_HEAD=$(gh pr view ${{ github.event.issue.number }} --json headRefOid -q .headRefOid)
+        echo "sha=$PR_HEAD" >> $GITHUB_OUTPUT
+
     - name: Detect Changed Apps
       if: steps.diff.outputs.command-name
       id: detect
       uses: ./.github/actions/detect-apps
       with:
         base_ref: ${{ steps.base.outputs.base }}
-        head_ref: ${{ github.sha }}
+        head_ref: ${{ steps.pr-head.outputs.sha }}
         pr_number: ${{ github.event.issue.number }}
         action_type: diff
 
