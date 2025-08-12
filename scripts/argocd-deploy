@@ -27,9 +27,6 @@ TARGET_REVISION=""
 PR_NUMBER=""
 SYNC_TIMEOUT="300"
 
-# ArgoCD command with standard flags
-ARGOCD="argocd --server argocd.cow-banjo.ts.net --grpc-web"
-
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -113,13 +110,21 @@ patch_apps() {
   # Patch all apps to update target revision - fail fast if any fail
   for app in "${apps_array[@]}"; do
     echo "Updating $app to target revision: $TARGET_REVISION..."
-    if ! $ARGOCD app patch "$app" --patch "$patch_json" 2>&1; then
+    if ! argocd app patch "$app" --patch "$patch_json" 2>&1; then
       echo "❌ Failed to update target revision for $app"
       FAILED_APPS=("${apps_array[@]}")
       comment_pr "❌ Failed to update target revision for **$app** to \`$TARGET_REVISION\`. Check ArgoCD application configuration."
       return 1
     fi
     echo "✅ Updated $app target revision"
+
+    echo "Refreshing $app to resolve new target revision..."
+    if ! argocd app get "$app" --refresh 2>&1; then
+      echo "❌ Failed to refresh $app"
+      FAILED_APPS=("${apps_array[@]}")
+      comment_pr "❌ Failed to refresh **$app** after updating target revision to \`$TARGET_REVISION\`. ArgoCD may not be able to resolve the branch."
+      return 1
+    fi
   done
 }
 
@@ -129,7 +134,7 @@ sync_apps() {
   read -ra apps_array <<< "$APPS"
 
   echo "Syncing apps: ${apps_array[*]}"
-  if $ARGOCD app sync "${apps_array[@]}" --timeout "$SYNC_TIMEOUT" 2>&1; then
+  if argocd app sync "${apps_array[@]}" --timeout "$SYNC_TIMEOUT" 2>&1; then
     SUCCESS_APPS=("${apps_array[@]}")
     echo "✅ Successfully synced: ${apps_array[*]}"
     comment_pr "🚀 Successfully deployed **${apps_array[*]}** to \`$TARGET_REVISION\`"
