@@ -7,10 +7,11 @@ set -euo pipefail
 # success/failure status for each application individually.
 #
 # HOW IT WORKS:
-# 1. For each application: patch source to target revision, sync, and wait for healthy state
+# 1. For each application: patch source to target revision, sync with pruning, and wait for healthy state
 # 2. Tracks which applications succeed vs fail during deployment
 # 3. Optionally comments deployment results on GitHub PRs
 # 4. Exits with error code if any deployments fail
+# 5. Uses --prune to remove resources no longer defined in Git (safe per-application)
 #
 # GITHUB ACTIONS INTEGRATION:
 # The script comments deployment results on PRs when --comment-pr is provided.
@@ -133,8 +134,8 @@ sync_apps() {
   local -a apps_array
   read -ra apps_array <<< "$APPS"
 
-  echo "Syncing apps: ${apps_array[*]}"
-  if argocd app sync "${apps_array[@]}" --timeout "$SYNC_TIMEOUT" 2>&1; then
+  echo "Syncing apps: ${apps_array[*]} (with pruning)"
+  if argocd app sync "${apps_array[@]}" --prune --timeout "$SYNC_TIMEOUT" 2>&1; then
     SUCCESS_APPS=("${apps_array[@]}")
     echo "✅ Successfully synced: ${apps_array[*]}"
     comment_pr "🚀 Successfully deployed **${apps_array[*]}** to \`$TARGET_REVISION\`"
