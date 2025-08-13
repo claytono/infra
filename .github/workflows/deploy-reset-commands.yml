@@ -126,4 +126,5 @@ jobs:
         ./trusted-main/scripts/argocd-deploy \
           --apps "${{ steps.detect.outputs.apps }}" \
           --target-revision "${{ steps.pr-info.outputs.target-revision }}" \
-          --comment-pr "${{ github.event.issue.number }}"
+          --comment-pr "${{ github.event.issue.number }}" \
+          --action-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
