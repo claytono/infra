@@ -123,7 +123,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       run: |-
-        ./trusted-main/scripts/argocd-deploy \
+        "${GITHUB_WORKSPACE}/trusted-main/scripts/argocd-deploy" \
           --apps "${{ steps.detect.outputs.apps }}" \
           --target-revision "${{ steps.pr-info.outputs.target-revision }}" \
           --comment-pr "${{ github.event.issue.number }}" \
