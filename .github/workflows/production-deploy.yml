@@ -50,4 +50,5 @@ jobs:
       run: |-
         ./scripts/argocd-deploy \
           --apps "${{ steps.detect.outputs.apps }}" \
-          --target-revision "main"
+          --target-revision "main" \
+          --action-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

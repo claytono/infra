@@ -27,6 +27,8 @@ APPS=""
 TARGET_REVISION=""
 PR_NUMBER=""
 SYNC_TIMEOUT="300"
+ACTION_RUN_URL=""
+MAX_RETRIES="3"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -47,6 +49,14 @@ while [[ $# -gt 0 ]]; do
       SYNC_TIMEOUT="$2"
       shift 2
       ;;
+    --action-run-url)
+      ACTION_RUN_URL="$2"
+      shift 2
+      ;;
+    --max-retries)
+      MAX_RETRIES="$2"
+      shift 2
+      ;;
     --help)
       echo "Usage: $0 --apps 'app1 app2' --target-revision 'branch' [--comment-pr PR_NUMBER]"
       echo "Deploy ArgoCD applications to specified target revision"
@@ -56,6 +66,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --target-revision REV    Target revision (branch/tag/commit)"
       echo "  --comment-pr PR_NUMBER   Comment results on PR"
       echo "  --sync-timeout SECONDS   Sync timeout in seconds (default: 300)"
+      echo "  --action-run-url URL     GitHub Action run URL for failure comments"
+      echo "  --max-retries NUM        Maximum retry attempts (default: 3)"
       echo "  --help                   Show this help message"
       exit 0
       ;;
@@ -84,6 +96,15 @@ FAILED_APPS=()
 # Function to comment on PR
 comment_pr() {
   local message="$1"
+  local status="${2:-success}"
+
+  # Add action run link for non-success statuses when URL is available
+  if [[ "$status" != "success" && -n "$ACTION_RUN_URL" ]]; then
+    message="$message
+
+[View action run details]($ACTION_RUN_URL)"
+  fi
+
   if [[ -n "$PR_NUMBER" && -n "${GH_TOKEN:-}" ]]; then
     gh pr comment "$PR_NUMBER" --body "$message"
   else
@@ -103,7 +124,7 @@ ensure_apps_exist() {
       if ! argocd app create --file "kubernetes/argocd-apps/$app.yaml" 2>&1; then
         echo "❌ Failed to create application $app"
         FAILED_APPS+=("$app")
-        comment_pr "❌ Failed to create **$app** from manifest"
+        comment_pr "❌ Failed to create **$app** from manifest" "failure"
         return 1
       fi
       echo "✅ Created application $app"
@@ -136,7 +157,7 @@ patch_apps() {
     if ! argocd app patch "$app" --patch "$patch_json" 2>&1; then
       echo "❌ Failed to update target revision for $app"
       FAILED_APPS=("${apps_array[@]}")
-      comment_pr "❌ Failed to update target revision for **$app** to \`$TARGET_REVISION\`. Check ArgoCD application configuration."
+      comment_pr "❌ Failed to update target revision for **$app** to \`$TARGET_REVISION\`. Check ArgoCD application configuration." "failure"
       return 1
     fi
     echo "✅ Updated $app target revision"
@@ -145,7 +166,7 @@ patch_apps() {
     if ! argocd app get "$app" --refresh 2>&1; then
       echo "❌ Failed to refresh $app"
       FAILED_APPS=("${apps_array[@]}")
-      comment_pr "❌ Failed to refresh **$app** after updating target revision to \`$TARGET_REVISION\`. ArgoCD may not be able to resolve the branch."
+      comment_pr "❌ Failed to refresh **$app** after updating target revision to \`$TARGET_REVISION\`. ArgoCD may not be able to resolve the branch." "failure"
       return 1
     fi
   done
@@ -160,33 +181,58 @@ sync_apps() {
   if argocd app sync "${apps_array[@]}" --prune --timeout "$SYNC_TIMEOUT" 2>&1; then
     SUCCESS_APPS=("${apps_array[@]}")
     echo "✅ Successfully synced: ${apps_array[*]}"
-    comment_pr "🚀 Successfully deployed **${apps_array[*]}** to \`$TARGET_REVISION\`"
+    comment_pr "🚀 Successfully deployed **${apps_array[*]}** to \`$TARGET_REVISION\`" "success"
   else
     FAILED_APPS=("${apps_array[@]}")
     echo "❌ Failed to sync: ${apps_array[*]}"
-    comment_pr "❌ Deployment failed during sync phase for **${apps_array[*]}**. Apps were updated to \`$TARGET_REVISION\` but failed to sync. Check ArgoCD for details."
+    comment_pr "❌ Deployment failed during sync phase for **${apps_array[*]}**. Apps were updated to \`$TARGET_REVISION\` but failed to sync. Check ArgoCD for details." "failure"
     return 1
   fi
 }
 
-# Main deployment
+# Function to execute all deployment steps
+execute_deployment() {
+  # Reset tracking arrays for this attempt
+  SUCCESS_APPS=()
+  FAILED_APPS=()
+
+  # Ensure all apps exist first (create if needed)
+  if ! ensure_apps_exist; then
+    return 1
+  fi
+
+  # Patch apps to target revision (fail fast if any patch fails)
+  if ! patch_apps; then
+    return 1
+  fi
+
+  # Then sync all apps (fail if sync fails)
+  if ! sync_apps; then
+    return 1
+  fi
+
+  return 0
+}
+
+# Main deployment with retry logic
 echo "Starting deployment of apps: $APPS"
 echo "Target revision: $TARGET_REVISION"
 
-# Ensure all apps exist first (create if needed)
-if ! ensure_apps_exist; then
-  exit 1
-fi
+for attempt in $(seq 1 "$MAX_RETRIES"); do
+  echo "Deployment attempt $attempt/$MAX_RETRIES"
 
-# Patch apps to target revision (fail fast if any patch fails)
-if ! patch_apps; then
-  exit 1
-fi
-
-# Then sync all apps (fail if sync fails)
-if ! sync_apps; then
-  exit 1
-fi
+  if execute_deployment; then
+    echo "✅ Deployment succeeded on attempt $attempt/$MAX_RETRIES"
+    break
+  else
+    if [[ $attempt -eq $MAX_RETRIES ]]; then
+      echo "❌ Deployment failed after $MAX_RETRIES attempts"
+      exit 1
+    fi
+    echo "❌ Deployment failed (attempt $attempt/$MAX_RETRIES). Retrying in $((attempt * 2))s..."
+    sleep $((attempt * 2))
+  fi
+done
 
 echo ""
 echo "Deployment Summary:"
