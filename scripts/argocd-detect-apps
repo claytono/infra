@@ -95,6 +95,10 @@ extract_app_names() {
       # Extract from kubernetes/APP_NAME/ directory structure (but skip argocd-apps)
       if [[ "$file" =~ ^kubernetes/([^/]+)/ && "${BASH_REMATCH[1]}" != "argocd-apps" ]]; then
         app_name="${BASH_REMATCH[1]}"
+        # Strip numeric prefixes like "0-flannel" -> "flannel"
+        if [[ "$app_name" =~ ^[0-9]+-(.+)$ ]]; then
+          app_name="${BASH_REMATCH[1]}"
+        fi
       # Extract from kubernetes/argocd-apps/APP_NAME.yaml file structure
       elif [[ "$file" =~ ^kubernetes/argocd-apps/([^/]+)\.yaml$ ]]; then
         app_name="${BASH_REMATCH[1]}"
