@@ -102,20 +102,13 @@ jobs:
         PR_BRANCH=$(gh pr view $PR_NUMBER --json headRefName -q .headRefName)
         echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
 
-    - name: Cache patchutils
-      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&
-        steps.detect.outputs.app_count != '0'
-      uses: awalsh128/cache-apt-pkgs-action@v1.5.3
-      with:
-        packages: patchutils
-        version: 1.0
-
     - name: ArgoCD Diff
       if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&
         steps.detect.outputs.app_count != '0'
       env:
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        KUBECTL_EXTERNAL_DIFF: git diff --no-index --no-color
       run: |-
         set -x
         # Split apps into array for processing
@@ -140,13 +133,8 @@ jobs:
             diff_output="${diff_output}## 📋 $app\n\nNo changes detected.\n\n"
           elif [[ $exit_code -eq 1 ]]; then
             # Differences found (exit code 1 means diff found)
-            # Convert context diff to unified diff using filterdiff
-            if unified_diff=$(echo "$app_diff" | filterdiff --format=unified 2>/dev/null); then
-              diff_output="${diff_output}## 📋 $app\n\n\`\`\`diff\n$unified_diff\n\`\`\`\n\n"
-            else
-              # Fallback to original format if filterdiff fails
-              diff_output="${diff_output}## 📋 $app\n\n\`\`\`diff\n$app_diff\n\`\`\`\n\n"
-            fi
+            # ArgoCD should now output unified diff format via KUBECTL_EXTERNAL_DIFF
+            diff_output="${diff_output}## 📋 $app\n\n\`\`\`diff\n$app_diff\n\`\`\`\n\n"
           else
             # Actual error occurred (exit code 2 or other)
             diff_output="${diff_output}## 📋 $app\n\n❌ Failed to generate diff (exit code $exit_code):\n\`\`\`\n$app_diff\n\`\`\`\n\n"
