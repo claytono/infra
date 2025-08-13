@@ -29,7 +29,7 @@ jobs:
     - name: Check for diff command
       if: github.event_name == 'issue_comment'
       id: diff
-      uses: xt0rted/slash-command-action@v2.0.0
+      uses: xt0rted/slash-command-action@bf51f8f5f4ea3d58abc7eca58f77104182b23e88 # v2.0.0
       continue-on-error: true
       with:
         command: diff
@@ -44,14 +44,14 @@ jobs:
     - name: Checkout PR head
       if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name ||
         steps.diff-pr.outputs.command-name
-      uses: actions/checkout@v4
+      uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
       with:
         fetch-depth: 0
         ref: ${{ github.event_name == 'pull_request' && github.head_ref || format('refs/pull/{0}/head', github.event.issue.number) }}
 
     - name: Checkout trusted scripts from main branch
       if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name
-      uses: actions/checkout@v4
+      uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
       with:
         fetch-depth: 0
         ref: main
