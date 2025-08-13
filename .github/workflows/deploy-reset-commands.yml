@@ -51,6 +51,14 @@ jobs:
         fetch-depth: 0
         ref: refs/pull/${{ github.event.issue.number }}/head
 
+    - name: Checkout trusted scripts from main branch
+      if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: main
+        path: trusted-main
+
     - name: Determine base ref
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       id: base
@@ -92,7 +100,7 @@ jobs:
     - name: Detect Changed Apps
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       id: detect
-      uses: ./.github/actions/detect-apps
+      uses: ./trusted-main/.github/actions/detect-apps
       with:
         base_ref: ${{ steps.base.outputs.base }}
         head_ref: ${{ steps.pr-head.outputs.sha }}
@@ -103,7 +111,7 @@ jobs:
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
         && steps.detect.outputs.app_count != '0'
       id: setup-argocd
-      uses: ./.github/actions/setup-argocd
+      uses: ./trusted-main/.github/actions/setup-argocd
       with:
         tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
@@ -115,7 +123,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       run: |-
-        ./scripts/argocd-deploy \
+        ./trusted-main/scripts/argocd-deploy \
           --apps "${{ steps.detect.outputs.apps }}" \
           --target-revision "${{ steps.pr-info.outputs.target-revision }}" \
           --comment-pr "${{ github.event.issue.number }}"
