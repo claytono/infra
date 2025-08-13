@@ -117,6 +117,7 @@ jobs:
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |-
+        set -x
         # Split apps into array for processing
         IFS=' ' read -ra APPS_ARRAY <<< "${{ steps.detect.outputs.apps }}"
 
