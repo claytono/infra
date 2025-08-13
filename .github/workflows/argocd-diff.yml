@@ -49,6 +49,14 @@ jobs:
         fetch-depth: 0
         ref: ${{ github.event_name == 'pull_request' && github.head_ref || format('refs/pull/{0}/head', github.event.issue.number) }}
 
+    - name: Checkout trusted scripts from main branch
+      if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: main
+        path: trusted-main
+
     - name: Determine base ref
       if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name
       id: base
@@ -74,7 +82,7 @@ jobs:
     - name: Detect Changed Apps
       if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name
       id: detect
-      uses: ./.github/actions/detect-apps
+      uses: ./trusted-main/.github/actions/detect-apps
       with:
         base_ref: ${{ steps.base.outputs.base }}
         head_ref: ${{ steps.pr-head.outputs.sha }}
@@ -86,7 +94,7 @@ jobs:
       if: steps.diff.outputs.command-name || steps.diff-pr.outputs.command-name &&
         steps.detect.outputs.app_count != '0'
       id: setup-argocd
-      uses: ./.github/actions/setup-argocd
+      uses: ./trusted-main/.github/actions/setup-argocd
       with:
         tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
