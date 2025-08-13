@@ -30,7 +30,7 @@ jobs:
 
     - name: Check for deploy command
       id: deploy
-      uses: xt0rted/slash-command-action@v2.0.0
+      uses: xt0rted/slash-command-action@bf51f8f5f4ea3d58abc7eca58f77104182b23e88  # v2.0.0
       continue-on-error: true
       with:
         command: deploy
@@ -38,7 +38,7 @@ jobs:
 
     - name: Check for reset command
       id: reset
-      uses: xt0rted/slash-command-action@v2.0.0
+      uses: xt0rted/slash-command-action@bf51f8f5f4ea3d58abc7eca58f77104182b23e88  # v2.0.0
       continue-on-error: true
       with:
         command: reset
@@ -46,14 +46,14 @@ jobs:
 
     - name: Checkout PR head
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
-      uses: actions/checkout@v4
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
       with:
         fetch-depth: 0
         ref: refs/pull/${{ github.event.issue.number }}/head
 
     - name: Checkout trusted scripts from main branch
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
-      uses: actions/checkout@v4
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
       with:
         fetch-depth: 0
         ref: main

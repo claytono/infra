@@ -10,7 +10,7 @@ resources:
 
 images:
 - name: tautulli/tautulli
-  newTag: v2.15.3
+  newTag: v2.15.3@sha256:fffd16c87c9428ce2d53ce9c0897a11cb912679700a49a986385d4d12d819de3
 
 labels:
 
