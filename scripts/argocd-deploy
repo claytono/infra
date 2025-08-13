@@ -91,6 +91,28 @@ comment_pr() {
   fi
 }
 
+# Function to ensure applications exist (create if they don't)
+ensure_apps_exist() {
+  local -a apps_array
+  read -ra apps_array <<< "$APPS"
+
+  for app in "${apps_array[@]}"; do
+    echo "Checking if $app exists in ArgoCD..."
+    if ! argocd app get "$app" >/dev/null 2>&1; then
+      echo "Application $app does not exist, creating it..."
+      if ! argocd app create --file "kubernetes/argocd-apps/$app.yaml" 2>&1; then
+        echo "❌ Failed to create application $app"
+        FAILED_APPS+=("$app")
+        comment_pr "❌ Failed to create **$app** from manifest"
+        return 1
+      fi
+      echo "✅ Created application $app"
+    else
+      echo "✅ Application $app already exists"
+    fi
+  done
+}
+
 # Function to patch all apps to update target revision
 patch_apps() {
   local -a apps_array
@@ -151,7 +173,12 @@ sync_apps() {
 echo "Starting deployment of apps: $APPS"
 echo "Target revision: $TARGET_REVISION"
 
-# Patch apps first (fail fast if any patch fails)
+# Ensure all apps exist first (create if needed)
+if ! ensure_apps_exist; then
+  exit 1
+fi
+
+# Patch apps to target revision (fail fast if any patch fails)
 if ! patch_apps; then
   exit 1
 fi

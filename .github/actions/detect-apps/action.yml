@@ -9,10 +9,6 @@ inputs:
   head_ref:
     required: false
     description: Git ref or SHA to diff to (if empty, finds all apps)
-  apps_dir:
-    required: false
-    default: kubernetes/argocd-apps
-    description: Directory containing ArgoCD application YAML files
   pr_number:
     required: false
     description: PR number for commenting (if empty, uses echo instead of gh pr comment)
@@ -54,12 +50,10 @@ runs:
       set -euo pipefail
       base='${{ inputs.base_ref }}'
       head='${{ inputs.head_ref }}'
-      apps_dir='${{ inputs.apps_dir }}'
-
       if [[ -z "$base" || -z "$head" ]]; then
         # No refs provided - find all apps (for workflow_dispatch or similar)
         echo "No refs provided - finding all ArgoCD applications"
-        apps=$(find "$apps_dir" -name "*.yaml" -exec basename {} .yaml \; | tr '\n' ' ' | sed 's/ $//')
+        apps=$(find "kubernetes/argocd-apps" -name "*.yaml" -exec basename {} .yaml \; | tr '\n' ' ' | sed 's/ $//')
         count=$(echo "$apps" | wc -w)
         echo "Found $count applications: $apps"
         echo "apps=$apps" >> "$GITHUB_OUTPUT"

@@ -92,11 +92,11 @@ extract_app_names() {
     if [[ -n "$file" ]]; then
       local app_name=""
 
-      # Extract from kubernetes/APP_NAME/ directory structure
-      if [[ "$file" =~ ^kubernetes/([^/]+)/ ]]; then
+      # Extract from kubernetes/APP_NAME/ directory structure (but skip argocd-apps)
+      if [[ "$file" =~ ^kubernetes/([^/]+)/ && "${BASH_REMATCH[1]}" != "argocd-apps" ]]; then
         app_name="${BASH_REMATCH[1]}"
-      # Extract from argocd-apps/APP_NAME.yaml file structure
-      elif [[ "$file" =~ ^argocd-apps/([^/]+)\.yaml$ ]]; then
+      # Extract from kubernetes/argocd-apps/APP_NAME.yaml file structure
+      elif [[ "$file" =~ ^kubernetes/argocd-apps/([^/]+)\.yaml$ ]]; then
         app_name="${BASH_REMATCH[1]}"
       fi
 
@@ -142,6 +142,8 @@ changed_files=$(get_changed_files)
 
 if [[ -z "$changed_files" ]]; then
   echo "No kubernetes files changed"
+  echo "apps=" >> "$GITHUB_OUTPUT"
+  echo "app_count=0" >> "$GITHUB_OUTPUT"
   exit 0
 fi
 
@@ -150,6 +152,8 @@ readarray -t app_names < <(extract_app_names "$changed_files")
 
 if [[ ${#app_names[@]} -eq 0 ]]; then
   echo "No ArgoCD applications detected in changed files"
+  echo "apps=" >> "$GITHUB_OUTPUT"
+  echo "app_count=0" >> "$GITHUB_OUTPUT"
   exit 0
 fi
 
