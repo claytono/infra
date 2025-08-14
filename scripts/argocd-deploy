@@ -1,241 +1,250 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+"""
+argocd-deploy.py — Deploy Argo CD applications with per-app retries
 
-# argocd-deploy - Deploy ArgoCD applications with proper error handling
-#
-# This script deploys ArgoCD applications to a specified target revision and tracks
-# success/failure status for each application individually.
-#
-# HOW IT WORKS:
-# 1. For each application: patch source to target revision, sync with pruning, and wait for healthy state
-# 2. Tracks which applications succeed vs fail during deployment
-# 3. Optionally comments deployment results on GitHub PRs
-# 4. Exits with error code if any deployments fail
-# 5. Uses --prune to remove resources no longer defined in Git (safe per-application)
-#
-# GITHUB ACTIONS INTEGRATION:
-# The script comments deployment results on PRs when --comment-pr is provided.
-#
-# EXAMPLES:
-# ./argocd-deploy --apps "app1 app2" --target-revision "main"
-# ./argocd-deploy --apps "webapp" --target-revision "feature-branch" --comment-pr 123
-#
-# Usage: ./argocd-deploy --apps "app1 app2" --target-revision "branch-name" [--comment-pr PR_NUMBER]
+This script deploys Argo CD applications to a specified target revision and tracks
+success/failure status for each application individually.
 
-# Default values
-APPS=""
-TARGET_REVISION=""
-PR_NUMBER=""
-SYNC_TIMEOUT="300"
-ACTION_RUN_URL=""
-MAX_RETRIES="3"
+HOW IT WORKS:
+1. For each application: ensure it exists, sync to target revision (optionally with --prune), then wait for Healthy
+2. Tracks which applications succeed vs fail during deployment
+3. Optionally comments deployment results on GitHub PRs
+4. Exits with error code if any deployments fail
+5. Implements retry logic with **linear** backoff
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --apps)
-      APPS="$2"
-      shift 2
-      ;;
-    --target-revision)
-      TARGET_REVISION="$2"
-      shift 2
-      ;;
-    --comment-pr)
-      PR_NUMBER="$2"
-      shift 2
-      ;;
-    --sync-timeout)
-      SYNC_TIMEOUT="$2"
-      shift 2
-      ;;
-    --action-run-url)
-      ACTION_RUN_URL="$2"
-      shift 2
-      ;;
-    --max-retries)
-      MAX_RETRIES="$2"
-      shift 2
-      ;;
-    --help)
-      echo "Usage: $0 --apps 'app1 app2' --target-revision 'branch' [--comment-pr PR_NUMBER]"
-      echo "Deploy ArgoCD applications to specified target revision"
-      echo ""
-      echo "Options:"
-      echo "  --apps APPS              Space-separated list of application names"
-      echo "  --target-revision REV    Target revision (branch/tag/commit)"
-      echo "  --comment-pr PR_NUMBER   Comment results on PR"
-      echo "  --sync-timeout SECONDS   Sync timeout in seconds (default: 300)"
-      echo "  --action-run-url URL     GitHub Action run URL for failure comments"
-      echo "  --max-retries NUM        Maximum retry attempts (default: 3)"
-      echo "  --help                   Show this help message"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      exit 1
-      ;;
-  esac
-done
+GITHUB ACTIONS INTEGRATION:
+The script comments deployment results on PRs when --comment-pr is provided.
 
-# Validate required arguments
-if [[ -z "$APPS" ]]; then
-  echo "Error: --apps is required"
-  exit 1
-fi
+EXAMPLES:
+./argocd-deploy.py --apps "app1 app2" --target-revision "main"
+./argocd-deploy.py --apps "webapp" --target-revision "feature-branch" --comment-pr 123
 
-if [[ -z "$TARGET_REVISION" ]]; then
-  echo "Error: --target-revision is required"
-  exit 1
-fi
+Usage: ./argocd-deploy.py --apps "app1 app2" --target-revision "branch-name" [--comment-pr PR_NUMBER]
+"""
 
-# Arrays to track results
-SUCCESS_APPS=()
-FAILED_APPS=()
+import argparse
+import os
+import subprocess
+import sys
+import time
+from typing import List, Optional
 
-# Function to comment on PR
-comment_pr() {
-  local message="$1"
-  local status="${2:-success}"
 
-  # Add action run link for non-success statuses when URL is available
-  if [[ "$status" != "success" && -n "$ACTION_RUN_URL" ]]; then
-    message="$message
+class DeploymentError(Exception):
+    """Custom exception for deployment failures"""
+    pass
 
-[View action run details]($ACTION_RUN_URL)"
-  fi
 
-  if [[ -n "$PR_NUMBER" && -n "${GH_TOKEN:-}" ]]; then
-    gh pr comment "$PR_NUMBER" --body "$message"
-  else
-    echo "PR Comment: $message"
-  fi
-}
+class ArgoCDDeployer:
+    """ArgoCD deployment manager with retry logic and PR commenting"""
 
-# Function to ensure applications exist (create if they don't)
-ensure_apps_exist() {
-  local -a apps_array
-  read -ra apps_array <<< "$APPS"
+    def __init__(self, apps: List[str], target_revision: str, pr_number: Optional[str] = None,
+                 action_run_url: Optional[str] = None, sync_timeout: int = 300, max_retries: int = 3):
+        self.apps = apps
+        self.target_revision = target_revision
+        self.pr_number = pr_number
+        self.action_run_url = action_run_url
+        self.sync_timeout = sync_timeout
+        self.max_retries = max_retries
 
-  for app in "${apps_array[@]}"; do
-    echo "Checking if $app exists in ArgoCD..."
-    if ! argocd app get "$app" >/dev/null 2>&1; then
-      echo "Application $app does not exist, creating it..."
-      if ! argocd app create --file "kubernetes/argocd-apps/$app.yaml" 2>&1; then
-        echo "❌ Failed to create application $app"
-        FAILED_APPS+=("$app")
-        comment_pr "❌ Failed to create **$app** from manifest" "failure"
-        return 1
-      fi
-      echo "✅ Created application $app"
-    else
-      echo "✅ Application $app already exists"
-    fi
-  done
-}
+    def run_command(self, cmd: List[str], capture_output: bool = True) -> subprocess.CompletedProcess:
+        """Run a command and return the result"""
+        try:
+            result = subprocess.run(cmd, capture_output=capture_output, text=True, check=False)
+            return result
+        except Exception as e:
+            raise DeploymentError(f"Failed to run command {' '.join(cmd)}: {e}")
 
-# Function to patch all apps to update target revision
-patch_apps() {
-  local -a apps_array
-  read -ra apps_array <<< "$APPS"
+    def ensure_app_exists(self, app: str) -> None:
+        """Ensure an ArgoCD application exists, create if it doesn't"""
+        print(f"Checking if {app} exists in ArgoCD...")
 
-  # Define JSON patch for target revision update
-  local patch_json
-  read -r -d '' patch_json <<-EOF || true
-	[
-	  {
-	    "op": "replace",
-	    "path": "/spec/source/targetRevision",
-	    "value": "$TARGET_REVISION"
-	  }
-	]
-	EOF
+        # Check if app exists
+        result = self.run_command(['argocd', 'app', 'get', app])
 
-  # Patch all apps to update target revision - fail fast if any fail
-  for app in "${apps_array[@]}"; do
-    echo "Updating $app to target revision: $TARGET_REVISION..."
-    if ! argocd app patch "$app" --patch "$patch_json" 2>&1; then
-      echo "❌ Failed to update target revision for $app"
-      FAILED_APPS=("${apps_array[@]}")
-      comment_pr "❌ Failed to update target revision for **$app** to \`$TARGET_REVISION\`. Check ArgoCD application configuration." "failure"
-      return 1
-    fi
-    echo "✅ Updated $app target revision"
+        if result.returncode != 0:
+            print(f"Application {app} does not exist, creating it...")
+            manifest_path = f"kubernetes/argocd-apps/{app}.yaml"
 
-    echo "Refreshing $app to resolve new target revision..."
-    if ! argocd app get "$app" --refresh 2>&1; then
-      echo "❌ Failed to refresh $app"
-      FAILED_APPS=("${apps_array[@]}")
-      comment_pr "❌ Failed to refresh **$app** after updating target revision to \`$TARGET_REVISION\`. ArgoCD may not be able to resolve the branch." "failure"
-      return 1
-    fi
-  done
-}
+            if not os.path.exists(manifest_path):
+                raise DeploymentError(f"Manifest file {manifest_path} not found for app {app}")
 
-# Function to sync all apps
-sync_apps() {
-  local -a apps_array
-  read -ra apps_array <<< "$APPS"
+            result = self.run_command(['argocd', 'app', 'create', '--file', manifest_path])
+            if result.returncode != 0:
+                raise DeploymentError(f"Failed to create application {app}: {result.stderr}")
 
-  echo "Syncing apps: ${apps_array[*]} (with pruning)"
-  if argocd app sync "${apps_array[@]}" --prune --timeout "$SYNC_TIMEOUT" 2>&1; then
-    SUCCESS_APPS=("${apps_array[@]}")
-    echo "✅ Successfully synced: ${apps_array[*]}"
-    comment_pr "🚀 Successfully deployed **${apps_array[*]}** to \`$TARGET_REVISION\`" "success"
-  else
-    FAILED_APPS=("${apps_array[@]}")
-    echo "❌ Failed to sync: ${apps_array[*]}"
-    comment_pr "❌ Deployment failed during sync phase for **${apps_array[*]}**. Apps were updated to \`$TARGET_REVISION\` but failed to sync. Check ArgoCD for details." "failure"
-    return 1
-  fi
-}
+            print(f"✅ Created application {app}")
+        else:
+            print(f"✅ Application {app} already exists")
 
-# Function to execute all deployment steps
-execute_deployment() {
-  # Reset tracking arrays for this attempt
-  SUCCESS_APPS=()
-  FAILED_APPS=()
+    def sync_app_to_revision(self, app: str) -> None:
+        """Sync a single application to the target revision"""
+        print(f"Syncing {app} to revision {self.target_revision} (with pruning)")
 
-  # Ensure all apps exist first (create if needed)
-  if ! ensure_apps_exist; then
-    return 1
-  fi
+        cmd = ['argocd', 'app', 'sync', app,
+               '--revision', self.target_revision,
+               '--prune',
+               '--timeout', str(self.sync_timeout)]
 
-  # Patch apps to target revision (fail fast if any patch fails)
-  if ! patch_apps; then
-    return 1
-  fi
+        result = self.run_command(cmd, capture_output=False)
+        if result.returncode != 0:
+            raise DeploymentError(f"Failed to sync {app} to {self.target_revision} (see sync output above)")
 
-  # Then sync all apps (fail if sync fails)
-  if ! sync_apps; then
-    return 1
-  fi
+        print(f"✅ Successfully synced {app} to {self.target_revision}")
 
-  return 0
-}
+    def wait_for_app(self, app: str) -> None:
+        """Wait for an application to reach healthy status"""
+        print(f"Waiting for {app} to become healthy...")
 
-# Main deployment with retry logic
-echo "Starting deployment of apps: $APPS"
-echo "Target revision: $TARGET_REVISION"
+        cmd = ['argocd', 'app', 'wait', app, '--timeout', str(self.sync_timeout)]
 
-for attempt in $(seq 1 "$MAX_RETRIES"); do
-  echo "Deployment attempt $attempt/$MAX_RETRIES"
+        result = self.run_command(cmd, capture_output=False)
+        if result.returncode != 0:
+            raise DeploymentError(f"Application {app} failed to reach healthy status (see wait output above)")
 
-  if execute_deployment; then
-    echo "✅ Deployment succeeded on attempt $attempt/$MAX_RETRIES"
-    break
-  else
-    if [[ $attempt -eq $MAX_RETRIES ]]; then
-      echo "❌ Deployment failed after $MAX_RETRIES attempts"
-      exit 1
-    fi
-    echo "❌ Deployment failed (attempt $attempt/$MAX_RETRIES). Retrying in $((attempt * 2))s..."
-    sleep $((attempt * 2))
-  fi
-done
+        print(f"✅ Application {app} is healthy")
 
-echo ""
-echo "Deployment Summary:"
-echo "  Total: $(echo "$APPS" | wc -w)"
-echo "  Success: ${#SUCCESS_APPS[@]}"
-echo "  Failed: ${#FAILED_APPS[@]}"
+    def deploy_single_app(self, app: str) -> bool:
+        """Deploy a single application and return success status"""
+        try:
+            print(f"\n--- Deploying {app} ---")
+
+            self.ensure_app_exists(app)
+            self.sync_app_to_revision(app)
+            self.wait_for_app(app)
+
+            print(f"✅ Successfully deployed {app}")
+            return True
+
+        except DeploymentError as e:
+            print(f"❌ Failed to deploy {app}: {e}")
+            return False
+
+    def deploy_app_with_retries(self, app: str) -> bool:
+        """Deploy a single app with retry logic"""
+        for attempt in range(1, self.max_retries + 1):
+            print(f"\n--- Deploying {app} (attempt {attempt}/{self.max_retries}) ---")
+
+            if self.deploy_single_app(app):
+                if attempt > 1:
+                    print(f"✅ {app} succeeded on attempt {attempt}/{self.max_retries}")
+                return True
+            else:
+                if attempt < self.max_retries:
+                    delay = attempt * 10  # 10s, 20s, 30s delays
+                    print(f"❌ {app} failed (attempt {attempt}/{self.max_retries}). Retrying in {delay}s...")
+                    time.sleep(delay)
+                else:
+                    print(f"❌ {app} failed after {self.max_retries} attempts")
+
+        return False
+
+    def comment_pr(self, message: str, is_failure: bool = False) -> None:
+        """Comment on a PR with deployment results"""
+        if not self.pr_number:
+            print(f"PR Comment: {message}")
+            return
+
+        # Add action run link for failures
+        if is_failure and self.action_run_url:
+            message = f"{message}\n\n[View action run details]({self.action_run_url})"
+
+        cmd = ['gh', 'pr', 'comment', self.pr_number, '--body', message]
+        result = self.run_command(cmd)
+
+        if result.returncode != 0:
+            print(f"Warning: Failed to comment on PR: {result.stderr}")
+
+    def deploy(self) -> None:
+        """Deploy all apps with per-app retry logic"""
+        print(f"Starting deployment of apps: {' '.join(self.apps)}")
+        print(f"Target revision: {self.target_revision}")
+
+        successful_apps = []
+        failed_apps = []
+
+        # Deploy each app individually with retries
+        for app in self.apps:
+            if self.deploy_app_with_retries(app):
+                successful_apps.append(app)
+            else:
+                failed_apps.append(app)
+
+        # Determine overall success and create message
+        if failed_apps:
+            if successful_apps:
+                message = f"❌ Partial deployment failure: **{', '.join(failed_apps)}** failed, **{', '.join(successful_apps)}** succeeded"
+            else:
+                message = f"❌ All applications failed: **{', '.join(failed_apps)}**"
+            is_failure = True
+        else:
+            message = f"🚀 Successfully deployed **{', '.join(successful_apps)}** to `{self.target_revision}`"
+            is_failure = False
+
+        # Comment on the final result
+        self.comment_pr(message, is_failure=is_failure)
+
+        # Print summary
+        print(f"\nDeployment Summary:")
+        print(f"  Total: {len(self.apps)}")
+        print(f"  Successful: {len(successful_apps)} - {', '.join(successful_apps) if successful_apps else 'None'}")
+        print(f"  Failed: {len(failed_apps)} - {', '.join(failed_apps) if failed_apps else 'None'}")
+
+        # Exit with error if any apps failed
+        if failed_apps:
+            sys.exit(1)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Deploy ArgoCD applications to specified target revision",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__
+    )
+
+    parser.add_argument('--apps', required=True,
+                       help='Space-separated list of application names')
+    parser.add_argument('--target-revision', required=True,
+                       help='Target revision (branch/tag/commit)')
+    parser.add_argument('--comment-pr',
+                       help='Comment results on PR')
+    parser.add_argument('--sync-timeout', type=int, default=300,
+                       help='Sync timeout in seconds (default: 300)')
+    parser.add_argument('--action-run-url',
+                       help='GitHub Action run URL for failure comments')
+    parser.add_argument('--max-retries', type=int, default=3,
+                       help='Maximum retry attempts (default: 3)')
+
+    args = parser.parse_args()
+
+    # Parse apps from space-separated string (dedupe, preserve order)
+    seen = set()
+    apps = [a for a in args.apps.split() if not (a in seen or seen.add(a))]
+
+    if not apps:
+        print("Error: No applications provided")
+        sys.exit(1)
+
+    # Validate token for gh if PR commenting is requested (accept GH_TOKEN or GITHUB_TOKEN)
+    if args.comment_pr:
+        token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
+        if not token:
+            print("Error: GH_TOKEN or GITHUB_TOKEN required for PR commenting")
+            sys.exit(1)
+        # Ensure gh sees GH_TOKEN
+        os.environ.setdefault('GH_TOKEN', token)
+
+    deployer = ArgoCDDeployer(
+        apps=apps,
+        target_revision=args.target_revision,
+        pr_number=args.comment_pr,
+        action_run_url=args.action_run_url,
+        sync_timeout=args.sync_timeout,
+        max_retries=args.max_retries
+    )
+
+    deployer.deploy()
+
+
+if __name__ == '__main__':
+    main()
