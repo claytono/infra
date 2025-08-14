@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: kube-flannel
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - namespace.yaml
 - helm/templates/config.yaml

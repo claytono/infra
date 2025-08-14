@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: ingress-nginx
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - namespace.yaml
 - helm/clusterrole.yaml

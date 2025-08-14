@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: argocd
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:
@@ -12,6 +15,7 @@ labels:
 resources:
 - namespace.yaml
 - tailscale-ingress.yaml
+- appset.yaml
 # Generated helm resources - do not edit below this line
 - helm/templates/argocd-application-controller/clusterrole.yaml
 - helm/templates/argocd-application-controller/clusterrolebinding.yaml
