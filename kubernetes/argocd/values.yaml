@@ -43,6 +43,8 @@ configs:
       p, role:github-actions, applications, sync, *, allow
       # Allow GitHub Actions to update applications (needed for target revision changes)
       p, role:github-actions, applications, update, *, allow
+      # Allow GitHub Actions to access projects (required for app operations)
+      p, role:github-actions, projects, get, *, allow
       # Assign github-actions account to the role
       g, github-actions, role:github-actions
   notifications:
