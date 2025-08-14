@@ -134,8 +134,7 @@ validate_apps() {
     fi
 
     if [[ -n "$kustomization_file" ]]; then
-      # Check if the kustomization.yaml has argoManaged annotation
-      if grep -q "argoManaged:[[:space:]]*['\"]true['\"]" "$kustomization_file"; then
+      if yq eval '.commonAnnotations.argoManaged == "true"' "$kustomization_file" 2>/dev/null | grep -q "true"; then
         valid_apps+=("$app")
       else
         echo "Warning: Application '$app' found but not managed by ApplicationSet (missing argoManaged: true annotation)" >&2
