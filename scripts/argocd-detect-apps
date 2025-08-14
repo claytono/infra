@@ -3,30 +3,25 @@ set -euo pipefail
 
 # argocd-detect-apps - Detect ArgoCD applications affected by file changes
 #
-# This script analyzes changed files in the kubernetes/ and argocd-apps/ directories
-# to determine which ArgoCD applications are affected by those changes.
+# This script analyzes changed files in the kubernetes/ directory to determine
+# which ArgoCD applications are affected by those changes.
 #
 # HOW IT WORKS:
-# 1. Gets list of changed files in kubernetes/ and argocd-apps/ directories via git diff
-# 2. Extracts application names from file paths using patterns:
-#    - kubernetes/APP_NAME/* (Kubernetes manifests)
-#    - argocd-apps/APP_NAME.yaml (ArgoCD application definitions)
-# 3. Validates that detected apps exist in the argocd-apps directory
+# 1. Gets list of changed files in kubernetes/ directory via git diff
+# 2. Extracts application names from file paths using pattern: kubernetes/APP_NAME/*
+# 3. Validates that detected apps have ApplicationSet management enabled
+#    (commonAnnotations.argoManaged: "true" in their kustomization.yaml)
 # 4. Outputs results for use in GitHub Actions workflows
 #
 # DIRECTORY STRUCTURE ASSUMPTION:
 # kubernetes/
 # ├── app1/
-# │   ├── kustomization.yaml
+# │   ├── kustomization.yaml    # <- with commonAnnotations.argoManaged: "true"
 # │   └── deployment.yaml
 # ├── app2/
+# │   ├── kustomization.yaml    # <- with commonAnnotations.argoManaged: "true"
 # │   └── helm/
-# └── shared-resources/  # <- Would be detected as "shared-resources" app
-#
-# argocd-apps/
-# ├── app1.yaml          # <- Changes here would detect "app1"
-# ├── app2.yaml          # <- Changes here would detect "app2"
-# └── shared-resources.yaml
+# └── shared-resources/         # <- Would be detected if has argoManaged annotation
 #
 # GITHUB ACTIONS INTEGRATION:
 # The script sets these outputs in $GITHUB_OUTPUT:
@@ -79,7 +74,7 @@ done
 # Function to get changed files from git diff
 get_changed_files() {
   git diff --name-only "$BASE_REF"..."$HEAD_REF" \
-    | grep -E '^kubernetes/|^argocd-apps/' \
+    | grep -E '^kubernetes/' \
     || true
 }
 
@@ -92,16 +87,18 @@ extract_app_names() {
     if [[ -n "$file" ]]; then
       local app_name=""
 
-      # Extract from kubernetes/APP_NAME/ directory structure (but skip argocd-apps)
-      if [[ "$file" =~ ^kubernetes/([^/]+)/ && "${BASH_REMATCH[1]}" != "argocd-apps" ]]; then
-        app_name="${BASH_REMATCH[1]}"
-        # Strip numeric prefixes like "0-flannel" -> "flannel"
-        if [[ "$app_name" =~ ^[0-9]+-(.+)$ ]]; then
-          app_name="${BASH_REMATCH[1]}"
+      # Extract from kubernetes/APP_NAME/ directory structure
+      if [[ "$file" =~ ^kubernetes/([^/]+)/ ]]; then
+        local raw_app_name="${BASH_REMATCH[1]}"
+
+        # Only consider it an app if the directory has a kustomization.yaml
+        if [[ -f "$REPO_ROOT/kubernetes/$raw_app_name/kustomization.yaml" ]]; then
+          app_name="$raw_app_name"
+          # Strip numeric prefixes like "0-flannel" -> "flannel"
+          if [[ "$app_name" =~ ^[0-9]+-(.+)$ ]]; then
+            app_name="${BASH_REMATCH[1]}"
+          fi
         fi
-      # Extract from kubernetes/argocd-apps/APP_NAME.yaml file structure
-      elif [[ "$file" =~ ^kubernetes/argocd-apps/([^/]+)\.yaml$ ]]; then
-        app_name="${BASH_REMATCH[1]}"
       fi
 
       # Add to array if not already present and not empty
@@ -115,26 +112,36 @@ extract_app_names() {
   printf '%s\n' "${apps[@]}"
 }
 
-# Function to validate apps exist in argocd-apps directory
+# Function to validate apps have ApplicationSet management enabled
 validate_apps() {
   local apps=("$@")
   local valid_apps=()
-  local argo_apps_dir="$REPO_ROOT/kubernetes/argocd-apps"
-
-  # Check if argocd-apps directory exists
-  if [[ ! -d "$argo_apps_dir" ]]; then
-    echo "Warning: argocd-apps directory not found at $argo_apps_dir" >&2
-    # Return all apps if we can't validate
-    printf '%s\n' "${apps[@]}"
-    return
-  fi
 
   for app in "${apps[@]}"; do
-    # Look for corresponding yaml file in argocd-apps directory
-    if [[ -f "$argo_apps_dir/$app.yaml" ]]; then
-      valid_apps+=("$app")
+    local kustomization_file=""
+
+    # Check for kustomization.yaml in the original directory (with potential numeric prefix)
+    if [[ -f "$REPO_ROOT/kubernetes/$app/kustomization.yaml" ]]; then
+      kustomization_file="$REPO_ROOT/kubernetes/$app/kustomization.yaml"
     else
-      echo "Warning: Application '$app' not found in argocd-apps directory" >&2
+      # Check with numeric prefixes (0-app, 1-app, etc.)
+      for prefix_dir in "$REPO_ROOT/kubernetes/"[0-9]*-"$app"; do
+        if [[ -f "$prefix_dir/kustomization.yaml" ]]; then
+          kustomization_file="$prefix_dir/kustomization.yaml"
+          break
+        fi
+      done
+    fi
+
+    if [[ -n "$kustomization_file" ]]; then
+      # Check if the kustomization.yaml has argoManaged annotation
+      if grep -q "argoManaged:[[:space:]]*['\"]true['\"]" "$kustomization_file"; then
+        valid_apps+=("$app")
+      else
+        echo "Warning: Application '$app' found but not managed by ApplicationSet (missing argoManaged: true annotation)" >&2
+      fi
+    else
+      echo "Warning: Application '$app' kustomization.yaml not found" >&2
     fi
   done
 
@@ -161,7 +168,7 @@ if [[ ${#app_names[@]} -eq 0 ]]; then
   exit 0
 fi
 
-# Validate apps exist in argocd-apps directory
+# Validate apps have ApplicationSet management enabled
 readarray -t valid_apps < <(validate_apps "${app_names[@]}")
 
 # Output results
