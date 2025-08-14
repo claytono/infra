@@ -42,6 +42,7 @@ GITHUB_OUTPUT="${GITHUB_OUTPUT:-/dev/stdout}"
 # Default values
 BASE_REF="main"
 HEAD_REF="HEAD"
+SCAN_ROOT=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -54,13 +55,18 @@ while [[ $# -gt 0 ]]; do
       HEAD_REF="$2"
       shift 2
       ;;
+    --scan-root)
+      SCAN_ROOT="$2"
+      shift 2
+      ;;
     --help)
-      echo "Usage: $0 [--base-ref BASE_REF] [--head-ref HEAD_REF]"
+      echo "Usage: $0 [--base-ref BASE_REF] [--head-ref HEAD_REF] [--scan-root PATH]"
       echo "Detects ArgoCD applications affected by file changes"
       echo ""
       echo "Options:"
       echo "  --base-ref REF     Base reference for comparison (default: main)"
       echo "  --head-ref REF     Head reference for comparison (default: HEAD)"
+      echo "  --scan-root PATH   Root directory to scan for kubernetes/ (default: auto-detect)"
       echo "  --help             Show this help message"
       exit 0
       ;;
@@ -92,7 +98,7 @@ extract_app_names() {
         local raw_app_name="${BASH_REMATCH[1]}"
 
         # Only consider it an app if the directory has a kustomization.yaml
-        if [[ -f "$REPO_ROOT/kubernetes/$raw_app_name/kustomization.yaml" ]]; then
+        if [[ -f "$EFFECTIVE_ROOT/kubernetes/$raw_app_name/kustomization.yaml" ]]; then
           app_name="$raw_app_name"
           # Strip numeric prefixes like "0-flannel" -> "flannel"
           if [[ "$app_name" =~ ^[0-9]+-(.+)$ ]]; then
@@ -121,11 +127,11 @@ validate_apps() {
     local kustomization_file=""
 
     # Check for kustomization.yaml in the original directory (with potential numeric prefix)
-    if [[ -f "$REPO_ROOT/kubernetes/$app/kustomization.yaml" ]]; then
-      kustomization_file="$REPO_ROOT/kubernetes/$app/kustomization.yaml"
+    if [[ -f "$EFFECTIVE_ROOT/kubernetes/$app/kustomization.yaml" ]]; then
+      kustomization_file="$EFFECTIVE_ROOT/kubernetes/$app/kustomization.yaml"
     else
       # Check with numeric prefixes (0-app, 1-app, etc.)
-      for prefix_dir in "$REPO_ROOT/kubernetes/"[0-9]*-"$app"; do
+      for prefix_dir in "$EFFECTIVE_ROOT/kubernetes/"[0-9]*-"$app"; do
         if [[ -f "$prefix_dir/kustomization.yaml" ]]; then
           kustomization_file="$prefix_dir/kustomization.yaml"
           break
@@ -134,7 +140,7 @@ validate_apps() {
     fi
 
     if [[ -n "$kustomization_file" ]]; then
-      if yq eval '.commonAnnotations.argoManaged == "true"' "$kustomization_file" 2>/dev/null | grep -q "true"; then
+      if yq eval '.commonAnnotations.argoManaged == "true"' "$kustomization_file" --exit-status >/dev/null 2>&1; then
         valid_apps+=("$app")
       else
         echo "Warning: Application '$app' found but not managed by ApplicationSet (missing argoManaged: true annotation)" >&2
@@ -147,7 +153,9 @@ validate_apps() {
   printf '%s\n' "${valid_apps[@]}"
 }
 
-cd "$REPO_ROOT"
+# Use scan root if provided, otherwise use auto-detected repo root
+EFFECTIVE_ROOT="${SCAN_ROOT:-$REPO_ROOT}"
+cd "$EFFECTIVE_ROOT"
 changed_files=$(get_changed_files)
 
 if [[ -z "$changed_files" ]]; then
