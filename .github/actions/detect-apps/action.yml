@@ -60,7 +60,7 @@ runs:
         echo "app_count=$count" >> "$GITHUB_OUTPUT"
       else
         # Use the argocd-detect-apps script for change detection
-        "${GITHUB_WORKSPACE}/trusted-main/scripts/argocd-detect-apps" --base-ref "$base" --head-ref "$head"
+        "${GITHUB_WORKSPACE}/trusted-main/scripts/argocd-detect-apps" --base-ref "$base" --head-ref "$head" --scan-root "${GITHUB_WORKSPACE}"
       fi
 
   - name: Comment if no apps found
