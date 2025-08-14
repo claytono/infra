@@ -27,9 +27,16 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Checkout trusted scripts from main branch
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
+      with:
+        fetch-depth: 0
+        ref: main
+        path: trusted-main
+
     - name: Detect Changed Apps
       id: detect
-      uses: ./.github/actions/detect-apps
+      uses: ./trusted-main/.github/actions/detect-apps
       with:
         base_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.event.before }}
         head_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.sha }}
@@ -38,7 +45,7 @@ jobs:
     - name: Setup ArgoCD environment
       if: steps.detect.outputs.app_count != '0'
       id: setup-argocd
-      uses: ./.github/actions/setup-argocd
+      uses: ./trusted-main/.github/actions/setup-argocd
       with:
         tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
         tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
@@ -48,7 +55,7 @@ jobs:
       env:
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       run: |-
-        ./scripts/argocd-deploy \
+        "${GITHUB_WORKSPACE}/trusted-main/scripts/argocd-deploy" \
           --apps "${{ steps.detect.outputs.apps }}" \
           --target-revision "main" \
           --action-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
