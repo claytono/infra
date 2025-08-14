@@ -49,8 +49,14 @@ class ArgoCDDeployer:
 
     def run_command(self, cmd: List[str], capture_output: bool = True) -> subprocess.CompletedProcess:
         """Run a command and return the result"""
+        print(f"Running command: {' '.join(cmd)}")
         try:
             result = subprocess.run(cmd, capture_output=capture_output, text=True, check=False)
+            if result.returncode != 0:
+                print(f"Command failed with return code {result.returncode}")
+                if capture_output:
+                    print(f"stdout: {result.stdout}")
+                    print(f"stderr: {result.stderr}")
             return result
         except Exception as e:
             raise DeploymentError(f"Failed to run command {' '.join(cmd)}: {e}")
@@ -96,7 +102,7 @@ class ArgoCDDeployer:
         """Wait for an application to reach healthy status"""
         print(f"Waiting for {app} to become healthy...")
 
-        cmd = ['argocd', 'app', 'wait', app, '--timeout', str(self.sync_timeout)]
+        cmd = ['argocd', 'app', 'wait', app, '--operation', '--health', '--timeout', str(self.sync_timeout)]
 
         result = self.run_command(cmd, capture_output=False)
         if result.returncode != 0:
@@ -231,8 +237,6 @@ def main():
         if not token:
             print("Error: GH_TOKEN or GITHUB_TOKEN required for PR commenting")
             sys.exit(1)
-        # Ensure gh sees GH_TOKEN
-        os.environ.setdefault('GH_TOKEN', token)
 
     deployer = ArgoCDDeployer(
         apps=apps,

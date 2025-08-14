@@ -15,20 +15,14 @@ metadata:
     app.kubernetes.io/version: "v3.0.6"
 data:
   policy.csv: |
-    # Allow GitHub Actions to read application status and refresh
+    # Allow GitHub Actions to read application status
     p, role:github-actions, applications, get, *, allow
     # Allow GitHub Actions to create applications
     p, role:github-actions, applications, create, *, allow
     # Allow GitHub Actions to trigger sync operations
     p, role:github-actions, applications, sync, *, allow
-    # Allow GitHub Actions to patch applications (needed for target revision changes)
-    p, role:github-actions, applications, patch, *, allow
-    # Allow GitHub Actions to update applications (patch operations may require update permission)
+    # Allow GitHub Actions to update applications (needed for target revision changes)
     p, role:github-actions, applications, update, *, allow
-    # Allow GitHub Actions to read projects (needed for refresh operations)
-    p, role:github-actions, projects, get, *, allow
-    # Allow GitHub Actions to read repositories (needed for branch resolution)
-    p, role:github-actions, repositories, get, *, allow
     # Assign github-actions account to the role
     g, github-actions, role:github-actions
   policy.default: ""
