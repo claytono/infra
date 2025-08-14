@@ -6,7 +6,7 @@ This script deploys Argo CD applications to a specified target revision and trac
 success/failure status for each application individually.
 
 HOW IT WORKS:
-1. For each application: ensure it exists, sync to target revision (optionally with --prune), then wait for Healthy
+1. For each application: verify it exists (managed by ApplicationSet), sync to target revision (optionally with --prune), then wait for Healthy
 2. Tracks which applications succeed vs fail during deployment
 3. Optionally comments deployment results on GitHub PRs
 4. Exits with error code if any deployments fail
@@ -61,27 +61,17 @@ class ArgoCDDeployer:
         except Exception as e:
             raise DeploymentError(f"Failed to run command {' '.join(cmd)}: {e}")
 
-    def ensure_app_exists(self, app: str) -> None:
-        """Ensure an ArgoCD application exists, create if it doesn't"""
-        print(f"Checking if {app} exists in ArgoCD...")
+    def verify_app_exists(self, app: str) -> None:
+        """Verify an ArgoCD application exists (managed by ApplicationSet)"""
+        print(f"Verifying {app} exists in ArgoCD...")
 
         # Check if app exists
         result = self.run_command(['argocd', 'app', 'get', app])
 
         if result.returncode != 0:
-            print(f"Application {app} does not exist, creating it...")
-            manifest_path = f"kubernetes/argocd-apps/{app}.yaml"
+            raise DeploymentError(f"Application {app} does not exist. Ensure it has a .argo-managed marker file and is managed by the ApplicationSet.")
 
-            if not os.path.exists(manifest_path):
-                raise DeploymentError(f"Manifest file {manifest_path} not found for app {app}")
-
-            result = self.run_command(['argocd', 'app', 'create', '--file', manifest_path])
-            if result.returncode != 0:
-                raise DeploymentError(f"Failed to create application {app}: {result.stderr}")
-
-            print(f"✅ Created application {app}")
-        else:
-            print(f"✅ Application {app} already exists")
+        print(f"✅ Application {app} exists")
 
     def sync_app_to_revision(self, app: str) -> None:
         """Sync a single application to the target revision"""
@@ -115,7 +105,7 @@ class ArgoCDDeployer:
         try:
             print(f"\n--- Deploying {app} ---")
 
-            self.ensure_app_exists(app)
+            self.verify_app_exists(app)
             self.sync_app_to_revision(app)
             self.wait_for_app(app)
 

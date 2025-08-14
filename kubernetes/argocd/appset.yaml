@@ -1,0 +1,40 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+
+metadata:
+  name: apps
+  namespace: argocd
+
+spec:
+  goTemplate: true
+  generators:
+  - git:
+      repoURL: https://github.com/claytono/infra.git
+      revision: main
+      files:
+      - path: kubernetes/*/kustomization.yaml
+    selector:
+      matchExpressions:
+      - key: values.commonAnnotations.argoManaged
+        operator: In
+        values: ['true']
+  template:
+    metadata:
+      name: '{{ base .path.dir | regexReplaceAll "^[0-9]+-" "" }}'  # <app> from kubernetes/<app>, stripping numeric prefixes
+      labels:
+        app.kubernetes.io/managed-by: applicationset
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/claytono/infra.git
+        targetRevision: main
+        path: '{{ .path.dir }}'  # kubernetes/<app>
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .values.namespace | default "default" }}'
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true
