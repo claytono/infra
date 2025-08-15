@@ -6,13 +6,13 @@ metadata:
   name: argocd-applicationset-controller
   namespace: argocd
   labels:
-    helm.sh/chart: argo-cd-8.2.5
+    helm.sh/chart: argo-cd-8.3.0
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/instance: argocd
     app.kubernetes.io/component: applicationset-controller
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.0.12"
+    app.kubernetes.io/version: "v3.1.0"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -23,22 +23,22 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cmd-params: 1eb0c45f922cb2252da4796fe63bbd99790deca02837076e1fca55b274c04404
+        checksum/cmd-params: dfa52cacafcf00c805d0b9540bed11fabf51d99489095e61da7eb2fcf374de2f
       labels:
-        helm.sh/chart: argo-cd-8.2.5
+        helm.sh/chart: argo-cd-8.3.0
         app.kubernetes.io/name: argocd-applicationset-controller
         app.kubernetes.io/instance: argocd
         app.kubernetes.io/component: applicationset-controller
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.0.12"
+        app.kubernetes.io/version: "v3.1.0"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-applicationset-controller
       automountServiceAccountToken: true
       containers:
         - name: applicationset-controller
-          image: quay.io/argoproj/argocd:v3.0.12
+          image: quay.io/argoproj/argocd:v3.1.0
           imagePullPolicy: IfNotPresent
           args:
             - /usr/local/bin/argocd-applicationset-controller
@@ -187,6 +187,12 @@ spec:
                 configMapKeyRef:
                   name: argocd-cmd-params-cm
                   key: applicationsetcontroller.enable.scm.providers
+                  optional: true
+            - name: ARGOCD_APPLICATIONSET_CONTROLLER_ENABLE_GITHUB_API_METRICS
+              valueFrom:
+                configMapKeyRef:
+                  name: argocd-cmd-params-cm
+                  key: applicationsetcontroller.enable.github.api.metrics
                   optional: true
             - name: ARGOCD_APPLICATIONSET_CONTROLLER_WEBHOOK_PARALLELISM_LIMIT
               valueFrom:

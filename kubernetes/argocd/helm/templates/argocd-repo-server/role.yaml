@@ -6,11 +6,11 @@ metadata:
   name: argocd-repo-server
   namespace: argocd
   labels:
-    helm.sh/chart: argo-cd-8.2.5
+    helm.sh/chart: argo-cd-8.3.0
     app.kubernetes.io/name: argocd-repo-server
     app.kubernetes.io/instance: argocd
     app.kubernetes.io/component: repo-server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.0.12"
+    app.kubernetes.io/version: "v3.1.0"
 rules:
