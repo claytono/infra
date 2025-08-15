@@ -33,6 +33,12 @@ data "onepassword_item" "argocd_github_actions_token" {
   title = "argocd-github-actions-token"
 }
 
+# Cachix auth token from 1Password
+data "onepassword_item" "cachix_auth_token" {
+  vault = data.onepassword_vault.kubernetes.uuid
+  title = "cachix-auth-token"
+}
+
 # Clean field mapping for B2 credentials
 locals {
   b2_fields = {
