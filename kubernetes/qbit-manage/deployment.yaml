@@ -20,7 +20,7 @@ spec:
 
       containers:
       - name: qbit-manage
-        image: ghcr.io/stuffanthings/qbit_manage:latest
+        image: qbit-manage
         ports:
         - containerPort: 8080
           name: web-api
