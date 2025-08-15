@@ -12,7 +12,7 @@ resources:
 
 images:
 - name: prom/blackbox-exporter
-  newTag: v0.24.0@sha256:3af31f8bd1ad2907b4b0f7c485fde3de0a8ee0b498d42fc971f0698885c03acb
+  newTag: v0.27.0@sha256:a50c4c0eda297baa1678cd4dc4712a67fdea713b832d43ce7fcc5f9bea05094d
 
 labels:
 
