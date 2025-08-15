@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: mqtt-log
-        image: eclipse-mosquitto:2.0
+        image: eclipse-mosquitto
         env:
         - name: MQTT_USERNAME
           valueFrom:

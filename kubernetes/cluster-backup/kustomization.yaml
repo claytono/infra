@@ -6,6 +6,13 @@ namespace: kube-system
 resources:
 - cronjob.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: debian
+  newTag: stable
+
 labels:
 
 - pairs:

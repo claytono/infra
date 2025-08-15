@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: transmission
-        image: linuxserver/transmission:version-3.00-r8
+        image: linuxserver/transmission
         imagePullPolicy: Always
         ports:
         - containerPort: 9091

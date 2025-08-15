@@ -8,6 +8,13 @@ resources:
 - externalsecret.yaml
 - pvc.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: debian
+  newTag: stable-slim
+
 labels:
 
 - pairs:

@@ -14,7 +14,7 @@ spec:
         spec:
           containers:
           - name: got-your-back
-            image: debian:stable-slim
+            image: debian
             command: [/run.sh]
             imagePullPolicy: Always
             env:

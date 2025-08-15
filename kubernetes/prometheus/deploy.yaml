@@ -25,7 +25,7 @@ spec:
       serviceAccountName: prometheus
       containers:
       - name: prometheus
-        image: prom/prometheus:latest
+        image: prom/prometheus
         args:
         - --config.file=/etc/prometheus/prometheus.yml
         - --web.external-url=https://prometheus.k.oneill.net

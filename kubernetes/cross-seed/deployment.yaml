@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: cross-seed
-        image: ghcr.io/cross-seed/cross-seed:latest
+        image: ghcr.io/cross-seed/cross-seed
         command: [cross-seed, daemon]
         ports:
         - containerPort: 2468

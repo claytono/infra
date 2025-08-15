@@ -8,6 +8,13 @@ resources:
 - pvc.yaml
 - ingress.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: dvorak/docker-smokeping
+  newTag: latest
+
 labels:
 
 - pairs:

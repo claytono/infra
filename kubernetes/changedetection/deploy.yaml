@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: changedetection
-        image: dgtlmoon/changedetection.io:latest
+        image: dgtlmoon/changedetection.io
         ports:
         - name: changedetection
           containerPort: 5000
@@ -35,7 +35,7 @@ spec:
         - name: PLAYWRIGHT_DRIVER_URL
           value: ws://localhost:3000/
       - name: browserless
-        image: dgtlmoon/sockpuppetbrowser:latest
+        image: dgtlmoon/sockpuppetbrowser
         resources:
           limits:
             memory: 2Gi
