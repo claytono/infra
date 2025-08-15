@@ -14,6 +14,10 @@ resources:
 - service.yaml
 - externalsecret.yaml
 
+images:
+- name: plexinc/pms-docker
+  newTag: 1.42.1.10060-4e8b05daf
+
 labels:
 
 - pairs:
