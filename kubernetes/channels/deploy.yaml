@@ -24,7 +24,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: channels
-        image: fancybits/channels-dvr:tve
+        image: fancybits/channels-dvr
         imagePullPolicy: Always
 
 #        command: ['sleep', 'infinity']

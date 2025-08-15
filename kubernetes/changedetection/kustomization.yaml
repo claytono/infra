@@ -8,6 +8,15 @@ resources:
 - service.yaml
 - pvc.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: dgtlmoon/changedetection.io
+  newTag: 0.50.8
+- name: dgtlmoon/sockpuppetbrowser
+  newTag: 0.0.2
+
 labels:
 
 - pairs:

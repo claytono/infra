@@ -32,7 +32,7 @@ spec:
           mountPath: /generated
       containers:
       - name: mosquitto
-        image: eclipse-mosquitto:2.0
+        image: eclipse-mosquitto
         imagePullPolicy: Always
         resources:
           limits:

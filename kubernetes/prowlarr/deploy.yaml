@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: sonarr
-        image: linuxserver/prowlarr:develop
+        image: linuxserver/prowlarr
         ports:
         - containerPort: 9696
         volumeMounts:

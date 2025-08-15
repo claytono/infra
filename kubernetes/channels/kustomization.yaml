@@ -10,6 +10,13 @@ resources:
 - pvc.yaml
 - service.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: fancybits/channels-dvr
+  newTag: tve
+
 labels:
 
 - pairs:

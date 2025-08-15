@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: autobrr
-        image: ghcr.io/autobrr/autobrr:latest
+        image: ghcr.io/autobrr/autobrr
         ports:
         - containerPort: 7474
         volumeMounts:

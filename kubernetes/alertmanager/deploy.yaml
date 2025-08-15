@@ -41,7 +41,7 @@ spec:
           mountPath: /config
       containers:
       - name: alertmanager
-        image: prom/alertmanager:latest
+        image: prom/alertmanager
         args:
         - --config.file=/config/config.yaml
         - --storage.path=/alertmanager

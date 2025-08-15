@@ -8,6 +8,13 @@ resources:
 - ingress.yaml
 - pvc.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: typhonragewind/meshcentral
+  newTag: 1.1.48
+
 labels:
 
 - pairs:
