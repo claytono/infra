@@ -6,13 +6,13 @@ metadata:
   name: argocd-dex-server
   namespace: argocd
   labels:
-    helm.sh/chart: argo-cd-8.1.0
+    helm.sh/chart: argo-cd-8.2.5
     app.kubernetes.io/name: argocd-dex-server
     app.kubernetes.io/instance: argocd
     app.kubernetes.io/component: dex-server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.0.6"
+    app.kubernetes.io/version: "v3.0.12"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -23,15 +23,15 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cmd-params: 274d84c337777348b38fb03aeeb8da53b12ca641fee72de42d3594df0b43cb23
+        checksum/cmd-params: 1eb0c45f922cb2252da4796fe63bbd99790deca02837076e1fca55b274c04404
       labels:
-        helm.sh/chart: argo-cd-8.1.0
+        helm.sh/chart: argo-cd-8.2.5
         app.kubernetes.io/name: argocd-dex-server
         app.kubernetes.io/instance: argocd
         app.kubernetes.io/component: dex-server
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.0.6"
+        app.kubernetes.io/version: "v3.0.12"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-dex-server
@@ -99,7 +99,7 @@ spec:
           mountPath: /tls
       initContainers:
       - name: copyutil
-        image: quay.io/argoproj/argocd:v3.0.6
+        image: quay.io/argoproj/argocd:v3.0.12
         imagePullPolicy: IfNotPresent
         command:
         - /bin/cp
