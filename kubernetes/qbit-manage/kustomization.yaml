@@ -6,6 +6,11 @@ namespace: default
 commonAnnotations:
   argoManaged: 'true'
 
+images:
+- name: qbit-manage
+  newName: ghcr.io/stuffanthings/qbit_manage
+  newTag: v4.5.3
+
 resources:
 - deployment.yaml
 - service.yaml
