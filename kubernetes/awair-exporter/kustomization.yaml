@@ -3,10 +3,17 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: default
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - deploy.yaml
 - service.yaml
 - externalsecret.yaml
+
+images:
+- name: dvorak/awair_exporter
+  newTag: latest
 
 labels:
 
