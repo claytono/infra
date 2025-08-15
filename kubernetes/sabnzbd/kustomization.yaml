@@ -3,11 +3,18 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: default
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - deployment.yaml
 - pvc.yaml
 - service.yaml
 - ingress.yaml
+
+images:
+- name: linuxserver/sabnzbd
+  newTag: 4.5.2
 
 labels:
 
