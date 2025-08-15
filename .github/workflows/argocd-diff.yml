@@ -83,7 +83,7 @@ jobs:
         event_name: ${{ github.event_name }}
 
     - name: Setup ArgoCD environment
-      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      if: steps.diff.outputs.command-name && steps.detect.outputs.apps != ''
       id: setup-argocd
       uses: ./trusted-main/.github/actions/setup-argocd
       with:
@@ -91,7 +91,7 @@ jobs:
         tailscale_oauth_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
 
     - name: Get PR branch name
-      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      if: steps.diff.outputs.command-name && steps.detect.outputs.apps != ''
       id: pr-branch
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,7 +101,7 @@ jobs:
         echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
 
     - name: ArgoCD Diff
-      if: steps.diff.outputs.command-name && steps.detect.outputs.app_count != '0'
+      if: steps.diff.outputs.command-name && steps.detect.outputs.apps != ''
       env:
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
