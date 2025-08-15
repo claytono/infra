@@ -14,9 +14,9 @@ resources:
 
 images:
 - name: debian
-  newTag: stable-slim
+  newTag: stable-slim@sha256:8810492a2dd16b7f59239c1e0cc1e56c1a1a5957d11f639776bd6798e795608b
 - name: eclipse-mosquitto
-  newTag: '2.0'
+  newTag: 2.0@sha256:d219d3a72847f3aed6a1d66975972d3b17f86e39e8f6f6b86b4088b879c1a2d6
 
 labels:
 

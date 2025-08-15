@@ -12,7 +12,7 @@ resources:
 
 images:
 - name: brbeaird/netatmo-wunderground-agent
-  newTag: latest
+  newTag: latest@sha256:9762b8722cb99722fa7f0669d389b4298f8b8599c8f06d745683ae1d89f319fe
 
 labels:
 

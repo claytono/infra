@@ -13,7 +13,7 @@ resources:
 
 images:
 - name: dvorak/awair_exporter
-  newTag: latest
+  newTag: latest@sha256:5c0cae7ff6b699eec82c28ad1b54b22142ab09aeb99688cd397948167f8cca91
 
 labels:
 

@@ -15,7 +15,7 @@ resources:
 
 images:
 - name: ghcr.io/xperimental/netatmo-exporter
-  newTag: 2.0.1
+  newTag: 2.0.1@sha256:b0312b93f33edf8214587752a3bafe5d6c3ef0271caf5628fa9a30e7863a00d2
 
 labels:
 
