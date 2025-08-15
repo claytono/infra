@@ -109,7 +109,7 @@ jobs:
 
     - name: Setup ArgoCD environment
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
-        && steps.detect.outputs.app_count != '0'
+        && steps.detect.outputs.apps != ''
       id: setup-argocd
       uses: ./trusted-main/.github/actions/setup-argocd
       with:
@@ -118,7 +118,7 @@ jobs:
 
     - name: Execute Command
       if: (steps.deploy.outputs.command-name || steps.reset.outputs.command-name)
-        && steps.detect.outputs.app_count != '0'
+        && steps.detect.outputs.apps != ''
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}

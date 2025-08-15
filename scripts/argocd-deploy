@@ -51,12 +51,19 @@ class ArgoCDDeployer:
         """Run a command and return the result"""
         print(f"Running command: {' '.join(cmd)}")
         try:
-            result = subprocess.run(cmd, capture_output=capture_output, text=True, check=False)
-            if result.returncode != 0:
-                print(f"Command failed with return code {result.returncode}")
-                if capture_output:
+            if capture_output:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+                if result.returncode != 0:
+                    print(f"Command failed with return code {result.returncode}")
                     print(f"stdout: {result.stdout}")
                     print(f"stderr: {result.stderr}")
+            else:
+                # For real-time output, capture stderr separately while showing stdout live
+                result = subprocess.run(cmd, stdout=None, stderr=subprocess.PIPE, text=True, check=False)
+                if result.returncode != 0:
+                    print(f"Command failed with return code {result.returncode}")
+                    if result.stderr:
+                        print(f"stderr: {result.stderr}")
             return result
         except Exception as e:
             raise DeploymentError(f"Failed to run command {' '.join(cmd)}: {e}")
@@ -73,7 +80,10 @@ class ArgoCDDeployer:
 
         result = self.run_command(cmd, capture_output=False)
         if result.returncode != 0:
-            raise DeploymentError(f"Failed to sync {app} to {self.target_revision} (see sync output above)")
+            error_msg = f"Failed to sync {app} to {self.target_revision}"
+            if result.stderr:
+                error_msg += f": {result.stderr.strip()}"
+            raise DeploymentError(error_msg)
 
         print(f"✅ Successfully synced {app} to {self.target_revision}")
 
@@ -85,7 +95,10 @@ class ArgoCDDeployer:
 
         result = self.run_command(cmd, capture_output=False)
         if result.returncode != 0:
-            raise DeploymentError(f"Application {app} failed to reach healthy status (see wait output above)")
+            error_msg = f"Application {app} failed to reach healthy status"
+            if result.stderr:
+                error_msg += f": {result.stderr.strip()}"
+            raise DeploymentError(error_msg)
 
         print(f"✅ Application {app} is healthy")
 

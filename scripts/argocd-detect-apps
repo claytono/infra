@@ -161,7 +161,6 @@ changed_files=$(get_changed_files)
 if [[ -z "$changed_files" ]]; then
   echo "No kubernetes files changed"
   echo "apps=" >> "$GITHUB_OUTPUT"
-  echo "app_count=0" >> "$GITHUB_OUTPUT"
   exit 0
 fi
 
@@ -171,7 +170,6 @@ readarray -t app_names < <(extract_app_names "$changed_files")
 if [[ ${#app_names[@]} -eq 0 ]]; then
   echo "No ArgoCD applications detected in changed files"
   echo "apps=" >> "$GITHUB_OUTPUT"
-  echo "app_count=0" >> "$GITHUB_OUTPUT"
   exit 0
 fi
 
@@ -182,9 +180,7 @@ readarray -t valid_apps < <(validate_apps "${app_names[@]}")
 if [[ ${#valid_apps[@]} -gt 0 ]]; then
   echo "Detected applications: ${valid_apps[*]}"
   echo "apps=${valid_apps[*]}" >> "$GITHUB_OUTPUT"
-  echo "app_count=${#valid_apps[@]}" >> "$GITHUB_OUTPUT"
 else
   echo "No valid ArgoCD applications found"
   echo "apps=" >> "$GITHUB_OUTPUT"
-  echo "app_count=0" >> "$GITHUB_OUTPUT"
 fi
