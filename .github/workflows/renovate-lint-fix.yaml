@@ -45,13 +45,11 @@ jobs:
       with:
         path: ~/.cache/pre-commit
         key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-precommit-
 
-    - name: Run pre-commit hooks on all files
+    - name: Run pre-commit hooks on changed files
       run: |
         # Run pre-commit hooks and capture the exit code
-        nix develop --command pre-commit run --all-files || true
+        nix develop --command pre-commit run || true
 
     - name: Check for changes
       id: check-changes
