@@ -13,7 +13,7 @@ resources:
 
 images:
 - name: ghcr.io/autobrr/autobrr
-  newTag: v1.9.0
+  newTag: v1.65.0@sha256:494e821e7a9c9a1279d1541522a65ed06b03d0b66563e827e3d29b9a63e61ddc
 
 labels:
 
