@@ -15,7 +15,7 @@ resources:
 
 images:
 - name: linuxserver/transmission
-  newTag: 4.0.6
+  newTag: 4.0.6@sha256:58b678fce1c0a9878d8811f547b698863ad8fceecc2ffb69570eed676c262238
 
 labels:
 

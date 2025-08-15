@@ -13,7 +13,7 @@ resources:
 
 images:
 - name: linuxserver/sonarr
-  newTag: 4.0.9
+  newTag: 4.0.9@sha256:db80ed8022dd15143644752a57db0553e48e23e3da54bdb9833d28ff89206a3c
 
 labels:
 
