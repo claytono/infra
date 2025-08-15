@@ -3,11 +3,20 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: default
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - deploy.yaml
 - externalsecret.yaml
 - pvc.yaml
 - service.yaml
+
+images:
+- name: debian
+  newTag: stable-slim
+- name: eclipse-mosquitto
+  newTag: '2.0'
 
 labels:
 
