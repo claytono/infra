@@ -16,7 +16,7 @@ images:
 - name: hairyhenderson/gomplate
   newTag: v4.3.3
 - name: prom/alertmanager
-  newTag: v0.9.1
+  newTag: v0.28.1
 
 labels:
 
