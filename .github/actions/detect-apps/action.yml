@@ -25,9 +25,6 @@ outputs:
   apps:
     description: Space-separated list of app names
     value: ${{ steps.collect.outputs.apps }}
-  app_count:
-    description: Integer count of detected apps
-    value: ${{ steps.collect.outputs.app_count }}
 
 runs:
   using: composite
@@ -54,17 +51,15 @@ runs:
         # No refs provided - find all apps (for workflow_dispatch or similar)
         echo "No refs provided - finding all ArgoCD applications"
         apps=$(find "kubernetes/argocd-apps" -name "*.yaml" -exec basename {} .yaml \; | tr '\n' ' ' | sed 's/ $//')
-        count=$(echo "$apps" | wc -w)
-        echo "Found $count applications: $apps"
+        echo "Found applications: $apps"
         echo "apps=$apps" >> "$GITHUB_OUTPUT"
-        echo "app_count=$count" >> "$GITHUB_OUTPUT"
       else
         # Use the argocd-detect-apps script for change detection
         "${GITHUB_WORKSPACE}/trusted-main/scripts/argocd-detect-apps" --base-ref "$base" --head-ref "$head" --scan-root "${GITHUB_WORKSPACE}"
       fi
 
   - name: Comment if no apps found
-    if: steps.collect.outputs.app_count == '0'
+    if: steps.collect.outputs.apps == ''
     shell: bash
     env:
       GH_TOKEN: ${{ github.token }}
