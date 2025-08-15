@@ -16,22 +16,22 @@ spec:
       - path: kubernetes/*/kustomization.yaml
     selector:
       matchExpressions:
-      - key: values.commonAnnotations.argoManaged
+      - key: commonAnnotations.argoManaged
         operator: In
         values: ['true']
   template:
     metadata:
-      name: '{{ base .path.dir | regexReplaceAll "^[0-9]+-" "" }}'  # <app> from kubernetes/<app>, stripping numeric prefixes
+      name: '{{ regexReplaceAll "^[0-9]+-" (index .path.segments 1) "" }}'
       labels:
         app.kubernetes.io/managed-by: applicationset
       finalizers:
-      - resources-finalizer.argocd.argoproj.io
+      - finalizers.argocd.argoproj.io/resources
     spec:
       project: default
       source:
         repoURL: https://github.com/claytono/infra.git
         targetRevision: main
-        path: '{{ .path.dir }}'  # kubernetes/<app>
+        path: kubernetes/{{ index .path.segments 1 }}  # kubernetes/<app>
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ .values.namespace | default "default" }}'

@@ -50,7 +50,7 @@ runs:
       if [[ -z "$base" || -z "$head" ]]; then
         # No refs provided - find all apps (for workflow_dispatch or similar)
         echo "No refs provided - finding all ArgoCD applications"
-        apps=$(find "kubernetes/argocd-apps" -name "*.yaml" -exec basename {} .yaml \; | tr '\n' ' ' | sed 's/ $//')
+        apps=$(argocd app list -o name | sed 's|argocd/||g' | tr '\n' ' ' | sed 's/ $//')
         echo "Found applications: $apps"
         echo "apps=$apps" >> "$GITHUB_OUTPUT"
       else
