@@ -11,7 +11,7 @@ commonAnnotations:
 
 images:
 - name: debian
-  newTag: stable
+  newTag: stable@sha256:cd50e36013f749a1f86c6369b873e1ad607335480dc4bc2905396ec17ab0ce02
 
 labels:
 
