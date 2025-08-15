@@ -14,9 +14,9 @@ resources:
 
 images:
 - name: hairyhenderson/gomplate
-  newTag: v4.3.3
+  newTag: v4.3.3@sha256:55db623a1e3d620501fbf3ff01753cfde101d9b49fa5ff0132b4a8d0c246c16c
 - name: prom/alertmanager
-  newTag: v0.28.1
+  newTag: v0.28.1@sha256:27c475db5fb156cab31d5c18a4251ac7ed567746a2483ff264516437a39b15ba
 
 labels:
 

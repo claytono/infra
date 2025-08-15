@@ -9,7 +9,7 @@ commonAnnotations:
 images:
 - name: qbit-manage
   newName: ghcr.io/stuffanthings/qbit_manage
-  newTag: v4.5.3
+  newTag: v4.5.3@sha256:5ea80932786ad7117ef47d92510e4f4684a0e1429bda332461ab7725091aed87
 
 resources:
 - deployment.yaml

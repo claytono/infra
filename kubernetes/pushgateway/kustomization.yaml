@@ -12,7 +12,7 @@ resources:
 
 images:
 - name: prom/pushgateway
-  newTag: v1.11.1
+  newTag: v1.11.1@sha256:03738d278e082ee9821df730c741b3b465c251fc2b68a85883def301a55a6215
 
 labels:
 
