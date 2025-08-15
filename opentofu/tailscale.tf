@@ -155,23 +155,3 @@ resource "onepassword_item" "tailscale_github_actions" {
     }
   }
 }
-
-# Create GitHub repository secrets for Tailscale OAuth
-resource "github_actions_secret" "tailscale_oauth_client_id" {
-  repository      = "infra"
-  secret_name     = "TAILSCALE_OAUTH_CLIENT_ID"
-  plaintext_value = tailscale_oauth_client.github_actions.id
-}
-
-resource "github_actions_secret" "tailscale_oauth_client_secret" {
-  repository      = "infra"
-  secret_name     = "TAILSCALE_OAUTH_CLIENT_SECRET"
-  plaintext_value = tailscale_oauth_client.github_actions.key
-}
-
-# Create GitHub repository secret for ArgoCD auth token
-resource "github_actions_secret" "argocd_auth_token" {
-  repository      = "infra"
-  secret_name     = "ARGOCD_AUTH_TOKEN"
-  plaintext_value = data.onepassword_item.argocd_github_actions_token.password
-}
