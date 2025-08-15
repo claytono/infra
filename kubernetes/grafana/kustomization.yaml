@@ -2,11 +2,18 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - deploy.yaml
 - pvc.yaml
 - ingress.yaml
 - service.yaml
+
+images:
+- name: grafana/grafana
+  newTag: 9.1.7
 
 labels:
 
