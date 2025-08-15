@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: default
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - helm/templates/clusterrole.yaml
 - helm/templates/clusterrolebinding.yaml
