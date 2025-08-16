@@ -1,7 +1,7 @@
 ---
 services:
   peanut:
-    image: brandawg93/peanut:latest@sha256:8979780e39a9ec68135d34b9852271f3ec2d681977d2871fad6ccb48ffcaf35c
+    image: brandawg93/peanut:latest@sha256:0b1bac17ed598fcefd1c0366a67431f21e209be29e4f2ab5c7cf895e4a2fb968
     restart: unless-stopped
     volumes:
       - /etc/nut/peanut-settings.yml:/config/settings.yml:ro
