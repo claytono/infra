@@ -6,6 +6,9 @@ resources:
 - deploy.yaml
 - externalsecret.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:
