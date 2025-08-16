@@ -37,14 +37,10 @@ resources:
 - clusterstore.yaml
 - iscsi-external-secret.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:
     app: external-secrets
-
-secretGenerator:
-- name: secrets
-  options:
-    disableNameSuffixHash: true
-  envs:
-  - secrets.txt

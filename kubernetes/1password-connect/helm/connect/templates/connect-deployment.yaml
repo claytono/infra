@@ -12,6 +12,8 @@ metadata:
     app.kubernetes.io/instance: connect
     app.kubernetes.io/version: "1.7.3"
     app.kubernetes.io/managed-by: Helm
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   selector:

@@ -1,5 +1,6 @@
 *.retry
 *.swp
+.vscode/
 
 # Ansible
 ansible-vault-password
@@ -17,4 +18,5 @@ backend.tf
 
 # Kubernetes
 kubernetes/hass/configmap.yaml
-.vscode/
+kubernetes/resticprofile/.cache
+kubernetes/resticprofile/.tmp
