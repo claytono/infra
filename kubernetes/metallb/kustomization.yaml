@@ -15,6 +15,9 @@ resources:
 - helm/templates/exclude-l2-config.yaml
 - config.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:

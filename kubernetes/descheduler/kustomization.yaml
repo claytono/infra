@@ -11,6 +11,9 @@ resources:
 - helm/templates/cronjob.yaml
 - helm/templates/configmap.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:

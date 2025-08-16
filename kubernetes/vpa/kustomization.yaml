@@ -11,6 +11,9 @@ resources:
 - helm/templates/recommender-deployment.yaml
 - helm/templates/recommender-service-account.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:

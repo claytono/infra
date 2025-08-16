@@ -31,6 +31,9 @@ resources:
 - helm/valkey/templates/primary/service.yaml
 - helm/valkey/templates/primary/serviceaccount.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 patches:
 
 - target:

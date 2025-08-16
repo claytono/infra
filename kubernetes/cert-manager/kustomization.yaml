@@ -25,6 +25,9 @@ resources:
 - self-signed.yaml
 - externalsecret.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 patches:
 - patch: |-
     apiVersion: apps/v1
