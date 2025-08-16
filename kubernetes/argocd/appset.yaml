@@ -38,3 +38,5 @@ spec:
       syncPolicy:
         syncOptions:
         - CreateNamespace=true
+        - ServerSideApply={{ if eq (index .path.segments 1) "external-secrets" }}true{{
+          else }}false{{ end }}
