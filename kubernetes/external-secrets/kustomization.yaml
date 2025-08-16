@@ -44,21 +44,3 @@ labels:
 
 - pairs:
     app: external-secrets
-
-patches:
-
-- target:
-    kind: CustomResourceDefinition
-    name: clustersecretstores.external-secrets.io
-  patch: |-
-    - op: add
-      path: /metadata/annotations/argocd.argoproj.io~1sync-options
-      value: ServerSideApply=true
-
-- target:
-    kind: CustomResourceDefinition
-    name: secretstores.external-secrets.io
-  patch: |-
-    - op: add
-      path: /metadata/annotations/argocd.argoproj.io~1sync-options
-      value: ServerSideApply=true
