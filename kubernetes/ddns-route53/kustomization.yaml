@@ -18,4 +18,4 @@ labels:
 
 images:
 - name: ghcr.io/crazy-max/ddns-route53
-  newTag: v2.13.0
+  newTag: 2.13.0
