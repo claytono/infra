@@ -9,6 +9,9 @@ resources:
 - pvc.yaml
 - externalsecret.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 configMapGenerator:
 
 - files:

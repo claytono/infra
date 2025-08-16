@@ -12,6 +12,9 @@ resources:
 - pvc-dnsmasq.yaml
 - externalsecret.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:
