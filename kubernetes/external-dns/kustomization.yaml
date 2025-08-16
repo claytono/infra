@@ -12,6 +12,9 @@ resources:
 - helm/templates/clusterrolebinding.yaml
 - externalsecret.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 commonLabels:
   app: external-dns
 

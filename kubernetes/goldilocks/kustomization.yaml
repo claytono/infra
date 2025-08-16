@@ -16,6 +16,9 @@ resources:
 - helm/templates/dashboard-service.yaml
 - helm/templates/dashboard-serviceaccount.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:

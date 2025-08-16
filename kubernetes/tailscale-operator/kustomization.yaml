@@ -19,6 +19,9 @@ resources:
 - helm/templates/proxygroup.yaml
 - helm/templates/recorder.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 patches:
 
 - target:

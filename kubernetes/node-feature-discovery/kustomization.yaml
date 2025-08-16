@@ -18,6 +18,9 @@ resources:
 - helm/templates/serviceaccount.yaml
 - helm/templates/worker.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:

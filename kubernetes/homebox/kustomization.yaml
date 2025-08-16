@@ -21,6 +21,9 @@ resources:
 - helm/postgresql/primary/statefulset.yaml
 - helm/postgresql/primary/svc-headless.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 patches:
 
 - target:

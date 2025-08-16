@@ -24,7 +24,7 @@ spec:
       hostNetwork: true
       containers:
       - name: plexmediaserver
-        image: plexinc/pms-docker:plexpass
+        image: plexinc/pms-docker
         imagePullPolicy: Always
         securityContext:
           privileged: true

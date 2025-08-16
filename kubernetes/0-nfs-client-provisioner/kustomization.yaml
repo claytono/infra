@@ -12,6 +12,9 @@ resources:
 - helm/templates/clusterrolebinding.yaml
 - helm/templates/deployment.yaml
 
+commonAnnotations:
+  argoManaged: 'true'
+
 labels:
 
 - pairs:
