@@ -2,3 +2,5 @@
 connect:
   credentials: test  # not used
   serviceType: ClusterIP
+  annotations:
+    reloader.stakater.com/auto: 'true'

@@ -8,8 +8,5 @@ resources:
 - helm/connect/templates/connect-deployment.yaml
 - helm/connect/templates/service.yaml
 
-secretGenerator:
-- name: op-credentials
-  files:
-  - 1password-credentials.json
-  type: Opaque
+commonAnnotations:
+  argoManaged: 'true'
