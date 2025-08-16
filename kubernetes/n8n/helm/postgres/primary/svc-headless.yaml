@@ -9,8 +9,8 @@ metadata:
     app.kubernetes.io/instance: n8n-postgres
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.5.0
-    helm.sh/chart: postgresql-16.7.21
+    app.kubernetes.io/version: 17.6.0
+    helm.sh/chart: postgresql-16.7.26
     app.kubernetes.io/component: primary
   annotations:
 spec:
