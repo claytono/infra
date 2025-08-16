@@ -44,6 +44,11 @@
       "matchDatasources": ["helm"],
       "matchManagers": ["helmv3"],
       "matchFileNames": ["kubernetes/**/Chart.yaml"]
+    },
+    {
+      "matchPackageNames": ["ghcr.io/linuxserver/qbittorrent"],
+      "allowedVersions": "< 14",
+      "description": "Only allow qbittorrent versions < 14 to avoid Ubuntu LTS tags"
     }
   ],
   "gitIgnoredAuthors": ["github-actions[bot]@users.noreply.github.com"]
