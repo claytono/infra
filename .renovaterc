@@ -49,6 +49,17 @@
       "matchPackageNames": ["ghcr.io/linuxserver/qbittorrent"],
       "allowedVersions": "< 14",
       "description": "Only allow qbittorrent versions < 14 to avoid Ubuntu LTS tags"
+    },
+    {
+      "matchManagers": ["pre-commit"],
+      "automerge": true,
+      "description": "Auto-merge pre-commit hook updates if CI passes"
+    },
+    {
+      "matchUpdateTypes": ["digest"],
+      "matchManagers": ["kustomize"],
+      "automerge": true,
+      "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
     }
   ],
   "gitIgnoredAuthors": ["github-actions[bot]@users.noreply.github.com"]
