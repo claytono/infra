@@ -34,7 +34,7 @@ spec:
         runAsUser: 0
       containers:
         - name: promtail
-          image: "docker.io/grafana/promtail"
+          image: "docker.io/grafana/promtail:2.5.0"
           imagePullPolicy: IfNotPresent
           args:
             - "-config.file=/etc/promtail/promtail.yaml"
