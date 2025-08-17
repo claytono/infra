@@ -15,6 +15,12 @@
       when: "setup_upgrade | default(false) | bool"
       tags: setup_upgrade
 
+- name: Hostname management
+  hosts: all
+  roles:
+    - role: hostname
+      tags: hostname
+
 - name: Common and network roles
   hosts: all
   roles:
