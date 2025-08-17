@@ -1,5 +1,7 @@
 ---
 # Integration test exceptions for localhost
+domain: oneill.net
+hostname_manage_etc_hosts: false
 restic_sftp_client: false
 setup_upgrade: true
 resticprofile_ssh_register: false
