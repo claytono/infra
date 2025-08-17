@@ -20,6 +20,7 @@ apiServer:
   - {{ ansible_fqdn }}
   - k1.oneill.net
 clusterName: kubernetes
+controlPlaneEndpoint: "{{ ansible_fqdn }}:6443"
 controllerManager:
   extraArgs:
     allocate-node-cidrs: "true"
