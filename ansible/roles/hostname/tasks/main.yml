@@ -1,0 +1,25 @@
+---
+# tasks file for hostname role
+
+- name: Set system hostname to short name
+  ansible.builtin.hostname:
+    name: "{{ hostname_short }}"
+  when: hostname_persist_hostname
+
+- name: Configure /etc/hosts
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    mode: "0644"
+    backup: true
+  when: hostname_manage_etc_hosts
+  notify: restart systemd-resolved
+
+- name: Configure nsswitch.conf for hostname resolution order
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: "^hosts:"
+    line: "hosts: {{ hostname_nsswitch_hosts_order }}"
+    backup: true
+  when: hostname_manage_nsswitch
+  notify: restart systemd-resolved

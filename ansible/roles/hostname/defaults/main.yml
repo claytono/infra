@@ -1,0 +1,25 @@
+---
+# defaults file for hostname role
+
+# Primary hostname settings - uses domain variable from inventory
+hostname_short: "{{ inventory_hostname }}"
+hostname_fqdn: "{{ inventory_hostname }}.{{ domain }}"
+
+# /etc/hosts management
+hostname_manage_etc_hosts: true
+
+# Additional hosts entries to add to /etc/hosts
+hostname_additional_hosts: []
+# Example:
+# hostname_additional_hosts:
+#   - ip: "192.168.1.10"
+#     hostnames: ["server1.example.com", "server1"]
+
+# nsswitch.conf configuration
+hostname_manage_nsswitch: true
+hostname_nsswitch_hosts_order: "files dns"
+
+# Hostname persistence - ensures hostname survives reboots
+# Sets both the runtime hostname (hostnamectl set-hostname) and
+# writes to /etc/hostname so it persists across reboots
+hostname_persist_hostname: true

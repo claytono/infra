@@ -1,0 +1,9 @@
+---
+# handlers file for hostname role
+
+- name: Restart systemd-resolved
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: restarted
+  when: ansible_facts['services']['systemd-resolved.service'] is defined and ansible_facts['services']['systemd-resolved.service']['state'] == 'running'
+  listen: restart systemd-resolved
