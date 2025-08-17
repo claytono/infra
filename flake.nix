@@ -32,6 +32,7 @@
             mosquitto
             nodejs_24
             opentofu
+            pluto
             pre-commit
             skopeo
             tflint
