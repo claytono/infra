@@ -4,12 +4,12 @@ kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
 
-kubernetes_short_version: "1.29"
-kubernetes_version: "1.29.15"
-kubeadm_version: "1.29.15-1.1"
-kubelet_version: "1.29.15-1.1"
-kubectl_version: "1.29.15-1.1"
-cri_tools_version: "1.29.0-1.1"
+kubernetes_short_version: "1.30"
+kubernetes_version: "1.30.14"
+kubeadm_version: "1.30.14-1.1"
+kubelet_version: "1.30.14-1.1"
+kubectl_version: "1.30.14-1.1"
+cri_tools_version: "1.30.0-1.1"
 kubernetes_cni_version: "1.3.0-1.1"
 
 kubernetes_master: "k1.oneill.net"
