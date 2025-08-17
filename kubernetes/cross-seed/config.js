@@ -34,7 +34,6 @@ module.exports = {
      */
     dataDirs: [
         "/downloads/qbittorrent/completed",
-        "/downloads/transmission/complete",
     ],
     /**
      * Determines flexibility of naming during matching. "safe" will allow only perfect name matches
