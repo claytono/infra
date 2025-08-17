@@ -6,7 +6,13 @@ clusters managed by Ansible and kubeadm.
 ## Prerequisites
 
 - [ ] VM snapshot of k1
-- [ ] Verify all applications are healthy before starting
+- [ ] Verify all applications are healthy before starting:
+
+  ```bash
+  kubectl get applications -A  # All should be Synced & Healthy
+  # Should be empty or only completed jobs
+  kubectl get pods --all-namespaces --field-selector=status.phase!=Running
+  ```
 
 ## Phase 0: Environment Preparation
 
@@ -36,8 +42,8 @@ clusters managed by Ansible and kubeadm.
 3. **Check certificate expiration (pre-upgrade)**
 
    ```bash
-   # Check current certificate expiration dates
-   sudo kubeadm certs check-expiration
+   # Check current certificate expiration dates (SSH to k1)
+   ssh k1 sudo kubeadm certs check-expiration
    ```
 
 ## Phase 1: Infrastructure Preparation
@@ -64,22 +70,42 @@ clusters managed by Ansible and kubeadm.
    # Check for deprecated APIs in running cluster
    pluto detect-all-in-cluster --target-versions k8s=v1.XX.0
 
-   # Validate manifests against target version
-   kubeconform -kubernetes-version 1.XX.0 kubernetes/
+   # Validate manifests against target version (with CRDs catalog)
+   CRD_SCHEMA_URL='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+   kubeconform -schema-location default \
+     -schema-location "$CRD_SCHEMA_URL" \
+     -kubernetes-version 1.XX.0 kubernetes/
    ```
 
-2. **Check Chart.yaml files and image versions for these services:**
+   **Note:** Clean up any deprecated resources found by pluto before proceeding.
 
-- **CNI**: flannel
-- **Load Balancer**: metallb
-- **Ingress**: ingress-nginx
-- **GitOps**: argocd
-- **Autoscaling**: vpa, descheduler
-- **DNS/Secrets**: external-dns, external-secrets, 1password-connect
-- **Monitoring**: kube-state-metrics, metrics-server
-- **Storage**: nfs-client-provisioner
-- **Operations**: reloader
-- **Container Runtime**: containerd (via githubixx.containerd role)
+2. **Verify component compatibility with target Kubernetes version:**
+
+   Check current Chart.yaml versions and confirm compatibility:
+
+   ```bash
+   # Check all Helm chart versions
+   find kubernetes -name "Chart.yaml" -exec grep -H "version:" {} \;
+
+   # Verify ArgoCD application version
+   kubectl get deploy argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].image}'
+   ```
+
+   **Key Components to verify:**
+
+   - **CNI**: flannel
+   - **Load Balancer**: metallb
+   - **Ingress**: ingress-nginx
+   - **GitOps**: argocd
+   - **Autoscaling**: vpa, descheduler
+   - **DNS/Secrets**: external-dns, external-secrets, 1password-connect
+   - **Monitoring**: kube-state-metrics, metrics-server
+   - **Storage**: nfs-client-provisioner
+   - **Operations**: reloader
+   - **Container Runtime**: containerd (via githubixx.containerd role)
+
+   **Action:** Research compatibility online and update components if needed
+   before upgrade.
 
 ## Phase 2: kubeadm Upgrade (Control Plane)
 
@@ -110,11 +136,11 @@ clusters managed by Ansible and kubeadm.
    kubectl get configmap kubelet-config -n kube-system -o yaml
    ```
 
-2. **Compare with kubeadm expectations:**
+2. **Compare with kubeadm expectations (SSH to k1):**
 
    ```bash
-   sudo kubeadm config print init-defaults
-   sudo kubeadm config print join-defaults
+   ssh k1 sudo kubeadm config print init-defaults
+   ssh k1 sudo kubeadm config print join-defaults
    ```
 
 3. **Look for:**
@@ -123,18 +149,18 @@ clusters managed by Ansible and kubeadm.
    - Missing configuration parameters
    - CNI configuration alignment
 
-### 2.3 Run kubeadm Upgrade
+### 2.3 Run kubeadm Upgrade (SSH to k1)
 
 1. **Plan the upgrade:**
 
    ```bash
-   sudo kubeadm upgrade plan
+   ssh k1 sudo kubeadm upgrade plan
    ```
 
 2. **Apply the upgrade:**
 
    ```bash
-   sudo kubeadm upgrade apply v1.XX.XX
+   ssh k1 sudo kubeadm upgrade apply v1.XX.XX
    ```
 
 ## Phase 3: Control Plane Package Updates
@@ -147,15 +173,21 @@ kubectl drain k1 --ignore-daemonsets --force --delete-emptydir-data
 
 ### 3.2 Update All Package Versions
 
-1. **Update kubernetes.yaml with all versions:**
+1. **Check available package versions (SSH to k1):**
+
+   ```bash
+   ssh k1 "sudo apt update && apt-cache policy kubernetes-cni kubelet kubectl cri-tools"
+   ```
+
+2. **Update kubernetes.yaml with latest available versions from target repo:**
 
    ```yaml
    kubernetes_version: "1.XX.XX"
    kubeadm_version: "1.XX.XX-1.1"
    kubelet_version: "1.XX.XX-1.1"
    kubectl_version: "1.XX.XX-1.1"
-   cri_tools_version: "1.XX.0-1.1"
-   kubernetes_cni_version: "1.X.X-1.1" # Keep compatible version
+   cri_tools_version: "1.XX.X-1.1" # Use latest patch from target minor version
+   kubernetes_cni_version: "1.X.X-1.1" # Use latest available version
    ```
 
 ### 3.3 Deploy Updated Packages
@@ -243,8 +275,8 @@ kubectl get pv,pvc --all-namespaces
 ### 5.5 Certificate Validation
 
 ```bash
-# Verify certificates were automatically renewed during upgrade
-sudo kubeadm certs check-expiration
+# Verify certificates were automatically renewed during upgrade (SSH to k1)
+ssh k1 sudo kubeadm certs check-expiration
 ```
 
 **Note:** Kubeadm automatically renews all certificates (1-year default
