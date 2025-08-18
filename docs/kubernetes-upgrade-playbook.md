@@ -3,6 +3,17 @@
 This playbook provides step-by-step instructions for upgrading Kubernetes
 clusters managed by Ansible and kubeadm.
 
+## Version Policy
+
+**Target**: Always stay one major version behind the latest stable release.
+
+- Latest: 1.33 → Target: 1.32
+- Latest: 1.34 → Target: 1.33
+- etc.
+
+This provides stability while maintaining reasonable currency with security
+updates and feature availability.
+
 ## Prerequisites
 
 - [ ] VM snapshot of k1
@@ -33,8 +44,8 @@ clusters managed by Ansible and kubeadm.
 
    ```bash
    # Verify all required tools
-   kubectl version --client
-   kubeconform --version
+   kubectl version
+   kubeconform -v
    pluto version
    ansible --version
    ```
@@ -151,13 +162,13 @@ clusters managed by Ansible and kubeadm.
 
 ### 2.3 Run kubeadm Upgrade (SSH to k1)
 
-1. **Plan the upgrade:**
+1. **Plan the upgrade (USER TO RUN MANUALLY):**
 
    ```bash
    ssh k1 sudo kubeadm upgrade plan
    ```
 
-2. **Apply the upgrade:**
+2. **Apply the upgrade (USER TO RUN MANUALLY):**
 
    ```bash
    ssh k1 sudo kubeadm upgrade apply v1.XX.XX
