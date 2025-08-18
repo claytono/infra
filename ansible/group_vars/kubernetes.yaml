@@ -4,13 +4,14 @@ kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
 
-kubernetes_short_version: "1.31"
-kubernetes_version: "1.31.12"
-kubeadm_version: "1.31.12-1.1"
-kubelet_version: "1.31.12-1.1"
-kubectl_version: "1.31.12-1.1"
-cri_tools_version: "1.31.1-1.1"
-kubernetes_cni_version: "1.5.1-1.1"
+# Our goal is to stay one version behind
+kubernetes_short_version: "1.32"
+kubernetes_version: "1.32.8"
+kubeadm_version: "1.32.8-1.1"
+kubelet_version: "1.32.8-1.1"
+kubectl_version: "1.32.8-1.1"
+cri_tools_version: "1.32.0-1.1"
+kubernetes_cni_version: "1.6.0-1.1"
 
 kubernetes_master: "k1.oneill.net"
 
