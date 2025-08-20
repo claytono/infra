@@ -28,7 +28,7 @@ data:
     
     discovery.relabel "pods" {
       targets = discovery.kubernetes.pods.targets
-      
+    
       rule {
         source_labels = ["__meta_kubernetes_pod_phase"]
         regex = "Running"
