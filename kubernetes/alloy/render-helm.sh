@@ -12,13 +12,14 @@ rm -rf helm tmp
 mkdir tmp helm
 
 # Use helm_template helper function
-helm_template promtail promtail \
+helm_template alloy alloy \
 	--values values.yaml \
+	--namespace loki \
 	--output-dir tmp
 
 mv tmp/*/* helm
 rmdir tmp/*
 rmdir tmp
 
-yq '.stringData."promtail.yaml"' helm/templates/secret.yaml \
-	>helm/promtail.dist.yaml
+# Delete the PSP since it's a deprecated resource and we don't need the warnings.
+rm -f helm/templates/podsecuritypolicy.yaml

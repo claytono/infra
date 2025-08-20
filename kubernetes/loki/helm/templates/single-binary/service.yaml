@@ -1,9 +1,9 @@
 ---
-# Source: loki/templates/service-memberlist.yaml
+# Source: loki/templates/single-binary/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: loki-memberlist
+  name: loki
   namespace: loki
   labels:
     helm.sh/chart: loki-6.36.1
@@ -13,13 +13,16 @@ metadata:
   annotations:
 spec:
   type: ClusterIP
-  clusterIP: None
   ports:
-    - name: tcp
-      port: 7946
-      targetPort: http-memberlist
+    - name: http-metrics
+      port: 3100
+      targetPort: http-metrics
+      protocol: TCP
+    - name: grpc
+      port: 9095
+      targetPort: grpc
       protocol: TCP
   selector:
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
-    app.kubernetes.io/part-of: memberlist
+    app.kubernetes.io/component: single-binary
