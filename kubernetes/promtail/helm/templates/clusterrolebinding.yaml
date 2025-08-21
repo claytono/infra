@@ -5,10 +5,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: promtail
   labels:
-    helm.sh/chart: promtail-4.2.1
+    helm.sh/chart: promtail-6.17.0
     app.kubernetes.io/name: promtail
     app.kubernetes.io/instance: promtail
-    app.kubernetes.io/version: "2.5.0"
+    app.kubernetes.io/version: "3.5.1"
     app.kubernetes.io/managed-by: Helm
 subjects:
   - kind: ServiceAccount

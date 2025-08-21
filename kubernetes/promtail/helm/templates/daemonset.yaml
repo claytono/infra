@@ -6,10 +6,10 @@ metadata:
   name: promtail
   namespace: default
   labels:
-    helm.sh/chart: promtail-4.2.1
+    helm.sh/chart: promtail-6.17.0
     app.kubernetes.io/name: promtail
     app.kubernetes.io/instance: promtail
-    app.kubernetes.io/version: "2.5.0"
+    app.kubernetes.io/version: "3.5.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -24,25 +24,27 @@ spec:
         app.kubernetes.io/name: promtail
         app.kubernetes.io/instance: promtail
       annotations:
-        checksum/config: 05baa20385d1c9350800a7278c89b9547c0f55e114099eb54fe06c7796f3365d
+        checksum/config: f9c89fe323b84b748763a711b8dd55c12faae5484bd01ae995b2c9430e2ef1eb
         prometheus.io/port: http-metrics
         prometheus.io/scrape: "true"
     spec:
       serviceAccountName: promtail
+      automountServiceAccountToken: true
+      enableServiceLinks: true
       securityContext:
         runAsGroup: 0
         runAsUser: 0
       containers:
         - name: promtail
-          image: "docker.io/grafana/promtail:2.5.0"
+          image: "docker.io/grafana/promtail:3.5.1"
           imagePullPolicy: IfNotPresent
           args:
             - "-config.file=/etc/promtail/promtail.yaml"
           volumeMounts:
             - name: config
               mountPath: /etc/promtail
-            - name: run
-              mountPath: /run/promtail
+            - mountPath: /run/promtail
+              name: run
             - mountPath: /var/lib/docker/containers
               name: containers
               readOnly: true
@@ -67,7 +69,7 @@ spec:
           readinessProbe:
             failureThreshold: 5
             httpGet:
-              path: /ready
+              path: '/ready'
               port: http-metrics
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -84,9 +86,9 @@ spec:
         - name: config
           secret:
             secretName: promtail
-        - name: run
-          hostPath:
+        - hostPath:
             path: /run/promtail
+          name: run
         - hostPath:
             path: /var/lib/docker/containers
           name: containers

@@ -1,9 +1,11 @@
 server:
   log_level: info
+  log_format: logfmt
   http_listen_port: 3101
+  
 
 clients:
-  - url: http://loki:3100/loki/api/v1/push
+  - url: http://loki-gateway/loki/api/v1/push
 
 positions:
   filename: /run/promtail/positions.yaml
@@ -29,6 +31,12 @@ scrape_configs:
         regex: ^;*([^;]+)(;.*)?$
         action: replace
         target_label: app
+      - source_labels:
+          - __meta_kubernetes_pod_label_app_kubernetes_io_instance
+          - __meta_kubernetes_pod_label_instance
+        regex: ^;*([^;]+)(;.*)?$
+        action: replace
+        target_label: instance
       - source_labels:
           - __meta_kubernetes_pod_label_app_kubernetes_io_component
           - __meta_kubernetes_pod_label_component
@@ -74,4 +82,12 @@ scrape_configs:
         - __meta_kubernetes_pod_annotation_kubernetes_io_config_hash
         - __meta_kubernetes_pod_container_name
         target_label: __path__
+  
+  
+
+limits_config:
+  
+
+tracing:
+  enabled: false
 
