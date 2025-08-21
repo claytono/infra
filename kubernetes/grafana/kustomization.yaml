@@ -13,7 +13,7 @@ resources:
 
 images:
 - name: grafana/grafana
-  newTag: 9.1.7@sha256:8b81f1225bc450e56cdcaffbfa5a051b891c8332789960e7362c38edba73a123
+  newTag: 10.4.7
 
 labels:
 
