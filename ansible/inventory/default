@@ -28,9 +28,6 @@ k5
 [nut]
 upspi
 
-[certbot]
-#gasherbrum
-#voron2
 
 [pi]
 #voron2-pizero
