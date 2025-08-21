@@ -25,6 +25,7 @@
   hosts: all
   roles:
     - role: common
+      tags: common
     - role: layereight.wifi
       when: "wifi_ssid is defined"
       tags: [wifi, network]

@@ -3,11 +3,11 @@
   ansible.builtin.user:
     name: "{{ resticprofile_client_user }}"
     state: present
-  register: restic_user_info
+  register: resticprofile_user_info
 
 - name: Create resticprofile configuration directory
   ansible.builtin.file:
-    path: "{{ restic_user_info.home }}/.config/resticprofile"
+    path: "{{ resticprofile_user_info.home }}/.config/resticprofile"
     state: directory
     mode: "0700"
     owner: "{{ resticprofile_client_user }}"
@@ -15,17 +15,17 @@
 - name: Write passphrase to file
   ansible.builtin.copy:
     content: "{{ restic_passphrase }}"
-    dest: "{{ restic_user_info.home }}/.config/resticprofile/passphrase.txt"
+    dest: "{{ resticprofile_user_info.home }}/.config/resticprofile/passphrase.txt"
     owner: "{{ resticprofile_client_user }}"
     mode: "0600"
 
 - name: Write config file
   ansible.builtin.template:
     src: templates/config.j2
-    dest: "{{ restic_user_info.home }}/.config/resticprofile/profiles.yaml"
+    dest: "{{ resticprofile_user_info.home }}/.config/resticprofile/profiles.yaml"
     owner: "{{ resticprofile_client_user }}"
     mode: "0600"
-  register: config_file
+  register: resticprofile_config_file
 
 - name: Check if resticprofile schedules are up to date
   ansible.builtin.command: "{{ resticprofile_bin_dir }}/resticprofile status"
@@ -39,7 +39,7 @@
     - resticprofile_enable_scheduling
     - resticprofile_install_resticprofile
     - resticprofile_status.stdout is not search('not found$')
-  register: unschedule_result
+  register: resticprofile_unschedule_result
   failed_when: false
 
 - name: Update resticprofile schedules
@@ -47,4 +47,4 @@
   when:
     - resticprofile_enable_scheduling
     - resticprofile_status is defined
-    - (resticprofile_status.stdout is search("not found$") or config_file.changed or resticprofile_install_resticprofile)
+    - (resticprofile_status.stdout is search("not found$") or resticprofile_config_file.changed or resticprofile_install_resticprofile)
