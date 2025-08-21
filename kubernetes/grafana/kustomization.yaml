@@ -13,7 +13,7 @@ resources:
 
 images:
 - name: grafana/grafana
-  newTag: 10.4.7
+  newTag: 12.1.0
 
 labels:
 
