@@ -1,0 +1,70 @@
+---
+# Source: loki/templates/loki-canary/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: loki-canary
+  namespace: loki
+  labels:
+    helm.sh/chart: loki-6.36.1
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/version: "3.5.3"
+    app.kubernetes.io/component: canary
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/component: canary
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: loki
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/component: canary
+    spec:
+      serviceAccountName: loki-canary
+      
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: loki-canary
+          image: docker.io/grafana/loki-canary:3.5.3
+          imagePullPolicy: IfNotPresent
+          args:
+            - -addr=loki-gateway.loki.svc.cluster.local.:80
+            - -labelname=pod
+            - -labelvalue=$(POD_NAME)
+            - -push=true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+          ports:
+            - name: http-metrics
+              containerPort: 3500
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http-metrics
+            initialDelaySeconds: 15
+            timeoutSeconds: 1
+      volumes:

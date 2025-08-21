@@ -1,13 +1,15 @@
 ---
-# Source: loki/templates/serviceaccount.yaml
+# Source: loki/templates/runtime-configmap.yaml
 apiVersion: v1
-kind: ServiceAccount
+kind: ConfigMap
 metadata:
-  name: loki
+  name: loki-runtime
   namespace: loki
   labels:
     helm.sh/chart: loki-6.36.1
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
     app.kubernetes.io/version: "3.5.3"
-automountServiceAccountToken: true
+data:
+  runtime-config.yaml: |
+    {}

@@ -1,25 +1,26 @@
 ---
-# Source: loki/templates/service-memberlist.yaml
+# Source: loki/templates/gateway/service-gateway.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: loki-memberlist
+  name: loki-gateway
   namespace: loki
   labels:
     helm.sh/chart: loki-6.36.1
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
     app.kubernetes.io/version: "3.5.3"
+    app.kubernetes.io/component: gateway
+    prometheus.io/service-monitor: "false"
   annotations:
 spec:
   type: ClusterIP
-  clusterIP: None
   ports:
-    - name: tcp
-      port: 7946
-      targetPort: http-memberlist
+    - name: http-metrics
+      port: 80
+      targetPort: http-metrics
       protocol: TCP
   selector:
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
-    app.kubernetes.io/part-of: memberlist
+    app.kubernetes.io/component: gateway
