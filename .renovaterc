@@ -1,40 +1,28 @@
 {
-  "extends": [
-    "config:best-practices"
-  ],
-  "schedule": [
-    "before 6am on monday"
-  ],
-  "ignorePaths": [
-    "ansible/galaxy/**"
-  ],
+  "extends": ["config:best-practices"],
+  "schedule": ["before 6am on monday"],
+  "ignorePaths": ["ansible/galaxy/**"],
   "rebaseWhen": "behind-base-branch",
   "minimumReleaseAge": "14 days",
   "internalChecksFilter": "strict",
   "semanticCommits": "disabled",
-  "pre-commit": {
-    "enabled": true
-  },
+
+  // Add this: label every Renovate PR
+  "addLabels": ["renovate"],
+
+  "pre-commit": { "enabled": true },
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "ansible/roles/resticprofile/defaults/main.yaml"
-      ],
-      "matchStrings": [
-        "(?:^|\\n)\\s*restic_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
-      ],
+      "managerFilePatterns": ["ansible/roles/resticprofile/defaults/main.yaml"],
+      "matchStrings": ["(?:^|\\n)\\s*restic_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"],
       "depNameTemplate": "restic/restic",
       "datasourceTemplate": "github-releases"
     },
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "ansible/roles/resticprofile/defaults/main.yaml"
-      ],
-      "matchStrings": [
-        "(?:^|\\n)\\s*resticprofile_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
-      ],
+      "managerFilePatterns": ["ansible/roles/resticprofile/defaults/main.yaml"],
+      "matchStrings": ["(?:^|\\n)\\s*resticprofile_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"],
       "depNameTemplate": "creativeprojects/resticprofile",
       "datasourceTemplate": "github-releases"
     }
@@ -53,12 +41,16 @@
     {
       "matchManagers": ["pre-commit"],
       "automerge": true,
+      "automergeType": "pr",
+      "addLabels": ["automerge"],
       "description": "Auto-merge pre-commit hook updates if CI passes"
     },
     {
       "matchUpdateTypes": ["digest"],
       "matchManagers": ["kustomize"],
       "automerge": true,
+      "automergeType": "pr",
+      "addLabels": ["automerge"],
       "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
     }
   ],
