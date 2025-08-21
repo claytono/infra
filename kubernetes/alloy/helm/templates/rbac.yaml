@@ -5,11 +5,11 @@ kind: ClusterRole
 metadata:
   name: alloy
   labels:
-    helm.sh/chart: alloy-0.12.0
+    helm.sh/chart: alloy-0.12.6
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
     
-    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/version: "v1.7.5"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -69,6 +69,7 @@ rules:
       - podmonitors
       - servicemonitors
       - probes
+      - scrapeconfigs
     verbs:
       - get
       - list
@@ -105,11 +106,11 @@ kind: ClusterRoleBinding
 metadata:
   name: alloy
   labels:
-    helm.sh/chart: alloy-0.12.0
+    helm.sh/chart: alloy-0.12.6
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
     
-    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/version: "v1.7.5"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
