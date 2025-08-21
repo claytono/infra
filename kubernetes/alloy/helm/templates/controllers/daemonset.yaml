@@ -4,12 +4,12 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: alloy
+  namespace: loki
   labels:
-    helm.sh/chart: alloy-0.12.0
+    helm.sh/chart: alloy-1.2.1
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
-    
-    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/version: "v1.10.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -22,6 +22,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
+        checksum/config: 40567b0c166d7a5fdf62d80966c0363e6d756c2a7c7bb5c6be08c70ef6cda53
         prometheus.io/port: "12345"
         prometheus.io/scrape: "true"
         reloader.stakater.com/auto: "true"
@@ -32,7 +33,7 @@ spec:
       serviceAccountName: alloy
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.7.0
+          image: docker.io/grafana/alloy:v1.10.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -65,17 +66,17 @@ spec:
               mountPath: /var/log
               readOnly: true
         - name: config-reloader
-          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
+          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0
           args:
-            - --volume-dir=/etc/alloy
-            - --webhook-url=http://localhost:12345/-/reload
+            - --watched-dir=/etc/alloy
+            - --reload-url=http://localhost:12345/-/reload
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
           resources:
             requests:
-              cpu: 1m
-              memory: 5Mi
+              cpu: 10m
+              memory: 50Mi
       dnsPolicy: ClusterFirst
       tolerations:
         - effect: NoSchedule
