@@ -40,6 +40,6 @@
     dest: "/etc/ssh/sshd_config.d/restic.conf"
     mode: "0644"
   delegate_to: "{{ item.fqdn }}"
-  register: sshd_config
+  register: resticprofile_sshd_config
   with_items: "{{ resticprofile_sftp_servers }}"
   notify: Restart sshd
