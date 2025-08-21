@@ -53,7 +53,7 @@
   pkgng:
     name:
     - openssl
-    - "py{{ ansible_python.version.major }}{{ ansible_python.version.minor }}-boto"
+    - "py{{ ansible_python.version.major }}{{ ansible_python.version.minor }}-boto3"
     - "py{{ ansible_python.version.major }}{{ ansible_python.version.minor }}-openssl"
     state: present
   when: ansible_os_family == 'FreeBSD'
@@ -75,14 +75,16 @@
   file:
     path: "{{ ler53_cert_dir }}"
     state: directory
-    owner: root
+    owner: "{{ ler53_cert_files_owner }}"
+    group: "{{ ler53_cert_files_group }}"
     mode: 0755
 
 - name: "create the {{ ler53_account_key_dir }} directory"
   file:
     path: "{{ ler53_account_key_dir }}"
     state: directory
-    owner: root
+    owner: "{{ ler53_cert_files_owner }}"
+    group: "{{ ler53_cert_files_group }}"
     mode: 0700
 
 - name: "importing virtualenv tasks"
@@ -96,14 +98,6 @@
     owner: "{{ ler53_cert_files_owner }}"
     group: "{{ ler53_cert_files_group }}"
     mode: "{{ ler53_cert_files_mode }}"
-  tags:
-  - openssl
-
-- name: check consistency of private key
-  openssl_privatekey_info:
-    path: "{{ ler53_cert_dir }}/{{ ler53_key_file_name }}"
-    check_consistency: yes
-  register: result_privatekey
   tags:
   - openssl
 
@@ -122,13 +116,6 @@
   tags:
   - openssl
 
-- name: check consistency of the CSR key
-  openssl_csr_info:
-    path: "{{ ler53_cert_dir }}/{{ ler53_csr_file_name }}"
-  register: result_csr
-  tags:
-  - openssl
-
 - name: generate the Let's Encrypt account key
   openssl_privatekey:
     path: "{{ ler53_account_key_dir }}/{{ ler53_account_key_file_name }}"
@@ -136,14 +123,6 @@
     owner: "{{ ler53_cert_files_owner }}"
     group: "{{ ler53_cert_files_group }}"
     mode: "{{ ler53_cert_files_mode }}"
-  tags:
-  - openssl
-
-- name: check consistency of the account key
-  openssl_privatekey_info:
-    path: "{{ ler53_account_key_dir }}/{{ ler53_account_key_file_name }}"
-    check_consistency: yes
-  register: result_accountkey
   tags:
   - openssl
 
@@ -177,8 +156,8 @@
     type: TXT
     ttl: 5
     value: "\"{{ ler53_item.value['dns-01']['resource_value'] }}\""
-    aws_access_key: "{{ ler53_aws_access_key }}"
-    aws_secret_key: "{{ ler53_aws_secret_key }}"
+    aws_access_key: "{{ ler53_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ ler53_aws_secret_key | default(omit) }}"
     overwrite: yes
     wait: yes
   with_dict: "{{ lets_encrypt_challenge['challenge_data'] | default({}) }}"
@@ -196,6 +175,8 @@
     account_email: "{{ ler53_account_email }}"
     data: "{{ lets_encrypt_challenge }}"
     remaining_days: "{{ ler53_cert_remaining_days_before_renewal }}"
+    chain_dest: "{{ ler53_cert_dir }}/{{ ler53_intermediate_file_name }}"
+    fullchain_dest: "{{ ler53_cert_dir }}/{{ ler53_cert_and_intermediate_file_name }}"
   notify: handle services
   register: lets_encrypt_validation_result
 
@@ -212,8 +193,8 @@
     type: TXT
     ttl: 5
     value: "\"{{ ler53_item.value['dns-01']['resource_value'] }}\""
-    aws_access_key: "{{ ler53_aws_access_key }}"
-    aws_secret_key: "{{ ler53_aws_secret_key }}"
+    aws_access_key: "{{ ler53_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ ler53_aws_secret_key | default(omit) }}"
   with_dict: "{{ lets_encrypt_challenge['challenge_data'] | default({}) }}"
   loop_control:
     loop_var: ler53_item
@@ -225,41 +206,16 @@
     group: "{{ ler53_cert_files_group }}"
     mode: "{{ ler53_cert_files_mode }}"
 
-- name: download the Let's Encrypt intermediate CA
-  get_url:
-    url: "{{ ler53_intermediate_download_url }}"
-    dest: "{{ ler53_cert_dir }}/{{ ler53_intermediate_file_name }}"
+- name: set the intermediate cert file permissions
+  file:
+    path: "{{ ler53_cert_dir }}/{{ ler53_intermediate_file_name }}"
     owner: "{{ ler53_cert_files_owner }}"
     group: "{{ ler53_cert_files_group }}"
     mode: "{{ ler53_cert_files_mode }}"
-  register: ler53_intermediate_download_task
-  when: ler53_intermediate_download | bool
 
-- name: get content of the certificate
-  command: "cat {{ ler53_cert_dir }}/{{ ler53_cert_file_name }}"
-  register: ler53_certificate_content
-  changed_when: false
-  when: ler53_intermediate_download | bool
-
-- name: get content of the intermediate CA
-  command: "cat {{ ler53_cert_dir }}/{{ ler53_intermediate_file_name }}"
-  register: ler53_intermediate_content
-  changed_when: false
-  when: ler53_intermediate_download | bool
-
-- name: create a file with the certificate and intermediate CA concatenated
-  copy:
-    content: "{{ ler53_certificate_content['stdout'] + '\n' + ler53_intermediate_content['stdout'] + '\n' }}"
-    dest: "{{ ler53_cert_dir }}/{{ ler53_cert_and_intermediate_file_name }}"
+- name: set the full cert chain file permissions
+  file:
+    path:  "{{ ler53_cert_dir }}/{{ ler53_cert_and_intermediate_file_name }}"
     owner: "{{ ler53_cert_files_owner }}"
     group: "{{ ler53_cert_files_group }}"
     mode: "{{ ler53_cert_files_mode }}"
-  when: ler53_intermediate_download | bool
-
-- name: verify the private keys and CSR
-  assert:
-    that:
-    - result_privatekey.key_is_consistent
-    - result_accountkey.key_is_consistent
-    - result_csr.signature_valid
-    msg: "The private keys and CSR are valid"

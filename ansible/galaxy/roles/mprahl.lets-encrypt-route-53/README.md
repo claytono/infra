@@ -28,10 +28,6 @@ Ansible 2.7+ is required for this role. If you are using an older version of Ans
 * **ler53_cert_changed** - this is set to `True` when the certificate is created or renewed.
 
 #### Required Variables
-* **ler53_aws_access_key** - the access key to an AWS user that is allowed to add records to the
-  domain the SSL certificate is being generated for.
-* **ler53_aws_secret_key** - the secret key to an AWS user that is allowed to add records to the
-  domain the SSL certificate is being generated for.
 * **ler53_route_53_domain** - the Route 53 (AWS) domain the SSL certificate is being generated
   for. This is a required parameter, if parameter `ler53_route_53_zone_id` is not supplied.
 * **ler53_route_53_zone_id** - the Route 53 (AWS) zone_id the SSL certificate is being generated
@@ -57,10 +53,6 @@ Ansible 2.7+ is required for this role. If you are using an older version of Ans
   `{{ ler53_cert_common_name }}.crt`.
 * **ler53_csr_file_name** - the file name of the certificate signing request (CSR) being generated.
   This defaults to `{{ ler53_cert_common_name }}.csr`.
-* **ler53_intermediate_download** - whether or not the Let's Encrypt intermediate CA should be
-  downloaded. This defaults to `true`.
-* **ler53_intermediate_download_url** - the URL to download the Let's Encrypt intermediate CA. This
-  defaults to `https://letsencrypt.org/certs/lets-encrypt-r3.pem`.
 * **ler53_intermediate_file_name** - the file name of the intermediate CA downloaded from Let's
   Encrypt. This defaults to `{{ ler53_cert_common_name }}.intermediate.pem`.
 * **ler53_cert_and_intermediate_file_name** - the name of the file created with the certificate and
@@ -92,6 +84,14 @@ Ansible 2.7+ is required for this role. If you are using an older version of Ans
 * **ler53_acme_directory** - The ACME directory to use. This defaults to
   `https://acme-v02.api.letsencrypt.org/directory`. This can be useful to override if you'd like to
   test this role against the stage Let's Encrypt instance.
+* **ler53_aws_access_key** - the access key to an AWS user that is allowed to add records to the
+  domain the SSL certificate is being generated for. If not specified, the AWS SDK will
+  [determine](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html)
+  the access key.
+* **ler53_aws_secret_key** - the secret key to an AWS user that is allowed to add records to the
+  domain the SSL certificate is being generated for. If not specified, the AWS SDK will
+  [determine](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html)
+  the secret key.
 
 ## Example Playbook
 
@@ -103,8 +103,6 @@ Ansible 2.7+ is required for this role. If you are using an older version of Ans
   vars:
   - ler53_cert_common_name: host.example.com
   - ler53_route_53_domain: example.com
-  - ler53_aws_access_key: SomeAccessKey
-  - ler53_aws_secret_key: SomeSecretKey
 
   roles:
   - mprahl.lets-encrypt-route-53
