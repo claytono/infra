@@ -14,8 +14,6 @@ alloy:
         format = "logfmt"
       }
 
-      // Test reloader functionality and annotations
-
       discovery.kubernetes "pods" {
         role = "pod"
       }
