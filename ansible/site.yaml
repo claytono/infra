@@ -61,13 +61,6 @@
     - role: resticprofile
       tags: restic
 
-- name: Certbot
-  hosts: certbot
-  become: true
-  roles:
-    - role: certbot
-      tags: certbot
-
 - name: NUT
   hosts: nut
   roles:
