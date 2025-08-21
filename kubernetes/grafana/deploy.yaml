@@ -28,8 +28,6 @@ spec:
         - mountPath: /var
           name: grafana-storage
         env:
-        - name: INFLUXDB_HOST
-          value: monitoring-influxdb
         - name: GF_SERVER_HTTP_PORT
           value: '3000'
           # The following env variables are required to make Grafana accessible via
