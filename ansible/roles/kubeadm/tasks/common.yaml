@@ -31,12 +31,15 @@
     - { name: "net.ipv4.ip_forward", value: "1" }
     - { name: "net.bridge.bridge-nf-call-ip6tables", value: "1" }
 
-- name: "Configure sysctl for inotify watches for Kubernetes"
+- name: Configure sysctl for inotify (Grafana/K8s nodes)
   ansible.posix.sysctl:
-    name: "fs.inotify.max_user_watches"
-    value: "1048576"
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
     state: present
     reload: true
+  loop:
+    - { name: "fs.inotify.max_user_watches", value: "1048576" }
+    - { name: "fs.inotify.max_user_instances", value: "4096" }
 
 - name: "Disabling accepting ICMP redirects"
   ansible.posix.sysctl:
@@ -50,13 +53,13 @@
 
 - name: "Check if swap is enabled"
   ansible.builtin.command: "swapon --show"
-  register: swap_status
+  register: kubeadm_swap_status
   changed_when: false
   failed_when: false
 
 - name: "Turn off swap"
   ansible.builtin.command: "swapoff -a"
-  when: swap_status.stdout != ""
+  when: kubeadm_swap_status.stdout != ""
 
 - name: "Disable swap in fstab"
   ansible.builtin.replace:

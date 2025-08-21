@@ -9,7 +9,7 @@
 
 - name: Client | fetch ssh-key
   ansible.builtin.command: "cat {{ resticprofile_ssh_key }}.pub"
-  register: sshkey
+  register: resticprofile_sshkey
   changed_when: false
 
 - name: Client | disable strict key checking for backup servers
@@ -30,7 +30,7 @@
 - name: Client | put sshpubkey on the normal backupserver
   ansible.posix.authorized_key:
     user: "{{ item.user }}"
-    key: "{{ sshkey.stdout }}"
+    key: "{{ resticprofile_sshkey.stdout }}"
   delegate_to: "{{ item.fqdn }}"
   with_items: "{{ resticprofile_sftp_servers }}"
   when: resticprofile_ssh_register
