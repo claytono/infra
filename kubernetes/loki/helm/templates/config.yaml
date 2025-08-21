@@ -45,6 +45,7 @@ data:
       mode: simple
     limits_config:
       max_cache_freshness_per_query: 10m
+      max_label_names_per_series: 30
       query_timeout: 300s
       reject_old_samples: true
       reject_old_samples_max_age: 168h

@@ -32,7 +32,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 6649357dd07be9ae678122f2fa1f47b9c53bfb4497acb7af3579a65d6a53e69b
+        checksum/config: 4af4913f10307731fce33da5b7777f0d8b1fd97eec81712f32528526576a4be2
         prometheus.io/port: http-metrics
         prometheus.io/scrape: "true"
         reloader.stakater.com/auto: "true"
