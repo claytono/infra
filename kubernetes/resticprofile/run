@@ -11,7 +11,7 @@ mkdir -p .cache
 mkdir -p .tmp
 uuidgen >.tmp/uuid
 
-source ./get-1password-secrets.sh
+source ./get-1password-secrets
 
 # Get resticprofile password
 export_resticprofile_password

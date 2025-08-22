@@ -25,4 +25,4 @@ labels:
 configMapGenerator:
 - name: run-script
   files:
-  - run.sh
+  - run

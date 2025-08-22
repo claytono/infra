@@ -22,7 +22,7 @@ spec:
             image: debian
             imagePullPolicy: Always
             command:
-            - /script/backup.sh
+            - /script/backup
             volumeMounts:
             - name: script
               mountPath: /script

@@ -31,4 +31,4 @@ configMapGenerator:
   - mosquitto.conf
 - name: create-password-file-script
   files:
-  - create-password-file.sh
+  - create-password-file

@@ -5,11 +5,13 @@ set -eu -o pipefail
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASEDIR"
 
-source "$BASEDIR/../scripts/chart-version.sh"
+source "$BASEDIR/../scripts/chart-version"
 
 rm -rf helm tmp
 mkdir tmp helm
-helm_template metallb metallb --namespace metallb-system --include-crds --values values.yaml --output-dir tmp
+
+# Render goldilocks chart
+helm_template goldilocks goldilocks --include-crds --values values.yaml --output-dir tmp
 
 mv tmp/*/* helm
 rmdir tmp/*

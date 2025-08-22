@@ -20,7 +20,7 @@ spec:
       initContainers:
       - name: init-password-file
         image: debian
-        command: [/bin/sh, -c, /scripts/create-password-file.sh > /generated/passwd]
+        command: [/bin/sh, -c, /scripts/create-password-file > /generated/passwd]
         volumeMounts:
         - name: script
           mountPath: /scripts
