@@ -47,7 +47,7 @@ jobs:
 
     - name: Setup Cachix
       if: steps.changes.outputs.need-render-helm == 'true'
-      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad # v16
+      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad  # v16
       with:
         name: claytono
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
@@ -80,13 +80,13 @@ jobs:
           | xargs -0 -r -n1 dirname \
           | sort -u \
           | while read -r dir; do
-              if [ -f "$dir/render-helm.sh" ]; then
+              if [ -f "$dir/render" ]; then
                 echo "⏳ Rendering in $dir"
                 pushd "$dir"
-                nix develop --command ./render-helm.sh
+                nix develop --command ./render
                 popd
               else
-                echo "⏭  Skipping $dir (no render-helm.sh)"
+                echo "⏭  Skipping $dir (no render script)"
               fi
             done
 

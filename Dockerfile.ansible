@@ -41,7 +41,7 @@ COPY --chown=ansible:ansible ansible /workspace/ansible
 COPY --chown=ansible:ansible flake.nix flake.lock /workspace/
 
 # Ensure the Nix wrapper is executable before using it
-RUN chmod +x ../ansible/scripts/docker-nix-wrapper.sh
+RUN chmod +x ../ansible/scripts/docker-nix-wrapper
 
 # Create a minimal inventory file for localhost and add it to tailscale_disabled group
 RUN mkdir -p inventory && \
@@ -55,4 +55,4 @@ EOF
 
 RUN nix develop --command true
 
-ENTRYPOINT ["../ansible/scripts/docker-nix-wrapper.sh"]
+ENTRYPOINT ["../ansible/scripts/docker-nix-wrapper"]

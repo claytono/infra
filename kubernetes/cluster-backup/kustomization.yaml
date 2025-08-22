@@ -23,4 +23,4 @@ labels:
 configMapGenerator:
 - name: cluster-backup
   files:
-  - backup.sh
+  - backup

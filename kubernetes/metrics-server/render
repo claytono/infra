@@ -5,18 +5,16 @@ set -eu -o pipefail
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASEDIR"
 
-# Source the chart-version.sh helper
-source "$BASEDIR/../scripts/chart-version.sh"
+source "$BASEDIR/../scripts/chart-version"
 
 rm -rf helm tmp
-mkdir tmp helm
+mkdir tmp
 
-helm_template flannel flannel \
-	--create-namespace \
+# Template using Chart.yaml
+helm_template metrics-server metrics-server \
 	--values values.yaml \
 	--output-dir tmp
 
 mv tmp/*/* helm
 rmdir tmp/*
 rmdir tmp
-rm -rf helm/tests
