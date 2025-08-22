@@ -58,6 +58,7 @@ scrape_configs:
     replacement: blackbox-exporter:9115  # The blackbox exporter's real hostname:port.
 
 - job_name: hass
+  scrape_interval: 2s
   bearer_token_file: /secrets/hass-bearer-token
   metrics_path: /api/prometheus
   static_configs:
