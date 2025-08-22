@@ -31,7 +31,7 @@ loki:
     max_label_names_per_series: 30  # Increase from default 15 to 30
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: http-metrics
+    prometheus.io/port: '3100'
     reloader.stakater.com/auto: 'true'
 
 # If Alloy points at the gateway, keep this; otherwise you can disable it
