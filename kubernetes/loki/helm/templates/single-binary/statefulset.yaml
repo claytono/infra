@@ -33,7 +33,7 @@ spec:
     metadata:
       annotations:
         checksum/config: 4af4913f10307731fce33da5b7777f0d8b1fd97eec81712f32528526576a4be2
-        prometheus.io/port: http-metrics
+        prometheus.io/port: "3100"
         prometheus.io/scrape: "true"
         reloader.stakater.com/auto: "true"
         kubectl.kubernetes.io/default-container: "loki"
