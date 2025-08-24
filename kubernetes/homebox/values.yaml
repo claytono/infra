@@ -24,6 +24,7 @@ ingress:
   className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: 500m
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: HomeBox
     gethomepage.dev/description: Inventory and Organization System

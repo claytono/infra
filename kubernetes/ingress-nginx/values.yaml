@@ -4,7 +4,7 @@ controller:
   extraArgs:
     enable-ssl-passthrough: ''
   config:
-    proxy-body-size: 5m
+    proxy-body-size: 100m
   admissionWebhooks:
     enabled: false
   updateStrategy:
