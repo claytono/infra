@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 055c5b2f7db12586ae968975381bdc670ce0e26edbde2ba0607b00721902ddaa
+        checksum/config: ca45d88a6436bed771bb0411f12509c08bb237bcead41cd9ced9cd09d0c8970a
       labels:
         app.kubernetes.io/name: n8n
         app.kubernetes.io/instance: n8n
@@ -47,8 +47,8 @@ spec:
             - name: DB_POSTGRESDB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  key: DB_POSTGRESDB_PASSWORD
-                  name: n8n-secrets
+                  key: password
+                  name: n8n-postgres-app
             - name: N8N_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:

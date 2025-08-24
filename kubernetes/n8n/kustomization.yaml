@@ -7,6 +7,7 @@ namespace: n8n
 resources:
 - namespace.yaml
 - externalsecret.yaml
+- n8n-postgres-cluster.yaml
   # n8n resources
 - helm/n8n/configmap.yaml
 - helm/n8n/deployment.yaml
@@ -14,13 +15,6 @@ resources:
 - helm/n8n/pvc.yaml
 - helm/n8n/service.yaml
 - helm/n8n/serviceaccount.yaml
-  # PostgreSQL resources
-- helm/postgres/primary/networkpolicy.yaml
-- helm/postgres/primary/pdb.yaml
-- helm/postgres/primary/statefulset.yaml
-- helm/postgres/primary/svc-headless.yaml
-- helm/postgres/primary/svc.yaml
-- helm/postgres/serviceaccount.yaml
   # Valkey/Redis resources
 - helm/valkey/templates/configmap.yaml
 - helm/valkey/templates/headless-svc.yaml
