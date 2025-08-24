@@ -19,7 +19,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 67441ca27e000f3de6d235032f1ee4345ad8b7c83faec4f0a36374a759da8ad0
+        checksum/secret: 619be5a8b943dc8bd0897182947a681bc1cb0a4cb439f2fdb16b62dc26d432c6
+        reloader.stakater.com/auto: "true"
       labels:
         helm.sh/chart: homebox-0.1.2
         app.kubernetes.io/name: homebox

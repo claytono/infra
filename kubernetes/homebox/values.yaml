@@ -9,14 +9,11 @@ env:
   TZ: America/New_York
   HBOX_OPTIONS_ALLOW_REGISTRATION: true
   HBOX_WEB_MAX_UPLOAD_SIZE: 250
-
-  # Database configuration for PostgreSQL
   HBOX_DATABASE_DRIVER: postgres
-  HBOX_DATABASE_HOST: homebox-postgresql
-  HBOX_DATABASE_PORT: 5432
-  HBOX_DATABASE_NAME: homebox
-  HBOX_DATABASE_USER: homebox
-  HBOX_DATABASE_SSL_MODE: disable
+
+# Pod configuration
+podAnnotations:
+  reloader.stakater.com/auto: 'true'
 
 # Ingress configuration
 ingress:
@@ -40,17 +37,16 @@ ingress:
     hosts:
     - homebox.k.oneill.net
 
-# PostgreSQL configuration with external secrets
+# PostgreSQL configuration - disabled since using CloudNativePG
 postgresql:
+  enabled: false
+
+# External PostgreSQL configuration for CloudNativePG
+externalPostgresql:
+  enabled: true
+  host: homebox-postgres-rw
+  port: 5432
   auth:
     username: homebox
+    password: dummy-will-be-overridden
     database: homebox
-    existingSecret: homebox-postgresql
-    secretKeys:
-      adminPasswordKey: admin-password
-      userPasswordKey: postgres-password
-  primary:
-    networkPolicy:
-      enabled: false
-    pdb:
-      create: false
