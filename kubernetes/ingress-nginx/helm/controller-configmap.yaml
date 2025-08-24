@@ -14,4 +14,4 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 data:
-  proxy-body-size: "5m"
+  proxy-body-size: "100m"
