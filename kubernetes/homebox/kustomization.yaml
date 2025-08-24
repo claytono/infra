@@ -2,10 +2,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-resources:
-  # External secrets
+namespace: default
 
-- externalsecret.yaml
+resources:
+
+- homebox-postgres-cluster.yaml
 
   # HomeBox resources
 - helm/homebox/deployment.yaml
@@ -14,12 +15,6 @@ resources:
 - helm/homebox/pvc.yaml
 - helm/homebox/serviceaccount.yaml
 - helm/homebox/ingress.yaml
-
-  # PostgreSQL resources
-- helm/postgresql/serviceaccount.yaml
-- helm/postgresql/primary/svc.yaml
-- helm/postgresql/primary/statefulset.yaml
-- helm/postgresql/primary/svc-headless.yaml
 
 commonAnnotations:
   argoManaged: 'true'
@@ -39,8 +34,8 @@ patches:
         name: HBOX_DATABASE_PASSWORD
         valueFrom:
           secretKeyRef:
-            name: homebox-postgresql
-            key: postgres-password
+            name: homebox-postgres-app
+            key: password
 
 # Add labels for metrics
 labels:

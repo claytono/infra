@@ -15,7 +15,6 @@ helm_template homebox homebox --include-crds --values values.yaml --output-dir t
 
 mv tmp/*/* helm
 mv helm/templates helm/homebox
-mv helm/charts/postgresql/templates helm/postgresql
 rm -rf helm/charts
 rmdir tmp/*
 rmdir tmp
