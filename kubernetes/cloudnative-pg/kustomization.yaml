@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cnpg-system
+
+resources:
+- namespace.yaml
+- helm/templates/crds/crds.yaml
+- helm/templates/rbac.yaml
+- helm/templates/config.yaml
+- helm/templates/deployment.yaml
+- helm/templates/service.yaml
+- helm/templates/monitoring-configmap.yaml
+- helm/templates/mutatingwebhookconfiguration.yaml
+- helm/templates/validatingwebhookconfiguration.yaml
+
+commonAnnotations:
+  argoManaged: 'true'
+
+labels:
+
+- pairs:
+    app: cloudnative-pg

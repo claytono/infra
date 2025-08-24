@@ -37,11 +37,11 @@ main:
     db:
       type: postgresdb
       postgresdb:
-        host: n8n-postgres-postgresql
+        host: n8n-postgres-rw
         port: 5432
         database: n8n
         user: n8n
-        # password will come from external secret via extraEnv
+        # password will come from CloudNativePG secret via extraEnv
 
   # Enable persistent storage (default is false/emptyDir)
   persistence:
@@ -66,8 +66,8 @@ main:
     DB_POSTGRESDB_PASSWORD:
       valueFrom:
         secretKeyRef:
-          name: n8n-secrets
-          key: DB_POSTGRESDB_PASSWORD
+          name: n8n-postgres-app
+          key: password
 
 # Enable Valkey/Redis for queue mode and better performance
 valkey:
@@ -77,3 +77,7 @@ valkey:
     persistence:
       enabled: true
       size: 2Gi
+
+# Disable embedded PostgreSQL - using CloudNativePG instead
+postgresql:
+  enabled: false
