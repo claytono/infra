@@ -5,10 +5,10 @@ kind: Deployment
 metadata:
   name: n8n
   labels:
-    helm.sh/chart: n8n-1.0.10
+    helm.sh/chart: n8n-1.0.12
     app.kubernetes.io/name: n8n
     app.kubernetes.io/instance: n8n
-    app.kubernetes.io/version: "1.99.1"
+    app.kubernetes.io/version: "1.107.4"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -38,7 +38,7 @@ spec:
         - name: n8n
           securityContext:
             {}
-          image: "n8nio/n8n:1.99.1"
+          image: "n8nio/n8n:1.107.4"
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
