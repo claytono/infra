@@ -4,7 +4,7 @@ name: n8n-meta
 version: 0.1.0
 dependencies:
 - name: n8n
-  version: 1.0.10
+  version: 1.0.12
   repository: oci://8gears.container-registry.com/library
 - name: postgresql
   version: 16.7.26
