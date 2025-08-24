@@ -16,14 +16,11 @@ resources:
 - helm/n8n/service.yaml
 - helm/n8n/serviceaccount.yaml
   # Valkey/Redis resources
-- helm/valkey/templates/configmap.yaml
-- helm/valkey/templates/headless-svc.yaml
-- helm/valkey/templates/health-configmap.yaml
-- helm/valkey/templates/networkpolicy.yaml
-- helm/valkey/templates/scripts-configmap.yaml
-- helm/valkey/templates/primary/application.yaml
-- helm/valkey/templates/primary/service.yaml
-- helm/valkey/templates/primary/serviceaccount.yaml
+- helm/valkey/pvc.yaml
+- helm/valkey/scripts.yaml
+- helm/valkey/service-internal.yaml
+- helm/valkey/services.yaml
+- helm/valkey/statefulset.yaml
 
 commonAnnotations:
   argoManaged: 'true'
