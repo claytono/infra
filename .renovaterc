@@ -6,8 +6,6 @@
   "minimumReleaseAge": "14 days",
   "internalChecksFilter": "strict",
   "semanticCommits": "disabled",
-
-  // Add this: label every Renovate PR
   "addLabels": ["renovate"],
 
   "pre-commit": { "enabled": true },
@@ -25,6 +23,16 @@
       "matchStrings": ["(?:^|\\n)\\s*resticprofile_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"],
       "depNameTemplate": "creativeprojects/resticprofile",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [".*\\.ya?ml$"],
+      "matchStrings": [
+        "imageName:\\s*(?<depName>ghcr\\.io/cloudnative-pg/postgresql):(?<currentValue>[\\w.-]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "registryUrlTemplate": "https://ghcr.io",
+      "versioningTemplate": "docker"
     }
   ],
   "packageRules": [
@@ -52,6 +60,27 @@
       "automergeType": "pr",
       "addLabels": ["automerge"],
       "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
+      "matchCurrentVersion": "/^17\\./",
+      "automerge": true,
+      "automergeType": "pr",
+      "addLabels": ["db-image", "automerge"],
+      "description": "Auto-merge PostgreSQL 17.x updates (always offline anyway)"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "draftPR": true,
+      "addLabels": ["db-major-upgrade"],
+      "prBodyNotes": [
+        "PostgreSQL major version upgrade (e.g., 17→18). Verify backups, extension compatibility, and application compatibility before merging."
+      ],
+      "description": "PostgreSQL major version upgrades require manual review"
     }
   ],
   "gitIgnoredAuthors": ["github-actions[bot]@users.noreply.github.com"]
