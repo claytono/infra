@@ -1,32 +1,51 @@
 {
-  "extends": ["config:best-practices"],
-  "schedule": ["before 6am on monday"],
-  "ignorePaths": ["ansible/galaxy/**"],
+  "extends": [
+    "config:best-practices"
+  ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "ignorePaths": [
+    "ansible/galaxy/**"
+  ],
   "rebaseWhen": "behind-base-branch",
   "minimumReleaseAge": "14 days",
   "internalChecksFilter": "strict",
   "semanticCommits": "disabled",
-  "addLabels": ["renovate"],
-
-  "pre-commit": { "enabled": true },
+  "addLabels": [
+    "renovate"
+  ],
+  "pre-commit": {
+    "enabled": true
+  },
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["ansible/roles/resticprofile/defaults/main.yaml"],
-      "matchStrings": ["(?:^|\\n)\\s*restic_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"],
+      "managerFilePatterns": [
+        "ansible/roles/resticprofile/defaults/main.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*restic_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
+      ],
       "depNameTemplate": "restic/restic",
       "datasourceTemplate": "github-releases"
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["ansible/roles/resticprofile/defaults/main.yaml"],
-      "matchStrings": ["(?:^|\\n)\\s*resticprofile_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"],
+      "managerFilePatterns": [
+        "ansible/roles/resticprofile/defaults/main.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*resticprofile_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
+      ],
       "depNameTemplate": "creativeprojects/resticprofile",
       "datasourceTemplate": "github-releases"
     },
     {
       "customType": "regex",
-      "fileMatch": [".*\\.ya?ml$"],
+      "managerFilePatterns": [
+        "/.*\\.ya?ml$/"
+      ],
       "matchStrings": [
         "imageName:\\s*(?<depName>ghcr\\.io/cloudnative-pg/postgresql):(?<currentValue>[\\w.-]+)"
       ],
@@ -37,51 +56,86 @@
   ],
   "packageRules": [
     {
-      "matchDatasources": ["helm"],
-      "matchManagers": ["helmv3"],
-      "matchFileNames": ["kubernetes/**/Chart.yaml"]
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchManagers": [
+        "helmv3"
+      ],
+      "matchFileNames": [
+        "kubernetes/**/Chart.yaml"
+      ]
     },
     {
-      "matchPackageNames": ["ghcr.io/linuxserver/qbittorrent"],
+      "matchPackageNames": [
+        "ghcr.io/linuxserver/qbittorrent"
+      ],
       "allowedVersions": "< 14",
       "description": "Only allow qbittorrent versions < 14 to avoid Ubuntu LTS tags"
     },
     {
-      "matchManagers": ["pre-commit"],
+      "matchManagers": [
+        "pre-commit"
+      ],
       "automerge": true,
       "automergeType": "pr",
-      "addLabels": ["automerge"],
+      "addLabels": [
+        "automerge"
+      ],
       "description": "Auto-merge pre-commit hook updates if CI passes"
     },
     {
-      "matchUpdateTypes": ["digest"],
-      "matchManagers": ["kustomize"],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "matchManagers": [
+        "kustomize"
+      ],
       "automerge": true,
       "automergeType": "pr",
-      "addLabels": ["automerge"],
+      "addLabels": [
+        "automerge"
+      ],
       "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/cloudnative-pg/postgresql"
+      ],
       "matchCurrentVersion": "/^17\\./",
       "automerge": true,
       "automergeType": "pr",
-      "addLabels": ["db-image", "automerge"],
+      "addLabels": [
+        "db-image",
+        "automerge"
+      ],
       "description": "Auto-merge PostgreSQL 17.x updates (always offline anyway)"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
-      "matchUpdateTypes": ["major"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/cloudnative-pg/postgresql"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false,
       "draftPR": true,
-      "addLabels": ["db-major-upgrade"],
+      "addLabels": [
+        "db-major-upgrade"
+      ],
       "prBodyNotes": [
         "PostgreSQL major version upgrade (e.g., 17→18). Verify backups, extension compatibility, and application compatibility before merging."
       ],
       "description": "PostgreSQL major version upgrades require manual review"
     }
   ],
-  "gitIgnoredAuthors": ["github-actions[bot]@users.noreply.github.com"]
+  "gitIgnoredAuthors": [
+    "github-actions[bot]@users.noreply.github.com"
+  ]
 }
