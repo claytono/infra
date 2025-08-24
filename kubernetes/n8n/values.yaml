@@ -25,15 +25,23 @@ ingress:
 
 # Main n8n application configuration
 main:
+  # Reloader annotations to restart when secrets change
+  podAnnotations:
+    reloader.stakater.com/auto: 'true'
+
   # n8n-specific configuration via environment variables
   config:
     n8n:
       protocol: https
       host: n8n.k.oneill.net
-
-#      port: 443
       webhook_url: https://n8n.k.oneill.net/
       editor_base_url: https://n8n.k.oneill.net/
+    # Configure Valkey/Redis connection for queue mode
+    queue:
+      bull:
+        redis:
+          host: valkey
+          port: 6379
     db:
       type: postgresdb
       postgresdb:
@@ -68,15 +76,11 @@ main:
         secretKeyRef:
           name: n8n-postgres-app
           key: password
-
-# Enable Valkey/Redis for queue mode and better performance
-valkey:
-  enabled: true
-  architecture: standalone
-  primary:
-    persistence:
-      enabled: true
-      size: 2Gi
+    QUEUE_BULL_REDIS_PASSWORD:
+      valueFrom:
+        secretKeyRef:
+          name: n8n-valkey
+          key: valkey-password
 
 # Disable embedded PostgreSQL - using CloudNativePG instead
 postgresql:

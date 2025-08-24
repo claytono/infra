@@ -22,7 +22,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: ca45d88a6436bed771bb0411f12509c08bb237bcead41cd9ced9cd09d0c8970a
+        checksum/config: 77628a4e27c47647deaaa96f3cc42afe59762c7ba5bcec518c2906f8eb227c68
+        reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: n8n
         app.kubernetes.io/instance: n8n
@@ -59,6 +60,11 @@ spec:
                 secretKeyRef:
                   key: N8N_USER_MANAGEMENT_JWT_SECRET
                   name: n8n-secrets
+            - name: QUEUE_BULL_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: valkey-password
+                  name: n8n-valkey
           lifecycle:
             {}
           ports:
