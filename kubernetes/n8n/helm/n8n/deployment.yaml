@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 77628a4e27c47647deaaa96f3cc42afe59762c7ba5bcec518c2906f8eb227c68
+        checksum/config: 4135c77c41065434b067b6628acfe11635d71db12d89ad78af3f154beffefd7f
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: n8n

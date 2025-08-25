@@ -34,8 +34,15 @@ main:
     n8n:
       protocol: https
       host: n8n.k.oneill.net
+      port: 5678
       webhook_url: https://n8n.k.oneill.net/
       editor_base_url: https://n8n.k.oneill.net/
+      enforce_settings_file_permissions: true
+      runners_enabled: true
+      secure_cookie: false
+    # Express server configuration for nginx ingress
+    express:
+      trust_proxy: true
     # Configure Valkey/Redis connection for queue mode
     queue:
       bull:
