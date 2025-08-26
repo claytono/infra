@@ -7,8 +7,8 @@ for file in "$@"; do
   if [[ -f "$file" ]]; then
     # Check for both apiVersion: and kind: (not commented out)
     if grep -q '^apiVersion:' "$file" && grep -q '^kind:' "$file"; then
-      # Exclude Kustomization kind (case-insensitive)
-      if ! grep -iq '^kind: *kustomization' "$file"; then
+      # Exclude Kustomization and Component kinds (case-insensitive)
+      if ! grep -iq '^kind: *\(kustomization\|component\)' "$file"; then
         filtered+=("$file")
       fi
     fi

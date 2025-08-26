@@ -4,6 +4,8 @@ kind: Ingress
 
 metadata:
   name: prometheus
+  labels:
+    ak-auth: 'true'
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
@@ -12,6 +14,7 @@ metadata:
     gethomepage.dev/icon: prometheus.png
 
 spec:
+  ingressClassName: nginx
   tls:
   - hosts:
     - prometheus.k.oneill.net
@@ -27,4 +30,3 @@ spec:
             name: prometheus
             port:
               number: 9090
-  ingressClassName: nginx

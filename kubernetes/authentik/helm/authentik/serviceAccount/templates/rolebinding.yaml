@@ -1,0 +1,22 @@
+---
+# Source: authentik/charts/serviceAccount/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: authentik
+  namespace: "authentik"
+  labels:
+    helm.sh/chart: "serviceAccount-2.1.0"
+    app.kubernetes.io/name: "serviceAccount"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2.1.0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: authentik
+subjects:
+  - kind: ServiceAccount
+    name: authentik
+    namespace: "authentik"

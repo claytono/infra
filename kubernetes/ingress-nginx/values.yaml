@@ -1,10 +1,12 @@
 ---
 controller:
   replicaCount: 2
+  allowSnippetAnnotations: true
   extraArgs:
     enable-ssl-passthrough: ''
   config:
     proxy-body-size: 100m
+    annotations-risk-level: Critical
   admissionWebhooks:
     enabled: false
   updateStrategy:

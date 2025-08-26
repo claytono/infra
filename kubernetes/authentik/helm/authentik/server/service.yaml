@@ -1,0 +1,30 @@
+---
+# Source: authentik/templates/server/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik-server
+  namespace: "authentik"
+  labels:
+    helm.sh/chart: "authentik-2025.8.1"
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2025.8.1"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 9000
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 9443
+  selector:
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "server"

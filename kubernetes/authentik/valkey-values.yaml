@@ -1,0 +1,22 @@
+---
+# Valkey configuration for Authentik caching
+
+# Use Deployment instead of StatefulSet for non-HA mode
+useDeploymentWhenNonHA: true
+
+# Reloader annotations to restart when secrets change
+podAnnotations:
+  reloader.stakater.com/auto: 'true'
+
+# Use standalone mode (no HA)
+haMode:
+  enabled: false
+
+# Enable persistence with 2Gi storage
+storage:
+  requestedSize: 2Gi
+  accessModes:
+  - ReadWriteOnce
+
+# Use existing secret auth.conf file for authentication
+extraSecretValkeyConfigs: authentik-valkey-config

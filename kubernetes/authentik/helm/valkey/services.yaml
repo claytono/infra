@@ -1,0 +1,22 @@
+---
+# Source: valkey/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey
+  labels:
+    helm.sh/chart: valkey-2.1.3
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: valkey
+    app.kubernetes.io/version: "8.1.3"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  ports:
+    - port: 6379
+      targetPort: valkey
+      protocol: TCP
+      name: valkey
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: valkey
