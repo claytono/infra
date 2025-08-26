@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir -p tmp helm/authentik helm/valkey
+
+# Render authentik chart
+helm_template authentik authentik --namespace authentik --values values.yaml --output-dir tmp
+
+# Move authentik templates to helm/authentik/
+mv tmp/authentik/templates/* helm/authentik/
+# Move authentik charts (includes ServiceAccount) to helm/authentik/
+mv tmp/authentik/charts/* helm/authentik/
+
+# Clean up authentik temp dir
+rm -rf tmp/authentik
+
+# Render valkey chart separately
+helm_template valkey valkey --namespace authentik --values valkey-values.yaml --output-dir tmp
+
+# Move valkey templates to helm/valkey/
+mv tmp/valkey/templates/* helm/valkey/
+
+# Clean up
+rm -rf tmp
+rm -rf helm/*/tests

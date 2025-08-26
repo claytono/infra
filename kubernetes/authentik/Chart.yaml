@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: authentik-meta
+version: 0.1.0
+dependencies:
+- name: authentik
+  version: 2025.8.1
+  repository: https://charts.goauthentik.io
+- name: valkey
+  version: 2.1.3
+  repository: https://groundhog2k.github.io/helm-charts/

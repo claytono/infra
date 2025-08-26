@@ -1,0 +1,20 @@
+---
+# Source: authentik/charts/serviceAccount/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: "authentik-authentik"
+  labels:
+    helm.sh/chart: "serviceAccount-2.1.0"
+    app.kubernetes.io/name: "serviceAccount"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2.1.0"
+rules:
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - list

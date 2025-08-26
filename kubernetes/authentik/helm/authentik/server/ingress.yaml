@@ -1,0 +1,40 @@
+---
+# Source: authentik/templates/server/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authentik-server
+  namespace: "authentik"
+  labels:
+    helm.sh/chart: "authentik-2025.8.1"
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2025.8.1"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/description: Identity Provider & SSO
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Security
+    gethomepage.dev/icon: authentik.png
+    gethomepage.dev/name: Authentik
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "auth.k.oneill.net"
+      http:
+        paths:
+          - path: '/'
+            pathType: Prefix
+            backend:
+              service:
+                name: authentik-server
+                port:
+                  number: 80
+  tls:
+    - hosts:
+      - auth.k.oneill.net
+      secretName: authentik-tls

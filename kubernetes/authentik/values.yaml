@@ -1,0 +1,94 @@
+---
+# Authentik Helm Chart Values
+# Based on authentik/authentik v2025.8.1
+
+# Authentik configuration - these become AUTHENTIK_ environment variables
+authentik:
+  # Enable trace logging for debugging
+  log_level: trace
+
+  # External PostgreSQL configuration (using CloudNativePG)
+  postgresql:
+    host: authentik-postgres-rw
+    name: authentik
+    user: authentik
+    # password set via env below
+
+  # External Redis/Valkey configuration
+  redis:
+    host: valkey
+    # password set via env below
+
+# Server configuration
+server:
+  # Reloader annotations to restart when secrets change
+  podAnnotations:
+    reloader.stakater.com/auto: 'true'
+
+  # Ingress configuration - enabled (default: false)
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+      gethomepage.dev/enabled: 'true'
+      gethomepage.dev/name: Authentik
+      gethomepage.dev/description: Identity Provider & SSO
+      gethomepage.dev/group: Security
+      gethomepage.dev/icon: authentik.png
+    hosts:
+    - auth.k.oneill.net
+    tls:
+    - secretName: authentik-tls
+      hosts:
+      - auth.k.oneill.net
+
+  # Additional environment variables from secrets
+  env:
+  - name: AUTHENTIK_POSTGRESQL__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: authentik-postgres-app
+        key: password
+  - name: AUTHENTIK_REDIS__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: authentik-valkey
+        key: valkey-password
+
+  # Environment variables from external secrets (for secret key, bootstrap password)
+  envFrom:
+  - secretRef:
+      name: authentik-secrets
+
+# Service account configuration for outpost management
+serviceAccount:
+  create: true
+  name: authentik
+
+# Worker configuration
+worker:
+  # Reloader annotations to restart when secrets change
+  podAnnotations:
+    reloader.stakater.com/auto: 'true'
+
+  # Additional environment variables from secrets
+  env:
+  - name: AUTHENTIK_POSTGRESQL__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: authentik-postgres-app
+        key: password
+  - name: AUTHENTIK_REDIS__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: authentik-valkey
+        key: valkey-password
+  - name: PYTHONHTTPSVERIFY
+    value: '0'
+
+  # Environment variables from external secrets (for secret key, bootstrap password)
+  envFrom:
+  - secretRef:
+      name: authentik-secrets
