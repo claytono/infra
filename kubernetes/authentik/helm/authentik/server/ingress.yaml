@@ -20,7 +20,6 @@ metadata:
     gethomepage.dev/group: Security
     gethomepage.dev/icon: authentik.png
     gethomepage.dev/name: Authentik
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
