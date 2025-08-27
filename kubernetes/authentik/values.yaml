@@ -4,8 +4,6 @@
 
 # Authentik configuration - these become AUTHENTIK_ environment variables
 authentik:
-  # Enable trace logging for debugging
-  log_level: trace
 
   # External PostgreSQL configuration (using CloudNativePG)
   postgresql:
@@ -85,8 +83,6 @@ worker:
       secretKeyRef:
         name: authentik-valkey
         key: valkey-password
-  - name: PYTHONHTTPSVERIFY
-    value: '0'
 
   # Environment variables from external secrets (for secret key, bootstrap password)
   envFrom:
