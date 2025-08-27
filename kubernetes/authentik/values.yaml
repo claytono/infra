@@ -34,6 +34,7 @@ server:
       gethomepage.dev/description: Identity Provider & SSO
       gethomepage.dev/group: Security
       gethomepage.dev/icon: authentik.png
+      gethomepage.dev/pod-selector: app.kubernetes.io/name=authentik,app.kubernetes.io/component=server
     hosts:
     - auth.k.oneill.net
     tls:
