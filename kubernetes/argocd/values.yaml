@@ -23,7 +23,7 @@ server:
       gethomepage.dev/name: Argo CD
       gethomepage.dev/description: GitOps Continuous Delivery
       gethomepage.dev/icon: mdi-git
-      gethomepage.dev/group: Platform
+      gethomepage.dev/group: Home Lab
     path: /
     pathType: Prefix
 
