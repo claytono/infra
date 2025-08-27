@@ -1,6 +1,6 @@
 ---
 - name: "Reset kubeadm if requested"
-  ansible.builtin.command: "kubeadm reset"
+  ansible.builtin.command: "kubeadm reset -f"
   when: "kubeadm_reset |default(false) |bool"
 
 - name: "Run kubeadm join to master"
