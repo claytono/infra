@@ -167,8 +167,11 @@ def generate_blueprint(template_content: str, app_info: Dict[str, str]) -> str:
 
 def generate_outpost_yaml(app_names: List[str]) -> str:
     """Generate complete outpost YAML configuration."""
+    # Sort app names for deterministic output
+    sorted_app_names = sorted(app_names)
+
     providers = []
-    for app_name in app_names:
+    for app_name in sorted_app_names:
         providers.append(f"""    - !Find
       - authentik_providers_proxy.proxyprovider
       - [name, {app_name}]""")
