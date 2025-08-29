@@ -32,14 +32,22 @@ from typing import List, Optional
 
 class DeploymentError(Exception):
     """Custom exception for deployment failures"""
+
     pass
 
 
 class ArgoCDDeployer:
     """ArgoCD deployment manager with retry logic and PR commenting"""
 
-    def __init__(self, apps: List[str], target_revision: str, pr_number: Optional[str] = None,
-                 action_run_url: Optional[str] = None, sync_timeout: int = 300, max_retries: int = 3):
+    def __init__(
+        self,
+        apps: List[str],
+        target_revision: str,
+        pr_number: Optional[str] = None,
+        action_run_url: Optional[str] = None,
+        sync_timeout: int = 300,
+        max_retries: int = 3,
+    ):
         self.apps = apps
         self.target_revision = target_revision
         self.pr_number = pr_number
@@ -47,19 +55,25 @@ class ArgoCDDeployer:
         self.sync_timeout = sync_timeout
         self.max_retries = max_retries
 
-    def run_command(self, cmd: List[str], capture_output: bool = True) -> subprocess.CompletedProcess:
+    def run_command(
+        self, cmd: List[str], capture_output: bool = True
+    ) -> subprocess.CompletedProcess:
         """Run a command and return the result"""
         print(f"Running command: {' '.join(cmd)}")
         try:
             if capture_output:
-                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, check=False
+                )
                 if result.returncode != 0:
                     print(f"Command failed with return code {result.returncode}")
                     print(f"stdout: {result.stdout}")
                     print(f"stderr: {result.stderr}")
             else:
                 # For real-time output, capture stderr separately while showing stdout live
-                result = subprocess.run(cmd, stdout=None, stderr=subprocess.PIPE, text=True, check=False)
+                result = subprocess.run(
+                    cmd, stdout=None, stderr=subprocess.PIPE, text=True, check=False
+                )
                 if result.returncode != 0:
                     print(f"Command failed with return code {result.returncode}")
                     if result.stderr:
@@ -68,15 +82,21 @@ class ArgoCDDeployer:
         except Exception as e:
             raise DeploymentError(f"Failed to run command {' '.join(cmd)}: {e}")
 
-
     def sync_app_to_revision(self, app: str) -> None:
         """Sync a single application to the target revision"""
         print(f"Syncing {app} to revision {self.target_revision} (with pruning)")
 
-        cmd = ['argocd', 'app', 'sync', app,
-               '--revision', self.target_revision,
-               '--prune',
-               '--timeout', str(self.sync_timeout)]
+        cmd = [
+            "argocd",
+            "app",
+            "sync",
+            app,
+            "--revision",
+            self.target_revision,
+            "--prune",
+            "--timeout",
+            str(self.sync_timeout),
+        ]
 
         result = self.run_command(cmd, capture_output=False)
         if result.returncode != 0:
@@ -91,7 +111,16 @@ class ArgoCDDeployer:
         """Wait for an application to reach healthy status"""
         print(f"Waiting for {app} to become healthy...")
 
-        cmd = ['argocd', 'app', 'wait', app, '--operation', '--health', '--timeout', str(self.sync_timeout)]
+        cmd = [
+            "argocd",
+            "app",
+            "wait",
+            app,
+            "--operation",
+            "--health",
+            "--timeout",
+            str(self.sync_timeout),
+        ]
 
         result = self.run_command(cmd, capture_output=False)
         if result.returncode != 0:
@@ -129,7 +158,9 @@ class ArgoCDDeployer:
             else:
                 if attempt < self.max_retries:
                     delay = attempt * 10  # 10s, 20s, 30s delays
-                    print(f"❌ {app} failed (attempt {attempt}/{self.max_retries}). Retrying in {delay}s...")
+                    print(
+                        f"❌ {app} failed (attempt {attempt}/{self.max_retries}). Retrying in {delay}s..."
+                    )
                     time.sleep(delay)
                 else:
                     print(f"❌ {app} failed after {self.max_retries} attempts")
@@ -146,7 +177,7 @@ class ArgoCDDeployer:
         if is_failure and self.action_run_url:
             message = f"{message}\n\n[View action run details]({self.action_run_url})"
 
-        cmd = ['gh', 'pr', 'comment', self.pr_number, '--body', message]
+        cmd = ["gh", "pr", "comment", self.pr_number, "--body", message]
         result = self.run_command(cmd)
 
         if result.returncode != 0:
@@ -182,10 +213,14 @@ class ArgoCDDeployer:
         self.comment_pr(message, is_failure=is_failure)
 
         # Print summary
-        print(f"\nDeployment Summary:")
+        print("\nDeployment Summary:")
         print(f"  Total: {len(self.apps)}")
-        print(f"  Successful: {len(successful_apps)} - {', '.join(successful_apps) if successful_apps else 'None'}")
-        print(f"  Failed: {len(failed_apps)} - {', '.join(failed_apps) if failed_apps else 'None'}")
+        print(
+            f"  Successful: {len(successful_apps)} - {', '.join(successful_apps) if successful_apps else 'None'}"
+        )
+        print(
+            f"  Failed: {len(failed_apps)} - {', '.join(failed_apps) if failed_apps else 'None'}"
+        )
 
         # Exit with error if any apps failed
         if failed_apps:
@@ -196,21 +231,28 @@ def main():
     parser = argparse.ArgumentParser(
         description="Deploy ArgoCD applications to specified target revision",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
 
-    parser.add_argument('--apps', required=True,
-                       help='Space-separated list of application names')
-    parser.add_argument('--target-revision', required=True,
-                       help='Target revision (branch/tag/commit)')
-    parser.add_argument('--comment-pr',
-                       help='Comment results on PR')
-    parser.add_argument('--sync-timeout', type=int, default=300,
-                       help='Sync timeout in seconds (default: 300)')
-    parser.add_argument('--action-run-url',
-                       help='GitHub Action run URL for failure comments')
-    parser.add_argument('--max-retries', type=int, default=3,
-                       help='Maximum retry attempts (default: 3)')
+    parser.add_argument(
+        "--apps", required=True, help="Space-separated list of application names"
+    )
+    parser.add_argument(
+        "--target-revision", required=True, help="Target revision (branch/tag/commit)"
+    )
+    parser.add_argument("--comment-pr", help="Comment results on PR")
+    parser.add_argument(
+        "--sync-timeout",
+        type=int,
+        default=300,
+        help="Sync timeout in seconds (default: 300)",
+    )
+    parser.add_argument(
+        "--action-run-url", help="GitHub Action run URL for failure comments"
+    )
+    parser.add_argument(
+        "--max-retries", type=int, default=3, help="Maximum retry attempts (default: 3)"
+    )
 
     args = parser.parse_args()
 
@@ -224,7 +266,7 @@ def main():
 
     # Validate token for gh if PR commenting is requested (accept GH_TOKEN or GITHUB_TOKEN)
     if args.comment_pr:
-        token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
+        token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
         if not token:
             print("Error: GH_TOKEN or GITHUB_TOKEN required for PR commenting")
             sys.exit(1)
@@ -235,11 +277,11 @@ def main():
         pr_number=args.comment_pr,
         action_run_url=args.action_run_url,
         sync_timeout=args.sync_timeout,
-        max_retries=args.max_retries
+        max_retries=args.max_retries,
     )
 
     deployer.deploy()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
