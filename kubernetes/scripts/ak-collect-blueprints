@@ -21,10 +21,14 @@ PORT_MAPPING = {
 
 def find_ingress_files(base_dir: Path) -> List[Path]:
     """Find all YAML files that might contain ingress resources."""
-    ingress_files = []
-    for yaml_file in base_dir.rglob("*.yaml"):
-        ingress_files.append(yaml_file)
-    return ingress_files
+    candidates: set[Path] = set()
+    for pattern in ("*.yaml", "*.yml"):
+        for yaml_file in base_dir.rglob(pattern):
+            # Skip generated outputs
+            if "generated-blueprints" in yaml_file.parts:
+                continue
+            candidates.add(yaml_file)
+    return sorted(candidates)
 
 
 def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
