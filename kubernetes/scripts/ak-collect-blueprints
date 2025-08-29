@@ -1,0 +1,372 @@
+#!/usr/bin/env python3
+"""
+Generate Authentik blueprints from Kubernetes ingress resources with ak-auth labels.
+"""
+
+import argparse
+import filecmp
+import os
+import re
+import shutil
+import sys
+import yaml
+from pathlib import Path
+from typing import Dict, List, Any
+
+# Port name to number mapping
+PORT_MAPPING = {
+    'http': 80,
+    'https': 443,
+}
+
+
+def find_ingress_files(base_dir: Path) -> List[Path]:
+    """Find all YAML files that might contain ingress resources."""
+    ingress_files = []
+    for yaml_file in base_dir.rglob("*.yaml"):
+        ingress_files.append(yaml_file)
+    return ingress_files
+
+
+def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
+    """Parse YAML file and return ingress resources with ak-auth annotation/label."""
+    try:
+        # Read file content first
+        with open(file_path, 'r') as f:
+            content = f.read()
+
+        # Quick check for ingress kind before parsing YAML
+        if not re.search(r'kind:\s*Ingress', content, re.IGNORECASE):
+            return []
+
+        # Parse YAML only if it contains ingress resources
+        docs = list(yaml.safe_load_all(content))
+
+        ingresses = []
+        for doc in docs:
+            if not doc or doc.get('kind') != 'Ingress':
+                continue
+
+            # Check for ak-auth label
+            metadata = doc.get('metadata', {})
+            labels = metadata.get('labels', {})
+
+            if labels.get('ak-auth') == 'true':
+                ingresses.append(doc)
+
+        return ingresses
+    except Exception as e:
+        print(f"Warning: Could not parse {file_path}: {e}", file=sys.stderr)
+        return []
+
+
+def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, str]:
+    """Extract app info from ingress resource."""
+    metadata = ingress.get('metadata', {})
+    spec = ingress.get('spec', {})
+
+    # Get service name from directory structure
+    service_name = None
+    path_parts = file_path.parts
+    for i, part in enumerate(path_parts):
+        if part == 'kubernetes' and i + 1 < len(path_parts):
+            service_name = path_parts[i + 1]
+            break
+
+    if not service_name:
+        raise ValueError(f"Could not determine service name from path: {file_path}")
+
+    ingress_name = metadata.get('name', '')
+    namespace = metadata.get('namespace', 'default')
+
+    # Get external host from first rule
+    rules = spec.get('rules', [])
+    if not rules:
+        raise ValueError(f"No rules found in ingress {metadata.get('name')}")
+
+    external_host = f"https://{rules[0].get('host', '')}"
+
+    # Get service info from first path
+    paths = rules[0].get('http', {}).get('paths', [])
+    if not paths:
+        raise ValueError(f"No paths found in ingress {metadata.get('name')}")
+
+    backend = paths[0].get('backend', {}).get('service', {})
+    k8s_service_name = backend.get('name', '')
+    service_port = backend.get('port', {})
+
+    # Handle both number and name port specifications
+    if isinstance(service_port, dict):
+        if 'number' in service_port:
+            port = service_port['number']
+        elif 'name' in service_port:
+            port_name = service_port['name']
+            if port_name not in PORT_MAPPING:
+                raise ValueError(f"Unknown port name '{port_name}' in ingress {metadata.get('name')} - add to PORT_MAPPING")
+            port = PORT_MAPPING[port_name]
+        else:
+            raise ValueError(f"Service port specification missing both 'number' and 'name' in ingress {metadata.get('name')}")
+    else:
+        raise ValueError(f"Invalid service port specification in ingress {metadata.get('name')}: expected dict, got {type(service_port)}")
+
+    internal_host = f"http://{k8s_service_name}.{namespace}.svc.cluster.local:{port}"
+
+    return {
+        'service_name': service_name,
+        'ingress_name': ingress_name,
+        'app_name': service_name,  # Will be updated by resolve_app_names if needed
+        'namespace': namespace,
+        'external_host': external_host,
+        'internal_host': internal_host,
+    }
+
+
+def resolve_app_names(raw_app_infos: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Resolve final app names, adding ingress suffixes when there are conflicts."""
+    # Group by service name
+    service_groups = {}
+    for app_info in raw_app_infos:
+        service_name = app_info['service_name']
+        if service_name not in service_groups:
+            service_groups[service_name] = []
+        service_groups[service_name].append(app_info)
+
+    # Update app names for services with multiple ingresses
+    resolved_infos = []
+    for service_name, infos in service_groups.items():
+        if len(infos) == 1:
+            # Single ingress - use service name
+            infos[0]['app_name'] = service_name
+            resolved_infos.extend(infos)
+        else:
+            # Multiple ingresses - add ingress name suffix
+            for info in infos:
+                ingress_suffix = info['ingress_name'].replace(f"{service_name}-", "").replace("-ingress", "")
+                info['app_name'] = f"{service_name}-{ingress_suffix}"
+                resolved_infos.append(info)
+
+    return resolved_infos
+
+
+def generate_blueprint(template_content: str, app_info: Dict[str, str]) -> str:
+    """Generate blueprint by substituting template placeholders."""
+    blueprint = template_content
+    for key, value in app_info.items():
+        blueprint = blueprint.replace(f"{{{key}}}", value)
+    return blueprint
+
+
+def generate_outpost_yaml(app_names: List[str]) -> str:
+    """Generate complete outpost YAML configuration."""
+    providers = []
+    for app_name in app_names:
+        providers.append(f"""    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, {app_name}]""")
+
+    providers_yaml = "\n".join(providers)
+
+    return f"""---
+version: 1
+
+metadata:
+  name: outpost-config
+
+entries:
+
+# Outpost Configuration
+- identifiers:
+    name: authentik Embedded Outpost
+  model: authentik_outposts.outpost
+  state: present
+  attrs:
+    providers:
+{providers_yaml}
+"""
+
+
+def update_kustomization_configmap(kustomization_file: Path, app_infos: List[Dict[str, str]]) -> None:
+    """Update kustomization.yaml with configMapGenerator section."""
+    # Read the existing file
+    with open(kustomization_file, 'r') as f:
+        lines = f.readlines()
+
+    # Find the marker line
+    marker_line = "# ak-collect-blueprints: auto-generated section below\n"
+    try:
+        marker_index = lines.index(marker_line)
+    except ValueError:
+        raise ValueError(f"Marker line not found in {kustomization_file}. Expected: {marker_line.strip()}")
+
+    # Keep everything up to and including the marker line
+    new_lines = lines[:marker_index + 1]
+
+    # Generate the configMapGenerator section
+    new_lines.append("configMapGenerator:\n")
+    new_lines.append("- name: authentik-blueprints\n")
+    new_lines.append("  files:\n")
+
+    # Add blueprint files
+    for app_info in app_infos:
+        new_lines.append(f"  - generated-blueprints/{app_info['app_name']}.yaml\n")
+
+    # Add outpost file
+    new_lines.append("  - generated-blueprints/outpost.yaml\n")
+    new_lines.append("  options:\n")
+    new_lines.append("    disableNameSuffixHash: true\n")
+
+    # Write to temp file then move into place
+    temp_file = kustomization_file.with_suffix('.tmp')
+    with open(temp_file, 'w') as f:
+        f.writelines(new_lines)
+
+    temp_file.replace(kustomization_file)
+    print(f"Updated {kustomization_file} with {len(app_infos)} blueprint files")
+
+
+def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
+    """Collect and process ingress information from all YAML files."""
+    ingress_files = find_ingress_files(base_dir)
+
+    raw_app_infos = []
+    errors = []
+    for file_path in ingress_files:
+        ingresses = parse_ingress_file(file_path)
+        for ingress in ingresses:
+            try:
+                app_info = extract_ingress_info(ingress, file_path)
+                raw_app_infos.append(app_info)
+            except ValueError as e:
+                errors.append(str(e))
+                print(f"Warning: {e}", file=sys.stderr)
+
+    # Determine final app names based on service conflicts
+    app_infos = resolve_app_names(raw_app_infos)
+
+    for app_info in app_infos:
+        print(f"Found ak-auth ingress: {app_info['app_name']}")
+
+    if not app_infos:
+        print("No ingresses with ak-auth found")
+        return []
+
+    # Exit if any errors occurred during parsing
+    if errors:
+        print(f"ERROR: {len(errors)} errors occurred during parsing. Aborting.", file=sys.stderr)
+        sys.exit(1)
+
+    return app_infos
+
+
+def generate_blueprints_to_temp(template_content: str, app_infos: List[Dict[str, str]], temp_dir: Path) -> None:
+    """Generate all blueprints to temporary directory."""
+    # Clean temporary directory
+    for existing_file in temp_dir.glob("*.yaml"):
+        existing_file.unlink()
+
+    # Generate individual blueprints
+    for app_info in app_infos:
+        blueprint_content = generate_blueprint(template_content, app_info)
+        blueprint_file = temp_dir / f"{app_info['app_name']}.yaml"
+
+        with open(blueprint_file, 'w') as f:
+            f.write(blueprint_content)
+
+        print(f"Generated blueprint: {blueprint_file}")
+
+    # Generate outpost configuration
+    app_names = [info['app_name'] for info in app_infos]
+    outpost_content = generate_outpost_yaml(app_names)
+
+    outpost_file = temp_dir / "outpost.yaml"
+    with open(outpost_file, 'w') as f:
+        f.write(outpost_content)
+
+    print(f"Generated outpost config: {outpost_file}")
+
+
+def directories_are_different(dir1: Path, dir2: Path) -> bool:
+    """Compare two directories and return True if they are different."""
+    if not dir1.exists() or not dir2.exists():
+        return True
+
+    # Get all files in both directories
+    files1 = {f.relative_to(dir1) for f in dir1.rglob('*') if f.is_file()}
+    files2 = {f.relative_to(dir2) for f in dir2.rglob('*') if f.is_file()}
+
+    # Different file sets means directories are different
+    if files1 != files2:
+        return True
+
+    # Compare each file
+    for file_path in files1:
+        if not filecmp.cmp(dir1 / file_path, dir2 / file_path, shallow=False):
+            return True
+
+    return False
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate authentik blueprints from ingresses')
+    parser.add_argument('--check', action='store_true',
+                       help='Check mode: exit 1 if generated blueprints would change files')
+    args = parser.parse_args()
+
+    script_dir = Path(__file__).parent.resolve()
+    base_dir = script_dir.parent
+    template_file = base_dir / "authentik" / "service-blueprint.template.yaml"
+    output_dir = base_dir / "authentik" / "generated-blueprints"
+
+    # Load template
+    if not template_file.exists():
+        print(f"Template file not found: {template_file}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(template_file, 'r') as f:
+        template_content = f.read()
+
+    # Collect ingress information
+    app_infos = collect_ingress_info(base_dir)
+    if not app_infos:
+        return
+
+    # Create temporary directory (clean it first if it exists)
+    temp_dir = output_dir.with_suffix('.tmp')
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir)
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        # Generate blueprints to temporary directory
+        generate_blueprints_to_temp(template_content, app_infos, temp_dir)
+
+        # In check mode, compare directories and exit if different
+        if args.check:
+            if directories_are_different(output_dir, temp_dir):
+                print("Blueprint files would be modified", file=sys.stderr)
+                shutil.rmtree(temp_dir)
+                sys.exit(1)
+            else:
+                print("Blueprint files are up to date")
+                shutil.rmtree(temp_dir)
+                return
+
+        # Update kustomization.yaml with configMapGenerator
+        kustomization_file = base_dir / "authentik" / "kustomization.yaml"
+        update_kustomization_configmap(kustomization_file, app_infos)
+
+        # All successful - atomically replace the real directory
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
+        shutil.move(temp_dir, output_dir)
+
+        print(f"Generated {len(app_infos)} blueprints total")
+
+    except Exception as e:
+        print(f"ERROR: Failed to generate blueprints: {e}", file=sys.stderr)
+        print(f"Temporary files left in {temp_dir} for debugging", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

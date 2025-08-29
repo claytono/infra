@@ -16,13 +16,13 @@ repos:
   hooks:
   - id: yamlfix
     args: [-c, .yamlfix.toml]
-    exclude: ^ansible/
+    exclude: ^ansible/|service-blueprint\.template\.yaml$
 
 - repo: https://github.com/adrienverge/yamllint.git
   rev: v1.37.1
   hooks:
   - id: yamllint
-    exclude: ^ansible/
+    exclude: ^ansible/|service-blueprint\.template\.yaml$
 
 - repo: https://github.com/pre-commit/mirrors-prettier
   rev: v3.1.0
@@ -45,6 +45,13 @@ repos:
     files: ^kubernetes/.*\.(ya?ml)$
     pass_filenames: true
     exclude: helm.yaml$
+  - id: ak-collect-blueprints
+    name: collect authentik blueprints
+    entry: kubernetes/scripts/ak-collect-blueprints --check
+    language: system
+    files: ^kubernetes/.*/.*\.(ya?ml)$
+    pass_filenames: false
+    always_run: false
 
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1

@@ -63,6 +63,11 @@ spec:
                 name: authentik
             - secretRef:
                 name: authentik-secrets
+          volumeMounts:
+            - mountPath: /blueprints/dev
+              name: blueprints-dev
+            - name: blueprints-cm-authentik-blueprints
+              mountPath: /blueprints/mounted/cm-authentik-blueprints
           ports:
             - name: http
               containerPort: 9000
@@ -116,4 +121,10 @@ spec:
                     app.kubernetes.io/instance: "authentik"
                     app.kubernetes.io/component: "worker"
                 topologyKey: kubernetes.io/hostname
+      volumes:
+        - emptyDir: {}
+          name: blueprints-dev
+        - name: blueprints-cm-authentik-blueprints
+          configMap:
+            name: authentik-blueprints
       enableServiceLinks: true

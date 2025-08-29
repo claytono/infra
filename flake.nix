@@ -25,6 +25,7 @@
             ansible
             ansible-lint
             awscli2
+            curl
             jq
             kubeconform
             kubectl
@@ -34,6 +35,8 @@
             opentofu
             pluto
             pre-commit
+            python3
+            python3Packages.pyyaml
             skopeo
             tflint
             trivy
