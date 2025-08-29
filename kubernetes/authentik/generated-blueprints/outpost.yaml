@@ -1,0 +1,24 @@
+---
+version: 1
+
+metadata:
+  name: outpost-config
+
+entries:
+
+# Outpost Configuration
+- identifiers:
+    name: authentik Embedded Outpost
+  model: authentik_outposts.outpost
+  state: present
+  attrs:
+    providers:
+    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, alertmanager]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, prometheus]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, goldilocks]

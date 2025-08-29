@@ -16,6 +16,9 @@ resources:
 - helm/templates/dashboard-service.yaml
 - helm/templates/dashboard-serviceaccount.yaml
 
+components:
+- ../components/authentik
+
 commonAnnotations:
   argoManaged: 'true'
 

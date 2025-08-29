@@ -8,7 +8,7 @@ resources:
 - namespace.yaml
 - externalsecret.yaml
 - authentik-postgres-cluster.yaml
-  # Authentik resources
+# Authentik resources
 - helm/authentik/secret.yaml
 - helm/authentik/server/deployment.yaml
 - helm/authentik/server/ingress.yaml
@@ -19,7 +19,7 @@ resources:
 - helm/authentik/serviceAccount/templates/clusterrolebinding.yaml
 - helm/authentik/serviceAccount/templates/role.yaml
 - helm/authentik/serviceAccount/templates/rolebinding.yaml
-  # Valkey resources
+# Valkey resources
 - helm/valkey/pvc.yaml
 - helm/valkey/scripts.yaml
 - helm/valkey/service-internal.yaml
@@ -28,3 +28,14 @@ resources:
 
 commonAnnotations:
   argoManaged: 'true'
+
+# ak-collect-blueprints: auto-generated section below
+configMapGenerator:
+- name: authentik-blueprints
+  files:
+  - generated-blueprints/alertmanager.yaml
+  - generated-blueprints/prometheus.yaml
+  - generated-blueprints/goldilocks.yaml
+  - generated-blueprints/outpost.yaml
+  options:
+    disableNameSuffixHash: true
