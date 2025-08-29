@@ -46,11 +46,12 @@ def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
             if not doc or doc.get("kind") != "Ingress":
                 continue
 
-            # Check for ak-auth label
+            # Check for ak-auth label or annotation
             metadata = doc.get("metadata", {})
             labels = metadata.get("labels", {})
+            annotations = metadata.get("annotations", {})
 
-            if labels.get("ak-auth") == "true":
+            if labels.get("ak-auth") == "true" or annotations.get("ak-auth") == "true":
                 ingresses.append(doc)
 
         return ingresses

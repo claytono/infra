@@ -35,6 +35,7 @@ configMapGenerator:
   files:
   - generated-blueprints/alertmanager.yaml
   - generated-blueprints/prometheus.yaml
+  - generated-blueprints/goldilocks.yaml
   - generated-blueprints/outpost.yaml
   options:
     disableNameSuffixHash: true
