@@ -6,7 +6,6 @@ metadata:
   name: goldilocks-dashboard
   namespace: default
   labels:
-    ak-auth: "true"
     app.kubernetes.io/name: goldilocks
     helm.sh/chart: goldilocks-10.0.0
     app.kubernetes.io/instance: goldilocks
