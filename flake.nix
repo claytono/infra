@@ -28,6 +28,7 @@
             curl
             jq
             kubeconform
+            kubecolor
             kubectl
             kustomize
             mosquitto
@@ -35,8 +36,11 @@
             opentofu
             pluto
             pre-commit
-            python3
-            python3Packages.pyyaml
+            # Python with required packages
+            (python3.withPackages (ps: with ps; [
+              jinja2
+              pyyaml
+            ]))
             skopeo
             tflint
             trivy

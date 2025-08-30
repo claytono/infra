@@ -33,9 +33,11 @@ commonAnnotations:
 configMapGenerator:
 - name: authentik-blueprints
   files:
+  - generated-blueprints/radarr.yaml
+  - generated-blueprints/sonarr.yaml
   - generated-blueprints/alertmanager.yaml
-  - generated-blueprints/prometheus.yaml
   - generated-blueprints/goldilocks.yaml
+  - generated-blueprints/prometheus.yaml
   - generated-blueprints/outpost.yaml
   options:
     disableNameSuffixHash: true

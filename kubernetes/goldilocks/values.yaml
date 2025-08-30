@@ -18,7 +18,7 @@ dashboard:
     enabled: true
     ingressClassName: nginx
     annotations:
-      ak-auth: 'true'
+      ak-simple: 'true'
       cert-manager.io/cluster-issuer: letsencrypt
       gethomepage.dev/enabled: 'true'
       gethomepage.dev/name: Goldilocks

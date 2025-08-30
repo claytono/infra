@@ -5,7 +5,7 @@ kind: Ingress
 metadata:
   name: prometheus
   labels:
-    ak-auth: 'true'
+    ak-simple: 'true'
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'

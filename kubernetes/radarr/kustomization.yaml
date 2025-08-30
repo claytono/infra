@@ -6,6 +6,9 @@ namespace: default
 commonAnnotations:
   argoManaged: 'true'
 
+components:
+- ../components/authentik
+
 resources:
 - deployment.yaml
 - service.yaml
