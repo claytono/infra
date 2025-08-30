@@ -17,6 +17,12 @@ entries:
     internal_host: {{ internal_host }}
     intercept_header_auth: true
     cookie_domain: oneill.net
+{%- if skip_path_regex %}
+    skip_path_regex: |-
+{%- for line in skip_path_regex.split('\n') %}
+      {{ line }}
+{%- endfor %}
+{%- endif %}
     authorization_flow: !Find
     - authentik_flows.flow
     - [slug, default-provider-authorization-implicit-consent]

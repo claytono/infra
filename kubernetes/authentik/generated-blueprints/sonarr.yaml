@@ -19,6 +19,8 @@ entries:
     basic_auth_username_attribute: username
     basic_auth_password_attribute: password
     cookie_domain: oneill.net
+    skip_path_regex: |-
+      ^https://sonarr.k.oneill.net/api(/|$)
     authorization_flow: !Find
     - authentik_flows.flow
     - [slug, default-provider-authorization-implicit-consent]
