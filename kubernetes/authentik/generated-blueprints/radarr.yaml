@@ -1,0 +1,35 @@
+---
+version: 1
+
+metadata:
+  name: radarr-basic-config
+
+entries:
+- identifiers:  # radarr Proxy Provider (Basic Auth)
+    name: radarr
+  id: radarr_provider
+  model: authentik_providers_proxy.proxyprovider
+  state: present
+  attrs:
+    name: radarr
+    mode: forward_domain
+    external_host: https://radarr.k.oneill.net
+    internal_host: http://radarr.default.svc.cluster.local:7878
+    intercept_header_auth: true
+    basic_auth_username_attribute: username
+    basic_auth_password_attribute: password
+    cookie_domain: oneill.net
+    authorization_flow: !Find
+    - authentik_flows.flow
+    - [slug, default-provider-authorization-implicit-consent]
+    invalidation_flow: !Find
+    - authentik_flows.flow
+    - [slug, default-provider-invalidation-flow]
+- identifiers:  # radarr Application
+    slug: radarr
+  id: radarr_app
+  model: authentik_core.application
+  state: present
+  attrs:
+    name: radarr
+    provider: !KeyOf radarr_provider

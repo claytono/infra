@@ -2,19 +2,19 @@
 version: 1
 
 metadata:
-  name: {app_name}-config
+  name: {{ app_name }}-config
 
 entries:
-- identifiers:  # {app_name} Proxy Provider
-    name: {app_name}
-  id: {app_name}_provider
+- identifiers:  # {{ app_name }} Proxy Provider
+    name: {{ app_name }}
+  id: {{ app_name }}_provider
   model: authentik_providers_proxy.proxyprovider
   state: present
   attrs:
-    name: {app_name}
+    name: {{ app_name }}
     mode: forward_domain
-    external_host: {external_host}
-    internal_host: {internal_host}
+    external_host: {{ external_host }}
+    internal_host: {{ internal_host }}
     intercept_header_auth: true
     cookie_domain: oneill.net
     authorization_flow: !Find
@@ -23,11 +23,11 @@ entries:
     invalidation_flow: !Find
     - authentik_flows.flow
     - [slug, default-provider-invalidation-flow]
-- identifiers:  # {app_name} Application
-    slug: {app_name}
-  id: {app_name}_app
+- identifiers:  # {{ app_name }} Application
+    slug: {{ app_name }}
+  id: {{ app_name }}_app
   model: authentik_core.application
   state: present
   attrs:
-    name: {app_name}
-    provider: !KeyOf {app_name}_provider
+    name: {{ app_name }}
+    provider: !KeyOf {{ app_name }}_provider

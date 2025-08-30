@@ -11,12 +11,16 @@ import sys
 import yaml
 from pathlib import Path
 from typing import Dict, List, Any
+from jinja2 import Template
 
-# Port name to number mapping
+# Configuration constants
 PORT_MAPPING = {
     "http": 80,
     "https": 443,
 }
+
+# Supported authentication types (templates are blueprint-templates/{type}.yaml.j2)
+AUTH_TYPES = ["simple", "basic"]
 
 
 def find_ingress_files(base_dir: Path) -> List[Path]:
@@ -32,7 +36,7 @@ def find_ingress_files(base_dir: Path) -> List[Path]:
 
 
 def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
-    """Parse YAML file and return ingress resources with ak-auth annotation/label."""
+    """Parse YAML file and return ingress resources with ak-simple or ak-basic annotation/label."""
     try:
         # Read file content first
         with open(file_path, "r") as f:
@@ -50,12 +54,23 @@ def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
             if not doc or doc.get("kind") != "Ingress":
                 continue
 
-            # Check for ak-auth label or annotation
+            # Check for ak-simple or ak-basic label or annotation
             metadata = doc.get("metadata", {})
             labels = metadata.get("labels", {})
             annotations = metadata.get("annotations", {})
 
-            if labels.get("ak-auth") == "true" or annotations.get("ak-auth") == "true":
+            has_simple = (
+                labels.get("ak-simple") == "true"
+                or annotations.get("ak-simple") == "true"
+            )
+            has_basic = (
+                labels.get("ak-basic") == "true"
+                or annotations.get("ak-basic") == "true"
+            )
+
+            if has_simple or has_basic:
+                # Add auth_type to the document for template selection
+                doc["_auth_type"] = "basic" if has_basic else "simple"
                 ingresses.append(doc)
 
         return ingresses
@@ -128,6 +143,7 @@ def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, 
         "namespace": namespace,
         "external_host": external_host,
         "internal_host": internal_host,
+        "auth_type": ingress["_auth_type"],
     }
 
 
@@ -163,43 +179,18 @@ def resolve_app_names(raw_app_infos: List[Dict[str, str]]) -> List[Dict[str, str
 
 
 def generate_blueprint(template_content: str, app_info: Dict[str, str]) -> str:
-    """Generate blueprint by substituting template placeholders."""
-    blueprint = template_content
-    for key, value in app_info.items():
-        blueprint = blueprint.replace(f"{{{key}}}", value)
-    return blueprint
+    """Generate blueprint using Jinja2 template engine."""
+    template = Template(template_content)
+    return template.render(**app_info)
 
 
-def generate_outpost_yaml(app_names: List[str]) -> str:
-    """Generate complete outpost YAML configuration."""
+def generate_outpost_yaml(app_names: List[str], outpost_template: str) -> str:
+    """Generate complete outpost YAML configuration using Jinja2 template."""
     # Sort app names for deterministic output
     sorted_app_names = sorted(app_names)
 
-    providers = []
-    for app_name in sorted_app_names:
-        providers.append(f"""    - !Find
-      - authentik_providers_proxy.proxyprovider
-      - [name, {app_name}]""")
-
-    providers_yaml = "\n".join(providers)
-
-    return f"""---
-version: 1
-
-metadata:
-  name: outpost-config
-
-entries:
-
-# Outpost Configuration
-- identifiers:
-    name: authentik Embedded Outpost
-  model: authentik_outposts.outpost
-  state: present
-  attrs:
-    providers:
-{providers_yaml}
-"""
+    template = Template(outpost_template)
+    return template.render(app_names=sorted_app_names)
 
 
 def update_kustomization_configmap(
@@ -242,7 +233,6 @@ def update_kustomization_configmap(
         f.writelines(new_lines)
 
     temp_file.replace(kustomization_file)
-    print(f"Updated {kustomization_file} with {len(app_infos)} blueprint files")
 
 
 def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
@@ -264,11 +254,17 @@ def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
     # Determine final app names based on service conflicts
     app_infos = resolve_app_names(raw_app_infos)
 
-    for app_info in app_infos:
-        print(f"Found ak-auth ingress: {app_info['app_name']}")
+    # Sort and display found services
+    sorted_app_infos = sorted(app_infos, key=lambda x: (x["auth_type"], x["app_name"]))
+
+    print("Found services with authentik annotations:")
+    for app_info in sorted_app_infos:
+        auth_type = app_info["auth_type"]
+        print(f"  ✓ ak-{auth_type}: {app_info['app_name']}")
+    print()
 
     if not app_infos:
-        print("No ingresses with ak-auth found")
+        print("No ingresses with ak-simple or ak-basic found")
         return []
 
     # Exit if any errors occurred during parsing
@@ -279,11 +275,14 @@ def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
         )
         sys.exit(1)
 
-    return app_infos
+    return sorted_app_infos
 
 
 def generate_blueprints_to_temp(
-    template_content: str, app_infos: List[Dict[str, str]], temp_dir: Path
+    templates: Dict[str, str],
+    outpost_template: str,
+    app_infos: List[Dict[str, str]],
+    temp_dir: Path,
 ) -> None:
     """Generate all blueprints to temporary directory."""
     # Clean temporary directory
@@ -291,24 +290,32 @@ def generate_blueprints_to_temp(
         existing_file.unlink()
 
     # Generate individual blueprints
+    print("Generating blueprints...")
     for app_info in app_infos:
+        auth_type = app_info["auth_type"]
+        template_content = templates[auth_type]
         blueprint_content = generate_blueprint(template_content, app_info)
         blueprint_file = temp_dir / f"{app_info['app_name']}.yaml"
 
         with open(blueprint_file, "w") as f:
             f.write(blueprint_content)
+            if not blueprint_content.endswith("\n"):
+                f.write("\n")
 
-        print(f"Generated blueprint: {blueprint_file}")
+        print(f"  ✓ {app_info['app_name']} ({auth_type})")
 
     # Generate outpost configuration
     app_names = [info["app_name"] for info in app_infos]
-    outpost_content = generate_outpost_yaml(app_names)
+    outpost_content = generate_outpost_yaml(app_names, outpost_template)
 
     outpost_file = temp_dir / "outpost.yaml"
     with open(outpost_file, "w") as f:
         f.write(outpost_content)
+        if not outpost_content.endswith("\n"):
+            f.write("\n")
 
-    print(f"Generated outpost config: {outpost_file}")
+    print("  ✓ outpost (all providers)")
+    print()
 
 
 def directories_are_different(dir1: Path, dir2: Path) -> bool:
@@ -345,16 +352,32 @@ def main():
 
     script_dir = Path(__file__).parent.resolve()
     base_dir = script_dir.parent
-    template_file = base_dir / "authentik" / "service-blueprint.template.yaml"
-    output_dir = base_dir / "authentik" / "generated-blueprints"
+    authentik_dir = base_dir / "authentik"
+    output_dir = authentik_dir / "generated-blueprints"
 
-    # Load template
-    if not template_file.exists():
-        print(f"Template file not found: {template_file}", file=sys.stderr)
+    # Load templates
+    print("Loading blueprint templates...")
+    template_contents = {}
+    for auth_type in sorted(AUTH_TYPES):
+        template_file = authentik_dir / "blueprint-templates" / f"{auth_type}.yaml.j2"
+        if not template_file.exists():
+            print(f"Template file not found: {template_file}", file=sys.stderr)
+            sys.exit(1)
+
+        with open(template_file, "r") as f:
+            template_contents[auth_type] = f.read()
+        print(f"  ✓ {auth_type} template: {template_file.name}")
+
+    # Load outpost template
+    outpost_template_file = authentik_dir / "blueprint-templates" / "outpost.yaml.j2"
+    if not outpost_template_file.exists():
+        print(f"Outpost template not found: {outpost_template_file}", file=sys.stderr)
         sys.exit(1)
 
-    with open(template_file, "r") as f:
-        template_content = f.read()
+    with open(outpost_template_file, "r") as f:
+        outpost_template = f.read()
+    print(f"  ✓ outpost template: {outpost_template_file.name}")
+    print()
 
     # Collect ingress information
     app_infos = collect_ingress_info(base_dir)
@@ -369,7 +392,9 @@ def main():
 
     try:
         # Generate blueprints to temporary directory
-        generate_blueprints_to_temp(template_content, app_infos, temp_dir)
+        generate_blueprints_to_temp(
+            template_contents, outpost_template, app_infos, temp_dir
+        )
 
         # In check mode, compare directories and exit if different
         if args.check:
@@ -391,7 +416,11 @@ def main():
             shutil.rmtree(output_dir)
         shutil.move(temp_dir, output_dir)
 
-        print(f"Generated {len(app_infos)} blueprints total")
+        # Summary
+        print("Blueprint generation complete!")
+        print(f"  • Generated: {len(app_infos)} service blueprints + 1 outpost config")
+        print(f"  • Updated: {kustomization_file.name}")
+        print(f"  • Output: {output_dir.relative_to(base_dir)}")
 
     except Exception as e:
         print(f"ERROR: Failed to generate blueprints: {e}", file=sys.stderr)

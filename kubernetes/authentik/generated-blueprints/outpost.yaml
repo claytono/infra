@@ -22,3 +22,9 @@ entries:
     - !Find
       - authentik_providers_proxy.proxyprovider
       - [name, prometheus]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, radarr]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, sonarr]

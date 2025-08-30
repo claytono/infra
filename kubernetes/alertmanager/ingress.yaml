@@ -6,7 +6,7 @@ metadata:
   name: alertmanager
   labels:
     k8s-app: alertmanager
-    ak-auth: 'true'
+    ak-simple: 'true'
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
