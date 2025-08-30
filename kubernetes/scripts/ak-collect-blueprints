@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Generate Authentik blueprints from Kubernetes ingress resources with ak-*
-labels/annotations.
+labels/annotations. Updates files when drift is detected and exits non‑zero;
+exits zero when no changes are required.
 """
 
-import argparse
 import filecmp
 import re
 import shutil
@@ -341,16 +341,6 @@ def directories_are_different(dir1: Path, dir2: Path) -> bool:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate authentik blueprints from ingresses"
-    )
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="Check mode: exit 1 if generated blueprints would change files",
-    )
-    args = parser.parse_args()
-
     script_dir = Path(__file__).parent.resolve()
     base_dir = script_dir.parent
     authentik_dir = base_dir / "authentik"
@@ -397,31 +387,40 @@ def main():
             template_contents, outpost_template, app_infos, temp_dir
         )
 
-        # In check mode, compare directories and exit if different
-        if args.check:
-            if directories_are_different(output_dir, temp_dir):
-                print("Blueprint files would be modified", file=sys.stderr)
-                shutil.rmtree(temp_dir)
-                sys.exit(1)
-            else:
-                print("Blueprint files are up to date")
-                shutil.rmtree(temp_dir)
-                return
+        # Compare generated blueprints directory to existing one
+        would_change_dir = directories_are_different(output_dir, temp_dir)
 
-        # Update kustomization.yaml with configMapGenerator
+        # Capture current kustomization content, update it, and detect changes
         kustomization_file = base_dir / "authentik" / "kustomization.yaml"
+        try:
+            before_kustom = kustomization_file.read_text()
+        except FileNotFoundError:
+            before_kustom = ""
         update_kustomization_configmap(kustomization_file, app_infos)
+        after_kustom = kustomization_file.read_text()
+        kustom_changed = before_kustom != after_kustom
 
-        # All successful - atomically replace the real directory
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
-        shutil.move(temp_dir, output_dir)
+        # If anything changed, replace the real blueprints dir and exit non-zero
+        if would_change_dir:
+            if output_dir.exists():
+                shutil.rmtree(output_dir)
+            shutil.move(temp_dir, output_dir)
+        else:
+            # No change in blueprints; remove temp
+            shutil.rmtree(temp_dir)
 
         # Summary
-        print("Blueprint generation complete!")
-        print(f"  • Generated: {len(app_infos)} service blueprints + 1 outpost config")
-        print(f"  • Updated: {kustomization_file.name}")
-        print(f"  • Output: {output_dir.relative_to(base_dir)}")
+        if would_change_dir or kustom_changed:
+            print("Blueprint generation complete!")
+            print(
+                f"  • Generated: {len(app_infos)} service blueprints + 1 outpost config"
+            )
+            print(f"  • Updated: {kustomization_file.name}")
+            print(f"  • Output: {output_dir.relative_to(base_dir)}")
+            sys.exit(1)
+        else:
+            print("Blueprint files are up to date")
+            return
 
     except Exception as e:
         print(f"ERROR: Failed to generate blueprints: {e}", file=sys.stderr)

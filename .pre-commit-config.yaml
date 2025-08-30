@@ -47,7 +47,7 @@ repos:
     exclude: helm.yaml$
   - id: ak-collect-blueprints
     name: collect authentik blueprints
-    entry: kubernetes/scripts/ak-collect-blueprints --check
+    entry: kubernetes/scripts/ak-collect-blueprints
     language: system
     files: ^kubernetes/.*/.*\.(ya?ml)$
     pass_filenames: false
