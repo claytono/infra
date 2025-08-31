@@ -111,17 +111,11 @@ def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, 
     metadata = ingress.get("metadata", {})
     spec = ingress.get("spec", {})
 
-    # Get service name from directory structure
-    service_name = None
+    # Service name is the first path segment relative to kubernetes/
     path_parts = file_path.parts
-    for i, part in enumerate(path_parts):
-        if part == "kubernetes" and i + 1 < len(path_parts):
-            service_name = path_parts[i + 1]
-            break
-    # If running from kubernetes/ as CWD, fall back to first path segment
-    if not service_name and len(path_parts) >= 2:
+    if len(path_parts) >= 1:
         service_name = path_parts[0]
-    if not service_name:
+    else:
         raise ValueError(f"Could not determine service name from path: {file_path}")
 
     ingress_name = metadata.get("name", "")
