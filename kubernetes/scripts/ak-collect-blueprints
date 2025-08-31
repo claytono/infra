@@ -356,16 +356,24 @@ def _op_run(
 def _op_item_apply_template(
     action: str, payload: str, title: str | None = None, *, vault: str = OP_VAULT
 ) -> None:
-    """Apply a Jinja-rendered template by piping it to op via stdin.
+    """Apply a Jinja-rendered template using a temporary file for --template."""
+    import tempfile
+    import os as _os
 
-    Uses --template /dev/stdin to avoid temporary files.
-    """
-    args: List[str] = ["item", action]
-    if action == "edit" and title:
-        args.append(title)
-    # Read template from STDIN to avoid temp files (op expects @/dev/stdin)
-    args.extend(["--vault", vault, "--template", "@/dev/stdin"])
-    _op_run(args, input=payload)
+    with tempfile.NamedTemporaryFile("w", delete=False) as tf:
+        tf.write(payload)
+        tmp_path = tf.name
+    try:
+        args: List[str] = ["item", action]
+        if action == "edit" and title:
+            args.append(title)
+        args.extend(["--vault", vault, "--template", tmp_path])
+        _op_run(args)
+    finally:
+        try:
+            _os.remove(tmp_path)
+        except Exception:
+            pass
 
 
 def _should_skip_op() -> bool:
@@ -393,69 +401,18 @@ def _get_blueprint_template_path(name: str) -> Path:
 def _render_password_item_payload(
     title: str, client_id: str, client_secret: str
 ) -> str:
-    """Render 1Password password item JSON from Jinja template in-memory."""
+    """Render 1Password secure note JSON from Jinja template in-memory."""
     template_path = _get_blueprint_template_path("op-password-item.json.j2")
     with open(template_path, "r") as f:
         tmpl = Template(f.read())
     return tmpl.render(title=title, client_id=client_id, client_secret=client_secret)
 
 
-def _ensure_item_fields(
-    item: Dict[str, Any], client_id: str, client_secret: str
-) -> Dict[str, Any]:
-    """Ensure notesPlain, client-id, and client-secret fields exist with correct types/values."""
-    fields = item.get("fields") or []
-    by_label = {f.get("label"): f for f in fields if isinstance(f, dict)}
-
-    # notesPlain
-    note_val = "Generated and managed by ak-collect-blueprints (OIDC bootstrap). Do not edit manually."
-    if "notesPlain" in by_label:
-        by_label["notesPlain"]["value"] = note_val
-    else:
-        fields.append(
-            {
-                "id": "notesPlain",
-                "type": "STRING",
-                "purpose": "NOTES",
-                "label": "notesPlain",
-                "value": note_val,
-            }
-        )
-
-    # client-id
-    if "client-id" in by_label:
-        by_label["client-id"]["type"] = "STRING"
-        by_label["client-id"]["value"] = client_id
-    else:
-        fields.append(
-            {
-                "id": "client-id",
-                "type": "STRING",
-                "label": "client-id",
-                "value": client_id,
-            }
-        )
-
-    # client-secret
-    if "client-secret" in by_label:
-        by_label["client-secret"]["type"] = "CONCEALED"
-        by_label["client-secret"]["value"] = client_secret
-    else:
-        fields.append(
-            {
-                "id": "client-secret",
-                "type": "CONCEALED",
-                "label": "client-secret",
-                "value": client_secret,
-            }
-        )
-
-    item["fields"] = fields
-    return item
+# _ensure_item_fields removed; template fully defines desired fields
 
 
 def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
-    """Ensure each OIDC app has a 1Password 'password' item <app>-oidc with typed client-id and client-secret."""
+    """Ensure each OIDC app has a 1Password secure note <app>-oidc with typed client-id and client-secret."""
     oidc_apps = [i for i in app_infos if i.get("auth_type") == "oidc"]
     if not oidc_apps:
         return
@@ -504,24 +461,12 @@ def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
             else:
                 print(f"  • 1Password item up-to-date: {title}")
         else:
-            # Create base password item, then update fields via full JSON edit
-            _op_run(
-                [
-                    "item",
-                    "create",
-                    "--category",
-                    "password",
-                    "--title",
-                    title,
-                    "--vault",
-                    OP_VAULT,
-                ]
-            )
+            # Create item directly from template (password remains blank in template)
             secret_val = _generate_oidc_client_secret_b64()
             payload = _render_password_item_payload(
                 title=title, client_id=client_id, client_secret=secret_val
             )
-            _op_item_apply_template("edit", payload=payload, title=title)
+            _op_item_apply_template("create", payload=payload)
             print(f"  • Created 1Password item: {title}")
 
 
@@ -558,11 +503,8 @@ def update_oidc_blueprints_externalsecret_file(
         file_path.parent.mkdir(parents=True, exist_ok=True)
         old_content = ""
 
-    # Normalize newlines for comparison
-    if not new_content.endswith("\n"):
-        new_content = new_content + "\n"
-
-    if old_content != new_content:
+    # Compare ignoring trailing whitespace/newlines to reduce needless diffs
+    if old_content.rstrip() != new_content.rstrip():
         _write_text_ensure_newline(file_path, new_content)
         print(f"  • Updated: {file_path.relative_to(authentik_dir.parent)}")
         return True
