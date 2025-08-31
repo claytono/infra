@@ -6,13 +6,13 @@ metadata:
   name: argocd-rbac-cm
   namespace: argocd
   labels:
-    helm.sh/chart: argo-cd-8.3.0
+    helm.sh/chart: argo-cd-8.3.1
     app.kubernetes.io/name: argocd-rbac-cm
     app.kubernetes.io/instance: argocd
     app.kubernetes.io/component: server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.1.0"
+    app.kubernetes.io/version: "v3.1.1"
 data:
   policy.csv: |
     # Allow GitHub Actions to read application status
