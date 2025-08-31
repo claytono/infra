@@ -5,7 +5,7 @@ kind: Ingress
 metadata:
   name: radarr
   annotations:
-    ak-basic: 'true'
+    ak-type: basic-auth
     cert-manager.io/cluster-issuer: letsencrypt
     ak-path-exclude: /api(/|$)
     gethomepage.dev/enabled: 'true'

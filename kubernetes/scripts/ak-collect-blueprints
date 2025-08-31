@@ -6,6 +6,12 @@ exits zero when no changes are required.
 """
 
 import filecmp
+import json
+import os
+import base64
+import secrets
+import string
+import subprocess
 import re
 import shutil
 import sys
@@ -20,8 +26,15 @@ PORT_MAPPING = {
     "https": 443,
 }
 
+# 1Password vault for OIDC client credentials
+OP_VAULT = "Kubernetes"
+
 # Supported authentication types (templates are blueprint-templates/{type}.yaml.j2)
+# We no longer generate per-app OIDC blueprints; OIDC is handled via consolidated ExternalSecret
 AUTH_TYPES = ["simple", "basic"]
+
+# Unified generated output directory (blueprints + externalsecret)
+GENERATED_DIR_NAME = "generated"
 
 
 def find_ingress_files(base_dir: Path) -> List[Path]:
@@ -30,14 +43,15 @@ def find_ingress_files(base_dir: Path) -> List[Path]:
     for pattern in ("*.yaml", "*.yml"):
         for yaml_file in base_dir.rglob(pattern):
             # Skip generated outputs
-            if "generated-blueprints" in yaml_file.parts:
+            # Skip generated outputs
+            if "generated" in yaml_file.parts:
                 continue
             candidates.add(yaml_file)
     return sorted(candidates)
 
 
 def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
-    """Parse YAML file and return ingress resources with ak-simple or ak-basic annotation/label."""
+    """Parse YAML file and return ingress resources with ak-type markers only."""
     try:
         # Read file content first
         with open(file_path, "r") as f:
@@ -55,24 +69,20 @@ def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
             if not doc or doc.get("kind") != "Ingress":
                 continue
 
-            # Check for ak-simple or ak-basic label or annotation
-            metadata = doc.get("metadata", {})
-            labels = metadata.get("labels", {})
-            annotations = metadata.get("annotations", {})
+            # Check for ak-type label/annotation (unified selector)
+            metadata = doc.get("metadata", {}) or {}
+            labels = metadata.get("labels") or {}
+            annotations = metadata.get("annotations") or {}
 
-            has_simple = (
-                labels.get("ak-simple") == "true"
-                or annotations.get("ak-simple") == "true"
-            )
-            has_basic = (
-                labels.get("ak-basic") == "true"
-                or annotations.get("ak-basic") == "true"
-            )
-
-            if has_simple or has_basic:
-                # Add auth_type to the document for template selection
-                doc["_auth_type"] = "basic" if has_basic else "simple"
-                ingresses.append(doc)
+            # Unified key
+            type_val = labels.get("ak-type") or annotations.get("ak-type")
+            if type_val:
+                norm = type_val.strip().lower()
+                if norm in ("simple", "basic", "basic-auth", "oidc"):
+                    if norm == "basic-auth":
+                        norm = "basic"
+                    doc["_auth_type"] = norm
+                    ingresses.append(doc)
 
         return ingresses
     except Exception as e:
@@ -161,7 +171,7 @@ def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, 
             # Anchor at the service external host
             exclude_patterns.append(f"^{external_host}{p}")
 
-    return {
+    info: Dict[str, Any] = {
         "service_name": service_name,
         "ingress_name": ingress_name,
         "app_name": service_name,  # Will be updated by resolve_app_names if needed
@@ -171,6 +181,20 @@ def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, 
         "auth_type": ingress["_auth_type"],
         "skip_path_regex": "\n".join(exclude_patterns),
     }
+
+    # If OIDC, require callback path annotation "ak-oidc-callback"
+    if info["auth_type"] == "oidc":
+        cb = annotations.get("ak-oidc-callback")
+        if not isinstance(cb, str) or not cb.strip():
+            raise ValueError(
+                f"Ingress '{metadata.get('name')}' requires annotation 'ak-oidc-callback' for OIDC"
+            )
+        cb = cb.strip()
+        if not cb.startswith("/"):
+            cb = "/" + cb
+        info["oidc_callback_path"] = cb
+
+    return info
 
 
 def resolve_app_names(raw_app_infos: List[Dict[str, str]]) -> List[Dict[str, str]]:
@@ -244,12 +268,14 @@ def update_kustomization_configmap(
     new_lines.append("- name: authentik-blueprints\n")
     new_lines.append("  files:\n")
 
-    # Add blueprint files
+    # Add blueprint files (exclude OIDC, which is handled via consolidated ExternalSecret)
     for app_info in app_infos:
-        new_lines.append(f"  - generated-blueprints/{app_info['app_name']}.yaml\n")
+        if app_info.get("auth_type") == "oidc":
+            continue
+        new_lines.append(f"  - {GENERATED_DIR_NAME}/{app_info['app_name']}.yaml\n")
 
     # Add outpost file
-    new_lines.append("  - generated-blueprints/outpost.yaml\n")
+    new_lines.append(f"  - {GENERATED_DIR_NAME}/outpost.yaml\n")
     new_lines.append("  options:\n")
     new_lines.append("    disableNameSuffixHash: true\n")
 
@@ -283,14 +309,14 @@ def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
     # Sort and display found services
     sorted_app_infos = sorted(app_infos, key=lambda x: (x["auth_type"], x["app_name"]))
 
-    print("Found services with authentik annotations:")
+    print("Found services with ak-type annotations:")
     for app_info in sorted_app_infos:
         auth_type = app_info["auth_type"]
         print(f"  ✓ ak-{auth_type}: {app_info['app_name']}")
     print()
 
     if not app_infos:
-        print("No ingresses with ak-simple or ak-basic found")
+        print("No ingresses with ak-type found")
         return []
 
     # Exit if any errors occurred during parsing
@@ -304,43 +330,300 @@ def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
     return sorted_app_infos
 
 
+def _op_available() -> bool:
+    return shutil.which("op") is not None
+
+
+def _op_run(
+    args: List[str],
+    *,
+    input: str | None = None,
+    check: bool = True,
+    capture_output: bool = False,
+) -> subprocess.CompletedProcess:
+    """Run an op CLI command with safe defaults (stdin for sensitive data)."""
+    cmd = ["op", *args]
+    return subprocess.run(
+        cmd,
+        check=check,
+        input=input,
+        text=True,
+        capture_output=capture_output,
+    )
+
+
+def _op_item_apply_template(
+    action: str, payload: str, title: str | None = None, *, vault: str = OP_VAULT
+) -> None:
+    """Apply a Jinja-rendered template by piping it to op via stdin.
+
+    Uses --template /dev/stdin to avoid temporary files.
+    """
+    args: List[str] = ["item", action]
+    if action == "edit" and title:
+        args.append(title)
+    # Read template from STDIN to avoid temp files
+    args.extend(["--vault", vault, "--template", "/dev/stdin"])
+    _op_run(args, input=payload)
+
+
+def _should_skip_op() -> bool:
+    """Return True when running in CI/lint environment or explicitly requested to skip."""
+    env_true = {"1", "true", "yes", "on"}
+    return (
+        os.environ.get("AK_SKIP_OP", "").lower() in env_true
+        or os.environ.get("GITHUB_ACTIONS", "").lower() in env_true
+        or os.environ.get("CI", "").lower() in env_true
+    )
+
+
+def _generate_secret_value(length: int = 48) -> str:
+    alphabet = string.ascii_letters + string.digits + "-_"
+    return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
+def _generate_oidc_client_secret_b64() -> str:
+    """Generate a strong client secret: 32 random bytes, base64-encoded."""
+    rand = secrets.token_bytes(32)
+    return base64.b64encode(rand).decode("ascii")
+
+
+def _get_blueprint_template_path(name: str) -> Path:
+    """Return path to a template under authentik/blueprint-templates."""
+    script_dir = Path(__file__).parent.resolve()
+    return script_dir.parent / "authentik" / "blueprint-templates" / name
+
+
+def _render_password_item_payload(
+    title: str, client_id: str, client_secret: str, tags: List[str]
+) -> str:
+    template_path = _get_blueprint_template_path("op-password-item.json.j2")
+    with open(template_path, "r") as f:
+        tmpl = Template(f.read())
+    return tmpl.render(
+        title=title, client_id=client_id, client_secret=client_secret, tags=tags
+    )
+
+
+def _ensure_item_fields(
+    item: Dict[str, Any], client_id: str, client_secret: str
+) -> Dict[str, Any]:
+    """Ensure notesPlain, client-id, and client-secret fields exist with correct types/values."""
+    fields = item.get("fields") or []
+    by_label = {f.get("label"): f for f in fields if isinstance(f, dict)}
+
+    # notesPlain
+    note_val = "Generated and managed by ak-collect-blueprints (OIDC bootstrap). Do not edit manually."
+    if "notesPlain" in by_label:
+        by_label["notesPlain"]["value"] = note_val
+    else:
+        fields.append(
+            {
+                "id": "notesPlain",
+                "type": "STRING",
+                "purpose": "NOTES",
+                "label": "notesPlain",
+                "value": note_val,
+            }
+        )
+
+    # client-id
+    if "client-id" in by_label:
+        by_label["client-id"]["type"] = "STRING"
+        by_label["client-id"]["value"] = client_id
+    else:
+        fields.append(
+            {
+                "id": "client-id",
+                "type": "STRING",
+                "label": "client-id",
+                "value": client_id,
+            }
+        )
+
+    # client-secret
+    if "client-secret" in by_label:
+        by_label["client-secret"]["type"] = "CONCEALED"
+        by_label["client-secret"]["value"] = client_secret
+    else:
+        fields.append(
+            {
+                "id": "client-secret",
+                "type": "CONCEALED",
+                "label": "client-secret",
+                "value": client_secret,
+            }
+        )
+
+    item["fields"] = fields
+    return item
+
+
+def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
+    """Ensure each OIDC app has a 1Password 'password' item <app>-oidc with typed client-id and client-secret."""
+    oidc_apps = [i for i in app_infos if i.get("auth_type") == "oidc"]
+    if not oidc_apps:
+        return
+
+    # Skip in CI/lint contexts
+    if _should_skip_op():
+        print("Skipping 1Password item management (CI/lint environment)")
+        return
+
+    if not _op_available():
+        print("FATAL: 1Password 'op' CLI not found in PATH.")
+        print("Install and sign in to 'op' CLI before running ak-collect-blueprints.")
+        sys.exit(1)
+
+    # Jinja template for password item JSON is loaded by _render_password_item_payload
+
+    for info in oidc_apps:
+        app = info["app_name"]
+        title = f"{app}-oidc"
+        client_id = app
+
+        # Try to read existing item
+        result = _op_run(
+            ["item", "get", title, "--vault", OP_VAULT, "--format", "json"],
+            check=False,
+            capture_output=True,
+        )
+        if result.returncode == 0:
+            data = json.loads(result.stdout or "{}")
+            fields = {f.get("label"): f for f in data.get("fields", [])}
+            needs_update = False
+            # Ensure client-id
+            if not fields.get("client-id") or not fields["client-id"].get("value"):
+                needs_update = True
+            # Ensure client-secret
+            if not fields.get("client-secret") or not fields["client-secret"].get(
+                "value"
+            ):
+                needs_update = True
+
+            if needs_update:
+                secret_val = _generate_oidc_client_secret_b64()
+                updated = _ensure_item_fields(
+                    data, client_id=client_id, client_secret=secret_val
+                )
+                _op_item_apply_template(
+                    "edit", payload=json.dumps(updated), title=title
+                )
+                print(f"  • Updated 1Password item: {title}")
+            else:
+                print(f"  • 1Password item up-to-date: {title}")
+        else:
+            # Create base password item, then update fields via full JSON edit
+            _op_run(
+                [
+                    "item",
+                    "create",
+                    "--category",
+                    "password",
+                    "--title",
+                    title,
+                    "--vault",
+                    OP_VAULT,
+                ]
+            )
+            # Fetch the created item
+            created = _op_run(
+                ["item", "get", title, "--vault", OP_VAULT, "--format", "json"],
+                capture_output=True,
+            )
+            item_json = json.loads(created.stdout or "{}")
+            secret_val = _generate_oidc_client_secret_b64()
+            updated = _ensure_item_fields(
+                item_json, client_id=client_id, client_secret=secret_val
+            )
+            _op_item_apply_template("edit", payload=json.dumps(updated), title=title)
+            print(f"  • Created 1Password item: {title}")
+
+
+def render_oidc_blueprints_externalsecret(
+    authentik_dir: Path, app_infos: List[Dict[str, str]]
+) -> str:
+    """Render a single ExternalSecret via Jinja template for all OIDC apps."""
+    template_path = _get_blueprint_template_path(
+        "externalsecret-oidc-blueprints.yaml.j2"
+    )
+    with open(template_path, "r") as f:
+        template_content = f.read()
+
+    oidc_apps = sorted(
+        [i for i in app_infos if i.get("auth_type") == "oidc"],
+        key=lambda x: x["app_name"],
+    )
+    template = Template(template_content)
+    return template.render(oidc_apps=oidc_apps)
+
+
+def update_oidc_blueprints_externalsecret_file(
+    authentik_dir: Path, app_infos: List[Dict[str, str]]
+) -> bool:
+    """Create/update authentik/generated/externalsecret-oidc-blueprints.yaml. Returns True if changed."""
+    file_path = (
+        authentik_dir / GENERATED_DIR_NAME / "externalsecret-oidc-blueprints.yaml"
+    )
+    new_content = render_oidc_blueprints_externalsecret(authentik_dir, app_infos)
+    try:
+        old_content = file_path.read_text()
+    except FileNotFoundError:
+        # Ensure directory exists on first write
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        old_content = ""
+
+    # Normalize newlines for comparison
+    if not new_content.endswith("\n"):
+        new_content = new_content + "\n"
+
+    if old_content != new_content:
+        _write_text_ensure_newline(file_path, new_content)
+        print(f"  • Updated: {file_path.relative_to(authentik_dir.parent)}")
+        return True
+    return False
+
+
+def _write_text_ensure_newline(path: Path, content: str) -> None:
+    with open(path, "w") as f:
+        f.write(content)
+        if not content.endswith("\n"):
+            f.write("\n")
+
+
 def generate_blueprints_to_temp(
     templates: Dict[str, str],
     outpost_template: str,
     app_infos: List[Dict[str, str]],
     temp_dir: Path,
+    authentik_dir: Path,
 ) -> None:
     """Generate all blueprints to temporary directory."""
-    # Clean temporary directory
+    # Clean temp dir
     for existing_file in temp_dir.glob("*.yaml"):
         existing_file.unlink()
 
-    # Generate individual blueprints
+    # Generate individual blueprints (non-OIDC)
     print("Generating blueprints...")
     for app_info in app_infos:
-        auth_type = app_info["auth_type"]
-        template_content = templates[auth_type]
-        blueprint_content = generate_blueprint(template_content, app_info)
-        blueprint_file = temp_dir / f"{app_info['app_name']}.yaml"
+        if app_info["auth_type"] == "oidc":
+            continue
+        content = generate_blueprint(templates[app_info["auth_type"]], app_info)
+        _write_text_ensure_newline(temp_dir / f"{app_info['app_name']}.yaml", content)
+        print(f"  ✓ {app_info['app_name']} ({app_info['auth_type']})")
 
-        with open(blueprint_file, "w") as f:
-            f.write(blueprint_content)
-            if not blueprint_content.endswith("\n"):
-                f.write("\n")
-
-        print(f"  ✓ {app_info['app_name']} ({auth_type})")
-
-    # Generate outpost configuration
-    app_names = [info["app_name"] for info in app_infos]
+    # Generate outpost config (providers for non-OIDC apps)
+    app_names = [i["app_name"] for i in app_infos if i.get("auth_type") != "oidc"]
     outpost_content = generate_outpost_yaml(app_names, outpost_template)
-
-    outpost_file = temp_dir / "outpost.yaml"
-    with open(outpost_file, "w") as f:
-        f.write(outpost_content)
-        if not outpost_content.endswith("\n"):
-            f.write("\n")
-
+    _write_text_ensure_newline(temp_dir / "outpost.yaml", outpost_content)
     print("  ✓ outpost (all providers)")
+
+    # Generate consolidated OIDC ExternalSecret
+    es_content = render_oidc_blueprints_externalsecret(authentik_dir, app_infos)
+    _write_text_ensure_newline(
+        temp_dir / "externalsecret-oidc-blueprints.yaml", es_content
+    )
+    print("  ✓ externalsecret-oidc-blueprints (all OIDC apps)")
     print()
 
 
@@ -369,13 +652,13 @@ def main():
     script_dir = Path(__file__).parent.resolve()
     base_dir = script_dir.parent
     authentik_dir = base_dir / "authentik"
-    output_dir = authentik_dir / "generated-blueprints"
+    output_dir = authentik_dir / GENERATED_DIR_NAME
 
     # Load templates
     print("Loading blueprint templates...")
     template_contents = {}
     for auth_type in sorted(AUTH_TYPES):
-        template_file = authentik_dir / "blueprint-templates" / f"{auth_type}.yaml.j2"
+        template_file = _get_blueprint_template_path(f"{auth_type}.yaml.j2")
         if not template_file.exists():
             print(f"Template file not found: {template_file}", file=sys.stderr)
             sys.exit(1)
@@ -385,7 +668,7 @@ def main():
         print(f"  ✓ {auth_type} template: {template_file.name}")
 
     # Load outpost template
-    outpost_template_file = authentik_dir / "blueprint-templates" / "outpost.yaml.j2"
+    outpost_template_file = _get_blueprint_template_path("outpost.yaml.j2")
     if not outpost_template_file.exists():
         print(f"Outpost template not found: {outpost_template_file}", file=sys.stderr)
         sys.exit(1)
@@ -409,7 +692,7 @@ def main():
     try:
         # Generate blueprints to temporary directory
         generate_blueprints_to_temp(
-            template_contents, outpost_template, app_infos, temp_dir
+            template_contents, outpost_template, app_infos, temp_dir, authentik_dir
         )
 
         # Compare generated blueprints directory to existing one
@@ -434,13 +717,23 @@ def main():
             # No change in blueprints; remove temp
             shutil.rmtree(temp_dir)
 
+        # Manage 1Password items and consolidated OIDC ExternalSecret
+        # Ensure 1Password items exist (fatal if op not available)
+        ensure_1password_oidc_items(app_infos)
+
+        es_changed = update_oidc_blueprints_externalsecret_file(
+            authentik_dir, app_infos
+        )
+
         # Summary
-        if would_change_dir or kustom_changed:
+        if would_change_dir or kustom_changed or es_changed:
             print("Blueprint generation complete!")
             print(
                 f"  • Generated: {len(app_infos)} service blueprints + 1 outpost config"
             )
-            print(f"  • Updated: {kustomization_file.name}")
+            print(
+                f"  • Updated: {kustomization_file.name}{' + externalsecret-oidc-blueprints.yaml' if es_changed else ''}"
+            )
             print(f"  • Output: {output_dir.relative_to(base_dir)}")
             sys.exit(1)
         else:
