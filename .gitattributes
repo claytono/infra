@@ -6,3 +6,5 @@ kubernetes/*/helm/** linguist-vendored
 # Ansible Galaxy roles and collections
 ansible/galaxy/** linguist-vendored
 
+# Authentik generated blueprints (first-party, but auto-generated)
+kubernetes/authentik/generated/** linguist-vendored
