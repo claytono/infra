@@ -52,6 +52,35 @@ def generated_path(name: str | Path) -> Path:
     return generated_dir() / str(name)
 
 
+# File helpers
+def _write_text_ensure_newline(path: Path, content: str) -> None:
+    with open(path, "w") as f:
+        f.write(content)
+        if not content.endswith("\n"):
+            f.write("\n")
+
+
+def directories_are_different(dir1: Path, dir2: Path) -> bool:
+    """Compare two directories and return True if they are different."""
+    if not dir1.exists() or not dir2.exists():
+        return True
+
+    # Get all files in both directories
+    files1 = {f.relative_to(dir1) for f in dir1.rglob("*") if f.is_file()}
+    files2 = {f.relative_to(dir2) for f in dir2.rglob("*") if f.is_file()}
+
+    # Different file sets means directories are different
+    if files1 != files2:
+        return True
+
+    # Compare each file
+    for file_path in files1:
+        if not filecmp.cmp(dir1 / file_path, dir2 / file_path, shallow=False):
+            return True
+
+    return False
+
+
 def find_ingress_files(base_dir: Path) -> List[Path]:
     """Find all YAML files that might contain ingress resources."""
     candidates: set[Path] = set()
@@ -106,8 +135,10 @@ def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
         return []
 
 
-def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, str]:
-    """Extract app info from ingress resource."""
+def build_app_info_from_ingress(
+    ingress: Dict[str, Any], file_path: Path
+) -> Dict[str, str]:
+    """Build app_info dict from an Ingress resource."""
     metadata = ingress.get("metadata", {})
     spec = ingress.get("spec", {})
 
@@ -186,7 +217,7 @@ def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, 
     info: Dict[str, Any] = {
         "service_name": service_name,
         "ingress_name": ingress_name,
-        "app_name": service_name,  # Will be updated by resolve_app_names if needed
+        "app_name": service_name,  # Will be updated by resolve_app_name_conflicts if needed
         "namespace": namespace,
         "external_host": external_host,
         "internal_host": internal_host,
@@ -209,7 +240,9 @@ def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, 
     return info
 
 
-def resolve_app_names(raw_app_infos: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def resolve_app_name_conflicts(
+    raw_app_infos: List[Dict[str, str]],
+) -> List[Dict[str, str]]:
     """Resolve final app names, adding ingress suffixes when there are conflicts."""
     # Group by service name
     service_groups = {}
@@ -240,66 +273,7 @@ def resolve_app_names(raw_app_infos: List[Dict[str, str]]) -> List[Dict[str, str
     return resolved_infos
 
 
-def generate_blueprint(template_content: str, app_info: Dict[str, str]) -> str:
-    """Generate blueprint using Jinja2 template engine."""
-    template = Template(template_content)
-    return template.render(**app_info)
-
-
-def generate_outpost_yaml(app_names: List[str], outpost_template: str) -> str:
-    """Generate complete outpost YAML configuration using Jinja2 template."""
-    # Sort app names for deterministic output
-    sorted_app_names = sorted(app_names)
-
-    template = Template(outpost_template)
-    return template.render(app_names=sorted_app_names)
-
-
-def update_kustomization_configmap(
-    kustomization_file: Path, app_infos: List[Dict[str, str]]
-) -> None:
-    """Update kustomization.yaml with configMapGenerator section."""
-    # Read the existing file
-    with open(kustomization_file, "r") as f:
-        lines = f.readlines()
-
-    # Find the marker line
-    marker_line = "# ak-collect-blueprints: auto-generated section below\n"
-    try:
-        marker_index = lines.index(marker_line)
-    except ValueError:
-        raise ValueError(
-            f"Marker line not found in {kustomization_file}. Expected: {marker_line.strip()}"
-        )
-
-    # Keep everything up to and including the marker line
-    new_lines = lines[: marker_index + 1]
-
-    # Generate the configMapGenerator section
-    new_lines.append("configMapGenerator:\n")
-    new_lines.append("- name: authentik-blueprints\n")
-    new_lines.append("  files:\n")
-
-    # Add blueprint files (exclude OIDC, which is handled via consolidated ExternalSecret)
-    for app_info in app_infos:
-        if app_info.get("auth_type") == "oidc":
-            continue
-        new_lines.append(f"  - {GENERATED_DIR_NAME}/{app_info['app_name']}.yaml\n")
-
-    # Add outpost file
-    new_lines.append(f"  - {GENERATED_DIR_NAME}/outpost.yaml\n")
-    new_lines.append("  options:\n")
-    new_lines.append("    disableNameSuffixHash: true\n")
-
-    # Write to temp file then move into place
-    temp_file = kustomization_file.with_suffix(".tmp")
-    with open(temp_file, "w") as f:
-        f.writelines(new_lines)
-
-    temp_file.replace(kustomization_file)
-
-
-def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
+def collect_app_infos_from_ingresses(base_dir: Path) -> List[Dict[str, str]]:
     """Collect and process ingress information from all YAML files."""
     ingress_files = find_ingress_files(base_dir)
 
@@ -309,14 +283,14 @@ def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
         ingresses = parse_ingress_file(file_path)
         for ingress in ingresses:
             try:
-                app_info = extract_ingress_info(ingress, file_path)
+                app_info = build_app_info_from_ingress(ingress, file_path)
                 raw_app_infos.append(app_info)
             except ValueError as e:
                 errors.append(str(e))
                 print(f"Warning: {e}", file=sys.stderr)
 
     # Determine final app names based on service conflicts
-    app_infos = resolve_app_names(raw_app_infos)
+    app_infos = resolve_app_name_conflicts(raw_app_infos)
 
     # Sort and display found services
     sorted_app_infos = sorted(app_infos, key=lambda x: (x["auth_type"], x["app_name"]))
@@ -340,6 +314,36 @@ def collect_ingress_info(base_dir: Path) -> List[Dict[str, str]]:
         sys.exit(1)
 
     return sorted_app_infos
+
+
+# Renderers (return strings)
+def render_blueprint(template_content: str, app_info: Dict[str, str]) -> str:
+    """Render blueprint using Jinja2 template engine."""
+    template = Template(template_content)
+    return template.render(**app_info)
+
+
+def render_outpost_yaml(app_names: List[str], outpost_template: str) -> str:
+    """Render complete outpost YAML configuration using Jinja2 template."""
+    # Sort app names for deterministic output
+    sorted_app_names = sorted(app_names)
+
+    template = Template(outpost_template)
+    return template.render(app_names=sorted_app_names)
+
+
+def render_oidc_blueprints_externalsecret(app_infos: List[Dict[str, str]]) -> str:
+    """Render a single ExternalSecret via Jinja template for all OIDC apps."""
+    template_path_ = template_path("externalsecret-oidc-blueprints.yaml.j2")
+    with open(template_path_, "r") as f:
+        template_content = f.read()
+
+    oidc_apps = sorted(
+        [i for i in app_infos if i.get("auth_type") == "oidc"],
+        key=lambda x: x["app_name"],
+    )
+    template = Template(template_content)
+    return template.render(oidc_apps=oidc_apps)
 
 
 def _op_available() -> bool:
@@ -413,10 +417,7 @@ def _render_password_item_payload(
     return tmpl.render(title=title, client_id=client_id, client_secret=client_secret)
 
 
-# _ensure_item_fields removed; template fully defines desired fields
-
-
-def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
+def sync_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
     """Ensure each OIDC app has a 1Password secure note <app>-oidc with typed client-id and client-secret."""
     oidc_apps = [i for i in app_infos if i.get("auth_type") == "oidc"]
     if not oidc_apps:
@@ -475,48 +476,6 @@ def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
             print(f"  • Created 1Password item: {title}")
 
 
-def render_oidc_blueprints_externalsecret(app_infos: List[Dict[str, str]]) -> str:
-    """Render a single ExternalSecret via Jinja template for all OIDC apps."""
-    template_path_ = template_path("externalsecret-oidc-blueprints.yaml.j2")
-    with open(template_path_, "r") as f:
-        template_content = f.read()
-
-    oidc_apps = sorted(
-        [i for i in app_infos if i.get("auth_type") == "oidc"],
-        key=lambda x: x["app_name"],
-    )
-    template = Template(template_content)
-    return template.render(oidc_apps=oidc_apps)
-
-
-def update_oidc_blueprints_externalsecret_file(
-    authentik_dir: Path, app_infos: List[Dict[str, str]]
-) -> bool:
-    """Create/update authentik/generated/externalsecret-oidc-blueprints.yaml. Returns True if changed."""
-    file_path = generated_path("externalsecret-oidc-blueprints.yaml")
-    new_content = render_oidc_blueprints_externalsecret(app_infos)
-    try:
-        old_content = file_path.read_text()
-    except FileNotFoundError:
-        # Ensure directory exists on first write
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        old_content = ""
-
-    # Compare ignoring trailing whitespace/newlines to reduce needless diffs
-    if old_content.rstrip() != new_content.rstrip():
-        _write_text_ensure_newline(file_path, new_content)
-        print(f"  • Updated: {file_path.relative_to(authentik_dir.parent)}")
-        return True
-    return False
-
-
-def _write_text_ensure_newline(path: Path, content: str) -> None:
-    with open(path, "w") as f:
-        f.write(content)
-        if not content.endswith("\n"):
-            f.write("\n")
-
-
 def generate_blueprints_to_temp(
     templates: Dict[str, str],
     outpost_template: str,
@@ -534,13 +493,13 @@ def generate_blueprints_to_temp(
     for app_info in app_infos:
         if app_info["auth_type"] == "oidc":
             continue
-        content = generate_blueprint(templates[app_info["auth_type"]], app_info)
+        content = render_blueprint(templates[app_info["auth_type"]], app_info)
         _write_text_ensure_newline(temp_dir / f"{app_info['app_name']}.yaml", content)
         print(f"  ✓ {app_info['app_name']} ({app_info['auth_type']})")
 
     # Generate outpost config (providers for non-OIDC apps)
     app_names = [i["app_name"] for i in app_infos if i.get("auth_type") != "oidc"]
-    outpost_content = generate_outpost_yaml(app_names, outpost_template)
+    outpost_content = render_outpost_yaml(app_names, outpost_template)
     _write_text_ensure_newline(temp_dir / "outpost.yaml", outpost_content)
     print("  ✓ outpost (non-OIDC providers)")
 
@@ -553,24 +512,68 @@ def generate_blueprints_to_temp(
     print()
 
 
-def directories_are_different(dir1: Path, dir2: Path) -> bool:
-    """Compare two directories and return True if they are different."""
-    if not dir1.exists() or not dir2.exists():
+def write_kustomization_configmap_section(
+    kustomization_file: Path, app_infos: List[Dict[str, str]]
+) -> None:
+    """Write configMapGenerator section into kustomization.yaml."""
+    # Read the existing file
+    with open(kustomization_file, "r") as f:
+        lines = f.readlines()
+
+    # Find the marker line
+    marker_line = "# ak-collect-blueprints: auto-generated section below\n"
+    try:
+        marker_index = lines.index(marker_line)
+    except ValueError:
+        raise ValueError(
+            f"Marker line not found in {kustomization_file}. Expected: {marker_line.strip()}"
+        )
+
+    # Keep everything up to and including the marker line
+    new_lines = lines[: marker_index + 1]
+
+    # Generate the configMapGenerator section
+    new_lines.append("configMapGenerator:\n")
+    new_lines.append("- name: authentik-blueprints\n")
+    new_lines.append("  files:\n")
+
+    # Add blueprint files (exclude OIDC, which is handled via consolidated ExternalSecret)
+    for app_info in app_infos:
+        if app_info.get("auth_type") == "oidc":
+            continue
+        new_lines.append(f"  - {GENERATED_DIR_NAME}/{app_info['app_name']}.yaml\n")
+
+    # Add outpost file
+    new_lines.append(f"  - {GENERATED_DIR_NAME}/outpost.yaml\n")
+    new_lines.append("  options:\n")
+    new_lines.append("    disableNameSuffixHash: true\n")
+
+    # Write to temp file then move into place
+    temp_file = kustomization_file.with_suffix(".tmp")
+    with open(temp_file, "w") as f:
+        f.writelines(new_lines)
+
+    temp_file.replace(kustomization_file)
+
+
+def write_oidc_externalsecret(
+    authentik_dir: Path, app_infos: List[Dict[str, str]]
+) -> bool:
+    """Create/update authentik/generated/externalsecret-oidc-blueprints.yaml. Returns True if changed."""
+    file_path = generated_path("externalsecret-oidc-blueprints.yaml")
+    new_content = render_oidc_blueprints_externalsecret(app_infos)
+    try:
+        old_content = file_path.read_text()
+    except FileNotFoundError:
+        # Ensure directory exists on first write
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        old_content = ""
+
+    # Compare ignoring trailing whitespace/newlines to reduce needless diffs
+    if old_content.rstrip() != new_content.rstrip():
+        _write_text_ensure_newline(file_path, new_content)
+        print(f"  • Updated: {file_path.relative_to(authentik_dir.parent)}")
         return True
-
-    # Get all files in both directories
-    files1 = {f.relative_to(dir1) for f in dir1.rglob("*") if f.is_file()}
-    files2 = {f.relative_to(dir2) for f in dir2.rglob("*") if f.is_file()}
-
-    # Different file sets means directories are different
-    if files1 != files2:
-        return True
-
-    # Compare each file
-    for file_path in files1:
-        if not filecmp.cmp(dir1 / file_path, dir2 / file_path, shallow=False):
-            return True
-
     return False
 
 
@@ -607,7 +610,7 @@ def main():
     print()
 
     # Collect ingress information
-    app_infos = collect_ingress_info(Path("."))
+    app_infos = collect_app_infos_from_ingresses(Path("."))
     if not app_infos:
         return
 
@@ -632,7 +635,7 @@ def main():
             before_kustom = kustomization_file.read_text()
         except FileNotFoundError:
             before_kustom = ""
-        update_kustomization_configmap(kustomization_file, app_infos)
+        write_kustomization_configmap_section(kustomization_file, app_infos)
         after_kustom = kustomization_file.read_text()
         kustom_changed = before_kustom != after_kustom
 
@@ -647,11 +650,9 @@ def main():
 
         # Manage 1Password items and consolidated OIDC ExternalSecret
         # Ensure 1Password items exist (fatal if op not available)
-        ensure_1password_oidc_items(app_infos)
+        sync_1password_oidc_items(app_infos)
 
-        es_changed = update_oidc_blueprints_externalsecret_file(
-            authentik_dir, app_infos
-        )
+        es_changed = write_oidc_externalsecret(authentik_dir, app_infos)
 
         # Summary
         if would_change_dir or kustom_changed or es_changed:
