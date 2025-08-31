@@ -64,12 +64,12 @@ spec:
             - secretRef:
                 name: authentik-secrets
           volumeMounts:
-            - name: blueprints-dev
-              mountPath: /blueprints/dev
-            - name: blueprints-secret-oidc
-              mountPath: /blueprints/mounted/secret-authentik-oidc-blueprints
+            - mountPath: /blueprints/dev
+              name: blueprints-dev
             - name: blueprints-cm-authentik-blueprints
               mountPath: /blueprints/mounted/cm-authentik-blueprints
+            - name: blueprints-secret-authentik-oidc-blueprints
+              mountPath: /blueprints/mounted/secret-authentik-oidc-blueprints
           ports:
             - name: http
               containerPort: 9000
@@ -126,10 +126,10 @@ spec:
       volumes:
         - emptyDir: {}
           name: blueprints-dev
-        - name: blueprints-secret-oidc
-          secret:
-            secretName: authentik-oidc-blueprints
         - name: blueprints-cm-authentik-blueprints
           configMap:
             name: authentik-blueprints
+        - name: blueprints-secret-authentik-oidc-blueprints
+          secret:
+            secretName: authentik-oidc-blueprints
       enableServiceLinks: true
