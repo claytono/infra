@@ -78,8 +78,10 @@ def parse_ingress_file(file_path: Path) -> List[Dict[str, Any]]:
             type_val = labels.get("ak-type") or annotations.get("ak-type")
             if type_val:
                 norm = type_val.strip().lower()
-                if norm in ("simple", "basic", "basic-auth", "oidc"):
+                # Support only 'basic-auth' (not 'basic'), plus 'simple' and 'oidc'
+                if norm in ("simple", "basic-auth", "oidc"):
                     if norm == "basic-auth":
+                        # Map to internal template name
                         norm = "basic"
                     doc["_auth_type"] = norm
                     ingresses.append(doc)
