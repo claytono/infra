@@ -1,0 +1,8 @@
+# Mark third-party content as vendored for GitHub Linguist
+
+# Pre-rendered Helm templates (upstream chart output)
+kubernetes/*/helm/** linguist-vendored
+
+# Ansible Galaxy roles and collections
+ansible/galaxy/** linguist-vendored
+
