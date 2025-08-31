@@ -15,7 +15,7 @@ spec:
           containers:
           - name: got-your-back
             image: debian
-            command: [/run, --fast-incremental]
+            command: [/usr/local/bin/run, --fast-incremental]
             imagePullPolicy: Always
             env:
             - name: PING_URL
@@ -29,7 +29,7 @@ spec:
             - name: config-source
               mountPath: /config-source
             - name: run-script
-              mountPath: /run
+              mountPath: /usr/local/bin/run
               subPath: run
             - name: got-your-back-data
               mountPath: /data
