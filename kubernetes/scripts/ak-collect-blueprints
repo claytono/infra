@@ -36,14 +36,29 @@ AUTH_TYPES = ["simple", "basic"]
 GENERATED_DIR_NAME = "generated"
 
 
+# Path helpers (use relative paths; main() chdirs to kubernetes/)
+def template_path(name: str) -> Path:
+    """Return path to authentik/blueprint-templates/<name>."""
+    return Path("authentik/blueprint-templates") / name
+
+
+def generated_dir() -> Path:
+    """Return path to authentik/<generated>/ directory."""
+    return Path("authentik") / GENERATED_DIR_NAME
+
+
+def generated_path(name: str | Path) -> Path:
+    """Return path inside generated dir for given filename."""
+    return generated_dir() / str(name)
+
+
 def find_ingress_files(base_dir: Path) -> List[Path]:
     """Find all YAML files that might contain ingress resources."""
     candidates: set[Path] = set()
     for pattern in ("*.yaml", "*.yml"):
         for yaml_file in base_dir.rglob(pattern):
             # Skip generated outputs
-            # Skip generated outputs
-            if "generated" in yaml_file.parts:
+            if GENERATED_DIR_NAME in yaml_file.parts:
                 continue
             candidates.add(yaml_file)
     return sorted(candidates)
@@ -103,7 +118,9 @@ def extract_ingress_info(ingress: Dict[str, Any], file_path: Path) -> Dict[str, 
         if part == "kubernetes" and i + 1 < len(path_parts):
             service_name = path_parts[i + 1]
             break
-
+    # If running from kubernetes/ as CWD, fall back to first path segment
+    if not service_name and len(path_parts) >= 2:
+        service_name = path_parts[0]
     if not service_name:
         raise ValueError(f"Could not determine service name from path: {file_path}")
 
@@ -392,18 +409,12 @@ def _generate_oidc_client_secret_b64() -> str:
     return base64.b64encode(rand).decode("ascii")
 
 
-def _get_blueprint_template_path(name: str) -> Path:
-    """Return path to a template under authentik/blueprint-templates."""
-    script_dir = Path(__file__).parent.resolve()
-    return script_dir.parent / "authentik" / "blueprint-templates" / name
-
-
 def _render_password_item_payload(
     title: str, client_id: str, client_secret: str
 ) -> str:
     """Render 1Password secure note JSON from Jinja template in-memory."""
-    template_path = _get_blueprint_template_path("op-password-item.json.j2")
-    with open(template_path, "r") as f:
+    template_path_ = template_path("op-password-item.json.j2")
+    with open(template_path_, "r") as f:
         tmpl = Template(f.read())
     return tmpl.render(title=title, client_id=client_id, client_secret=client_secret)
 
@@ -474,10 +485,8 @@ def render_oidc_blueprints_externalsecret(
     authentik_dir: Path, app_infos: List[Dict[str, str]]
 ) -> str:
     """Render a single ExternalSecret via Jinja template for all OIDC apps."""
-    template_path = _get_blueprint_template_path(
-        "externalsecret-oidc-blueprints.yaml.j2"
-    )
-    with open(template_path, "r") as f:
+    template_path_ = template_path("externalsecret-oidc-blueprints.yaml.j2")
+    with open(template_path_, "r") as f:
         template_content = f.read()
 
     oidc_apps = sorted(
@@ -492,9 +501,7 @@ def update_oidc_blueprints_externalsecret_file(
     authentik_dir: Path, app_infos: List[Dict[str, str]]
 ) -> bool:
     """Create/update authentik/generated/externalsecret-oidc-blueprints.yaml. Returns True if changed."""
-    file_path = (
-        authentik_dir / GENERATED_DIR_NAME / "externalsecret-oidc-blueprints.yaml"
-    )
+    file_path = generated_path("externalsecret-oidc-blueprints.yaml")
     new_content = render_oidc_blueprints_externalsecret(authentik_dir, app_infos)
     try:
         old_content = file_path.read_text()
@@ -578,14 +585,16 @@ def directories_are_different(dir1: Path, dir2: Path) -> bool:
 def main():
     script_dir = Path(__file__).parent.resolve()
     base_dir = script_dir.parent
-    authentik_dir = base_dir / "authentik"
-    output_dir = authentik_dir / GENERATED_DIR_NAME
+    # Work with relative paths from the kubernetes/ top-level
+    os.chdir(base_dir)
+    authentik_dir = Path("authentik")
+    output_dir = generated_dir()
 
     # Load templates
     print("Loading blueprint templates...")
     template_contents = {}
     for auth_type in sorted(AUTH_TYPES):
-        template_file = _get_blueprint_template_path(f"{auth_type}.yaml.j2")
+        template_file = template_path(f"{auth_type}.yaml.j2")
         if not template_file.exists():
             print(f"Template file not found: {template_file}", file=sys.stderr)
             sys.exit(1)
@@ -595,7 +604,7 @@ def main():
         print(f"  ✓ {auth_type} template: {template_file.name}")
 
     # Load outpost template
-    outpost_template_file = _get_blueprint_template_path("outpost.yaml.j2")
+    outpost_template_file = template_path("outpost.yaml.j2")
     if not outpost_template_file.exists():
         print(f"Outpost template not found: {outpost_template_file}", file=sys.stderr)
         sys.exit(1)
@@ -606,12 +615,12 @@ def main():
     print()
 
     # Collect ingress information
-    app_infos = collect_ingress_info(base_dir)
+    app_infos = collect_ingress_info(Path("."))
     if not app_infos:
         return
 
     # Create temporary directory (clean it first if it exists)
-    temp_dir = output_dir.with_suffix(".tmp")
+    temp_dir = generated_dir().with_suffix(".tmp")
     if temp_dir.exists():
         shutil.rmtree(temp_dir)
     temp_dir.mkdir(parents=True, exist_ok=True)
@@ -626,7 +635,7 @@ def main():
         would_change_dir = directories_are_different(output_dir, temp_dir)
 
         # Capture current kustomization content, update it, and detect changes
-        kustomization_file = base_dir / "authentik" / "kustomization.yaml"
+        kustomization_file = Path("authentik/kustomization.yaml")
         try:
             before_kustom = kustomization_file.read_text()
         except FileNotFoundError:

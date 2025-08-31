@@ -13,6 +13,7 @@ resources:
 - deployment.yaml
 - service.yaml
 - ingress.yaml
+- pvc.yaml
 
 images:
 - name: linuxserver/radarr
