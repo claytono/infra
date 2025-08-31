@@ -5,6 +5,7 @@ namespace: default
 
 commonAnnotations:
   argoManaged: 'true'
+  reloader.stakater.com/auto: 'true'
 
 resources:
 - deployment.yaml

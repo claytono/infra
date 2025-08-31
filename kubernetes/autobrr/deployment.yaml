@@ -5,9 +5,7 @@ kind: Deployment
 metadata:
   name: autobrr
   annotations:
-    reloader.stakater.com/auto: 'true'
-    secret.reloader.stakater.com/reload: autobrr-oidc,iscsi-chap-secret
-    configmap.reloader.stakater.com/reload: autobrr-config
+    # reloader auto is set via commonAnnotations in kustomization
 
 spec:
   strategy:
