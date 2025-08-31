@@ -10,7 +10,6 @@ import json
 import os
 import base64
 import secrets
-import string
 import subprocess
 import re
 import shutil
@@ -379,11 +378,6 @@ def _should_skip_op() -> bool:
     )
 
 
-def _generate_secret_value(length: int = 48) -> str:
-    alphabet = string.ascii_letters + string.digits + "-_"
-    return "".join(secrets.choice(alphabet) for _ in range(length))
-
-
 def _generate_oidc_client_secret_b64() -> str:
     """Generate a strong client secret: 32 random bytes, base64-encoded."""
     rand = secrets.token_bytes(32)
@@ -396,15 +390,8 @@ def _get_blueprint_template_path(name: str) -> Path:
     return script_dir.parent / "authentik" / "blueprint-templates" / name
 
 
-def _render_password_item_payload(
-    title: str, client_id: str, client_secret: str, tags: List[str]
-) -> str:
-    template_path = _get_blueprint_template_path("op-password-item.json.j2")
-    with open(template_path, "r") as f:
-        tmpl = Template(f.read())
-    return tmpl.render(
-        title=title, client_id=client_id, client_secret=client_secret, tags=tags
-    )
+# Note: legacy template-based payload rendering removed; we update items via
+# direct JSON edits through _ensure_item_fields and _op_item_apply_template.
 
 
 def _ensure_item_fields(
@@ -476,8 +463,6 @@ def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
         print("FATAL: 1Password 'op' CLI not found in PATH.")
         print("Install and sign in to 'op' CLI before running ak-collect-blueprints.")
         sys.exit(1)
-
-    # Jinja template for password item JSON is loaded by _render_password_item_payload
 
     for info in oidc_apps:
         app = info["app_name"]
