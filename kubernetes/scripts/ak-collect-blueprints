@@ -475,9 +475,7 @@ def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
             print(f"  • Created 1Password item: {title}")
 
 
-def render_oidc_blueprints_externalsecret(
-    authentik_dir: Path, app_infos: List[Dict[str, str]]
-) -> str:
+def render_oidc_blueprints_externalsecret(app_infos: List[Dict[str, str]]) -> str:
     """Render a single ExternalSecret via Jinja template for all OIDC apps."""
     template_path_ = template_path("externalsecret-oidc-blueprints.yaml.j2")
     with open(template_path_, "r") as f:
@@ -496,7 +494,7 @@ def update_oidc_blueprints_externalsecret_file(
 ) -> bool:
     """Create/update authentik/generated/externalsecret-oidc-blueprints.yaml. Returns True if changed."""
     file_path = generated_path("externalsecret-oidc-blueprints.yaml")
-    new_content = render_oidc_blueprints_externalsecret(authentik_dir, app_infos)
+    new_content = render_oidc_blueprints_externalsecret(app_infos)
     try:
         old_content = file_path.read_text()
     except FileNotFoundError:
@@ -544,10 +542,10 @@ def generate_blueprints_to_temp(
     app_names = [i["app_name"] for i in app_infos if i.get("auth_type") != "oidc"]
     outpost_content = generate_outpost_yaml(app_names, outpost_template)
     _write_text_ensure_newline(temp_dir / "outpost.yaml", outpost_content)
-    print("  ✓ outpost (all providers)")
+    print("  ✓ outpost (non-OIDC providers)")
 
     # Generate consolidated OIDC ExternalSecret
-    es_content = render_oidc_blueprints_externalsecret(authentik_dir, app_infos)
+    es_content = render_oidc_blueprints_externalsecret(app_infos)
     _write_text_ensure_newline(
         temp_dir / "externalsecret-oidc-blueprints.yaml", es_content
     )
@@ -658,8 +656,9 @@ def main():
         # Summary
         if would_change_dir or kustom_changed or es_changed:
             print("Blueprint generation complete!")
+            non_oidc = sum(1 for i in app_infos if i.get("auth_type") != "oidc")
             print(
-                f"  • Generated: {len(app_infos)} service blueprints + 1 outpost config"
+                f"  • Generated: {non_oidc} service blueprints + 1 outpost (non-OIDC)"
             )
             print(
                 f"  • Updated: {kustomization_file.name}{' + externalsecret-oidc-blueprints.yaml' if es_changed else ''}"
