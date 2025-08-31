@@ -6,6 +6,8 @@
 blueprints:
   configMaps:
   - authentik-blueprints
+  secrets:
+  - authentik-oidc-blueprints
 
 # Authentik configuration - these become AUTHENTIK_ environment variables
 authentik:

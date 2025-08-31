@@ -7,7 +7,7 @@ metadata:
   labels:
     app: sonarr
   annotations:
-    ak-basic: 'true'
+    ak-type: basic-auth
     cert-manager.io/cluster-issuer: letsencrypt
     ak-path-exclude: /api(/|$)
     gethomepage.dev/enabled: 'true'

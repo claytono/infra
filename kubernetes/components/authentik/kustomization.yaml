@@ -4,12 +4,12 @@ kind: Component
 
 patches:
 
-# ak-simple patches (label and annotation selectors)
+# ak-type=simple (unified selector)
 - target:
     group: networking.k8s.io
     version: v1
     kind: Ingress
-    labelSelector: ak-simple=true
+    labelSelector: ak-type=simple
   patch: &simple-auth-patch |-
     - op: add
       path: /metadata/annotations/nginx.ingress.kubernetes.io~1auth-url
@@ -29,15 +29,15 @@ patches:
     group: networking.k8s.io
     version: v1
     kind: Ingress
-    annotationSelector: ak-simple=true
+    annotationSelector: ak-type=simple
   patch: *simple-auth-patch
 
-# ak-basic patches (label and annotation selectors)
+# ak-type=basic-auth (unified selector)
 - target:
     group: networking.k8s.io
     version: v1
     kind: Ingress
-    labelSelector: ak-basic=true
+    labelSelector: ak-type=basic-auth
   patch: &basic-auth-patch |-
     - op: add
       path: /metadata/annotations/nginx.ingress.kubernetes.io~1auth-url
@@ -57,5 +57,5 @@ patches:
     group: networking.k8s.io
     version: v1
     kind: Ingress
-    annotationSelector: ak-basic=true
+    annotationSelector: ak-type=basic-auth
   patch: *basic-auth-patch
