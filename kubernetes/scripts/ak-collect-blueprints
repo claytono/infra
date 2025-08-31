@@ -390,8 +390,14 @@ def _get_blueprint_template_path(name: str) -> Path:
     return script_dir.parent / "authentik" / "blueprint-templates" / name
 
 
-# Note: legacy template-based payload rendering removed; we update items via
-# direct JSON edits through _ensure_item_fields and _op_item_apply_template.
+def _render_password_item_payload(
+    title: str, client_id: str, client_secret: str
+) -> str:
+    """Render 1Password password item JSON from Jinja template in-memory."""
+    template_path = _get_blueprint_template_path("op-password-item.json.j2")
+    with open(template_path, "r") as f:
+        tmpl = Template(f.read())
+    return tmpl.render(title=title, client_id=client_id, client_secret=client_secret)
 
 
 def _ensure_item_fields(
@@ -490,12 +496,10 @@ def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
 
             if needs_update:
                 secret_val = _generate_oidc_client_secret_b64()
-                updated = _ensure_item_fields(
-                    data, client_id=client_id, client_secret=secret_val
+                payload = _render_password_item_payload(
+                    title=title, client_id=client_id, client_secret=secret_val
                 )
-                _op_item_apply_template(
-                    "edit", payload=json.dumps(updated), title=title
-                )
+                _op_item_apply_template("edit", payload=payload, title=title)
                 print(f"  • Updated 1Password item: {title}")
             else:
                 print(f"  • 1Password item up-to-date: {title}")
@@ -513,17 +517,11 @@ def ensure_1password_oidc_items(app_infos: List[Dict[str, str]]) -> None:
                     OP_VAULT,
                 ]
             )
-            # Fetch the created item
-            created = _op_run(
-                ["item", "get", title, "--vault", OP_VAULT, "--format", "json"],
-                capture_output=True,
-            )
-            item_json = json.loads(created.stdout or "{}")
             secret_val = _generate_oidc_client_secret_b64()
-            updated = _ensure_item_fields(
-                item_json, client_id=client_id, client_secret=secret_val
+            payload = _render_password_item_payload(
+                title=title, client_id=client_id, client_secret=secret_val
             )
-            _op_item_apply_template("edit", payload=json.dumps(updated), title=title)
+            _op_item_apply_template("edit", payload=payload, title=title)
             print(f"  • Created 1Password item: {title}")
 
 
