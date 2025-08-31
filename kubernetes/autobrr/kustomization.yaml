@@ -12,6 +12,14 @@ resources:
 - ingress.yaml
 - externalsecret.yaml
 
+configMapGenerator:
+- name: autobrr-config
+  literals:
+  - AUTOBRR__OIDC_ENABLED=true
+  - AUTOBRR__OIDC_DISABLE_BUILT_IN_LOGIN=false
+  - AUTOBRR__OIDC_ISSUER=https://auth.k.oneill.net/application/o/autobrr/
+  - AUTOBRR__OIDC_REDIRECT_URL=https://autobrr.k.oneill.net/api/auth/oidc/callback
+
 images:
 - name: ghcr.io/autobrr/autobrr
   newTag: v1.65.0@sha256:494e821e7a9c9a1279d1541522a65ed06b03d0b66563e827e3d29b9a63e61ddc
