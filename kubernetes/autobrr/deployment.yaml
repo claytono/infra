@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: autobrr
   annotations:
-    # reloader auto is set via commonAnnotations in kustomization
+    reloader.stakater.com/auto: 'true'
 
 spec:
   strategy:
