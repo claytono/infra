@@ -363,8 +363,8 @@ def _op_item_apply_template(
     args: List[str] = ["item", action]
     if action == "edit" and title:
         args.append(title)
-    # Read template from STDIN to avoid temp files
-    args.extend(["--vault", vault, "--template", "/dev/stdin"])
+    # Read template from STDIN to avoid temp files (op expects @/dev/stdin)
+    args.extend(["--vault", vault, "--template", "@/dev/stdin"])
     _op_run(args, input=payload)
 
 
