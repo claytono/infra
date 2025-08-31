@@ -7,6 +7,7 @@ metadata:
   annotations:
     reloader.stakater.com/auto: 'true'
     secret.reloader.stakater.com/reload: autobrr-oidc,iscsi-chap-secret
+    configmap.reloader.stakater.com/reload: autobrr-config
 
 spec:
   strategy:
@@ -28,6 +29,8 @@ spec:
         envFrom:
         - secretRef:
             name: autobrr-oidc
+        - configMapRef:
+            name: autobrr-config
         volumeMounts:
         - mountPath: /config
           name: config
