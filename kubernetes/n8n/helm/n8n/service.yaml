@@ -4,8 +4,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: n8n
+  namespace: n8n
   labels:
-    helm.sh/chart: n8n-1.0.12
+    helm.sh/chart: n8n-1.0.13
     app.kubernetes.io/name: n8n
     app.kubernetes.io/instance: n8n
     app.kubernetes.io/version: "1.107.4"
