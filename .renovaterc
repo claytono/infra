@@ -109,7 +109,7 @@
         "digest"
       ],
       "matchManagers": [
-        "regex"
+        "custom.regex"
       ],
       "automerge": true,
       "automergeType": "pr",
