@@ -10,8 +10,3 @@ resources:
 
 commonAnnotations:
   argoManaged: 'true'
-
-images:
-- name: curlimages/curl
-  newName: curlimages/curl
-  newTag: latest
