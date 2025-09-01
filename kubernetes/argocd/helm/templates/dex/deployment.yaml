@@ -6,7 +6,7 @@ metadata:
   name: argocd-dex-server
   namespace: argocd
   labels:
-    helm.sh/chart: argo-cd-8.3.1
+    helm.sh/chart: argo-cd-8.3.3
     app.kubernetes.io/name: argocd-dex-server
     app.kubernetes.io/instance: argocd
     app.kubernetes.io/component: dex-server
@@ -23,9 +23,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cmd-params: 0c607ccabd6781b80b8bead0921bb32ba459e033f9b7acef4316ee056bc67183
+        checksum/cmd-params: fe7e6e5a414758800d7e7f87c02c7add7530a5d0fb1b0767c5a6b9650dca9390
       labels:
-        helm.sh/chart: argo-cd-8.3.1
+        helm.sh/chart: argo-cd-8.3.3
         app.kubernetes.io/name: argocd-dex-server
         app.kubernetes.io/instance: argocd
         app.kubernetes.io/component: dex-server
@@ -38,7 +38,7 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: dex-server
-        image: ghcr.io/dexidp/dex:v2.43.1
+        image: ghcr.io/dexidp/dex:v2.44.0
         imagePullPolicy: IfNotPresent
         command:
         - /shared/argocd-dex
