@@ -6,7 +6,7 @@ metadata:
   name: "connect-health-check"
   namespace: 1password
   labels:
-    helm.sh/chart: connect-2.0.2
+    helm.sh/chart: connect-2.0.3
     app.kubernetes.io/name: connect
     app.kubernetes.io/instance: connect
     app.kubernetes.io/version: "1.7.3"
@@ -18,5 +18,6 @@ spec:
   restartPolicy: Never
   containers:
     - name: curl
-      image: curlimages/curl
+      image: curlimages/curl:latest
+
       command: ["curl", "http://onepassword-connect:8080/health"]
