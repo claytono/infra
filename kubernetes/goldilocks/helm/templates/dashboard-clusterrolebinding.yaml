@@ -6,7 +6,7 @@ metadata:
   name: goldilocks-dashboard
   labels:
     app.kubernetes.io/name: goldilocks
-    helm.sh/chart: goldilocks-10.0.0
+    helm.sh/chart: goldilocks-10.1.0
     app.kubernetes.io/instance: goldilocks
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: dashboard
