@@ -572,7 +572,8 @@ def write_oidc_externalsecret(
     # Compare ignoring trailing whitespace/newlines to reduce needless diffs
     if old_content.rstrip() != new_content.rstrip():
         _write_text_ensure_newline(file_path, new_content)
-        print(f"  • Updated: {file_path.relative_to(authentik_dir.parent)}")
+        # Print a simple relative path to avoid relative_to errors in different environments
+        print(f"  • Updated: {file_path}")
         return True
     return False
 
@@ -664,7 +665,8 @@ def main():
             print(
                 f"  • Updated: {kustomization_file.name}{' + externalsecret-oidc-blueprints.yaml' if es_changed else ''}"
             )
-            print(f"  • Output: {output_dir.relative_to(base_dir)}")
+            # Print path directly; avoid Path.relative_to which can raise in some contexts
+            print(f"  • Output: {output_dir}")
             sys.exit(1)
         else:
             print("Blueprint files are up to date")

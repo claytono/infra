@@ -7,6 +7,8 @@ metadata:
   labels:
     app: bazarr
   annotations:
+    ak-type: basic-auth
+    ak-path-exclude: /api(/|$)
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Bazarr

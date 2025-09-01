@@ -7,6 +7,7 @@ metadata:
   labels:
     app: qbit-manage
   annotations:
+    ak-type: simple
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: qBit Manage

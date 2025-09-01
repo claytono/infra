@@ -18,13 +18,28 @@ entries:
       - [name, alertmanager]
     - !Find
       - authentik_providers_proxy.proxyprovider
+      - [name, bazarr]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
       - [name, goldilocks]
     - !Find
       - authentik_providers_proxy.proxyprovider
       - [name, prometheus]
     - !Find
       - authentik_providers_proxy.proxyprovider
+      - [name, prowlarr]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, qbit-manage]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
       - [name, radarr]
     - !Find
       - authentik_providers_proxy.proxyprovider
+      - [name, sabnzbd]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
       - [name, sonarr]
+    - !Find
+      - authentik_providers_proxy.proxyprovider
+      - [name, tautulli]
