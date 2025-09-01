@@ -47,7 +47,7 @@
         "/.*\\.ya?ml$/"
       ],
       "matchStrings": [
-        "imageName:\\s*(?<depName>ghcr\\.io/cloudnative-pg/postgresql):(?<currentValue>[\\w.-]+)"
+        "imageName:\\s*(?<depName>ghcr\\.io/cloudnative-pg/postgresql):(?<currentValue>[A-Za-z0-9._-]+)(?:@(?<currentDigest>sha256:[A-Fa-f0-9]{64}))?"
       ],
       "datasourceTemplate": "docker",
       "registryUrlTemplate": "https://ghcr.io",
@@ -105,6 +105,26 @@
       "matchPackageNames": [
         "ghcr.io/cloudnative-pg/postgresql"
       ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "matchManagers": [
+        "regex"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "addLabels": [
+        "automerge"
+      ],
+      "description": "Auto-merge CNPG digest refreshes for regex-managed imageName"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/cloudnative-pg/postgresql"
+      ],
       "matchCurrentVersion": "/^17\\./",
       "automerge": true,
       "automergeType": "pr",
@@ -112,7 +132,7 @@
         "db-image",
         "automerge"
       ],
-      "description": "Auto-merge PostgreSQL 17.x updates (always offline anyway)"
+      "description": "Auto-merge PostgreSQL 17.x updates"
     },
     {
       "matchDatasources": [
