@@ -14,5 +14,5 @@ helm_template connect connect \
 	--values values.yaml \
 	--output-dir helm
 
-# Drop Helm test manifests from rendered output
-rm -rf helm/templates/tests
+# Drop Helm test manifests from rendered output (handle nested path)
+rm -rf helm/templates/tests helm/*/templates/tests
