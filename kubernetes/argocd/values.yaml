@@ -92,9 +92,8 @@ configs:
     dexserver.disable.tls: 'true'
 
 dex:
-  # Ensure External Secrets merged keys into Secret 'argocd-secret'.
-  # Source: ExternalSecret 'argocd-oidc-config' (1Password items 'argocd-oidc' and 'argocd-dex').
-  # Not used by the pod; only materializes keys.
+  # This is here just to ensure ESO has merged these values into the existing
+  # argocd-secret.  These aren't used in the pod.
   env:
   - name: OIDC_CLIENT_ID
     valueFrom:
