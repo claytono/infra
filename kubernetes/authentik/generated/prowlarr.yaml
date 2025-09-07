@@ -21,6 +21,7 @@ entries:
     cookie_domain: oneill.net
     skip_path_regex: |-
       ^https://prowlarr.k.oneill.net/\d+/api.*
+      ^https://prowlarr.k.oneill.net/api.*
     authorization_flow: !Find
     - authentik_flows.flow
     - [slug, default-provider-authorization-implicit-consent]
