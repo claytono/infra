@@ -56,6 +56,20 @@
   ],
   "packageRules": [
     {
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "kubernetes/**"
+      ],
+      "schedule": [],
+      "minimumReleaseAge": "2 days",
+      "description": "Kubernetes Docker digests: bypass schedule, delay 2 days"
+    },
+    {
       "matchDatasources": [
         "helm"
       ],
