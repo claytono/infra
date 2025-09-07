@@ -56,22 +56,6 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": [
-        "digest"
-      ],
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchFileNames": [
-        "kubernetes/**"
-      ],
-      "schedule": [
-        "at any time"
-      ],
-      "minimumReleaseAge": "2 days",
-      "description": "Kubernetes Docker digests: bypass schedule, delay 2 days"
-    },
-    {
       "matchDatasources": [
         "helm"
       ],
@@ -107,6 +91,7 @@
       "matchManagers": [
         "kustomize"
       ],
+      "minimumReleaseAge": "2 days",
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -127,6 +112,7 @@
       "matchManagers": [
         "custom.regex"
       ],
+      "minimumReleaseAge": "2 days",
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
