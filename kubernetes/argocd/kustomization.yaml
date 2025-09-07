@@ -17,6 +17,7 @@ resources:
 - tailscale-ingress.yaml
 - appset.yaml
 - externalsecret-oidc-config.yaml
+- externalsecret-server-secretkey.yaml
 
 # Generated helm resources - do not edit below this line
 - helm/templates/argocd-application-controller/clusterrole.yaml
