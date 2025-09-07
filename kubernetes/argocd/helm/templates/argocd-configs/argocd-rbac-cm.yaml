@@ -27,6 +27,8 @@ data:
     p, role:github-actions, projects, get, *, allow
     # Assign github-actions account to the role
     g, github-actions, role:github-actions
+    # Assign authentik admins to admin
+    g, authentik Admins, role:admin
   policy.default: ""
   policy.matchMode: glob
   scopes: '[groups]'

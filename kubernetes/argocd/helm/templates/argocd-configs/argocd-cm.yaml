@@ -18,6 +18,38 @@ data:
   admin.enabled: "true"
   application.instanceLabelKey: argocd.argoproj.io/instance
   application.sync.impersonation.enabled: "false"
+  dex.config: |
+    issuer: https://argocd.k.oneill.net/dex
+    storage:
+      type: memory
+    web:
+      http: 0.0.0.0:5556
+    telemetry:
+      http: 0.0.0.0:5558
+    frontend:
+      theme: argocd
+    staticClients:
+    - id: argocd
+      name: Argo CD
+      redirectURIs:
+      - https://argocd.k.oneill.net/auth/callback
+      secret: $dex.clientSecret
+    connectors:
+    - type: oidc
+      id: authentik
+      name: Authentik
+      config:
+        issuer: https://auth.k.oneill.net/application/o/argocd/
+        clientID: $oidc.authentik.clientID
+        clientSecret: $oidc.authentik.clientSecret
+        #redirectURI: https://argocd.k.oneill.net/api/dex/callback
+        scopes:
+        - openid
+        - profile
+        - email
+        - groups
+        insecureEnableGroups: true
+        getUserInfo: true
   exec.enabled: "false"
   resource.customizations.ignoreResourceUpdates.ConfigMap: |
     jqPathExpressions:

@@ -31,6 +31,7 @@ data:
   controller.self.heal.timeout.seconds: "5"
   controller.status.processors: "20"
   controller.sync.timeout.seconds: "0"
+  dexserver.disable.tls: "true"
   dexserver.log.format: text
   dexserver.log.level: info
   hydrator.enabled: "false"
@@ -43,7 +44,7 @@ data:
   reposerver.log.level: info
   reposerver.parallelism.limit: "0"
   server.basehref: /
-  server.dex.server: https://argocd-dex-server:5556
+  server.dex.server: http://argocd-dex-server:5556
   server.dex.server.strict.tls: "false"
   server.disable.auth: "false"
   server.enable.gzip: "true"

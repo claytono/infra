@@ -14,6 +14,8 @@ metadata:
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: "v3.1.1"
   annotations:
+    ak-oidc-callback: "/api/dex/callback"
+    ak-type: "oidc"
     gethomepage.dev/description: "GitOps Continuous Delivery"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Home Lab"

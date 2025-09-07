@@ -24,6 +24,8 @@ server:
       gethomepage.dev/description: GitOps Continuous Delivery
       gethomepage.dev/icon: mdi-git
       gethomepage.dev/group: Home Lab
+      ak-type: oidc
+      ak-oidc-callback: /api/dex/callback
     path: /
     pathType: Prefix
 
@@ -32,6 +34,38 @@ configs:
     url: https://argocd.k.oneill.net
     # GitHub Actions service account configuration
     accounts.github-actions: apiKey
+    dex.config: |
+      issuer: https://argocd.k.oneill.net/dex
+      storage:
+        type: memory
+      web:
+        http: 0.0.0.0:5556
+      telemetry:
+        http: 0.0.0.0:5558
+      frontend:
+        theme: argocd
+      staticClients:
+      - id: argocd
+        name: Argo CD
+        redirectURIs:
+        - https://argocd.k.oneill.net/auth/callback
+        secret: $dex.clientSecret
+      connectors:
+      - type: oidc
+        id: authentik
+        name: Authentik
+        config:
+          issuer: https://auth.k.oneill.net/application/o/argocd/
+          clientID: $oidc.authentik.clientID
+          clientSecret: $oidc.authentik.clientSecret
+          scopes:
+          - openid
+          - profile
+          - email
+          - groups
+          insecureEnableGroups: true
+          getUserInfo: true
+
   rbac:
     # RBAC policy for GitHub Actions service account - minimal required permissions
     policy.csv: |
@@ -47,5 +81,32 @@ configs:
       p, role:github-actions, projects, get, *, allow
       # Assign github-actions account to the role
       g, github-actions, role:github-actions
+      # Assign authentik admins to admin
+      g, authentik Admins, role:admin
   notifications:
     argocdUrl: https://argocd.k.oneill.net
+  params:
+    # Dex is configured to listen on plain HTTP 5556 via dex.config
+    server.dex.server: http://argocd-dex-server:5556
+    server.dex.server.strict.tls: 'false'
+    dexserver.disable.tls: 'true'
+
+dex:
+  # This is here just to ensure ESO has merged these values into the existing
+  # argocd-secret.  These aren't used in the pod.
+  env:
+  - name: OIDC_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: argocd-secret  # ESO writes into this
+        key: oidc.authentik.clientID  # required key
+  - name: OIDC_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: argocd-secret
+        key: oidc.authentik.clientSecret
+  - name: DEX_STATIC_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: argocd-secret
+        key: dex.clientSecret
