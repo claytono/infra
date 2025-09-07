@@ -42,7 +42,6 @@ data:
         issuer: https://auth.k.oneill.net/application/o/argocd/
         clientID: $oidc.authentik.clientID
         clientSecret: $oidc.authentik.clientSecret
-        #redirectURI: https://argocd.k.oneill.net/api/dex/callback
         scopes:
         - openid
         - profile
