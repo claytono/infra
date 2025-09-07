@@ -41,6 +41,13 @@ spec:
           value: '10001'
         - name: TZ
           value: EST5EDT
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - apk add ffmpeg
       volumes:
       - name: config
         iscsi:
