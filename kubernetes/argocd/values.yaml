@@ -92,9 +92,9 @@ configs:
     dexserver.disable.tls: 'true'
 
 dex:
-  # Ensure External Secrets has merged these values into argocd-secret.
-  # Populated from 1Password item "argocd" via ExternalSecret "argocd-secret".
-  # These envs are not used by the pod itself; they only materialize keys.
+  # Ensure External Secrets merged keys into Secret 'argocd-secret'.
+  # Source: ExternalSecret 'argocd-oidc-config' (1Password items 'argocd-oidc' and 'argocd-dex').
+  # Not used by the pod; only materializes keys.
   env:
   - name: OIDC_CLIENT_ID
     valueFrom:
