@@ -13,7 +13,7 @@ commonAnnotations:
 
 images:
 - name: typhonragewind/meshcentral
-  newTag: 1.1.49@sha256:a453b1cfb6bee1ca618aadf998961f36b30502c21480bf63e525115e22298034
+  newTag: 1.1.49@sha256:5cf8fd161dcc94cab94158e669aa773641f675ed5f2fd3ab7f4809e5d5a1a423
 
 labels:
 
