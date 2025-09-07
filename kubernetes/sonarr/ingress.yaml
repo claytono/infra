@@ -9,7 +9,7 @@ metadata:
   annotations:
     ak-type: basic-auth
     cert-manager.io/cluster-issuer: letsencrypt
-    ak-path-exclude: /api(/|$)
+    ak-path-exclude: /api/v\d+.*
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Sonarr
     gethomepage.dev/description: TV Manager

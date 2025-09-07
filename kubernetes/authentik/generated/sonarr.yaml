@@ -20,7 +20,7 @@ entries:
     basic_auth_password_attribute: password
     cookie_domain: oneill.net
     skip_path_regex: |-
-      ^https://sonarr.k.oneill.net/api(/|$)
+      ^https://sonarr.k.oneill.net/api/v\d+.*
     authorization_flow: !Find
     - authentik_flows.flow
     - [slug, default-provider-authorization-implicit-consent]

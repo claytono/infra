@@ -9,6 +9,7 @@ metadata:
     ak-path-exclude: |-
       /\d+/api.*
       /api.*
+      /\d+/download.*
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Prowlarr
