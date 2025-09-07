@@ -5,10 +5,10 @@ kind: Deployment
 metadata:
   name: homebox
   labels:
-    helm.sh/chart: homebox-0.1.2
+    helm.sh/chart: homebox-0.2.0
     app.kubernetes.io/name: homebox
     app.kubernetes.io/instance: homebox
-    app.kubernetes.io/version: "0.20.2"
+    app.kubernetes.io/version: "0.21.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -19,13 +19,13 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 619be5a8b943dc8bd0897182947a681bc1cb0a4cb439f2fdb16b62dc26d432c6
+        checksum/secret: 0ec8b33b18b21dd857c89bfa93092da22e9875cdf3382ad71d5b2b50293308fe
         reloader.stakater.com/auto: "true"
       labels:
-        helm.sh/chart: homebox-0.1.2
+        helm.sh/chart: homebox-0.2.0
         app.kubernetes.io/name: homebox
         app.kubernetes.io/instance: homebox
-        app.kubernetes.io/version: "0.20.2"
+        app.kubernetes.io/version: "0.21.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: homebox
@@ -44,11 +44,12 @@ spec:
             runAsGroup: 65532
             runAsNonRoot: true
             runAsUser: 65532
-          image: "sysadminsmedia/homebox:0.20.2"
+          image: "sysadminsmedia/homebox:0.21.0"
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
                 name: homebox
+          env:
           ports:
             - name: http
               containerPort: 7745
