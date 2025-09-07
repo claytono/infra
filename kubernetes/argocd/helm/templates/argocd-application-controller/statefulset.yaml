@@ -24,8 +24,6 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cmd-params: fe7e6e5a414758800d7e7f87c02c7add7530a5d0fb1b0767c5a6b9650dca9390
-        checksum/cm: fea1e2583200482d4f9a7d447307d6dbda7f56b3f85d7d7e3242c21995dbb4db
       labels:
         helm.sh/chart: argo-cd-8.3.3
         app.kubernetes.io/name: argocd-application-controller

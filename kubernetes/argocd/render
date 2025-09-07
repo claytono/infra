@@ -23,6 +23,12 @@ rmdir tmp/*
 rmdir tmp
 rm -rf helm/tests
 
+# Strip noisy Helm checksum annotations to reduce diffs/noise
+# Remove any annotation keys beginning with "checksum/" from all rendered YAML
+while IFS= read -r -d '' f; do
+  awk '!( $0 ~ /^[[:space:]]*checksum\// ) { print }' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+done < <(find helm -type f -name '*.yaml' -print0)
+
 # Update kustomization.yaml resources to match actual helm files
 # Use awk for cross-platform compatibility
 awk '/# Generated helm resources/ { exit } { print }' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
