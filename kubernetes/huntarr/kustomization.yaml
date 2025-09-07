@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: default
+
+commonAnnotations:
+  argoManaged: 'true'
+
+components:
+- ../components/authentik
+
+resources:
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+
+images:
+- name: ghcr.io/plexguide/huntarr
+  newTag: 8.2.10@sha256:b5a47c2b43806165f433d308d69a21e74a687ce59f4fcccb612d6a7acb3af6d7
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: huntarr
+    app.kubernetes.io/instance: huntarr
+  includeSelectors: true

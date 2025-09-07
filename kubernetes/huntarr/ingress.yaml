@@ -1,0 +1,31 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: huntarr
+  annotations:
+    ak-type: simple
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Huntarr
+    gethomepage.dev/description: Missing and Upgrade Hunter
+    gethomepage.dev/group: Media
+
+spec:
+  tls:
+  - hosts:
+    - huntarr.k.oneill.net
+    secretName: huntarr-tls
+  rules:
+  - host: huntarr.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: huntarr
+            port:
+              number: 9705
+  ingressClassName: nginx
