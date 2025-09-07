@@ -65,7 +65,9 @@
       "matchFileNames": [
         "kubernetes/**"
       ],
-      "schedule": [],
+      "schedule": [
+        "at any time"
+      ],
       "minimumReleaseAge": "2 days",
       "description": "Kubernetes Docker digests: bypass schedule, delay 2 days"
     },
