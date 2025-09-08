@@ -23,7 +23,7 @@ roles:
     name: ntd.nut
     version: "1.7.1"
   - src: geerlingguy.docker
-    version: "7.5.1"
+    version: "7.5.3"
 
 collections:
   - name: artis3n.tailscale
