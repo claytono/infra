@@ -12,6 +12,7 @@
     dest: /etc/nut/peanut/Dockerfile
     mode: "0644"
   become: true
+  notify: Rebuild peanut caddy image
 
 - name: Deploy PeaNUT settings.yml config file
   ansible.builtin.template:

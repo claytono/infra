@@ -9,3 +9,15 @@
     AWS_SECRET_ACCESS_KEY: "{{ ler53_aws_secret_key }}"
     AWS_REGION: "{{ route53_region }}"
   become: true
+
+- name: Rebuild peanut caddy image
+  community.docker.docker_compose_v2:
+    project_src: /etc/nut/peanut
+    state: present
+    build: true
+    wait: true
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ ler53_aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ ler53_aws_secret_key }}"
+    AWS_REGION: "{{ route53_region }}"
+  become: true
