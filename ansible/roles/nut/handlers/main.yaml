@@ -5,6 +5,7 @@
     state: restarted
     wait: true
   become: true
+  no_log: true
 
 - name: Rebuild peanut caddy image
   community.docker.docker_compose_v2:
@@ -13,3 +14,4 @@
     build: true
     wait: true
   become: true
+  no_log: true
