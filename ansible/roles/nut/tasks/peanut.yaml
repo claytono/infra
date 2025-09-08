@@ -31,6 +31,16 @@
   become: true
   notify: Restart peanut containers
 
+- name: Write compose .env with AWS creds (for caddy)
+  ansible.builtin.template:
+    src: peanut.env.j2
+    dest: /etc/nut/peanut/.env
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  become: true
+
 - name: Deploy docker-compose.yaml for peanut and caddy
   ansible.builtin.copy:
     src: docker-compose.yaml
@@ -50,8 +60,4 @@
     project_src: /etc/nut/peanut
     state: present
     wait: true
-  environment:
-    AWS_ACCESS_KEY_ID: "{{ ler53_aws_access_key }}"
-    AWS_SECRET_ACCESS_KEY: "{{ ler53_aws_secret_key }}"
-    AWS_REGION: "{{ route53_region }}"
   become: true
