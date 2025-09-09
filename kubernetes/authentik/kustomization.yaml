@@ -42,6 +42,7 @@ configMapGenerator:
   - generated/tautulli.yaml
   - generated/alertmanager.yaml
   - generated/goldilocks.yaml
+  - generated/grafana.yaml
   - generated/huntarr.yaml
   - generated/prometheus.yaml
   - generated/qbit-manage.yaml
