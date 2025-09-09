@@ -1,0 +1,33 @@
+---
+version: 1
+
+metadata:
+  name: grafana-config
+
+entries:
+- identifiers:  # grafana Proxy Provider
+    name: grafana
+  id: grafana_provider
+  model: authentik_providers_proxy.proxyprovider
+  state: present
+  attrs:
+    name: grafana
+    mode: forward_domain
+    external_host: https://grafana.k.oneill.net
+    internal_host: http://grafana.default.svc.cluster.local:80
+    intercept_header_auth: true
+    cookie_domain: oneill.net
+    authorization_flow: !Find
+    - authentik_flows.flow
+    - [slug, default-provider-authorization-implicit-consent]
+    invalidation_flow: !Find
+    - authentik_flows.flow
+    - [slug, default-provider-invalidation-flow]
+- identifiers:  # grafana Application
+    slug: grafana
+  id: grafana_app
+  model: authentik_core.application
+  state: present
+  attrs:
+    name: grafana
+    provider: !KeyOf grafana_provider
