@@ -4,8 +4,6 @@ name: Build Peanut Caddy Image
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-    - ansible/roles/nut/files/Dockerfile
   push:
     branches: [main]
     paths:
@@ -22,15 +20,30 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: Detect changes
+      id: changes
+      uses: dorny/paths-filter@v3
+      with:
+        filters: |
+          dockerfile:
+            - 'ansible/roles/nut/files/Dockerfile'
+
+    - name: Dockerfile unchanged — skipping build
+      if: steps.changes.outputs.dockerfile != 'true'
+      run: echo "Dockerfile unchanged — skipping build"
+
     - name: Set up QEMU (multi-arch)
+      if: steps.changes.outputs.dockerfile == 'true'
       uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
+      if: steps.changes.outputs.dockerfile == 'true'
       uses: docker/setup-buildx-action@v3
       with:
         install: true
 
     - name: Build (linux/${{ matrix.arch }})
+      if: steps.changes.outputs.dockerfile == 'true'
       uses: docker/build-push-action@v6
       with:
         context: .
