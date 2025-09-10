@@ -29,6 +29,9 @@ import yaml
 from pathlib import Path
 from typing import Optional, Sequence
 
+# Port name to number mapping for Kubernetes service ports
+PORT_MAPPING = {"http": 80, "https": 443}
+
 # Repository root (infra directory)
 REPO_ROOT = Path(__file__).parent.parent.parent.resolve()
 OPENTOFU_DIR = REPO_ROOT / "opentofu"
@@ -146,7 +149,12 @@ def build_app_info_from_ingress(ingress, file_path):
     if not rules:
         raise ValueError(f"No rules found in ingress {metadata.get('name')}")
 
-    external_host = f"https://{rules[0].get('host', '')}"
+    host = rules[0].get("host")
+    if not host:
+        raise ValueError(
+            f"Ingress {metadata.get('name')} rule missing required 'host' field"
+        )
+    external_host = f"https://{host}"
 
     # Get service info from first path
     paths = rules[0].get("http", {}).get("paths", [])
@@ -163,12 +171,11 @@ def build_app_info_from_ingress(ingress, file_path):
             port = service_port["number"]
         elif "name" in service_port:
             port_name = service_port["name"]
-            port_mapping = {"http": 80, "https": 443}
-            if port_name not in port_mapping:
+            if port_name not in PORT_MAPPING:
                 raise ValueError(
                     f"Unknown port name '{port_name}' in ingress {metadata.get('name')} - add to PORT_MAPPING"
                 )
-            port = port_mapping[port_name]
+            port = PORT_MAPPING[port_name]
         else:
             raise ValueError(
                 f"Service port specification missing both 'number' and 'name' in ingress {metadata.get('name')}"
