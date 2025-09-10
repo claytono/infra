@@ -45,9 +45,9 @@ repos:
     files: ^kubernetes/.*\.(ya?ml)$
     pass_filenames: true
     exclude: helm.yaml$
-  - id: ak-collect-blueprints
-    name: collect authentik blueprints
-    entry: kubernetes/scripts/ak-collect-blueprints
+  - id: ak-tool-generate
+    name: generate authentik terraform configs
+    entry: kubernetes/scripts/ak-tool generate
     language: system
     files: ^kubernetes/.*/.*\.(ya?ml)$
     pass_filenames: false

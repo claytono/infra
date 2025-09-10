@@ -1,0 +1,23 @@
+{
+  "resource": {
+    "authentik_application": {
+      "goldilocks": {
+        "name": "goldilocks",
+        "protocol_provider": "${authentik_provider_proxy.goldilocks.id}",
+        "slug": "goldilocks"
+      }
+    },
+    "authentik_provider_proxy": {
+      "goldilocks": {
+        "access_token_validity": "hours=1",
+        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
+        "cookie_domain": "oneill.net",
+        "external_host": "https://goldilocks.k.oneill.net",
+        "internal_host": "http://goldilocks-dashboard.default.svc.cluster.local:80",
+        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
+        "mode": "forward_domain",
+        "name": "goldilocks"
+      }
+    }
+  }
+}

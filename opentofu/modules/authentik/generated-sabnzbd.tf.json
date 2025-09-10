@@ -1,0 +1,27 @@
+{
+  "resource": {
+    "authentik_application": {
+      "sabnzbd": {
+        "name": "sabnzbd",
+        "protocol_provider": "${authentik_provider_proxy.sabnzbd.id}",
+        "slug": "sabnzbd"
+      }
+    },
+    "authentik_provider_proxy": {
+      "sabnzbd": {
+        "access_token_validity": "hours=1",
+        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
+        "basic_auth_enabled": true,
+        "basic_auth_password_attribute": "password",
+        "basic_auth_username_attribute": "username",
+        "cookie_domain": "oneill.net",
+        "external_host": "https://sabnzbd.k.oneill.net",
+        "internal_host": "http://sabnzbd.default.svc.cluster.local:8080",
+        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
+        "mode": "forward_domain",
+        "name": "sabnzbd",
+        "skip_path_regex": "^https://sabnzbd.k.oneill.net/api(/|$)"
+      }
+    }
+  }
+}

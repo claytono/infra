@@ -2,13 +2,6 @@
 # Authentik Helm Chart Values
 # Based on authentik/authentik v2025.8.1
 
-# Blueprint configuration - mount configmaps containing blueprints
-blueprints:
-  configMaps:
-  - authentik-blueprints
-  secrets:
-  - authentik-oidc-blueprints
-
 # Authentik configuration - these become AUTHENTIK_ environment variables
 authentik:
   # External PostgreSQL configuration (using CloudNativePG)
@@ -94,12 +87,3 @@ worker:
   envFrom:
   - secretRef:
       name: authentik-secrets
-
-  # Volumes for development blueprints
-  volumes:
-  - name: blueprints-dev
-    emptyDir: {}
-
-  volumeMounts:
-  - name: blueprints-dev
-    mountPath: /blueprints/dev

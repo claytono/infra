@@ -1,0 +1,800 @@
+#!/usr/bin/env python3
+"""
+ak-tool v2 (OpenTofu-based)
+
+Subcommands:
+  - generate  (generate tf.json files from Kubernetes ingress annotations)
+  - plan      (wrapper around `tofu plan` in opentofu/authentik)
+  - import    (import existing Authentik resources into Terraform state)
+  - apply     (wrapper around `tofu apply` in opentofu/authentik)
+  - run       (generate tf.json files then run tofu apply)
+
+Credentials:
+  - Reads AUTHENTIK_URL/AUTHENTIK_TOKEN from environment if set
+  - Else reads from 1Password item 'ak-tool' (vault 'Kubernetes') fields base_url/api_token
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+import urllib.parse
+import urllib.request
+import yaml
+from pathlib import Path
+from typing import Optional, Sequence
+
+# Repository root (infra directory)
+REPO_ROOT = Path(__file__).parent.parent.parent.resolve()
+OPENTOFU_DIR = REPO_ROOT / "opentofu"
+OP_VAULT = os.environ.get("AK_OP_VAULT", "Kubernetes")
+OP_ITEM = os.environ.get("AK_OP_ITEM", "ak-tool")
+OP_FIELD_URL = os.environ.get("AK_OP_FIELD_URL", "base_url")
+OP_FIELD_TOKEN = os.environ.get("AK_OP_FIELD_TOKEN", "api_token")
+
+
+def run(cmd: list[str], env: Optional[dict] = None) -> int:
+    print("$", " ".join(shlex.quote(c) for c in cmd))
+    if env:
+        os.environ.update(env)
+    os.execvp(cmd[0], cmd)
+
+
+def op_item_get_field(vault: str, item: str, label: str) -> Optional[str]:
+    try:
+        out = subprocess.check_output(
+            ["op", "item", "get", item, "--vault", vault, "--format", "json"],
+            text=True,
+        )
+        data = json.loads(out or "{}")
+        for f in data.get("fields", []) or []:
+            if f.get("label") == label:
+                return f.get("value")
+        return None
+    except Exception:
+        return None
+
+
+def resolve_auth() -> tuple[str, str]:
+    url = os.environ.get("AUTHENTIK_URL") or os.environ.get("AK_BASE_URL")
+    token = os.environ.get("AUTHENTIK_TOKEN") or os.environ.get("AK_TOKEN")
+    if url and token:
+        return url, token
+
+    # 1Password fallback
+    url = url or op_item_get_field(OP_VAULT, OP_ITEM, OP_FIELD_URL)
+    token = token or op_item_get_field(OP_VAULT, OP_ITEM, OP_FIELD_TOKEN)
+
+    if not url:
+        raise SystemExit("ERROR: AUTHENTIK_URL not found in environment or 1Password")
+    if not token:
+        raise SystemExit("ERROR: AUTHENTIK_TOKEN not found in environment or 1Password")
+
+    return url, token
+
+
+def find_ingress_files(base_dir) -> list:
+    """Find all YAML files that might contain ingress resources."""
+    candidates = set()
+    for pattern in ("*.yaml", "*.yml"):
+        for yaml_file in base_dir.rglob(pattern):
+            candidates.add(yaml_file)
+    return sorted(candidates)
+
+
+def parse_ingress_file(file_path) -> list:
+    """Parse YAML file and return ingress resources with ak-type markers only."""
+    try:
+        with open(file_path, "r") as f:
+            content = f.read()
+
+        # Quick check for ingress kind before parsing YAML
+        if not re.search(r"kind:\s*Ingress", content, re.IGNORECASE):
+            return []
+
+        docs = list(yaml.safe_load_all(content))
+        ingresses = []
+        for doc in docs:
+            if not doc or doc.get("kind") != "Ingress":
+                continue
+
+            # Check for ak-type label/annotation
+            metadata = doc.get("metadata", {}) or {}
+            labels = metadata.get("labels") or {}
+            annotations = metadata.get("annotations") or {}
+
+            type_val = labels.get("ak-type") or annotations.get("ak-type")
+            if type_val:
+                norm = type_val.strip().lower()
+                if norm in ("simple", "basic-auth", "oidc"):
+                    if norm == "basic-auth":
+                        norm = "basic"
+                    doc["_auth_type"] = norm
+                    ingresses.append(doc)
+
+        return ingresses
+    except Exception as e:
+        print(f"Warning: Could not parse {file_path}: {e}", file=sys.stderr)
+        return []
+
+
+def build_app_info_from_ingress(ingress, file_path):
+    """Build app_info dict from an Ingress resource."""
+
+    metadata = ingress.get("metadata", {})
+    spec = ingress.get("spec", {})
+
+    # Service name is the first path segment relative to kubernetes/
+    path_parts = Path(file_path).parts
+    if len(path_parts) >= 1:
+        service_name = path_parts[0]
+    else:
+        raise ValueError(f"Could not determine service name from path: {file_path}")
+
+    ingress_name = metadata.get("name")
+    if not ingress_name:
+        raise ValueError("Ingress missing required 'name' field in metadata")
+    namespace = metadata.get("namespace", "default")
+
+    # Get external host from first rule
+    rules = spec.get("rules", [])
+    if not rules:
+        raise ValueError(f"No rules found in ingress {metadata.get('name')}")
+
+    external_host = f"https://{rules[0].get('host', '')}"
+
+    # Get service info from first path
+    paths = rules[0].get("http", {}).get("paths", [])
+    if not paths:
+        raise ValueError(f"No paths found in ingress {metadata.get('name')}")
+
+    backend = paths[0].get("backend", {}).get("service", {})
+    k8s_service_name = backend.get("name", "")
+    service_port = backend.get("port", {})
+
+    # Handle both number and name port specifications
+    if isinstance(service_port, dict):
+        if "number" in service_port:
+            port = service_port["number"]
+        elif "name" in service_port:
+            port_name = service_port["name"]
+            port_mapping = {"http": 80, "https": 443}
+            if port_name not in port_mapping:
+                raise ValueError(
+                    f"Unknown port name '{port_name}' in ingress {metadata.get('name')} - add to PORT_MAPPING"
+                )
+            port = port_mapping[port_name]
+        else:
+            raise ValueError(
+                f"Service port specification missing both 'number' and 'name' in ingress {metadata.get('name')}"
+            )
+    else:
+        raise ValueError(
+            f"Invalid service port specification in ingress {metadata.get('name')}: expected dict, got {type(service_port)}"
+        )
+
+    internal_host = f"http://{k8s_service_name}.{namespace}.svc.cluster.local:{port}"
+
+    # Optional path exclusions from annotation "ak-path-exclude"
+    annotations = metadata.get("annotations", {})
+    raw_excludes = annotations.get("ak-path-exclude", "")
+
+    exclude_patterns = []
+    if raw_excludes:
+        # Split by newlines or commas to support multi-line annotation values
+        for piece in re.split(r"[\n,]", str(raw_excludes)):
+            p = piece.strip()
+            if not p:
+                continue
+            # If pattern looks like a full URL (with optional leading ^), leave as-is
+            if re.match(r"^\^?https?://", p):
+                # Ensure patterns are anchored at start
+                if not p.startswith("^"):
+                    p = f"^{p}"
+                exclude_patterns.append(p)
+                continue
+            # Treat as a path-based regex; ensure it starts with '/'
+            if not p.startswith("/"):
+                p = "/" + p
+            # Anchor at the service external host
+            exclude_patterns.append(f"^{external_host}{p}")
+
+    info = {
+        "service_name": service_name,
+        "ingress_name": ingress_name,
+        "app_name": service_name,  # Will be updated by resolve_app_name_conflicts if needed
+        "namespace": namespace,
+        "external_host": external_host,
+        "internal_host": internal_host,
+        "auth_type": ingress["_auth_type"],
+        "skip_path_regex": "\n".join(exclude_patterns),
+    }
+
+    # If OIDC, require callback path annotation "ak-oidc-callback"
+    if info["auth_type"] == "oidc":
+        cb = annotations.get("ak-oidc-callback")
+        if not isinstance(cb, str) or not cb.strip():
+            raise ValueError(
+                f"Ingress '{metadata.get('name')}' requires annotation 'ak-oidc-callback' for OIDC"
+            )
+        cb = cb.strip()
+        if not cb.startswith("/"):
+            cb = "/" + cb
+        info["oidc_callback_path"] = cb
+
+    return info
+
+
+def resolve_app_name_conflicts(raw_app_infos):
+    """Resolve final app names, adding ingress suffixes when there are conflicts."""
+    # Group by service name
+    service_groups = {}
+    for app_info in raw_app_infos:
+        service_name = app_info["service_name"]
+        if service_name not in service_groups:
+            service_groups[service_name] = []
+        service_groups[service_name].append(app_info)
+
+    # Update app names for services with multiple ingresses
+    resolved_infos = []
+    for service_name, infos in service_groups.items():
+        if len(infos) == 1:
+            # Single ingress - use service name
+            infos[0]["app_name"] = service_name
+            resolved_infos.extend(infos)
+        else:
+            # Multiple ingresses - add ingress name suffix
+            for info in infos:
+                ingress_suffix = (
+                    info["ingress_name"]
+                    .replace(f"{service_name}-", "")
+                    .replace("-ingress", "")
+                )
+                info["app_name"] = f"{service_name}-{ingress_suffix}"
+                resolved_infos.append(info)
+
+    return resolved_infos
+
+
+def collect_app_infos_from_ingresses(base_dir):
+    """Collect and process ingress information from all YAML files."""
+    ingress_files = find_ingress_files(base_dir)
+
+    raw_app_infos = []
+    errors = []
+    for file_path in ingress_files:
+        ingresses = parse_ingress_file(file_path)
+        for ingress in ingresses:
+            try:
+                app_info = build_app_info_from_ingress(ingress, file_path)
+                raw_app_infos.append(app_info)
+            except ValueError as e:
+                errors.append(str(e))
+                print(f"Warning: {e}", file=sys.stderr)
+
+    # Determine final app names based on service conflicts
+    app_infos = resolve_app_name_conflicts(raw_app_infos)
+
+    # Sort and display found services
+    sorted_app_infos = sorted(app_infos, key=lambda x: (x["auth_type"], x["app_name"]))
+
+    print("Found services with ak-type annotations:")
+    for app_info in sorted_app_infos:
+        auth_type = app_info["auth_type"]
+        print(f"  ✓ ak-{auth_type}: {app_info['app_name']}")
+    print()
+
+    if not app_infos:
+        print("No ingresses with ak-type found")
+        return []
+
+    # Exit if any errors occurred during parsing
+    if errors:
+        print(
+            f"ERROR: {len(errors)} errors occurred during parsing. Aborting.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    return sorted_app_infos
+
+
+def generate_terraform_files(app_infos, generated_dir):
+    """Generate .tf.json files for all applications. Returns True if any files changed."""
+    changed = False
+
+    for app_info in app_infos:
+        app_name = app_info["app_name"]
+        auth_type = app_info["auth_type"]
+
+        # Generate application resource
+        app_resource = generate_application(app_info)
+
+        # Generate terraform config based on auth type
+        if auth_type in ("simple", "basic"):
+            provider_resource = generate_proxy_provider(app_info)
+            terraform_config = {
+                "resource": {
+                    "authentik_provider_proxy": {app_name: provider_resource},
+                    "authentik_application": {app_name: app_resource},
+                }
+            }
+        elif auth_type == "oidc":
+            provider_resource = generate_oauth2_provider(app_info)
+            terraform_config = {
+                "resource": {
+                    "authentik_provider_oauth2": {app_name: provider_resource},
+                    "authentik_application": {app_name: app_resource},
+                }
+            }
+        else:
+            raise ValueError(f"Unknown auth type '{auth_type}' for app '{app_name}'")
+
+        # Check if file content would change
+        new_content = json.dumps(terraform_config, indent=2, sort_keys=True) + "\n"
+        output_file = generated_dir / f"generated-{app_name}.tf.json"
+
+        try:
+            old_content = output_file.read_text()
+        except FileNotFoundError:
+            old_content = ""
+
+        if old_content != new_content:
+            output_file.write_text(new_content)
+            changed = True
+            print(f"  ✓ generated-{app_name}.tf.json ({auth_type}) [CHANGED]")
+        else:
+            print(f"  ✓ generated-{app_name}.tf.json ({auth_type}) [up-to-date]")
+
+    return changed
+
+
+def generate_proxy_provider(app_info):
+    """Generate proxy provider resource for simple/basic auth."""
+    provider = {
+        "name": app_info["app_name"],
+        "external_host": app_info["external_host"],
+        "internal_host": app_info["internal_host"],
+        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
+        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
+        "access_token_validity": "hours=1",
+        "mode": "forward_domain",
+        "cookie_domain": "oneill.net",
+    }
+
+    # Add basic auth settings for basic auth types
+    if app_info["auth_type"] == "basic":
+        provider["basic_auth_enabled"] = True
+        provider["basic_auth_username_attribute"] = "username"
+        provider["basic_auth_password_attribute"] = "password"
+
+    if app_info["skip_path_regex"]:
+        provider["skip_path_regex"] = app_info["skip_path_regex"]
+
+    return provider
+
+
+def generate_oauth2_provider(app_info):
+    """Generate OAuth2 provider resource for OIDC."""
+    callback_url = f"{app_info['external_host']}{app_info['oidc_callback_path']}"
+    provider = {
+        "name": app_info["app_name"],
+        "client_id": app_info["app_name"],
+        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
+        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
+        "property_mappings": [
+            "${data.authentik_property_mapping_provider_scope.openid.id}",
+            "${data.authentik_property_mapping_provider_scope.email.id}",
+            "${data.authentik_property_mapping_provider_scope.profile.id}",
+        ],
+        "access_token_validity": "hours=1",  # Match current Authentik setting
+        "allowed_redirect_uris": [{"url": callback_url, "matching_mode": "strict"}],
+        "signing_key": "${data.authentik_certificate_key_pair.self_signed.id}",
+    }
+
+    return provider
+
+
+def generate_application(app_info):
+    """Generate application resource."""
+    if app_info["auth_type"] in ("simple", "basic"):
+        provider_type = "proxy"
+    else:
+        provider_type = "oauth2"
+    provider_ref = f"${{authentik_provider_{provider_type}.{app_info['app_name']}.id}}"
+
+    return {
+        "name": app_info["app_name"],
+        "slug": app_info["app_name"],
+        "protocol_provider": provider_ref,
+    }
+
+
+def generate_outpost_file(app_infos, generated_dir):
+    """Generate outpost.tf.json file that references all proxy providers. Returns True if changed."""
+    proxy_app_names = [
+        info["app_name"]
+        for info in app_infos
+        if info["auth_type"] in ("simple", "basic")
+    ]
+
+    if not proxy_app_names:
+        return False
+
+    proxy_app_names.sort()
+    provider_refs = [
+        f"${{authentik_provider_proxy.{app_name}.id}}" for app_name in proxy_app_names
+    ]
+
+    outpost_config = {
+        "resource": {
+            "authentik_outpost": {
+                "embedded": {
+                    "name": "authentik Embedded Outpost",
+                    "type": "proxy",
+                    "protocol_providers": provider_refs,
+                    "service_connection": "${data.authentik_service_connection_kubernetes.local.id}",
+                }
+            }
+        }
+    }
+
+    new_content = json.dumps(outpost_config, indent=2, sort_keys=True) + "\n"
+    output_file = generated_dir / "generated-outpost.tf.json"
+
+    try:
+        old_content = output_file.read_text()
+    except FileNotFoundError:
+        old_content = ""
+
+    if old_content != new_content:
+        output_file.write_text(new_content)
+        print(
+            f"  ✓ generated-outpost.tf.json ({len(proxy_app_names)} proxy providers) [CHANGED]"
+        )
+        return True
+    else:
+        print(
+            f"  ✓ generated-outpost.tf.json ({len(proxy_app_names)} proxy providers) [up-to-date]"
+        )
+        return False
+
+
+def cmd_generate(_: argparse.Namespace) -> int:
+    """Generate .tf.json files for Authentik resources from Kubernetes ingresses."""
+    try:
+        print("Scanning for ingresses with ak-type annotations...")
+        # Change to kubernetes directory for correct relative paths
+        kubernetes_dir = REPO_ROOT / "kubernetes"
+        original_cwd = os.getcwd()
+        os.chdir(kubernetes_dir)
+        try:
+            app_infos = collect_app_infos_from_ingresses(Path("."))
+
+            if not app_infos:
+                print("No ingresses with ak-type found")
+                return 0
+
+            # Generate .tf.json files directly in the authentik module directory
+            generated_dir = OPENTOFU_DIR / "modules" / "authentik"
+            generated_dir.mkdir(parents=True, exist_ok=True)
+
+            files_changed = generate_terraform_files(app_infos, generated_dir)
+            outpost_changed = generate_outpost_file(app_infos, generated_dir)
+
+            any_changed = files_changed or outpost_changed
+            print(f"\nGenerated Terraform files in {generated_dir}")
+
+            if any_changed:
+                print("Files were updated - commit these changes")
+                return 1  # Non-zero exit for pre-commit hook
+            else:
+                print("All files are up-to-date")
+                return 0
+        finally:
+            os.chdir(original_cwd)
+
+    except Exception as e:
+        print(f"Error generating files: {e}", file=sys.stderr)
+        return 1
+
+
+def cmd_plan(args: argparse.Namespace) -> int:
+    # Change to opentofu directory
+    os.chdir(OPENTOFU_DIR)
+
+    cmd = ["tofu", "plan"]
+
+    # Add detailed-exitcode only if no unknown args (to avoid conflicts)
+    has_unknown_args = hasattr(args, "unknown_args") and args.unknown_args
+    if not has_unknown_args:
+        cmd.append("-detailed-exitcode")
+        # Default to constraining to authentik module when no specific targets
+        cmd += ["-target", "module.authentik"]
+
+    # Pass through any additional args
+    if has_unknown_args:
+        cmd.extend(args.unknown_args)
+
+    print("$", " ".join(shlex.quote(c) for c in cmd))
+    os.execvp(cmd[0], cmd)
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    """Generate .tf.json files then run tofu apply."""
+    # First generate
+    print("Step 1: Generating .tf.json files...")
+    rc = cmd_generate(args)
+    if rc != 0:
+        return rc
+
+    print("\nStep 2: Running tofu apply...")
+    # Then apply
+    return cmd_apply(args)
+
+
+def get_authentik_resource_id(resource_type: str, resource_name: str) -> Optional[str]:
+    """Get the actual Authentik resource ID for a given resource type and name."""
+    try:
+        url, token = resolve_auth()
+    except SystemExit:
+        print("  ⚠️  Cannot resolve Authentik credentials for API lookup")
+        return None
+
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+    # Define API endpoints and search logic for each resource type
+    api_configs = {
+        "authentik_application": {
+            "endpoint": "/api/v3/core/applications/",
+            "query_param": "slug",
+            "search_names": [resource_name],
+        },
+        "authentik_provider_proxy": {
+            "endpoint": "/api/v3/providers/proxy/",
+            "query_param": None,  # Get all and filter by name
+            "search_names": [resource_name],
+        },
+        "authentik_provider_oauth2": {
+            "endpoint": "/api/v3/providers/oauth2/",
+            "query_param": "name",
+            "search_names": [resource_name, f"{resource_name}-oidc"],
+        },
+        "authentik_outpost": {
+            "endpoint": "/api/v3/outposts/instances/",
+            "query_param": "name",
+            "search_names": ["authentik Embedded Outpost"],
+        },
+    }
+
+    config = api_configs.get(resource_type)
+    if not config:
+        return None
+
+    try:
+        for search_name in config["search_names"]:
+            # Build API URL with optional query parameter
+            if config["query_param"]:
+                api_url = f"{url}{config['endpoint']}?{config['query_param']}={urllib.parse.quote(search_name)}"
+            else:
+                api_url = f"{url}{config['endpoint']}"
+
+            req = urllib.request.Request(api_url, headers=headers)
+            with urllib.request.urlopen(req) as response:
+                data = json.loads(response.read().decode())
+                results = data.get("results", [])
+
+                if config["query_param"] is None:
+                    # For proxy providers, filter results by name
+                    for item in results:
+                        if item.get("name") == search_name:
+                            return str(item.get("pk"))
+                elif results:
+                    # For other types, return first result
+                    pk = results[0].get("pk")
+                    return str(pk) if pk is not None else None
+
+    except Exception as e:
+        print(f"  ⚠️  API lookup failed for {resource_type}.{resource_name}: {e}")
+        return None
+
+    return None
+
+
+def cmd_import(_: argparse.Namespace) -> int:
+    """Import existing Authentik resources into Terraform state if they don't already exist."""
+    try:
+        # Change to opentofu directory for Terraform operations
+        os.chdir(OPENTOFU_DIR)
+
+        print("Step 1: Reading generated .tf.json files...")
+        # Get list of expected resources from generated files
+        authentik_dir = OPENTOFU_DIR / "modules" / "authentik"
+        expected_resources = []
+
+        for tf_file in authentik_dir.glob("generated-*.tf.json"):
+            with open(tf_file, "r") as f:
+                tf_config = json.load(f)
+
+            for resource_type, resources in tf_config.get("resource", {}).items():
+                for resource_name in resources.keys():
+                    expected_resources.append((resource_type, resource_name))
+
+        if not expected_resources:
+            print("No generated resources found to import")
+            return 0
+
+        print(f"Step 2: Checking {len(expected_resources)} resources against state...")
+
+        # Check which resources already exist in Terraform state (filter to authentik module only)
+        existing_resources = set()
+        result = subprocess.run(
+            ["tofu", "state", "list", "module.authentik"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if result.returncode == 0 and result.stdout:
+            for line in result.stdout.strip().split("\n"):
+                if line.strip() and not line.startswith("module.authentik.data."):
+                    # Extract resource type and name from module.authentik.resource_type.resource_name
+                    parts = line.split(".")
+                    if (
+                        len(parts) == 4
+                    ):  # module.authentik.authentik_application.alertmanager
+                        resource_type = parts[2]  # e.g. "authentik_application"
+                        resource_name = parts[3]  # e.g. "alertmanager"
+                        existing_resources.add((resource_type, resource_name))
+        else:
+            print(f"Warning: State command failed (exit {result.returncode})")
+            if result.stderr:
+                print(f"Error: {result.stderr.strip()}")
+
+        # Find resources that need to be imported and which ones already exist
+        resources_to_import = []
+        resources_to_skip = []
+
+        for resource in expected_resources:
+            if resource in existing_resources:
+                resources_to_skip.append(resource)
+            else:
+                resources_to_import.append(resource)
+
+        # Print skipped resources
+        if resources_to_skip:
+            print(f"\nSkipping {len(resources_to_skip)} resources that already exist:")
+            for resource_type, resource_name in resources_to_skip:
+                print(f"  ⏭️  {resource_type}.{resource_name}")
+
+        if not resources_to_import:
+            print("All expected resources already exist in Terraform state")
+            return 0
+
+        print(f"\nStep 3: Importing {len(resources_to_import)} missing resources...")
+
+        # Import each missing resource
+        failed_imports = []
+        for resource_type, resource_name in resources_to_import:
+            terraform_address = f"module.authentik.{resource_type}.{resource_name}"
+
+            # Get the actual resource ID from Authentik API
+            authentik_id = get_authentik_resource_id(resource_type, resource_name)
+            if not authentik_id:
+                print(
+                    f"  ⚠️  Could not find {resource_type}.{resource_name} in Authentik, skipping"
+                )
+                continue
+
+            print(f"  → Importing {terraform_address} (ID: {authentik_id})")
+
+            try:
+                import_result = subprocess.run(
+                    ["tofu", "import", terraform_address, authentik_id],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+
+                if import_result.returncode == 0:
+                    print(f"  ✓ Successfully imported {resource_name}")
+                else:
+                    error_msg = import_result.stderr.strip()
+                    print(f"  ✗ Failed to import {resource_name}: {error_msg}")
+                    failed_imports.append((resource_name, error_msg))
+
+            except Exception as e:
+                print(f"  ✗ Error importing {resource_name}: {e}")
+                failed_imports.append((resource_name, str(e)))
+
+        # Summary
+        successful_imports = len(resources_to_import) - len(failed_imports)
+        print(
+            f"\nImport complete: {successful_imports} successful, {len(failed_imports)} failed"
+        )
+
+        if failed_imports:
+            print("\nFailed imports:")
+            for resource_name, error in failed_imports:
+                print(f"  - {resource_name}: {error}")
+            return 1
+
+        return 0
+
+    except Exception as e:
+        print(f"Error during import: {e}", file=sys.stderr)
+        return 1
+
+
+def cmd_apply(args: argparse.Namespace) -> int:
+    # Change to opentofu directory
+    os.chdir(OPENTOFU_DIR)
+
+    cmd = ["tofu", "apply"]
+    if args.auto_approve:
+        cmd.append("-auto-approve")
+
+    # Pass through any additional args
+    has_unknown_args = hasattr(args, "unknown_args") and args.unknown_args
+    if has_unknown_args:
+        cmd.extend(args.unknown_args)
+    else:
+        # Default to constraining to authentik module when no specific targets
+        cmd += ["-target", "module.authentik"]
+
+    print("$", " ".join(shlex.quote(c) for c in cmd))
+    os.execvp(cmd[0], cmd)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="ak-tool", description="Authentik tool for OpenTofu workflows"
+    )
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    pg = sub.add_parser("generate", help="Generate tf.json for Authentik resources")
+    pg.set_defaults(func=cmd_generate)
+
+    pp = sub.add_parser(
+        "plan", help="Run tofu plan for Authentik (passes through unknown args)"
+    )
+    pp.set_defaults(func=cmd_plan)
+
+    pi = sub.add_parser(
+        "import", help="Import existing Authentik resources into Terraform state"
+    )
+    pi.set_defaults(func=cmd_import)
+
+    pa = sub.add_parser(
+        "apply", help="Run tofu apply for Authentik (passes through unknown args)"
+    )
+    pa.add_argument(
+        "--auto-approve", action="store_true", help="Pass -auto-approve to tofu apply"
+    )
+    pa.set_defaults(func=cmd_apply)
+
+    pr = sub.add_parser("run", help="Generate tf.json files then run tofu apply")
+    pr.add_argument(
+        "--auto-approve", action="store_true", help="Pass -auto-approve to tofu apply"
+    )
+    pr.set_defaults(func=cmd_run)
+
+    return p
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    args, unknown_args = build_parser().parse_known_args(argv)
+    args.unknown_args = unknown_args
+    try:
+        return args.func(args)
+    except KeyboardInterrupt:
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())

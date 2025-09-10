@@ -26,6 +26,10 @@ terraform {
       source  = "integrations/github"
       version = "~> 6.0"
     }
+    authentik = {
+      source  = "goauthentik/authentik"
+      version = "~> 2025.8.0"
+    }
   }
 
   backend "s3" {
@@ -71,4 +75,14 @@ provider "github" {
 
 module "dns" {
   source = "./modules/dns"
+}
+
+# Authentik provider configuration via 1Password (see locals in secrets.tf)
+provider "authentik" {
+  url   = local.authentik_url
+  token = local.authentik_token
+}
+
+module "authentik" {
+  source = "./modules/authentik"
 }
