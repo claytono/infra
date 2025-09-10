@@ -69,3 +69,20 @@ locals {
   # GitHub token for managing repository secrets
   github_token = data.onepassword_item.github_opentofu.password
 }
+
+# Authentik credentials from 1Password (used to configure provider)
+data "onepassword_item" "ak_tool" {
+  vault = data.onepassword_vault.kubernetes.uuid
+  title = "ak-tool"
+}
+
+locals {
+  ak_tool_fields = {
+    for f in flatten([
+      for sec in data.onepassword_item.ak_tool.section : sec.field
+    ]) : f.label => f.value
+  }
+
+  authentik_url   = local.ak_tool_fields["base_url"]
+  authentik_token = local.ak_tool_fields["api_token"]
+}

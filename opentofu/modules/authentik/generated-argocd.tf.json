@@ -1,0 +1,32 @@
+{
+  "resource": {
+    "authentik_application": {
+      "argocd": {
+        "name": "argocd",
+        "protocol_provider": "${authentik_provider_oauth2.argocd.id}",
+        "slug": "argocd"
+      }
+    },
+    "authentik_provider_oauth2": {
+      "argocd": {
+        "access_token_validity": "hours=1",
+        "allowed_redirect_uris": [
+          {
+            "matching_mode": "strict",
+            "url": "https://argocd.k.oneill.net/api/dex/callback"
+          }
+        ],
+        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
+        "client_id": "argocd",
+        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
+        "name": "argocd",
+        "property_mappings": [
+          "${data.authentik_property_mapping_provider_scope.openid.id}",
+          "${data.authentik_property_mapping_provider_scope.email.id}",
+          "${data.authentik_property_mapping_provider_scope.profile.id}"
+        ],
+        "signing_key": "${data.authentik_certificate_key_pair.self_signed.id}"
+      }
+    }
+  }
+}

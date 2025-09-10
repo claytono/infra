@@ -1,0 +1,25 @@
+{
+  "resource": {
+    "authentik_outpost": {
+      "embedded": {
+        "name": "authentik Embedded Outpost",
+        "protocol_providers": [
+          "${authentik_provider_proxy.alertmanager.id}",
+          "${authentik_provider_proxy.bazarr.id}",
+          "${authentik_provider_proxy.goldilocks.id}",
+          "${authentik_provider_proxy.grafana.id}",
+          "${authentik_provider_proxy.huntarr.id}",
+          "${authentik_provider_proxy.prometheus.id}",
+          "${authentik_provider_proxy.prowlarr.id}",
+          "${authentik_provider_proxy.qbit-manage.id}",
+          "${authentik_provider_proxy.radarr.id}",
+          "${authentik_provider_proxy.sabnzbd.id}",
+          "${authentik_provider_proxy.sonarr.id}",
+          "${authentik_provider_proxy.tautulli.id}"
+        ],
+        "service_connection": "${data.authentik_service_connection_kubernetes.local.id}",
+        "type": "proxy"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "resource": {
+    "authentik_application": {
+      "autobrr": {
+        "name": "autobrr",
+        "protocol_provider": "${authentik_provider_oauth2.autobrr.id}",
+        "slug": "autobrr"
+      }
+    },
+    "authentik_provider_oauth2": {
+      "autobrr": {
+        "access_token_validity": "hours=1",
+        "allowed_redirect_uris": [
+          {
+            "matching_mode": "strict",
+            "url": "https://autobrr.k.oneill.net/api/auth/oidc/callback"
+          }
+        ],
+        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
+        "client_id": "autobrr",
+        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
+        "name": "autobrr",
+        "property_mappings": [
+          "${data.authentik_property_mapping_provider_scope.openid.id}",
+          "${data.authentik_property_mapping_provider_scope.email.id}",
+          "${data.authentik_property_mapping_provider_scope.profile.id}"
+        ],
+        "signing_key": "${data.authentik_certificate_key_pair.self_signed.id}"
+      }
+    }
+  }
+}
