@@ -7,6 +7,7 @@ metadata:
   labels:
     k8s-app: changedetection
   annotations:
+    ak-type: basic-auth
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: ChangeDetection
