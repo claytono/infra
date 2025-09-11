@@ -1,0 +1,26 @@
+{
+  "resource": {
+    "authentik_application": {
+      "changedetection": {
+        "name": "changedetection",
+        "protocol_provider": "${authentik_provider_proxy.changedetection.id}",
+        "slug": "changedetection"
+      }
+    },
+    "authentik_provider_proxy": {
+      "changedetection": {
+        "access_token_validity": "hours=1",
+        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
+        "basic_auth_enabled": true,
+        "basic_auth_password_attribute": "password",
+        "basic_auth_username_attribute": "username",
+        "cookie_domain": "oneill.net",
+        "external_host": "https://changedetection.k.oneill.net",
+        "internal_host": "http://changedetection.default.svc.cluster.local:5000",
+        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
+        "mode": "forward_domain",
+        "name": "changedetection"
+      }
+    }
+  }
+}
