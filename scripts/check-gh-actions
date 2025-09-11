@@ -9,7 +9,7 @@ REPO_PATH=$(echo "$REPO_URL" | sed -E 's/.*github.com[:/]([^/]+\/[^/]+)(\.git)?$
 BRANCH=$(git --no-pager branch --show-current)
 
 # Default exclusion patterns
-DEFAULT_EXCLUSIONS=("codecov/project" "codecov/patch")
+DEFAULT_EXCLUSIONS=("codecov/project" "codecov/patch" "CodeRabbit")
 
 # Function to print usage information
 usage() {
