@@ -31,6 +31,7 @@
             kubecolor
             kubectl
             kustomize
+            terraform
             mosquitto
             nodejs_24
             opentofu
