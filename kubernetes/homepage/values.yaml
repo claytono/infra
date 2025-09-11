@@ -22,6 +22,7 @@ ingress:
     annotations:
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: letsencrypt
+      ak-type: simple
     tls:
     - hosts:
       - homepage.k.oneill.net
