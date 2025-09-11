@@ -5,7 +5,7 @@ kind: Ingress
 metadata:
   name: smokeping
   annotations:
-    ak-type: basic-auth
+    ak-type: simple
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Smokeping
