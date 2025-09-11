@@ -39,13 +39,3 @@ patches:
       path: /metadata/annotations
       value:
         reloader.stakater.com/auto: "true"
-
-- target:
-    group: networking.k8s.io
-    version: v1
-    kind: Ingress
-    name: homepage
-  patch: |-
-    - op: add
-      path: /metadata/annotations/ak-type
-      value: simple
