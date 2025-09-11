@@ -7,7 +7,6 @@ namespace: authentik
 resources:
 - namespace.yaml
 - externalsecret.yaml
-- generated/externalsecret-oidc-blueprints.yaml
 - authentik-postgres-cluster.yaml
 # Authentik resources
 - helm/authentik/secret.yaml
@@ -29,23 +28,3 @@ resources:
 
 commonAnnotations:
   argoManaged: 'true'
-
-# ak-collect-blueprints: auto-generated section below
-configMapGenerator:
-- name: authentik-blueprints
-  files:
-  - generated/bazarr.yaml
-  - generated/prowlarr.yaml
-  - generated/radarr.yaml
-  - generated/sabnzbd.yaml
-  - generated/sonarr.yaml
-  - generated/tautulli.yaml
-  - generated/alertmanager.yaml
-  - generated/goldilocks.yaml
-  - generated/grafana.yaml
-  - generated/huntarr.yaml
-  - generated/prometheus.yaml
-  - generated/qbit-manage.yaml
-  - generated/outpost.yaml
-  options:
-    disableNameSuffixHash: true
