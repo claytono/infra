@@ -55,4 +55,5 @@ jobs:
       if: steps.changes.outputs.terraform == 'true' || env.ACT == 'true'
       run: |-
         nix develop --extra-experimental-features 'nix-command flakes' --option sandbox false --command pre-commit run terraform_trivy --all-files
+        nix develop --extra-experimental-features 'nix-command flakes' --option sandbox false --command pre-commit run terraform_validate --all-files
         nix develop --extra-experimental-features 'nix-command flakes' --option sandbox false --command pre-commit run terraform_providers_lock --all-files
