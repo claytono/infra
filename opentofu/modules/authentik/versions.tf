@@ -5,5 +5,13 @@ terraform {
       source  = "goauthentik/authentik"
       version = ">= 2025.8.0"
     }
+    onepassword = {
+      source  = "1Password/onepassword"
+      version = "~> 2.1"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }

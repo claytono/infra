@@ -31,7 +31,8 @@ deploying them to the appropriate locations.
 
 ## What This Does
 
-1. Updates Ansible vault password from 1Password (`ansible/ansible-vault-password`)
+1. Updates Ansible vault password from 1Password
+   (`ansible/ansible-vault-password`)
 2. Creates required Kubernetes namespaces (`1password`, `external-secrets`)
 3. Generates and applies `op-credentials` secret in `1password` namespace
 4. Generates and applies `secrets` secret in `external-secrets` namespace
