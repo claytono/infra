@@ -1,0 +1,74 @@
+---
+# smokeping_prober configuration
+# Groups of hosts with optional per-group parameters.
+
+targets:
+  # Internal hosts under oneill.net
+
+- hosts:
+  - udmp.oneill.net
+  - xtal.oneill.net
+  - luser.oneill.net
+  - k1.oneill.net
+  - k2.oneill.net
+  - k4.oneill.net
+  - k5.oneill.net
+  - og-left-door.oneill.net
+  - og-right-door.oneill.net
+  - fs2.oneill.net
+  interval: 1s
+  network: ip
+  protocol: icmp
+
+  # External domains
+
+- hosts:
+  - flux.fnord.net
+  - github.com
+  - google.com
+  - youtube.com
+  interval: 1s
+  network: ip
+  protocol: icmp
+
+  # Public DNS (IPv4 anycast)
+
+- hosts:
+    # Cloudflare Public DNS — global anycast edge, ICMP usually allowed, very low jitter baseline
+  - 1.1.1.1
+    # Cloudflare secondary — same fabric as 1.1.1.1, watch for occasional route flips between POPs
+  - 1.0.0.1
+    # Google Public DNS — massive anycast footprint, good long-term latency trendline
+  - 8.8.8.8
+    # Google secondary — same network as 8.8.8.8, helpful for correlation
+  - 8.8.4.4
+    # Quad9 filtered — security-focused anycast resolver, sometimes slightly higher RTT than CF/Google
+  - 9.9.9.9
+    # OpenDNS / Cisco Umbrella — large legacy footprint, stable RTT, some regions rate-limit ICMP bursts
+  - 208.67.222.222
+    # OpenDNS secondary — pair with 208.67.222.222 for path diversity checks
+  - 208.67.220.220
+    # Lumen/Level3 legacy resolver — extremely ubiquitous, good “old backbone” reference
+  - 4.2.2.2
+  interval: 1s
+  network: ip4
+  protocol: icmp
+
+  # Public DNS (IPv6 anycast)
+
+- hosts:
+    # Cloudflare v6 — strong v6 POP coverage, great for IPv6 path health
+  - 2606:4700:4700::1111
+    # Cloudflare v6 secondary — expect tiny RTT deltas vs ::1111
+  - 2606:4700:4700::1001
+    # Google v6 — broad peering on v6, very steady latency
+  - 2001:4860:4860::8888
+    # Google v6 secondary — correlate with ::8888 for route changes
+  - 2001:4860:4860::8844
+    # Quad9 v6 filtered — good signal for v6 reachability, may be a few ms higher than CF/Google
+  - 2620:fe::fe
+    # Quad9 v6 secondary — pairs with ::fe for redundancy
+  - 2620:fe::9
+  interval: 1s
+  network: ip6
+  protocol: icmp
