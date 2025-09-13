@@ -18,6 +18,9 @@
   "pre-commit": {
     "enabled": true
   },
+  "nix": {
+    "enabled": true
+  },
   "customManagers": [
     {
       "customType": "regex",
@@ -98,6 +101,18 @@
         "automerge"
       ],
       "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
+    },
+    {
+      "matchManagers": [
+        "nix"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "addLabels": [
+        "nix",
+        "automerge"
+      ],
+      "description": "Auto-merge Nix (flake.lock) updates if CI passes"
     },
     {
       "matchDatasources": [
