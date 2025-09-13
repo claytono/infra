@@ -81,11 +81,14 @@ repos:
   hooks:
   - id: terraform_fmt
   - id: terraform_validate
+    args:
+    - --hook-config=--retry-once-with-cleanup=true
   - id: terraform_tflint
   - id: terraform_trivy
     files: ^opentofu/.*$
   - id: terraform_providers_lock
     args:
+    - --hook-config=--mode=always-regenerate-lockfile
     - --args=-platform=linux_amd64
     - --args=-platform=darwin_arm64
 
