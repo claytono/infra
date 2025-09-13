@@ -26,6 +26,7 @@ import sys
 import urllib.parse
 import urllib.request
 import yaml
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -39,6 +40,7 @@ OP_VAULT = os.environ.get("AK_OP_VAULT", "Kubernetes")
 OP_ITEM = os.environ.get("AK_OP_ITEM", "ak-tool")
 OP_FIELD_URL = os.environ.get("AK_OP_FIELD_URL", "base_url")
 OP_FIELD_TOKEN = os.environ.get("AK_OP_FIELD_TOKEN", "api_token")
+TEMPLATE_DIR = Path(__file__).parent / "templates"
 
 
 def run(cmd: list[str], env: Optional[dict] = None) -> int:
@@ -312,51 +314,58 @@ def collect_app_infos_from_ingresses(base_dir):
 
 
 def generate_terraform_files(app_infos, generated_dir):
-    """Generate .tf.json files for all applications. Returns True if any files changed."""
-    changed = False
+    """Generate .tf files for all applications using Jinja2. Returns True if any files changed."""
+    env = Environment(
+        loader=FileSystemLoader(TEMPLATE_DIR),
+        undefined=StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    tmpl_proxy = env.get_template("provider-app-proxy.tf.j2")
+    tmpl_oidc = env.get_template("provider-app-oidc.tf.j2")
 
+    changed = False
     for app_info in app_infos:
-        app_name = app_info["app_name"]
+        app = app_info["app_name"]
         auth_type = app_info["auth_type"]
 
-        # Generate application resource
-        app_resource = generate_application(app_info)
-
-        # Generate terraform config based on auth type
         if auth_type in ("simple", "basic"):
-            provider_resource = generate_proxy_provider(app_info)
-            terraform_config = {
-                "resource": {
-                    "authentik_provider_proxy": {app_name: provider_resource},
-                    "authentik_application": {app_name: app_resource},
-                }
-            }
+            hcl = tmpl_proxy.render(
+                app=app,
+                external_host=app_info["external_host"],
+                internal_host=app_info["internal_host"],
+                basic=(auth_type == "basic"),
+                skip_path_regex=app_info.get("skip_path_regex") or None,
+            )
         elif auth_type == "oidc":
-            provider_resource = generate_oauth2_provider(app_info)
-            terraform_config = {
-                "resource": {
-                    "authentik_provider_oauth2": {app_name: provider_resource},
-                    "authentik_application": {app_name: app_resource},
-                }
-            }
+            callback_url = (
+                f"{app_info['external_host']}{app_info['oidc_callback_path']}"
+            )
+            ident = tf_ident_from_title(f"{app}-oidc")
+            hcl = tmpl_oidc.render(
+                app=app,
+                callback_url=callback_url,
+                ident=ident,
+            )
         else:
-            raise ValueError(f"Unknown auth type '{auth_type}' for app '{app_name}'")
+            raise ValueError(f"Unknown auth type {auth_type} for app {app}")
 
-        # Check if file content would change
-        new_content = json.dumps(terraform_config, indent=2, sort_keys=True) + "\n"
-        output_file = generated_dir / f"generated-{app_name}.tf.json"
+        # Normalize EOF newline for deterministic diffs
+        hcl = hcl.rstrip() + "\n"
 
-        try:
-            old_content = output_file.read_text()
-        except FileNotFoundError:
-            old_content = ""
-
-        if old_content != new_content:
-            output_file.write_text(new_content)
+        out_tf = generated_dir / f"generated-{app}.tf"
+        old = out_tf.read_text() if out_tf.exists() else ""
+        if old != hcl:
+            out_tf.write_text(hcl)
             changed = True
-            print(f"  ✓ generated-{app_name}.tf.json ({auth_type}) [CHANGED]")
+            print(f"  ✓ generated-{app}.tf ({auth_type}) [CHANGED]")
         else:
-            print(f"  ✓ generated-{app_name}.tf.json ({auth_type}) [up-to-date]")
+            print(f"  ✓ generated-{app}.tf ({auth_type}) [up-to-date]")
+
+        # Remove legacy JSON if present
+        legacy = generated_dir / f"generated-{app}.tf.json"
+        if legacy.exists():
+            legacy.unlink()
 
     return changed
 
@@ -387,11 +396,15 @@ def generate_proxy_provider(app_info):
 
 
 def generate_oauth2_provider(app_info):
-    """Generate OAuth2 provider resource for OIDC."""
+    """Generate OAuth2 provider resource for OIDC, wiring client_id/secret from locals."""
     callback_url = f"{app_info['external_host']}{app_info['oidc_callback_path']}"
+    app = app_info["app_name"]
+    ident = tf_ident_from_title(f"{app}-oidc")
     provider = {
-        "name": app_info["app_name"],
-        "client_id": app_info["app_name"],
+        "name": app,
+        # Use locals produced by generated per-service 1Password file
+        "client_id": f"${{local.{ident}_client_id}}",
+        "client_secret": f"${{local.{ident}_secret}}",
         "authorization_flow": "${data.authentik_flow.default_authorization.id}",
         "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
         "property_mappings": [
@@ -399,7 +412,7 @@ def generate_oauth2_provider(app_info):
             "${data.authentik_property_mapping_provider_scope.email.id}",
             "${data.authentik_property_mapping_provider_scope.profile.id}",
         ],
-        "access_token_validity": "hours=1",  # Match current Authentik setting
+        "access_token_validity": "hours=1",
         "allowed_redirect_uris": [{"url": callback_url, "matching_mode": "strict"}],
         "signing_key": "${data.authentik_certificate_key_pair.self_signed.id}",
     }
@@ -423,53 +436,166 @@ def generate_application(app_info):
 
 
 def generate_outpost_file(app_infos, generated_dir):
-    """Generate outpost.tf.json file that references all proxy providers. Returns True if changed."""
-    proxy_app_names = [
-        info["app_name"]
-        for info in app_infos
-        if info["auth_type"] in ("simple", "basic")
-    ]
+    """Generate outpost.tf HCL that references all proxy providers. Returns True if changed."""
+    env = Environment(
+        loader=FileSystemLoader(TEMPLATE_DIR),
+        undefined=StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    tmpl = env.get_template("outpost.tf.j2")
 
-    if not proxy_app_names:
+    proxy_apps = sorted(
+        [
+            info["app_name"]
+            for info in app_infos
+            if info["auth_type"] in ("simple", "basic")
+        ]
+    )
+    if not proxy_apps:
         return False
 
-    proxy_app_names.sort()
-    provider_refs = [
-        f"${{authentik_provider_proxy.{app_name}.id}}" for app_name in proxy_app_names
-    ]
-
-    outpost_config = {
-        "resource": {
-            "authentik_outpost": {
-                "embedded": {
-                    "name": "authentik Embedded Outpost",
-                    "type": "proxy",
-                    "protocol_providers": provider_refs,
-                    "service_connection": "${data.authentik_service_connection_kubernetes.local.id}",
-                }
-            }
-        }
-    }
-
-    new_content = json.dumps(outpost_config, indent=2, sort_keys=True) + "\n"
-    output_file = generated_dir / "generated-outpost.tf.json"
-
-    try:
-        old_content = output_file.read_text()
-    except FileNotFoundError:
-        old_content = ""
-
-    if old_content != new_content:
-        output_file.write_text(new_content)
-        print(
-            f"  ✓ generated-outpost.tf.json ({len(proxy_app_names)} proxy providers) [CHANGED]"
-        )
+    hcl = tmpl.render(proxy_apps=proxy_apps)
+    hcl = hcl.rstrip() + "\n"
+    out_tf = generated_dir / "generated-outpost.tf"
+    old = out_tf.read_text() if out_tf.exists() else ""
+    if old != hcl:
+        out_tf.write_text(hcl)
+        print(f"  ✓ generated-outpost.tf ({len(proxy_apps)} proxy providers) [CHANGED]")
+        # remove legacy json
+        legacy = generated_dir / "generated-outpost.tf.json"
+        if legacy.exists():
+            legacy.unlink()
         return True
     else:
         print(
-            f"  ✓ generated-outpost.tf.json ({len(proxy_app_names)} proxy providers) [up-to-date]"
+            f"  ✓ generated-outpost.tf ({len(proxy_apps)} proxy providers) [up-to-date]"
         )
         return False
+
+
+def tf_ident_from_title(title: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_]", "_", title)
+
+
+def ensure_single_trailing_newline(content: str) -> str:
+    """Ensure exactly one trailing newline at EOF for deterministic diffs."""
+    return content.rstrip() + "\n"
+
+
+def render_oidc_1p_hcl(titles: list[str]) -> str:
+    lines: list[str] = []
+    header = (
+        "###############################################\n"
+        "# Auto-generated by ak-tool generate\n"
+        "# OIDC client secrets in 1Password (TF-managed)\n"
+        "# NOTE: Import existing items with `tofu import` BEFORE apply to avoid duplicates.\n"
+        "###############################################\n\n"
+    )
+    lines.append(header)
+
+    for title in titles:
+        ident = tf_ident_from_title(title)
+        lines.append(
+            f'data "onepassword_item" "{ident}_existing" {{\n'
+            f"  vault = data.onepassword_vault.kubernetes.uuid\n"
+            f'  title = "{title}"\n'
+            f"}}\n\n"
+        )
+
+    for title in titles:
+        ident = tf_ident_from_title(title)
+        lines.append(
+            "locals {\n"
+            f"  {ident}_fields = {{\n"
+            "    for f in flatten([\n"
+            f"      for sec in data.onepassword_item.{ident}_existing.section : sec.field\n"
+            "    ]) : f.label => f.value\n"
+            "  }\n"
+            "}\n\n"
+        )
+
+    for title in titles:
+        ident = tf_ident_from_title(title)
+        svc = title.replace("-oidc", "")
+        lines.append(
+            f'resource "onepassword_item" "{ident}" {{\n'
+            "  vault    = data.onepassword_vault.kubernetes.uuid\n"
+            f'  title    = "{title}"\n'
+            '  category = "login"\n\n'
+            f'  note_value = "OIDC client for {svc}. Managed by OpenTofu — do not edit manually."\n\n'
+            "  section {\n"
+            '    label = "OIDC"\n\n'
+            "    field {\n"
+            '      label = "client-id"\n'
+            '      type  = "STRING"\n'
+            f'      value = try(local.{ident}_fields["client-id"], "")\n'
+            "    }\n\n"
+            "    field {\n"
+            '      label = "client-secret"\n'
+            '      type  = "CONCEALED"\n'
+            f'      value = try(local.{ident}_fields["client-secret"], "")\n'
+            "    }\n"
+            "  }\n\n"
+            "  lifecycle {\n"
+            "    prevent_destroy = true\n"
+            "  }\n"
+            "}\n\n"
+        )
+
+    return "".join(lines)
+
+
+def collect_oidc_titles_from_ingresses(app_infos: list[dict]) -> list[str]:
+    """Build OIDC 1Password item titles ("<app>-oidc") from parsed ingress data."""
+    titles = sorted(
+        {
+            f"{info['app_name']}-oidc"
+            for info in app_infos
+            if info.get("auth_type") == "oidc"
+        }
+    )
+    return titles
+
+
+def generate_oidc_1p_file_from_titles(titles: list[str]) -> bool:
+    """Generate per-service OIDC 1Password HCL files (one per app) using the Jinja2 template.
+
+    Writes `generated-<app>-oidc-1p.tf` for each OIDC app, and removes any combined file.
+    Returns True if any file changed.
+    """
+    module_dir = OPENTOFU_DIR / "modules" / "authentik"
+    module_dir.mkdir(parents=True, exist_ok=True)
+
+    # Remove combined file if it exists (we're splitting per service)
+    combined = module_dir / "generated-oidc-1p.tf"
+    if combined.exists():
+        combined.unlink()
+
+    # Prepare Jinja2 template
+    env = Environment(
+        loader=FileSystemLoader(TEMPLATE_DIR),
+        undefined=StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    tmpl = env.get_template("oidc-1p.tf.j2")
+
+    changed = False
+    for title in sorted(titles):
+        app = title[:-5] if title.endswith("-oidc") else title
+        ident = tf_ident_from_title(title)
+        hcl = tmpl.render(app=app, ident=ident, title=title)
+        hcl = hcl.rstrip() + "\n"
+        out = module_dir / f"generated-{app}-oidc-1p.tf"
+        old = out.read_text() if out.exists() else ""
+        if old != hcl:
+            out.write_text(hcl)
+            print(f"  ✓ generated-{app}-oidc-1p.tf [CHANGED]")
+            changed = True
+        else:
+            print(f"  ✓ generated-{app}-oidc-1p.tf [up-to-date]")
+    return changed
 
 
 def cmd_generate(_: argparse.Namespace) -> int:
@@ -494,7 +620,11 @@ def cmd_generate(_: argparse.Namespace) -> int:
             files_changed = generate_terraform_files(app_infos, generated_dir)
             outpost_changed = generate_outpost_file(app_infos, generated_dir)
 
-            any_changed = files_changed or outpost_changed
+            # Generate 1Password OIDC items Terraform from ingresses (auth_type == oidc)
+            oidc_titles = collect_oidc_titles_from_ingresses(app_infos)
+            oidc_changed = generate_oidc_1p_file_from_titles(oidc_titles)
+
+            any_changed = files_changed or outpost_changed or oidc_changed
             print(f"\nGenerated Terraform files in {generated_dir}")
 
             if any_changed:

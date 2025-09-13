@@ -50,4 +50,3 @@ spec:
           chapAuthSession: true
           secretRef:
             name: iscsi-chap-secret
-

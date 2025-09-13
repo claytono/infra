@@ -84,5 +84,6 @@ provider "authentik" {
 }
 
 module "authentik" {
-  source = "./modules/authentik"
+  source                 = "./modules/authentik"
+  onepassword_vault_uuid = data.onepassword_vault.kubernetes.uuid
 }
