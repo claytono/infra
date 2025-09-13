@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: prober
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smokeping-prober
+      app.kubernetes.io/instance: smokeping-prober
+  template:
+    metadata:
+      name: smokeping-prober
+      labels:
+        app.kubernetes.io/name: smokeping-prober
+        app.kubernetes.io/instance: smokeping-prober
+    spec:
+      containers:
+      - name: smokeping-prober
+        image: quay.io/superq/smokeping-prober
+        imagePullPolicy: IfNotPresent
+        args:
+        - --config.file=/config/config.yaml
+        - --privileged
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            add:
+            - NET_RAW
+        ports:
+        - containerPort: 9374
+        env:
+        - name: GOMAXPROCS
+          value: '1'
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: config
+        configMap:
+          name: config
