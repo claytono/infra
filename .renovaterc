@@ -106,6 +106,7 @@
       "matchManagers": [
         "nix"
       ],
+      "minimumReleaseAge": "0 days",
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
