@@ -11,6 +11,7 @@ metadata:
     gethomepage.dev/name: Huntarr
     gethomepage.dev/description: Missing and Upgrade Hunter
     gethomepage.dev/group: Media
+    gethomepage.dev/icon: huntarr.png
 
 spec:
   tls:
