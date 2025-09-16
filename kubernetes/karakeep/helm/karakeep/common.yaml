@@ -222,7 +222,7 @@ spec:
           - name: CRAWLER_FULL_PAGE_ARCHIVE
             value: "true"
           - name: CRAWLER_NUM_WORKERS
-            value: "2"
+            value: "3"
           - name: DATABASE_URL
             valueFrom:
               secretKeyRef:
@@ -238,6 +238,8 @@ spec:
             value: "true"
           - name: INFERENCE_MAX_OUTPUT_TOKENS
             value: "4096"
+          - name: INFERENCE_NUM_WORKERS
+            value: "3"
           - name: MEILI_ADDR
             value: http://karakeep-meilisearch:7700
           - name: NEXTAUTH_URL
