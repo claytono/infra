@@ -296,3 +296,9 @@ scrape_configs:
   - source_labels: [__meta_kubernetes_pod_name]
     action: replace
     target_label: kubernetes_pod_name
+
+- job_name: karakeep
+  metrics_path: /api/metrics
+  static_configs:
+  - targets: [karakeep.karakeep:3000]
+  bearer_token_file: /secrets/karakeep-prometheus-token

@@ -51,10 +51,11 @@ controllers:
           OAUTH_PROVIDER_NAME: Authentik
           DISABLE_PASSWORD_AUTH: 'true'
           CRAWLER_FULL_PAGE_ARCHIVE: 'true'
-          CRAWLER_NUM_WORKERS: '2'
+          CRAWLER_NUM_WORKERS: '3'
           INFERENCE_CONTEXT_LENGTH: '16384'
           INFERENCE_MAX_OUTPUT_TOKENS: '4096'
           INFERENCE_ENABLE_AUTO_SUMMARIZATION: 'true'
+          INFERENCE_NUM_WORKERS: '3'
         envFrom:
         - secretRef:
             name: karakeep
@@ -70,3 +71,6 @@ meilisearch:
   persistence:
     enabled: true
     size: 10Gi
+
+podAnnotations:
+  reloader.stakater.com/auto: 'true'
