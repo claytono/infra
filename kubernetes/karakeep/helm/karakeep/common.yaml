@@ -242,6 +242,8 @@ spec:
             value: http://karakeep-meilisearch:7700
           - name: NEXTAUTH_URL
             value: https://karakeep.k.oneill.net
+          - name: OAUTH_PROVIDER_NAME
+            value: Authentik
           - name: OAUTH_WELLKNOWN_URL
             value: https://auth.k.oneill.net/application/o/karakeep/.well-known/openid-configuration
           envFrom:
