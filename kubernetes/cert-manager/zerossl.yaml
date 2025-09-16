@@ -1,0 +1,26 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+
+metadata:
+  name: zerossl
+
+spec:
+  acme:
+    email: clayton@oneill.net
+    server: https://acme.zerossl.com/v2/DV90
+    privateKeySecretRef:
+      name: zerossl-account-key
+    externalAccountBinding:
+      keyID: 6S0Z-BQZ9KWpl7UzJlR54A
+      keySecretRef:
+        name: cert-manager
+        key: zerossl-eab-secret
+    solvers:
+    - dns01:
+        route53:
+          region: us-east-1
+          accessKeyID: AKIAJKAXEQX5E3OWSFHQ
+          secretAccessKeySecretRef:
+            name: cert-manager
+            key: aws-secret-access-key

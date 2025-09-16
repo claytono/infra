@@ -23,6 +23,7 @@ resources:
 - helm/templates/cainjector-serviceaccount.yaml
 - letsencrypt.yaml
 - self-signed.yaml
+- zerossl.yaml
 - externalsecret.yaml
 
 commonAnnotations:

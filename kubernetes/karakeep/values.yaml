@@ -1,0 +1,71 @@
+---
+# Values for rendering the Karakeep chart
+
+applicationHost: karakeep.k.oneill.net
+applicationProtocol: https
+
+meilisearchMasterKey: bogus
+
+ingress:
+  karakeep:
+    className: nginx
+    hosts:
+    - host: karakeep.k.oneill.net
+      paths:
+      - path: /
+        pathType: Prefix
+        service:
+          identifier: karakeep
+          port: http
+    tls:
+    - hosts:
+      - karakeep.k.oneill.net
+      secretName: karakeep-tls
+    annotations:
+      cert-manager.io/cluster-issuer: zerossl
+      ak-type: oidc
+      ak-oidc-callback: /api/auth/callback/custom
+
+persistence:
+  data:
+    enabled: true
+    size: 20Gi
+    accessMode: ReadWriteOnce
+    mountPath: /data
+
+secrets:
+  karakeep:
+    enabled: false
+
+controllers:
+  karakeep:
+    containers:
+      karakeep:
+        env:
+          DATABASE_URL:
+            valueFrom:
+              secretKeyRef:
+                name: karakeep-postgres-app
+                key: uri
+          OAUTH_WELLKNOWN_URL: https://auth.k.oneill.net/application/o/karakeep/.well-known/openid-configuration
+          DISABLE_PASSWORD_AUTH: 'true'
+          CRAWLER_FULL_PAGE_ARCHIVE: 'true'
+          CRAWLER_NUM_WORKERS: '2'
+          INFERENCE_CONTEXT_LENGTH: '16384'
+          INFERENCE_MAX_OUTPUT_TOKENS: '4096'
+          INFERENCE_ENABLE_AUTO_SUMMARIZATION: 'true'
+        envFrom:
+        - secretRef:
+            name: karakeep
+        - secretRef:
+            name: karakeep-meilisearch
+        - secretRef:
+            name: karakeep-oidc
+
+meilisearch:
+  enabled: true
+  auth:
+    existingMasterKeySecret: karakeep-meilisearch
+  persistence:
+    enabled: true
+    size: 10Gi

@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: karakeep
+
+resources:
+- namespace.yaml
+- tailscale-ingress.yaml
+- externalsecret.yaml
+- externalsecret-oidc.yaml
+- postgres-cluster.yaml
+- helm/karakeep/common.yaml
+- helm/meilisearch/serviceaccount.yaml
+- helm/meilisearch/configmap.yaml
+- helm/meilisearch/pvc.yaml
+- helm/meilisearch/service.yaml
+- helm/meilisearch/statefulset.yaml
+
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: ghcr.io/karakeep-app/karakeep
+  newTag: 0.27.1
+  digest: sha256:abd7d6b11b1b8fa3593d1971f886a74850ba8d6a99291218b150207d5a60378e
