@@ -48,6 +48,7 @@ controllers:
                 name: karakeep-postgres-app
                 key: uri
           OAUTH_WELLKNOWN_URL: https://auth.k.oneill.net/application/o/karakeep/.well-known/openid-configuration
+          OAUTH_PROVIDER_NAME: Authentik
           DISABLE_PASSWORD_AUTH: 'true'
           CRAWLER_FULL_PAGE_ARCHIVE: 'true'
           CRAWLER_NUM_WORKERS: '2'
