@@ -289,13 +289,13 @@ def collect_app_infos_from_ingresses(base_dir):
     # Determine final app names based on service conflicts
     app_infos = resolve_app_name_conflicts(raw_app_infos)
 
-    # Sort and display found services
-    sorted_app_infos = sorted(app_infos, key=lambda x: (x["auth_type"], x["app_name"]))
+    # Sort deterministically by app name for stable logging and processing
+    sorted_app_infos = sorted(app_infos, key=lambda x: x["app_name"])
 
     print("Found services with ak-type annotations:")
     for app_info in sorted_app_infos:
         auth_type = app_info["auth_type"]
-        print(f"  ✓ ak-{auth_type}: {app_info['app_name']}")
+        print(f"  ✓ {app_info['app_name']} (ak-{auth_type})")
     print()
 
     if not app_infos:
@@ -325,7 +325,8 @@ def generate_terraform_files(app_infos, generated_dir):
     tmpl_oidc = env.get_template("provider-app-oidc.tf.j2")
 
     changed = False
-    for app_info in app_infos:
+    # Process apps in sorted order by name for deterministic output
+    for app_info in sorted(app_infos, key=lambda x: x["app_name"]):
         app = app_info["app_name"]
         auth_type = app_info["auth_type"]
 

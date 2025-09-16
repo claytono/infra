@@ -1,0 +1,319 @@
+---
+# Source: karakeep/templates/common.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: karakeep-meilesearch
+  labels:
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: karakeep
+    app.kubernetes.io/version: 0.27.0
+    helm.sh/chart: karakeep-0.27.0
+  namespace: karakeep
+stringData:
+  MEILI_MASTER_KEY: 'bogus'
+---
+# Source: karakeep/templates/common.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: karakeep-data
+  labels:
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: karakeep
+    app.kubernetes.io/version: 0.27.0
+    helm.sh/chart: karakeep-0.27.0
+  namespace: karakeep
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "20Gi"
+---
+# Source: karakeep/templates/common.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: karakeep-chrome
+  labels:
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: karakeep
+    app.kubernetes.io/service: karakeep-chrome
+    app.kubernetes.io/version: 0.27.0
+    helm.sh/chart: karakeep-0.27.0
+  namespace: karakeep
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9222
+      targetPort: 9222
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/component: chrome
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/name: karakeep
+---
+# Source: karakeep/templates/common.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: karakeep
+  labels:
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: karakeep
+    app.kubernetes.io/service: karakeep
+    app.kubernetes.io/version: 0.27.0
+    helm.sh/chart: karakeep-0.27.0
+  namespace: karakeep
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/component: karakeep
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/name: karakeep
+---
+# Source: karakeep/templates/common.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep-chrome
+  labels:
+    app.kubernetes.io/component: chrome
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: karakeep
+    app.kubernetes.io/version: 0.27.0
+    helm.sh/chart: karakeep-0.27.0
+  namespace: karakeep
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: chrome
+      app.kubernetes.io/name: karakeep
+      app.kubernetes.io/instance: karakeep
+  template:
+    metadata:
+      annotations: 
+        checksum/secrets: 142519ce4ec524bde8adda3fc765d9968ce7a4b024b37b9ca1c0231899e2cefc
+      labels: 
+        app.kubernetes.io/component: chrome
+        app.kubernetes.io/instance: karakeep
+        app.kubernetes.io/name: karakeep
+    spec: 
+      enableServiceLinks: false
+      serviceAccountName: default
+      automountServiceAccountToken: true
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      dnsPolicy: ClusterFirst
+      containers: 
+        - args:
+          - --remote-debugging-address=0.0.0.0
+          - --remote-debugging-port=9222
+          - --headless
+          - --hide-scrollbars
+          - --disable-gpu
+          - --disable-dev-shm-usage
+          image: gcr.io/zenika-hub/alpine-chrome:124
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            tcpSocket:
+              port: 9222
+            timeoutSeconds: 1
+          name: chrome
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            tcpSocket:
+              port: 9222
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+              - SYS_ADMIN
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+          - mountPath: /tmp
+            name: chrome-tmp
+          - mountPath: /data
+            name: data
+      volumes: 
+        - emptyDir: {}
+          name: chrome-tmp
+        - name: data
+          persistentVolumeClaim:
+            claimName: karakeep-data
+---
+# Source: karakeep/templates/common.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: karakeep
+  labels:
+    app.kubernetes.io/component: karakeep
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: karakeep
+    app.kubernetes.io/version: 0.27.0
+    helm.sh/chart: karakeep-0.27.0
+  namespace: karakeep
+spec:
+  revisionHistoryLimit: 3
+  replicas: 
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: karakeep
+      app.kubernetes.io/name: karakeep
+      app.kubernetes.io/instance: karakeep
+  serviceName: karakeep
+  template:
+    metadata:
+      annotations: 
+        checksum/secrets: 142519ce4ec524bde8adda3fc765d9968ce7a4b024b37b9ca1c0231899e2cefc
+      labels: 
+        app.kubernetes.io/component: karakeep
+        app.kubernetes.io/instance: karakeep
+        app.kubernetes.io/name: karakeep
+    spec: 
+      enableServiceLinks: false
+      serviceAccountName: default
+      automountServiceAccountToken: true
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      dnsPolicy: ClusterFirst
+      containers: 
+        - env:
+          - name: BROWSER_WEB_URL
+            value: http://karakeep-chrome:9222
+          - name: CRAWLER_FULL_PAGE_ARCHIVE
+            value: "true"
+          - name: CRAWLER_NUM_WORKERS
+            value: "2"
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                key: uri
+                name: karakeep-postgres-app
+          - name: DATA_DIR
+            value: /data
+          - name: DISABLE_PASSWORD_AUTH
+            value: "true"
+          - name: INFERENCE_CONTEXT_LENGTH
+            value: "16384"
+          - name: INFERENCE_ENABLE_AUTO_SUMMARIZATION
+            value: "true"
+          - name: INFERENCE_MAX_OUTPUT_TOKENS
+            value: "4096"
+          - name: MEILI_ADDR
+            value: http://karakeep-meilisearch:7700
+          - name: NEXTAUTH_URL
+            value: https://karakeep.k.oneill.net
+          - name: OAUTH_WELLKNOWN_URL
+            value: https://auth.k.oneill.net/application/o/karakeep/.well-known/openid-configuration
+          envFrom:
+          - secretRef:
+              name: karakeep
+          - secretRef:
+              name: karakeep-meilisearch
+          - secretRef:
+              name: karakeep-oidc
+          image: ghcr.io/karakeep-app/karakeep:0.27.0
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            tcpSocket:
+              port: 3000
+            timeoutSeconds: 1
+          name: karakeep
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            tcpSocket:
+              port: 3000
+            timeoutSeconds: 1
+          volumeMounts:
+          - mountPath: /data
+            name: data
+      volumes: 
+        - name: data
+          persistentVolumeClaim:
+            claimName: karakeep-data
+  volumeClaimTemplates: 
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+---
+# Source: karakeep/templates/common.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: karakeep
+  labels:
+    app.kubernetes.io/instance: karakeep
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: karakeep
+    app.kubernetes.io/version: 0.27.0
+    helm.sh/chart: karakeep-0.27.0
+  annotations:
+    ak-oidc-callback: /api/auth/callback/custom
+    ak-type: oidc
+    cert-manager.io/cluster-issuer: zerossl
+  namespace: karakeep
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - "karakeep.k.oneill.net"
+      secretName: "karakeep-tls"
+  rules:
+    - host: "karakeep.k.oneill.net"
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: karakeep
+                port:
+                  number: 3000

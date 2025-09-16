@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: karakeep-render
+version: 0.1.0
+description: Render helper for Karakeep chart
+type: application
+
+dependencies:
+- name: karakeep
+  version: 0.27.0
+  repository: https://karakeep-app.github.io/helm-charts
