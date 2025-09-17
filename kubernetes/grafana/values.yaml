@@ -1,0 +1,65 @@
+---
+# Values for rendering the Grafana chart
+
+# Global namespace override
+namespaceOverride: o11y
+
+persistence:
+  enabled: true
+
+# Configure Grafana for OIDC authentication
+grafana.ini:
+  server:
+    root_url: https://grafana.k.oneill.net
+  auth:
+    oauth_allow_insecure_email_lookup: true
+  auth.generic_oauth:
+    enabled: true
+    name: Authentik
+    allow_sign_up: true
+    auto_login: true
+    client_id: $__env{OAUTH_CLIENT_ID}
+    client_secret: $__env{OAUTH_CLIENT_SECRET}
+    scopes: openid profile email groups
+    auth_url: https://auth.k.oneill.net/application/o/authorize/
+    token_url: https://auth.k.oneill.net/application/o/token/
+    api_url: https://auth.k.oneill.net/application/o/userinfo/
+    login_attribute_path: email
+    groups_attribute_path: groups
+    name_attribute_path: name
+    email_attribute_path: email
+    use_pkce: true
+    role_attribute_path: contains(groups[*], 'authentik Admins') && 'Admin' || 'Viewer'
+    allow_assign_grafana_admin: true
+
+# Environment variables for OIDC
+envFromSecret: grafana-oidc
+
+# Service configuration
+# Ingress configuration
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    ak-type: oidc
+    ak-oidc-callback: /login/generic_oauth
+    cert-manager.io/cluster-issuer: zerosssl
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Grafana
+    gethomepage.dev/group: Monitoring
+    gethomepage.dev/icon: grafana.png
+  hosts:
+  - grafana.k.oneill.net
+  path: /
+  tls:
+  - secretName: grafana-tls
+    hosts:
+    - grafana.k.oneill.net
+
+# Add reloader annotation for secret updates
+podAnnotations:
+  reloader.stakater.com/auto: 'true'
+
+# Disable local admin bootstrap; OIDC handles auth
+env:
+  GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: 'true'

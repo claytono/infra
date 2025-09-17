@@ -1,0 +1,38 @@
+---
+# Source: grafana/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: o11y
+  labels:
+    helm.sh/chart: grafana-8.5.2
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/version: "11.2.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    ak-oidc-callback: "/login/generic_oauth"
+    ak-type: "oidc"
+    cert-manager.io/cluster-issuer: "zerosssl"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: "Monitoring"
+    gethomepage.dev/icon: "grafana.png"
+    gethomepage.dev/name: "Grafana"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - grafana.k.oneill.net
+      secretName: grafana-tls
+  rules:
+    - host: "grafana.k.oneill.net"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 80

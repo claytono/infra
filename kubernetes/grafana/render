@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir -p tmp helm/grafana
+
+# Render the upstream Grafana chart (version set via Chart.yaml dependency)
+helm_template grafana grafana \
+  --namespace o11y \
+  --values values.yaml \
+  --output-dir tmp
+
+mv tmp/grafana/templates/* helm/grafana/
+
+rm -rf tmp
+rm -rf helm/*/tests
+rm -f helm/grafana/secret.yaml

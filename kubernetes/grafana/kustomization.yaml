@@ -2,21 +2,24 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+namespace: o11y
+
 commonAnnotations:
   argoManaged: 'true'
 
-components:
-- ../components/authentik
-
 resources:
-- deploy.yaml
-- pvc.yaml
-- ingress.yaml
-- service.yaml
-
-images:
-- name: grafana/grafana
-  newTag: 12.1.1@sha256:a1701c2180249361737a99a01bc770db39381640e4d631825d38ff4535efa47d
+- namespace.yaml
+- externalsecret.yaml
+- helm/grafana/serviceaccount.yaml
+- helm/grafana/configmap.yaml
+- helm/grafana/pvc.yaml
+- helm/grafana/clusterrole.yaml
+- helm/grafana/clusterrolebinding.yaml
+- helm/grafana/role.yaml
+- helm/grafana/rolebinding.yaml
+- helm/grafana/service.yaml
+- helm/grafana/deployment.yaml
+- helm/grafana/ingress.yaml
 
 labels:
 
