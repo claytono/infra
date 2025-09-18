@@ -108,7 +108,7 @@ resource "tailscale_oauth_client" "github_actions" {
 
 # Store operator OAuth credentials in 1Password
 resource "onepassword_item" "tailscale_operator" {
-  vault    = data.onepassword_vault.kubernetes.uuid
+  vault    = data.onepassword_vault.infra.uuid
   title    = "tailscale-operator"
   category = "login"
 
@@ -133,7 +133,7 @@ resource "onepassword_item" "tailscale_operator" {
 
 # Store GitHub Actions OAuth credentials in 1Password
 resource "onepassword_item" "tailscale_github_actions" {
-  vault    = data.onepassword_vault.kubernetes.uuid
+  vault    = data.onepassword_vault.infra.uuid
   title    = "tailscale-github-actions"
   category = "login"
 
