@@ -30,7 +30,7 @@ usage() {
 WAIT_FOR_COMPLETION=true
 TIMEOUT=300
 WATCH_INTERVAL=1
-FAIL_FAST=""
+FAIL_FAST=false
 PR_ARG=""
 EXCLUDE_PATTERNS=("${DEFAULT_EXCLUSIONS[@]}")
 
@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -f | --fail-fast)
-            FAIL_FAST="--fail-fast"
+            FAIL_FAST=true
             shift
             ;;
         -t | --timeout)
@@ -110,6 +110,32 @@ should_exclude_check() {
         fi
     done
     return 1 # False, should not exclude
+}
+
+# Determine whether a check bucket indicates a pending status
+is_pending_bucket() {
+    local bucket="$1"
+    case "$bucket" in
+        pending)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# Determine whether a check bucket indicates failure
+is_failure_bucket() {
+    local bucket="$1"
+    case "$bucket" in
+        fail|cancel)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 # Function to check for failed runs and get their logs
@@ -204,11 +230,66 @@ fi
 
 if [[ "$WAIT_FOR_COMPLETION" == "true" ]]; then
     echo "Waiting for workflows to complete (timeout: ${TIMEOUT}s)..."
-
     echo "Checking PR status every ${WATCH_INTERVAL} seconds..."
-    gh pr checks "$PR_NUMBER" --watch --interval "$WATCH_INTERVAL" $FAIL_FAST || true
 
-    # After waiting, check for failed checks
+    start_time=$(date +%s)
+
+    while true; do
+        set +e
+        checks_json=$(gh pr checks "$PR_NUMBER" --json name,state,link,bucket 2>/dev/null)
+        gh_status=$?
+        set -e
+
+        if [[ $gh_status -ne 0 && $gh_status -ne 8 ]]; then
+            echo "Failed to retrieve PR checks (exit code $gh_status)."
+            exit $gh_status
+        fi
+
+        if [[ -z "$checks_json" || "$checks_json" == "null" ]]; then
+            echo "No check data returned; continuing to poll."
+        fi
+
+        total_checks=$(echo "$checks_json" | jq '. | length')
+
+        pending_present=false
+        failure_detected=false
+
+        for ((i = 0; i < total_checks; i++)); do
+            name=$(echo "$checks_json" | jq -r ".[$i].name")
+            bucket=$(echo "$checks_json" | jq -r ".[$i].bucket")
+
+            if should_exclude_check "$name"; then
+                continue
+            fi
+
+            if is_pending_bucket "$bucket"; then
+                pending_present=true
+            fi
+
+            if is_failure_bucket "$bucket"; then
+                failure_detected=true
+            fi
+        done
+
+        if [[ "$failure_detected" == "true" && "$FAIL_FAST" == "true" ]]; then
+            echo "Detected failing checks; exiting due to fail-fast."
+            get_failed_checks_logs "$PR_NUMBER"
+            exit 1
+        fi
+
+        if [[ "$pending_present" != "true" ]]; then
+            break
+        fi
+
+        now=$(date +%s)
+        if (( now - start_time >= TIMEOUT )); then
+            echo "Timeout reached while waiting for workflows to complete."
+            break
+        fi
+
+        sleep "$WATCH_INTERVAL"
+    done
+
     echo "Evaluating check results..."
     get_failed_checks_logs "$PR_NUMBER"
     exit $?
