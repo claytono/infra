@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: openarchiver-config
+  namespace: openarchiver
+
+data:
+  NODE_ENV: production
+  PORT_BACKEND: '4000'
+  PORT_FRONTEND: '3000'
+  JWT_EXPIRES_IN: 7d
+  SYNC_FREQUENCY: '* * * * *'
+  STORAGE_TYPE: local
+  STORAGE_LOCAL_ROOT_PATH: /var/data/open-archiver
+  BODY_SIZE_LIMIT: 100M
+  REDIS_HOST: openarchiver-valkey
+  REDIS_PORT: '6379'
+  REDIS_TLS_ENABLED: 'false'
+  MEILI_HOST: http://openarchiver-meilisearch:7700
+  RATE_LIMIT_WINDOW_MS: '60000'
+  RATE_LIMIT_MAX_REQUESTS: '100'

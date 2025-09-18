@@ -1,0 +1,28 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: openarchiver
+  namespace: openarchiver
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - openarchiver.k.oneill.net
+    secretName: openarchiver-tls
+  rules:
+  - host: openarchiver.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openarchiver
+            port:
+              name: http

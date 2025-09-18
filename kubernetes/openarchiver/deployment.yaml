@@ -1,0 +1,74 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: openarchiver
+  namespace: openarchiver
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openarchiver
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openarchiver
+    spec:
+      containers:
+      - name: openarchiver
+        image: logiclabshq/open-archiver
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: openarchiver-config
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: openarchiver-postgres-app
+              key: uri
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: openarchiver-secrets
+              key: jwt-secret
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openarchiver-secrets
+              key: encryption-key
+        - name: MEILI_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openarchiver-secrets
+              key: meilisearch-master-key
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openarchiver-secrets
+              key: redis-password
+        ports:
+        - name: web
+          containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /
+            port: web
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: web
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        resources: {}
+        volumeMounts:
+        - name: data
+          mountPath: /var/data/open-archiver
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: openarchiver-data
