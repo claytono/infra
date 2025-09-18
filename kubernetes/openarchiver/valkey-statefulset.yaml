@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: openarchiver-valkey
+  namespace: openarchiver
+
+spec:
+  serviceName: openarchiver-valkey
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openarchiver-valkey
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openarchiver-valkey
+    spec:
+      securityContext:
+        fsGroup: 999
+        runAsGroup: 999
+        runAsNonRoot: true
+        runAsUser: 999
+      containers:
+      - name: valkey
+        image: valkey/valkey
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - exec valkey-server --requirepass "$VALKEY_PASSWORD"
+        env:
+        - name: VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openarchiver-secrets
+              key: redis-password
+        ports:
+        - name: redis
+          containerPort: 6379
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - valkey-cli -a "$VALKEY_PASSWORD" ping
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - valkey-cli -a "$VALKEY_PASSWORD" ping
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources: {}
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
