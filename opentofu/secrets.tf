@@ -1,41 +1,41 @@
-# Reference to the existing Kubernetes vault
-data "onepassword_vault" "kubernetes" {
+# Reference to the existing 1Password vault used by infra
+data "onepassword_vault" "infra" {
   uuid = "duipvbtxrc4wl22tw3jsihfo2m"
 }
 
 # Vultr API credentials from 1Password
 data "onepassword_item" "vultr_api" {
-  vault = data.onepassword_vault.kubernetes.uuid
+  vault = data.onepassword_vault.infra.uuid
   title = "Vultr API"
 }
 
 # Backblaze B2 credentials from 1Password (master key with writeBuckets permission)
 data "onepassword_item" "terraform_b2" {
-  vault = data.onepassword_vault.kubernetes.uuid
+  vault = data.onepassword_vault.infra.uuid
   title = "terraform-b2"
 }
 
 # Tailscale OpenTofu OAuth credentials from 1Password (for managing policy/ACLs/OAuth clients)
 data "onepassword_item" "tailscale_opentofu" {
-  vault = data.onepassword_vault.kubernetes.uuid
+  vault = data.onepassword_vault.infra.uuid
   title = "tailscale-opentofu"
 }
 
 # GitHub credentials from 1Password (for managing repository secrets)
 data "onepassword_item" "github_opentofu" {
-  vault = data.onepassword_vault.kubernetes.uuid
+  vault = data.onepassword_vault.infra.uuid
   title = "github-opentofu"
 }
 
 # ArgoCD GitHub Actions token from 1Password
 data "onepassword_item" "argocd_github_actions_token" {
-  vault = data.onepassword_vault.kubernetes.uuid
+  vault = data.onepassword_vault.infra.uuid
   title = "argocd-github-actions-token"
 }
 
 # Cachix auth token from 1Password
 data "onepassword_item" "cachix_auth_token" {
-  vault = data.onepassword_vault.kubernetes.uuid
+  vault = data.onepassword_vault.infra.uuid
   title = "cachix-auth-token"
 }
 
@@ -72,7 +72,7 @@ locals {
 
 # Authentik credentials from 1Password (used to configure provider)
 data "onepassword_item" "ak_tool" {
-  vault = data.onepassword_vault.kubernetes.uuid
+  vault = data.onepassword_vault.infra.uuid
   title = "ak-tool"
 }
 

@@ -11,7 +11,7 @@ Subcommands:
 
 Credentials:
   - Reads AUTHENTIK_URL/AUTHENTIK_TOKEN from environment if set
-  - Else reads from 1Password item 'ak-tool' (vault 'Kubernetes') fields base_url/api_token
+  - Else reads from 1Password item 'ak-tool' (vault 'infra') fields base_url/api_token
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ PORT_MAPPING = {"http": 80, "https": 443}
 # Repository root (infra directory)
 REPO_ROOT = Path(__file__).parent.parent.parent.resolve()
 OPENTOFU_DIR = REPO_ROOT / "opentofu"
-OP_VAULT = os.environ.get("AK_OP_VAULT", "Kubernetes")
+OP_VAULT = os.environ.get("AK_OP_VAULT", "infra")
 OP_ITEM = os.environ.get("AK_OP_ITEM", "ak-tool")
 OP_FIELD_URL = os.environ.get("AK_OP_FIELD_URL", "base_url")
 OP_FIELD_TOKEN = os.environ.get("AK_OP_FIELD_TOKEN", "api_token")
@@ -499,7 +499,7 @@ def render_oidc_1p_hcl(titles: list[str]) -> str:
         ident = tf_ident_from_title(title)
         lines.append(
             f'data "onepassword_item" "{ident}_existing" {{\n'
-            f"  vault = data.onepassword_vault.kubernetes.uuid\n"
+            f"  vault = data.onepassword_vault.infra.uuid\n"
             f'  title = "{title}"\n'
             f"}}\n\n"
         )
@@ -521,7 +521,7 @@ def render_oidc_1p_hcl(titles: list[str]) -> str:
         svc = title.replace("-oidc", "")
         lines.append(
             f'resource "onepassword_item" "{ident}" {{\n'
-            "  vault    = data.onepassword_vault.kubernetes.uuid\n"
+            "  vault    = data.onepassword_vault.infra.uuid\n"
             f'  title    = "{title}"\n'
             '  category = "login"\n\n'
             f'  note_value = "OIDC client for {svc}. Managed by OpenTofu — do not edit manually."\n\n'

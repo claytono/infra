@@ -39,12 +39,12 @@ deploying them to the appropriate locations.
 
 ## Security Notes
 
-- Secrets are fetched from 1Password vault "Kubernetes"
+- Secrets are fetched from 1Password vault "infra"
 - Secrets are applied directly to cluster (not stored in git)
 
 ## Dependencies
 
-- 1Password vault "Kubernetes" must contain:
+- 1Password vault "infra" must contain:
   - `ansible-vault-password` document
   - `1password-credentials.json` document
   - `external-secrets-token` document

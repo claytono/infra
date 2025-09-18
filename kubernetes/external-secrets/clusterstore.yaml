@@ -10,7 +10,7 @@ spec:
     onepassword:
       connectHost: http://onepassword-connect.1password:8080
       vaults:
-        Kubernetes: 1
+        infra: 1
       auth:
         secretRef:
           connectTokenSecretRef:
