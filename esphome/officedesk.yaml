@@ -6,7 +6,7 @@ substitutions:
   icon: mdi:bed
 
 packages:
-  lolin_d32_pro: !include common/device-classes/d1_mini.yaml
+  d1_mini: !include common/device-classes/d1_mini.yaml
   wifi: !include common/wifi.yaml
   base: !include common/base.yaml
 
