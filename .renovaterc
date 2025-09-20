@@ -184,6 +184,19 @@
         "PostgreSQL major version upgrade (e.g., 17→18). Verify backups, extension compatibility, and application compatibility before merging."
       ],
       "description": "PostgreSQL major version upgrades require manual review"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/esphome/esphome"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "enabled": false,
+      "description": "Disable digest updates for ESPHome to avoid unnecessary churn"
     }
   ],
   "gitIgnoredAuthors": [
