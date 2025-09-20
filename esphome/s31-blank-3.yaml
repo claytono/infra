@@ -1,8 +1,8 @@
 ---
 substitutions:
-  devicename: s31-blank-2
-  device_id: s31_blank_2
-  human_devicename: S31 Blank 2
+  devicename: s31-blank-3
+  device_id: s31_blank_3
+  human_devicename: S31 Blank 3
   icon: mdi:checkbox-blank-outline
 
 packages:
