@@ -1,0 +1,15 @@
+---
+substitutions:
+  devicename: battery-bme280
+  device_id: battery_bme280
+  human_devicename: Battery BME280
+  icon: mdi:coolant-temperature
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  d1_mini_bme280: !include common/device-classes/d1_mini_bme280.yaml
+
+deep_sleep:
+  run_duration: 1min
+  sleep_duration: 10min

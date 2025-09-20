@@ -1,0 +1,11 @@
+---
+substitutions:
+  devicename: x1c-ams2-monitor
+  device_id: x1c_ams2_monitor
+  human_devicename: X1C AMS2 Monitor
+  icon: mdi:coolant-temperature
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  ams_monitor: !include common/ams-monitor.yaml

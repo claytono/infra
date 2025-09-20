@@ -1,0 +1,48 @@
+---
+text_sensor:
+- platform: version
+  name: ${human_devicename} ESPHome Version
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret encryption_key
+
+ota:
+- platform: esphome
+  id: ota_esphome
+  password: !secret ota
+
+mqtt:
+  broker: !secret mqtt_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  log_topic: ${devicename}/log
+  discover_ip: false
+  discovery: false
+
+time:
+- platform: homeassistant
+  id: homeassistant_time
+  timezone: America/New_York
+
+# It's handy to have the uptime of the device recorded
+sensor:
+- platform: uptime
+  name: ${human_devicename} Uptime
+  update_interval: 60s
+
+binary_sensor:
+- platform: status
+  name: ${human_devicename} Status
+
+button:
+- platform: restart
+  id: restart_button
+  name: ${human_devicename} Restart Normally
+- platform: safe_mode
+  name: ${human_devicename} Restart in Safe Mode
+  id: power_button
+- platform: shutdown
+  name: ${human_devicename} Shutdown
+  id: shutdown_button

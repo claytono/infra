@@ -1,0 +1,11 @@
+---
+substitutions:
+  devicename: bedjet-power
+  device_id: bedjet_power
+  human_devicename: BedJet Power
+  icon: mdi:power-socket-us
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  sonoff_s31: !include common/device-classes/sonoff_s31.yaml

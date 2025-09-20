@@ -1,0 +1,70 @@
+---
+substitutions:
+  devicename: x1c-bentobox
+  device_id: x1c_bentobox
+  human_devicename: X1C Bentobox
+  icon: mdi:air-filter
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+
+esphome:
+  name: ${devicename}
+
+esp32:
+  board: az-delivery-devkit-v4
+
+# Enable logging
+logger:
+
+output:
+- platform: ledc
+  pin: GPIO19
+  id: fan_pwm
+  max_power: 0.5
+  frequency: 25000 Hz
+  zero_means_zero: true
+
+switch:
+- platform: gpio
+  internal: true
+  pin: GPIO18
+  id: fan_power
+  name: ${human_devicename} Fan Power
+
+sensor:
+- platform: pulse_counter
+  pin:
+    number: GPIO22
+    mode:
+      input: true
+      pullup: true
+  name: ${human_devicename} Fan1 RPM
+  filters:
+  - multiply: 0.5
+  unit_of_measurement: RPM
+  update_interval: 2s
+- platform: pulse_counter
+  pin:
+    number: GPIO21
+    mode:
+      input: true
+      pullup: true
+  name: ${human_devicename} Fan2 RPM
+  filters:
+  - multiply: 0.5
+  unit_of_measurement: RPM
+  update_interval: 2s
+
+fan:
+- platform: speed
+  output: fan_pwm
+  name: ${human_devicename} Fan
+  id: fan1
+  on_turn_on:
+    then:
+    - switch.turn_on: fan_power
+  on_turn_off:
+    then:
+    - switch.turn_off: fan_power

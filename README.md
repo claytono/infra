@@ -5,6 +5,7 @@ This is my personal infrastructure monorepo for managing my homelab environment.
 ## Structure
 
 - **`ansible/`** - System configuration and provisioning
+- **`esphome/`** - ESPHome device configurations and build tools
 - **`kubernetes/`** - Kubernetes application manifests
 - **`opentofu/`** - Cloud infrastructure (DNS, etc.)
 - **`scripts/`** - Automation and tooling

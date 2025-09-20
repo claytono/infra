@@ -1,0 +1,11 @@
+---
+substitutions:
+  devicename: s31-blank-2
+  device_id: s31_blank_2
+  human_devicename: S31 Blank 2
+  icon: mdi:checkbox-blank-outline
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  sonoff_s31: !include common/device-classes/sonoff_s31.yaml

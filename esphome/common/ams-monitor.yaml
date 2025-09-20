@@ -1,0 +1,56 @@
+---
+esphome:
+  name: ${devicename}
+  includes: center_text.h
+
+esp32:
+  board: az-delivery-devkit-v4
+
+# Enable logging
+logger:
+
+i2c:
+- id: bus_a
+  sda: 21
+  scl: 22
+  scan: true
+- id: bus_b
+  sda: 33
+  scl: 19
+  scan: true
+  frequency: 800kHz
+
+sensor:
+- platform: bme280_i2c
+  i2c_id: bus_a
+  address: 0x76
+  temperature:
+    id: bme280_temperature
+    name: ${human_devicename} Temperature
+    oversampling: 1x
+  pressure:
+    name: ${human_devicename} Pressure
+    oversampling: 1x
+  humidity:
+    id: bme280_humidity
+    name: ${human_devicename} Humidity
+    oversampling: 1x
+
+font:
+- file: fonts/Roboto-Medium.ttf
+  id: large_font
+  size: 38
+- file: fonts/Roboto-Medium.ttf
+  id: small_font
+  size: 12
+
+display:
+- platform: ssd1306_i2c
+  i2c_id: bus_b
+  model: SSD1306 128x64
+  address: 0x3C
+  lambda: |-
+    center_text(it, 0, id(large_font), "%.1f%%", id(bme280_humidity).state);
+    center_text(it, 40, id(small_font), "Humidity");
+    float fahrenheit_temp = id(bme280_temperature).state * 1.8 + 32;
+    center_text(it, 52, id(small_font), "Temp: %.1f°F", fahrenheit_temp);

@@ -1,0 +1,51 @@
+---
+substitutions:
+  devicename: office-foot-warmer
+  device_id: office_foot_warmer
+  human_devicename: Office Foot Warmer
+  icon: mdi:coolant-temperature
+
+esphome:
+  name: ${devicename}
+
+#  arduino_version: 2.4.2
+
+esp8266:
+  board: esp8285
+
+# Enable logging
+logger:
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+
+switch:
+- platform: gpio
+  pin: GPIO12
+  name: ${human_devicename} Switch
+  id: ${device_id}_switch
+
+binary_sensor:
+- platform: gpio
+  pin:
+    number: GPIO0
+    inverted: true
+  id: ${device_id}_switch_button
+  on_press:
+    then:
+    - switch.toggle: ${device_id}_switch
+
+sensor:
+- platform: dht
+  model: SI7021
+  pin: GPIO14
+  temperature:
+    name: ${human_devicename} Temperature
+  humidity:
+    name: ${human_devicename} Humidity
+
+status_led:
+  pin:
+    number: GPIO13
+    inverted: true

@@ -1,0 +1,16 @@
+---
+# This is the S31 attached to the UPS for testing power failure scenarios and
+# to monitor power.
+
+substitutions:
+  devicename: ups-power
+  device_id: ups_power
+  human_devicename: UPS Power
+  icon: mdi:ship-wheel
+  restore_mode: always_on
+
+packages:
+  wifi: !include common/wifi.yaml
+  web: !include common/web.yaml
+  base: !include common/base.yaml
+  sonoff_s31: !include common/device-classes/sonoff_s31.yaml

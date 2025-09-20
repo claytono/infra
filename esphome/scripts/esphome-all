@@ -1,0 +1,223 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Get to the esphome directory (parent of scripts)
+cd "$(dirname "$0")/.." || exit 1
+
+usage() {
+  cat >&2 <<'USAGE'
+Usage: ./esphome-all COMMAND [-j [JOBS]] [--shard N/TOTAL] [-- [ESPHOME_ARGS]]
+
+Runs an ESPHome command on all top-level YAML configs in this directory (excluding secrets).
+Runs sequentially by default. With -j, runs in parallel and saves logs to logs/<name>.log.
+
+  COMMAND         ESPHome command to run (e.g., compile, upload, clean, logs)
+  -j [JOBS]       Enable parallel mode with JOBS workers. If omitted or -j is
+                  passed without a value, uses the number of CPUs on this host.
+  --shard N/TOTAL Only process a subset of configs for CI sharding.
+                  N is 1-based shard index; TOTAL is shard count.
+  -- [ARGS]       Additional arguments to pass to esphome
+
+Examples:
+  ./esphome-all compile           # compile all configs sequentially
+  ./esphome-all compile -j 4      # compile with 4 parallel jobs
+  ./esphome-all clean             # clean all configs
+  ./esphome-all upload            # upload to all devices
+  ./esphome-all logs -- --follow  # tail logs from all devices
+USAGE
+}
+
+default_jobs() {
+  if command -v nproc >/dev/null 2>&1; then
+    nproc 2>/dev/null || echo 1
+  elif command -v sysctl >/dev/null 2>&1; then
+    sysctl -n hw.logicalcpu 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1
+  else
+    echo 1
+  fi
+}
+
+# Parse command first
+if [ $# -eq 0 ]; then
+  echo "Error: COMMAND is required" >&2
+  usage
+  exit 2
+fi
+
+COMMAND="$1"
+shift
+
+SHARD_INDEX=""; SHARD_TOTAL=""
+JOBS=""
+ESPHOME_ARGS=()
+
+while (( "$#" )); do
+  case "$1" in
+    -j)
+      # Optional value: if provided, consume it; otherwise use CPU cores
+      if [ $# -ge 2 ] && [[ "$2" != -* ]]; then
+        JOBS="$2"; shift 2
+      else
+        JOBS="auto"; shift
+      fi
+      ;;
+    -j*)
+      # Support -j4 form
+      JOBS="${1#-j}"; shift ;;
+    --shard)
+      # expects value like 1/4
+      shift
+      val="${1:-}"
+      [ -n "$val" ] || { echo "--shard requires N/TOTAL" >&2; usage; exit 2; }
+      SHARD_INDEX="${val%%/*}"; SHARD_TOTAL="${val##*/}"; shift ;;
+    -h|--help)
+      usage; exit 0 ;;
+    --)
+      shift;
+      ESPHOME_ARGS=("$@")
+      break ;;
+    -*)
+      echo "Unknown option: $1" >&2; usage; exit 2 ;;
+    *)
+      echo "Unexpected argument: $1" >&2; usage; exit 2 ;;
+  esac
+done
+
+# Use our wrapper script if it exists, otherwise fall back to esphome in PATH
+ESPHOME_CMD="esphome"
+if [ -f "scripts/esphome" ] && [ -x "scripts/esphome" ]; then
+  ESPHOME_CMD="scripts/esphome"
+elif ! command -v esphome >/dev/null 2>&1; then
+  echo "esphome CLI not found in PATH" >&2
+  exit 127
+fi
+
+# Warn if secrets are missing
+if [ ! -f secrets.yaml ] && [ -f secrets.tmpl ]; then
+  echo "Note: secrets.yaml not found; run scripts/bootstrap-secrets to generate it" >&2
+fi
+
+# Discover top-level YAML configs, excluding secrets templates/files
+mapfile -t files < <(
+  find . -maxdepth 1 -type f -name '*.yaml' \
+    ! -name 'secrets.yaml' \
+    ! -name '*secrets*' \
+    -print | sort
+)
+
+if [ ${#files[@]} -eq 0 ]; then
+  echo "No top-level ESPHome YAML configs found." >&2
+  exit 0
+fi
+
+# If sharding is requested, filter files to only this shard
+if [ -n "$SHARD_INDEX" ] && [ -n "$SHARD_TOTAL" ]; then
+  case "$SHARD_INDEX" in (*[!0-9]*) echo "Invalid shard index: $SHARD_INDEX" >&2; exit 2;; esac
+  case "$SHARD_TOTAL" in (*[!0-9]*) echo "Invalid shard total: $SHARD_TOTAL" >&2; exit 2;; esac
+  if [ "$SHARD_INDEX" -lt 1 ] || [ "$SHARD_TOTAL" -lt 1 ] || [ "$SHARD_INDEX" -gt "$SHARD_TOTAL" ]; then
+    echo "Shard must satisfy 1 <= N <= TOTAL" >&2; exit 2
+  fi
+  echo "Sharding: selecting shard $SHARD_INDEX of $SHARD_TOTAL"
+  selected=()
+  i=0
+  for f in "${files[@]}"; do
+    i=$((i+1))
+    # zero-based modulo
+    if [ $(((i-1) % SHARD_TOTAL)) -eq $((SHARD_INDEX-1)) ]; then
+      selected+=("$f")
+    fi
+  done
+  files=("${selected[@]}")
+  if [ ${#files[@]} -eq 0 ]; then
+    echo "Shard has no files to process."
+    exit 0
+  fi
+fi
+
+# If -j was not provided, run sequentially (streaming output)
+if [ -z "$JOBS" ]; then
+  failures=()
+  for f in "${files[@]}"; do
+    cfg=${f#./}
+    echo "==> Running 'esphome $COMMAND' on ${cfg}"
+    if "$ESPHOME_CMD" "$COMMAND" "$cfg" "${ESPHOME_ARGS[@]}"; then
+      echo "✅ ${cfg} succeeded"
+    else
+      echo "❌ ${cfg} failed" >&2
+      failures+=("${cfg}")
+    fi
+    echo
+  done
+
+  if [ ${#failures[@]} -ne 0 ]; then
+    echo "Failed configs:" >&2
+    for f in "${failures[@]}"; do
+      echo " - $f" >&2
+    done
+    exit 1
+  fi
+
+  echo "All configs processed successfully."
+  exit 0
+fi
+
+# Parallel mode
+logs_dir="logs"
+mkdir -p "${logs_dir}"
+if [ "$JOBS" = "auto" ] || [ -z "$JOBS" ]; then
+  JOBS="$(default_jobs)"
+fi
+echo "Running 'esphome $COMMAND' on ${#files[@]} configs with ${JOBS} parallel job(s). Logs in '${logs_dir}/'."
+
+throttle() {
+  # Limit number of background jobs
+  while :; do
+    running=$(jobs -pr | wc -l | tr -d ' ')
+    if [ "$running" -lt "$JOBS" ]; then
+      break
+    fi
+    sleep 0.2
+  done
+}
+
+for f in "${files[@]}"; do
+  cfg=${f#./}
+  base="${cfg%.yaml}"
+  log_file="${logs_dir}/${base}.log"
+  status_file="${logs_dir}/${base}.status"
+  printf "Queued %s\n" "$cfg"
+  throttle
+  (
+    "$ESPHOME_CMD" "$COMMAND" "$cfg" "${ESPHOME_ARGS[@]}" >"$log_file" 2>&1
+    rc=$?
+    if [ $rc -eq 0 ]; then
+      echo OK >"$status_file"
+    else
+      echo FAIL >"$status_file"
+    fi
+    exit $rc
+  ) &
+done
+
+wait || true
+
+echo
+echo "Summary:"
+fail_count=0
+for f in "${files[@]}"; do
+  cfg=${f#./}
+  base="${cfg%.yaml}"
+  status_file="${logs_dir}/${base}.status"
+  status="UNKNOWN"
+  if [ -f "$status_file" ]; then
+    status=$(cat "$status_file" 2>/dev/null || echo UNKNOWN)
+  fi
+  if [ "$status" = OK ]; then
+    printf "  ✅ %s (log: %s)\n" "$cfg" "${logs_dir}/${base}.log"
+  else
+    printf "  ❌ %s (log: %s)\n" "$cfg" "${logs_dir}/${base}.log"
+    fail_count=$((fail_count+1))
+  fi
+done
+
+exit $((fail_count > 0 ? 1 : 0))
