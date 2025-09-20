@@ -1,0 +1,11 @@
+---
+substitutions:
+  devicename: temp-probe2
+  device_id: temp_probe2
+  human_devicename: K-Type Thermocouple 2
+  icon: mdi:temperature
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  d1_mini_max6675: !include common/device-classes/d1_mini_max6675.yaml

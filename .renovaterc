@@ -55,6 +55,19 @@
       "datasourceTemplate": "docker",
       "registryUrlTemplate": "https://ghcr.io",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "esphome/scripts/esphome"
+      ],
+      "matchStrings": [
+        "ESPHOME_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "depNameTemplate": "ghcr.io/esphome/esphome",
+      "datasourceTemplate": "docker",
+      "registryUrlTemplate": "https://ghcr.io",
+      "versioningTemplate": "docker"
     }
   ],
   "packageRules": [

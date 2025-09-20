@@ -1,0 +1,83 @@
+---
+substitutions:
+  restore_mode: restore_default_on
+  update_interval: 60s
+
+esphome:
+  name: ${devicename}
+
+esp8266:
+  board: esp01_1m
+  restore_from_flash: true
+
+preferences:
+  flash_write_interval: 10min
+
+logger:
+  baud_rate: 0  # (UART logging interferes with cse7766)
+
+# Device Specific Config
+uart:
+  rx_pin: RX
+  baud_rate: 4800
+  parity: EVEN
+
+binary_sensor:
+- platform: gpio
+  pin:
+    number: GPIO0
+    mode: INPUT_PULLUP
+    inverted: true
+  name: ${human_devicename} Button
+  on_multi_click:
+  - timing:
+    - ON for at most 1s
+    - OFF for at least 0.2s
+    then:
+    - switch.toggle: relay
+  - timing:
+    - ON for at least 4s
+    then:
+    - button.press: restart_button
+- platform: status
+  name: ${human_devicename} Home Assistant Connected
+  id: ${device_id}_hass_status
+
+sensor:
+- platform: cse7766
+  current:
+    name: ${human_devicename} Current
+    id: ${device_id}_current
+    accuracy_decimals: 2
+    filters:
+    - throttle_average: ${update_interval}
+  voltage:
+    name: ${human_devicename} Voltage
+    id: ${device_id}_voltage
+    accuracy_decimals: 2
+    filters:
+    - throttle_average: ${update_interval}
+  power:
+    name: ${human_devicename} Power
+    id: ${device_id}_power
+    accuracy_decimals: 2
+    filters:
+    - throttle_average: ${update_interval}
+- platform: total_daily_energy
+  name: ${human_devicename} Total Daily Energy
+  power_id: ${device_id}_power
+  filters:
+      # Multiplication factor from W to kW is 0.001
+  - multiply: 0.001
+  unit_of_measurement: kWh
+
+switch:
+- platform: gpio
+  name: ${human_devicename} Relay
+  pin: GPIO12
+  id: relay
+  icon: ${icon}
+  restore_mode: ${restore_mode}
+
+status_led:
+  pin: GPIO13

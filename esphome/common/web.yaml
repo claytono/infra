@@ -1,0 +1,7 @@
+---
+# Turn on the web server
+web_server:
+  ota: false
+  auth:
+    username: !secret web_username
+    password: !secret web_password

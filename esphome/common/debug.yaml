@@ -1,0 +1,22 @@
+---
+# Example configuration entry
+debug:
+  update_interval: 5s
+
+text_sensor:
+- platform: debug
+  device:
+    name: ${human_devicename} Device Info
+  reset_reason:
+    name: ${human_devicename} Reset Reason
+
+sensor:
+- platform: debug
+  free:
+    name: ${human_devicename} Heap Free
+  block:
+    name: ${human_devicename} Heap Max Block
+  loop_time:
+    name: ${human_devicename} Loop Time
+  psram:
+    name: ${human_devicename} PSRAM Free

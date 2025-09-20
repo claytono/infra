@@ -1,0 +1,34 @@
+---
+substitutions:
+  devicename: freezer
+  device_id: freezer
+  human_devicename: Freezer
+  icon: mdi:coolant-temperature
+
+packages:
+  wifi: !include common/wifi.yaml
+  web: !include common/web.yaml
+  base: !include common/base.yaml
+
+esphome:
+  name: freezer
+
+esp8266:
+  board: esp8285
+
+# Enable logging
+logger:
+
+sensor:
+- platform: dht
+  model: SI7021
+  pin: GPIO14
+  temperature:
+    name: Freezer Temperature
+  humidity:
+    name: Freezer Humidity
+
+status_led:
+  pin:
+    number: GPIO13
+    inverted: true

@@ -1,0 +1,25 @@
+---
+esphome:
+  name: ${devicename}
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+i2c:
+  scan: false
+
+sensor:
+- platform: bme280_i2c
+  address: 0x76
+  temperature:
+    name: ${human_devicename} Temperature
+    oversampling: 1x
+  pressure:
+    name: ${human_devicename} Pressure
+    oversampling: 1x
+  humidity:
+    name: ${human_devicename} Humidity
+    oversampling: 1x

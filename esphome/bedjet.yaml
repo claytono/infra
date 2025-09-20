@@ -1,0 +1,86 @@
+---
+substitutions:
+  devicename: bedjet
+  device_id: bedjet
+  human_devicename: Bed Jet
+  icon: mdi:bed
+
+packages:
+  lolin_d32_pro: !include common/device-classes/lolin_d32_pro.yaml
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  debug: !include common/debug.yaml
+
+ota:
+- platform: esphome
+  id: !extend ota_esphome
+  on_begin:
+    then:
+    - logger.log: Disconnecting clients for OTA update...
+    - switch.turn_off: bedjet_1_ble_switch
+
+esp32_ble_tracker:
+
+logger:
+  logs:
+    esp32_ble_client: ERROR
+
+# text_sensor:
+#  - platform: ble_scanner
+#    name: "BLE Devices Scanner"
+
+mqtt: !remove
+
+ble_client:
+- mac_address: 08:D1:F9:0A:B9:0A
+  id: bedjet_ble_id1
+
+switch:
+- platform: ble_client
+  ble_client_id: bedjet_ble_id1
+  name: BedJet BLE Switch
+  id: bedjet_1_ble_switch
+
+bedjet:
+- id: bedjet_1
+  ble_client_id: bedjet_ble_id1
+  time_id: homeassistant_time
+
+climate:
+- platform: bedjet
+  id: bedjet_climate_entity
+  name: ${human_devicename} Climate
+  bedjet_id: bedjet_1
+
+time:
+- platform: homeassistant
+  id: !extend homeassistant_time
+  on_time:
+  - seconds: 0
+    minutes: 0
+    hours: 19
+    then:
+    - logger.log: 7 PM reached. Checking BedJet state and uptime...
+    - if:
+        condition:
+          and:
+          - lambda: return id(bedjet_climate_entity).mode == climate::CLIMATE_MODE_OFF;
+          - lambda: return (millis() > 60000);
+        then:
+        - logger.log: BedJet is off and uptime is over 1 minute. Rebooting...
+        - climate.control:
+            id: bedjet_climate_entity
+            mode: 'OFF'
+        - delay: 1s
+        - button.press: restart_button
+        else:
+        - if:
+            condition:
+              lambda: return !(millis() > 60000);
+            then:
+            - logger.log: Uptime is less than 1 minute. Skipping reboot.
+        - if:
+            condition:
+              lambda: return id(bedjet_climate_entity).mode != climate::CLIMATE_MODE_OFF;
+            then:
+            - logger.log: BedJet is on. Skipping reboot.

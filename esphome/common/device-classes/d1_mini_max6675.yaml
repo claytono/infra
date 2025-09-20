@@ -1,0 +1,35 @@
+---
+# Wiring info
+#
+# +------------+------------+----------------+------------+-----------------+
+# | MAX6675    | Wire Color | D1 Mini Pin    | GPIO       | Function        |
+# +------------+------------+----------------+------------+-----------------+
+# | GND        | Brown      | G (GND)        | -          | Ground          |
+# | VCC        | Red        | VCC (3.3V)     | -          | 3.3V Power      |
+# | SCK        | Orange     | D5             | GPIO14     | SPI Clock (CLK) |
+# | CS         | Green      | D8             | GPIO15     | Chip Select (CS)|
+# | SO         | Yellow     | D6             | GPIO12     | SPI MISO        |
+# +------------+------------+----------------+------------+-----------------+
+esphome:
+  name: ${devicename}
+
+esp8266:
+  board: d1_mini
+
+  # Enable logging
+
+logger:
+
+spi:
+  miso_pin: D6
+  clk_pin: D5
+
+sensor:
+- platform: max6675
+  id: max6675_1
+  name: ${human_devicename} Temperature
+  cs_pin: D8
+  update_interval: 15s
+- platform: copy
+  source_id: max6675_1
+  name: ${human_devicename} Temperature 2

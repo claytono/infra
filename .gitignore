@@ -20,3 +20,6 @@ backend.tf
 kubernetes/hass/configmap.yaml
 kubernetes/resticprofile/.cache
 kubernetes/resticprofile/.tmp
+
+# ESPHome
+esphome/secrets.yaml

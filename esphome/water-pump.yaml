@@ -1,0 +1,52 @@
+---
+substitutions:
+  devicename: water-pump
+  device_id: water_pump
+  human_devicename: Water Pump
+  icon: mdi:water-pump
+
+packages:
+  device: !include common/device-classes/lolin-s3-mini.yaml
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  web: !include common/web.yaml
+
+binary_sensor:
+- platform: gpio
+  pin:
+    number: 2
+    mode: INPUT_PULLUP
+    inverted: true
+  name: ${human_devicename} Pump A Button
+  id: ${device_id}_pump_a_button
+  internal: true
+  on_press:
+    then:
+    - switch.toggle: ${device_id}_pump_a
+
+- platform: gpio
+  pin:
+    number: 6
+    mode: INPUT_PULLUP
+    inverted: true
+  name: ${human_devicename} Pump B Button
+  id: ${device_id}_pump_b_button
+  internal: true
+  on_press:
+    then:
+    - switch.toggle: ${device_id}_pump_b
+
+switch:
+- platform: gpio
+  pin:
+    number: 4
+    mode: OUTPUT
+  name: ${human_devicename} Pump A
+  id: ${device_id}_pump_a
+
+- platform: gpio
+  pin:
+    number: 5
+    mode: OUTPUT
+  name: ${human_devicename} Pump B
+  id: ${device_id}_pump_b

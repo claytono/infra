@@ -1,0 +1,11 @@
+---
+substitutions:
+  devicename: filament-dryer
+  device_id: filament_dryer
+  human_devicename: Filament Dryer
+  icon: mdi:coolant-temperature
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  d1_mini_bme280: !include common/device-classes/d1_mini_bme280.yaml

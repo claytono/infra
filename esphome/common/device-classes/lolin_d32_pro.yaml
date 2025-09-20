@@ -1,0 +1,14 @@
+---
+esphome:
+  name: ${devicename}
+
+esp32:
+  board: lolin_d32_pro
+  framework:
+    type: esp-idf
+
+psram:
+  mode: quad
+  speed: 80MHz
+
+logger:

@@ -1,0 +1,11 @@
+---
+substitutions:
+  devicename: living-room-bme280
+  device_id: living_room_bme280
+  human_devicename: Living Room BME280
+  icon: mdi:coolant-temperature
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  d1_mini_bme280: !include common/device-classes/d1_mini_bme280.yaml
