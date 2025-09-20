@@ -34,7 +34,7 @@ CACHE_VOLUME="esphome-cache-${ESPHOME_VERSION}"
 # Clean up volumes from other ESPHome versions
 cleanup_old_volumes() {
   # Get all esphome volumes
-  mapfile -t volumes < <(docker volume ls --format "{{.Name}}" | grep "^esphome-")
+  mapfile -t volumes < <(docker volume ls --format "{{.Name}}" | grep "^esphome-" || true)
 
   for volume in "${volumes[@]}"; do
     # Skip current version volumes
