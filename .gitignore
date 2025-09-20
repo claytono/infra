@@ -1,6 +1,7 @@
 *.retry
 *.swp
 .vscode/
+.direnv/
 
 # Ansible
 ansible-vault-password
