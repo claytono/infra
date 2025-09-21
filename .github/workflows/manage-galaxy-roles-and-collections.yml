@@ -40,7 +40,7 @@ jobs:
     - name: Install galaxy roles and collections
       run: |
         cd ansible
-        nix develop --command ansible-galaxy install -r requirements.yaml
+        nix develop --command ansible-galaxy install -r requirements.yml
 
     - name: Check for changes
       if: github.ref == 'refs/heads/main'
