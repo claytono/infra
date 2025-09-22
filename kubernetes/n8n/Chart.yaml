@@ -4,7 +4,7 @@ name: n8n-meta
 version: 0.1.0
 dependencies:
 - name: n8n
-  version: 1.0.14
+  version: 1.0.15
   repository: oci://8gears.container-registry.com/library
 - name: valkey
   version: 2.1.4
