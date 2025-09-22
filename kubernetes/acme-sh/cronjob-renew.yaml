@@ -1,0 +1,62 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: acme-renew
+
+spec:
+  schedule: 0 4 * * *
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: acme-sh
+            image: neilpang/acme.sh
+            command: [/bin/sh, /scripts/acme-renew.sh]
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: false
+            volumeMounts:
+            - name: acme-data
+              mountPath: /acme.sh
+            - name: acme-script
+              mountPath: /scripts
+              readOnly: true
+            - name: ssh-key
+              mountPath: /root/.ssh
+              readOnly: true
+            - name: ssh-config
+              mountPath: /etc/ssh/ssh_config
+              subPath: ssh-config
+              readOnly: true
+            resources:
+              requests:
+                memory: 64Mi
+                cpu: 100m
+              limits:
+                memory: 128Mi
+                cpu: 200m
+          volumes:
+          - name: acme-data
+            persistentVolumeClaim:
+              claimName: acme-sh-data
+          - name: acme-script
+            configMap:
+              name: acme-sh-script
+              defaultMode: 0755
+          - name: ssh-key
+            secret:
+              secretName: acme-sh-credentials
+              items:
+              - key: udmp-ssh-key
+                path: id_rsa
+                mode: 0600
+          - name: ssh-config
+            configMap:
+              name: acme-sh-ssh-config
+          restartPolicy: OnFailure

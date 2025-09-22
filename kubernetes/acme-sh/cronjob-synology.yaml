@@ -1,0 +1,78 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: acme-synology-setup
+
+spec:
+  schedule: 0 3 * * *
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: acme-sh
+            image: neilpang/acme.sh
+            command: [/bin/sh, /scripts/acme-synology.sh]
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: false
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              value: AKIAJKAXEQX5E3OWSFHQ
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: aws-secret-access-key
+            # ZeroSSL EAB credentials
+            - name: ACME_EAB_KID
+              value: 6S0Z-BQZ9KWpl7UzJlR54A
+            - name: ACME_EAB_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: zerossl-eab-secret
+            # Synology deployment credentials
+            - name: SYNO_Username
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: syno-username
+            - name: SYNO_Password
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: syno-password
+            - name: SYNO_Scheme
+              value: https
+            - name: SYNO_Hostname
+              value: fs2.oneill.net
+            - name: SYNO_Port
+              value: '5001'
+            volumeMounts:
+            - name: acme-data
+              mountPath: /acme.sh
+            - name: acme-script
+              mountPath: /scripts
+              readOnly: true
+            resources:
+              requests:
+                memory: 64Mi
+                cpu: 100m
+              limits:
+                memory: 128Mi
+                cpu: 200m
+          volumes:
+          - name: acme-data
+            persistentVolumeClaim:
+              claimName: acme-sh-data
+          - name: acme-script
+            configMap:
+              name: acme-sh-script
+              defaultMode: 0755
+          restartPolicy: OnFailure
