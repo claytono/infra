@@ -1,0 +1,31 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: acme-sh
+
+resources:
+- namespace.yaml
+- pvc.yaml
+- externalsecret.yaml
+- cronjob-synology.yaml
+- cronjob-udmp.yaml
+- cronjob-renew.yaml
+
+configMapGenerator:
+- name: acme-sh-script
+  files:
+  - acme-synology.sh
+  - acme-udmp.sh
+  - acme-renew.sh
+  options:
+    disableNameSuffixHash: true
+- name: acme-sh-ssh-config
+  files:
+  - ssh-config
+  options:
+    disableNameSuffixHash: true
+
+images:
+- name: neilpang/acme.sh
+  newTag: 3.1.0

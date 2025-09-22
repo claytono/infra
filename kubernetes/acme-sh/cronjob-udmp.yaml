@@ -1,0 +1,82 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: acme-udmp-setup
+
+spec:
+  schedule: 0 3 * * *
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: acme-sh
+            image: neilpang/acme.sh
+            command: [/bin/sh, /scripts/acme-udmp.sh]
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: false
+            env:
+                # AWS Route53 credentials (same as cert-manager)
+            - name: AWS_ACCESS_KEY_ID
+              value: AKIAJKAXEQX5E3OWSFHQ
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: aws-secret-access-key
+                # ZeroSSL EAB credentials
+            - name: ACME_EAB_KID
+              value: 6S0Z-BQZ9KWpl7UzJlR54A
+            - name: ACME_EAB_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: zerossl-eab-secret
+                # UDM Pro hostname (SSH key auth used for deployment)
+            - name: UDMP_Hostname
+              value: udmp.oneill.net
+            volumeMounts:
+            - name: acme-data
+              mountPath: /acme.sh
+            - name: acme-script
+              mountPath: /scripts
+              readOnly: true
+            - name: ssh-key
+              mountPath: /root/.ssh
+              readOnly: true
+            - name: ssh-config
+              mountPath: /etc/ssh/ssh_config
+              subPath: ssh-config
+              readOnly: true
+            resources:
+              requests:
+                memory: 64Mi
+                cpu: 100m
+              limits:
+                memory: 128Mi
+                cpu: 200m
+          volumes:
+          - name: acme-data
+            persistentVolumeClaim:
+              claimName: acme-sh-data
+          - name: acme-script
+            configMap:
+              name: acme-sh-script
+              defaultMode: 0755
+          - name: ssh-key
+            secret:
+              secretName: acme-sh-credentials
+              items:
+              - key: udmp-ssh-key
+                path: id_rsa
+                mode: 0600
+          - name: ssh-config
+            configMap:
+              name: acme-sh-ssh-config
+          restartPolicy: OnFailure
