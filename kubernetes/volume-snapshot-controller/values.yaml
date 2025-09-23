@@ -1,0 +1,4 @@
+---
+snapshot-controller:
+  # Deploy the snapshot controller
+  enabled: true

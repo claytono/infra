@@ -1,0 +1,33 @@
+---
+# Client configuration - will be managed via External Secrets
+clientInfoSecret:
+  create: false
+  name: synology-csi-client-info
+
+# Storage class configuration
+storageClasses:
+  synology-iscsi-storage:
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+    parameters:
+      dsm: fs2.oneill.net
+      fsType: ext4
+      location: /volume1
+      enableSpaceReclamation: 'true'
+
+# Enable snapshot support
+snapshots:
+  enabled: true
+
+# Override snapshotter image version to match volume-snapshot-controller v8.3.0
+images:
+  snapshotter:
+    tag: v8.2.0
+
+# Volume snapshot class configuration for snapshot support
+volumeSnapshotClasses:
+  synology-snapshotclass:
+    deletionPolicy: Delete
+    # parameters:
+    #   description: "Kubernetes CSI Snapshot"
+    #   is_locked: "false"
