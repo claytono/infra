@@ -1,5 +1,5 @@
 ---
-exclude: ^ansible/galaxy/|^kubernetes/.*/helm/
+exclude: ^ansible/galaxy/|^kubernetes/.*/helm/|^kubernetes/.*/crds/
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks

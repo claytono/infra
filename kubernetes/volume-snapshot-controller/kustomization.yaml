@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: volume-snapshot-controller
+
+resources:
+- namespace.yaml
+- crds/volumesnapshotclasses-crd.yaml
+- crds/volumesnapshots-crd.yaml
+- crds/volumesnapshotcontents-crd.yaml
+- helm/templates/deployment_controller.yaml
+- helm/templates/serviceaccount_controller.yaml
+
+commonAnnotations:
+  argoManaged: 'true'

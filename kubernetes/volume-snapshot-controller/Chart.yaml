@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+name: volume-snapshot-controller
+version: 1.0.0
+dependencies:
+- name: snapshot-controller
+  version: 4.1.0
+  repository: https://piraeus.io/helm-charts/

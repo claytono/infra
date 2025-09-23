@@ -1,0 +1,43 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: synology-csi
+
+commonAnnotations:
+  argoManaged: 'true'
+
+patchesJson6902:
+
+- target:
+    group: rbac.authorization.k8s.io
+    version: v1
+    kind: ClusterRole
+    name: synology-csi-snapshotter
+  patch: |-
+    - op: replace
+      path: /rules/2/verbs
+      value: ["create", "get", "list", "watch", "update", "delete", "patch"]
+    - op: replace
+      path: /rules/3/verbs
+      value: ["update", "patch"]
+
+- target:
+    group: apps
+    version: v1
+    kind: StatefulSet
+    name: synology-csi-controller
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: "--extra-create-metadata"
+
+resources:
+- namespace.yaml
+- externalsecret.yaml
+- helm/controller.yaml
+- helm/csidriver.yaml
+- helm/node.yaml
+- helm/storageclass.yaml
+- helm/snapshotter.yaml
+- helm/volumesnapshotclass.yaml

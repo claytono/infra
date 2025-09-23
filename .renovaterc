@@ -68,6 +68,16 @@
       "datasourceTemplate": "docker",
       "registryUrlTemplate": "https://ghcr.io",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "kubernetes/**/render"
+      ],
+      "matchStrings": [
+        "VERSION=\"(?<currentValue>[^\"]+)\"\\s*\\nGIT_URL=\"https://github.com/(?<depName>[^/]+/[^/]+)\\.git\""
+      ],
+      "datasourceTemplate": "github-tags"
     }
   ],
   "packageRules": [

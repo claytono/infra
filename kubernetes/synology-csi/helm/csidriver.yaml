@@ -1,0 +1,18 @@
+---
+# Source: synology-csi/templates/csidriver.yaml
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/instance: synology-csi
+    app.kubernetes.io/name: synology-csi
+    helm.sh/template: csidriver.yaml
+    helm.sh/chart: synology-csi-0.9.3-SNAPSHOT
+  name: csi.san.synology.com
+spec:
+  attachRequired: true # Indicates the driver requires an attach operation (TODO: ControllerPublishVolume should be implemented)
+  podInfoOnMount: true
+  volumeLifecycleModes:
+    - Persistent
