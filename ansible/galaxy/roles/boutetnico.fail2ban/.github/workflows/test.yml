@@ -1,0 +1,47 @@
+---
+name: Test ansible role
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "22 2 * * 2"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Remove pre-installed ansible
+        run: sudo apt-get remove --purge -y ansible
+
+      - name: Install dependencies
+        run: pip install ansible ansible-lint docker molecule molecule-plugins[docker] pytest-testinfra black
+
+      - name: Display versions
+        run: |
+          python -c "import sys; print(sys.version)"
+          pip --version
+          ansible --version
+          molecule --version
+
+      - name: Lint code
+        run: |
+          ansible-lint
+          black --check .
+        env:
+          PY_COLORS: "1"
+
+      - name: Run Molecule
+        run: molecule test
+        env:
+          PY_COLORS: "1"

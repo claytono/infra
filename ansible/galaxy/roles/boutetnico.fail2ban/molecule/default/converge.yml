@@ -1,0 +1,44 @@
+---
+- name: Converge
+  hosts: all
+
+  roles:
+    - role: boutetnico.fail2ban
+
+      fail2ban_configuration:
+        Definition:
+          loglevel: WARNING
+
+      fail2ban_jails:
+        DEFAULT:
+          ignoreip: 127.0.0.1/8
+        nginx-badbots:
+          enabled: 'true'
+          action: nginx-deny-host[name = nginx-http-auth, port = http, protocol = tcp]
+          port: http
+          filter: nginx-badbots
+          logpath: /var/log/nginx_error.log
+          maxretry: 5
+          findtime: 600
+
+      fail2ban_filters:
+        nginx-badbots:
+          Definition:
+            _daemon: nginx-badbots
+            failregex: |
+              ^ \[error\] \d+#\d+: .* access forbidden by rule, client: <HOST>, .*$
+                          FastCGI sent in stderr: "Primary script unknown" .*, client: <HOST>
+            ignoreregex: ''
+
+      fail2ban_actions:
+        nginx-deny-host:
+          Definition:
+            actionban: |
+              sed -i "/deny <ip>;/d" <file>
+                          echo "deny <ip>;" >> <file>
+                          systemctl reload nginx
+            actionunban: |
+              sed -i "/deny <ip>;/d" <file>
+                            systemctl reload nginx
+          Init:
+            file: /etc/nginx/hosts.deny

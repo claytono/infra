@@ -1,0 +1,50 @@
+---
+- name: Ensure dependencies are installed
+  ansible.builtin.apt:
+    name: "{{ fail2ban_dependencies }}"
+    state: present
+    update_cache: true
+
+- name: Ensure Fail2ban local configuration is set
+  ansible.builtin.template:
+    dest: /etc/fail2ban/fail2ban.local
+    group: root
+    mode: "0644"
+    owner: root
+    src: fail2ban.local.j2
+  notify: Restart Fail2ban
+
+- name: Ensure Fail2ban local jail is set
+  ansible.builtin.template:
+    dest: /etc/fail2ban/jail.local
+    group: root
+    mode: "0644"
+    owner: root
+    src: jail.local.j2
+  notify: Restart Fail2ban
+
+- name: Ensure Fail2ban filters are set
+  ansible.builtin.template:
+    dest: /etc/fail2ban/filter.d/{{ item.key }}.conf
+    group: root
+    mode: "0644"
+    owner: root
+    src: filter.conf.j2
+  loop: "{{ fail2ban_filters | dict2items }}"
+  notify: Restart Fail2ban
+
+- name: Ensure Fail2ban actions are set
+  ansible.builtin.template:
+    dest: /etc/fail2ban/action.d/{{ item.key }}.conf
+    group: root
+    mode: "0644"
+    owner: root
+    src: action.conf.j2
+  loop: "{{ fail2ban_actions | dict2items }}"
+  notify: Restart Fail2ban
+
+- name: Ensure Fail2ban is started and starts on boot
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true

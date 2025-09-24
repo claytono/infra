@@ -1,0 +1,16 @@
+---
+- name: Prepare
+  hosts: all
+
+  tasks:
+    - name: Create auth.log otherwise fail2ban won't run
+      become: true
+      ansible.builtin.file:
+        group: root
+        mode: "0644"
+        owner: root
+        path: "{{ item }}"
+        state: touch
+      loop:
+        - /var/log/auth.log
+        - /var/log/nginx_error.log

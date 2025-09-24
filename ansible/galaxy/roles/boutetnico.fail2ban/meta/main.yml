@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  role_name: fail2ban
+  namespace: boutetnico
+  author: Nicolas Boutet
+  description: Install and configure Fail2ban.
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bookworm
+        - bullseye
+  galaxy_tags:
+    - attack
+    - ban
+    - bruteforce
+    - fail2ban
+dependencies: []
