@@ -24,6 +24,8 @@ roles:
     version: "1.7.1"
   - src: geerlingguy.docker
     version: "7.5.3"
+  - src: boutetnico.fail2ban
+    version: "3.0.0"
 
 collections:
   - name: artis3n.tailscale

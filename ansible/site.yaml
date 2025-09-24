@@ -33,6 +33,8 @@
       become: true
       tags: network
       when: "manage_network | default(false) | bool"
+    - role: boutetnico.fail2ban
+      tags: fail2ban
 
 - name: User group management
   hosts: all
