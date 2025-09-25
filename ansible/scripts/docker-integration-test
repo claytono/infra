@@ -20,12 +20,54 @@ echo "Building Ansible integration test image..."
 docker build --load -t ansible-integration-test -f Dockerfile.ansible .
 
 if [[ $# -eq 0 ]]; then
-    echo "Running playbook in container (default)..."
-    # Mount the existing vault password file from the host
-    docker run --rm \
-    -v "$(pwd)/ansible/ansible-vault-password:/workspace/ansible/ansible-vault-password:ro" \
-      ansible-integration-test ansible-playbook -i inventory/test_local site.yaml
+    echo "Running playbook in systemd container..."
+    # Start container with systemd in background
+    CONTAINER_ID=$(docker run -d \
+      --privileged \
+      --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+      --cgroupns=host \
+      --hostname ansible-integration-test \
+      -v "$(pwd)/ansible/ansible-vault-password:/tmp/ansible-vault-password:ro" \
+      --entrypoint /lib/systemd/systemd \
+      ansible-integration-test)
+
+    echo "Container started: $CONTAINER_ID"
+    echo "Waiting for systemd to be ready..."
+
+    # Poll for systemd readiness (wait up to 60 seconds)
+    SYSTEMD_READY=false
+    for ((i=1; i<=60; i++)); do
+        STATUS=$(docker exec "$CONTAINER_ID" systemctl is-system-running 2>/dev/null || echo "starting")
+        if [[ "$STATUS" == "running" || "$STATUS" == "degraded" ]]; then
+            echo "Systemd is ready: $STATUS"
+            SYSTEMD_READY=true
+            break
+        fi
+        sleep 1
+    done
+    if [[ "$SYSTEMD_READY" != "true" ]]; then
+        echo "Systemd did not become ready in time"
+        docker stop "$CONTAINER_ID" > /dev/null
+        docker rm "$CONTAINER_ID" > /dev/null
+        exit 1
+    fi
+
+    # Copy vault password to workspace and execute the playbook inside the running container
+    docker exec "$CONTAINER_ID" cp /tmp/ansible-vault-password /workspace/ansible/ansible-vault-password
+    if docker exec "$CONTAINER_ID" bash -c "cd /workspace && nix develop --command bash -c 'cd ansible && ansible-playbook -i inventory/test_local site.yaml'"; then
+        EXIT_CODE=0
+    else
+        EXIT_CODE=$?
+    fi
+
+    # Clean up container
+    docker stop "$CONTAINER_ID" > /dev/null
+    docker rm "$CONTAINER_ID" > /dev/null
+
+    exit $EXIT_CODE
 else
     echo "Running in container with custom command: $*"
-    docker run --rm -it ansible-integration-test "$@"
+    docker run --rm -it \
+      --privileged \
+      ansible-integration-test "$@"
 fi

@@ -1,25 +1,27 @@
 # syntax=docker/dockerfile:1@sha256:dabfc0969b935b2080555ace70ee69a5261af8a8f1b4df97b9e7fbcf6722eddf
 
-FROM debian:bullseye-slim@sha256:6d3c63184632046054ae709964befc943ecffa140adc697ca955a10002a79c08
+# Debian 12 = bookworm
+FROM geerlingguy/docker-debian12-ansible:latest
 
-# Enable contrib, non-free, and non-free-firmware components
-RUN sed -i 's/main$/main contrib non-free non-free-firmware/' /etc/apt/sources.list
-# Install dependencies for Nix
+# Enable non-free repositories for firmware packages
+RUN sed -i 's/Components: main/Components: main non-free-firmware/' /etc/apt/sources.list.d/debian.sources
+
+# Install additional dependencies for Nix (base image already has most tools)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl \
         ca-certificates \
         git \
-        sudo \
-        bash \
-        xz-utils
+        xz-utils \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Add a non-root user for Nix with UID 9000
 RUN useradd -m -u 9000 -s /bin/bash ansible
 # Enable passwordless sudo for ansible user
 RUN echo 'ansible ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ansible && chmod 0440 /etc/sudoers.d/ansible
 
-# Install Nix (multi-user)
+# Install Nix (multi-user) as root
 RUN mkdir -m 0755 /nix && chown ansible /nix
 RUN curl -L https://install.determinate.systems/nix | \
     bash -s -- install linux --init none --no-confirm
@@ -28,7 +30,8 @@ RUN for g in $(getent group | awk -F: '/^nixbld/ {print $1}'); do \
         usermod -aG "$g" ansible; \
     done && \
     chown -R ansible /nix
-USER ansible
+
+# Stay as root for systemd, but set ansible user for environment
 ENV USER=ansible
 ENV NIX_PATH="nixpkgs=channel:nixos-unstable"
 ENV PATH="/home/ansible/.nix-profile/bin:/home/ansible/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/nix/var/nix/profiles/default/bin"
@@ -43,16 +46,18 @@ COPY --chown=ansible:ansible flake.nix flake.lock /workspace/
 # Ensure the Nix wrapper is executable before using it
 RUN chmod +x ../ansible/scripts/docker-nix-wrapper
 
-# Create a minimal inventory file for localhost and add it to tailscale_disabled group
+# Create a minimal inventory file for ansible-integration-test and add it to tailscale_disabled group
 RUN mkdir -p inventory && \
     cat > inventory/test_local <<EOF
 [local]
-localhost ansible_connection=local
+ansible-integration-test ansible_connection=local
 
 [tailscale_disabled]
-localhost
+ansible-integration-test
 EOF
 
-RUN nix develop --command true
+# Run nix develop as ansible user from workspace directory
+RUN su ansible -c 'cd /workspace && nix develop --command true'
 
-ENTRYPOINT ["../ansible/scripts/docker-nix-wrapper"]
+# Let the base image handle systemd startup
+# ENTRYPOINT ["../ansible/scripts/docker-nix-wrapper"]
