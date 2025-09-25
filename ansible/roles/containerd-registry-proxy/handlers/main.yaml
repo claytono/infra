@@ -1,0 +1,26 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: Restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted
+  become: true
+
+- name: Add proxy CA certificate to ca-certificates.conf
+  ansible.builtin.lineinfile:
+    path: /etc/ca-certificates.conf
+    line: "docker_registry_proxy.crt"
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: Update CA certificates
+
+- name: Update CA certificates
+  ansible.builtin.command: update-ca-certificates --fresh
+  become: true

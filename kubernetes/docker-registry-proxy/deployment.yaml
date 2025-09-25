@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: docker-registry-proxy
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: docker-registry-proxy
+      app.kubernetes.io/instance: docker-registry-proxy
+  template:
+    metadata:
+      name: docker-registry-proxy
+      labels:
+        app.kubernetes.io/name: docker-registry-proxy
+        app.kubernetes.io/instance: docker-registry-proxy
+    spec:
+      containers:
+      - name: docker-registry-proxy
+        image: ghcr.io/rpardini/docker-registry-proxy:0.6.5
+        ports:
+        - name: proxy
+          containerPort: 3128
+        envFrom:
+        - configMapRef:
+            name: docker-registry-proxy-config
+        volumeMounts:
+        - name: cache-volume
+          mountPath: /docker_mirror_cache
+        - name: ca-certs
+          mountPath: /ca
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: '2'
+            memory: 4Gi
+      volumes:
+      - name: cache-volume
+        persistentVolumeClaim:
+          claimName: docker-registry-proxy-cache
+      - name: ca-certs
+        persistentVolumeClaim:
+          claimName: docker-registry-proxy-ca
