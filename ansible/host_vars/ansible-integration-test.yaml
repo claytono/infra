@@ -1,9 +1,9 @@
 ---
-# Integration test exceptions for localhost
+# Integration test exceptions for ansible-integration-test
 domain: oneill.net
-hostname_manage_etc_hosts: false
 restic_sftp_client: false
 setup_upgrade: true
 resticprofile_ssh_register: false
 resticprofile_enable_scheduling: false
 setup_upgrade_update_grub: false
+hostname_manage_etc_hosts: false
