@@ -1,0 +1,35 @@
+---
+# Configure containerd to use docker-registry-proxy via HTTPS_PROXY
+- name: Create containerd systemd service.d directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/containerd.service.d
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  become: true
+
+- name: Download CA certificate from docker-registry-proxy
+  ansible.builtin.get_url:
+    url: "{{ docker_registry_proxy_url }}/ca.crt"
+    dest: /usr/share/ca-certificates/docker_registry_proxy.crt
+    mode: "0644"
+    owner: root
+    group: root
+  become: true
+  notify: Add proxy CA certificate to ca-certificates.conf
+
+- name: Configure containerd systemd service environment
+  ansible.builtin.copy:
+    content: |
+      [Service]
+      Environment="HTTPS_PROXY={{ docker_registry_proxy_url }}/"
+      Environment="HTTP_PROXY={{ docker_registry_proxy_url }}/"
+    dest: /etc/systemd/system/containerd.service.d/http-proxy.conf
+    mode: "0644"
+    owner: root
+    group: root
+  become: true
+  notify:
+    - Reload systemd
+    - Restart containerd

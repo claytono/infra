@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: docker-registry-proxy-config
+
+data:
+  REGISTRIES: quay.io ghcr.io registry.k8s.io gcr.io us-docker.pkg.dev oci.external-secrets.io
+  ENABLE_MANIFEST_CACHE: 'true'

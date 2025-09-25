@@ -96,6 +96,9 @@
   roles:
     - role: kubeadm
       tags: kubernetes
+    - role: containerd-registry-proxy
+      when: enable_docker_registry_proxy | default(false) | bool
+      tags: [kubernetes, containerd, registry-proxy]
 
 - name: Prometheus node exporter
   hosts: all
