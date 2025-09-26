@@ -1,0 +1,152 @@
+---
+# Source: spegel/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: spegel
+  namespace: spegel
+  labels:
+    app.kubernetes.io/component: spegel
+    helm.sh/chart: spegel-0.4.0
+    app.kubernetes.io/name: spegel
+    app.kubernetes.io/instance: spegel
+    app.kubernetes.io/version: "v0.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  revisionHistoryLimit: 10
+  updateStrategy:
+    {}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: spegel
+      app.kubernetes.io/name: spegel
+      app.kubernetes.io/instance: spegel
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: spegel
+        app.kubernetes.io/name: spegel
+        app.kubernetes.io/instance: spegel
+    spec:
+      serviceAccountName: spegel
+      securityContext:
+        {}
+      priorityClassName: system-node-critical
+      initContainers:
+      - name: configuration
+        image: "ghcr.io/spegel-org/spegel@sha256:a86089ae74c4f9c98ec86c366d196f7a03044c38af09e6582b0661d42a324226"
+        imagePullPolicy: IfNotPresent
+        securityContext:
+            readOnlyRootFilesystem: true
+        args:
+          - configuration
+          - --log-level=INFO
+          - --containerd-registry-config-path=/etc/containerd/certs.d
+          - --mirror-targets
+          - http://$(NODE_IP):30020
+          - http://$(NODE_IP):30021
+          - --resolve-tags=true
+          - --prepend-existing=false
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            memory: 128Mi
+        volumeMounts:
+          - name: containerd-config
+            mountPath: /etc/containerd/certs.d
+      containers:
+      - name: registry
+        image: "ghcr.io/spegel-org/spegel@sha256:a86089ae74c4f9c98ec86c366d196f7a03044c38af09e6582b0661d42a324226"
+        imagePullPolicy: IfNotPresent
+        securityContext:
+            readOnlyRootFilesystem: true
+        args:
+          - registry
+          - --log-level=INFO
+          - --mirror-resolve-retries=3
+          - --mirror-resolve-timeout=20ms
+          - --registry-addr=:5000
+          - --router-addr=:5001
+          - --metrics-addr=:9090
+          - --containerd-sock=/run/containerd/containerd.sock
+          - --containerd-namespace=k8s.io
+          - --containerd-registry-config-path=/etc/containerd/certs.d
+          - --bootstrap-kind=dns
+          - --dns-bootstrap-domain=spegel-bootstrap.spegel.svc.cluster.local.
+          - --resolve-latest-tag=true
+          - --containerd-content-path=/var/lib/containerd/io.containerd.content.v1.content
+          - --debug-web-enabled=true
+        env:
+        - name: DATA_DIR
+          value: ""
+        - name: GOMEMLIMIT
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
+              divisor: 1
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        ports:
+          - name: registry
+            containerPort: 5000
+            hostPort: 30020
+            protocol: TCP
+          - name: router
+            containerPort: 5001
+            protocol: TCP
+          - name: metrics
+            containerPort: 9090
+            protocol: TCP
+        # Startup may take a bit longer on bootsrap as Pods need to find each other.
+        # This is why the startup proben is a bit more forgiving, while hitting the endpoint more often.
+        startupProbe:
+          periodSeconds: 3
+          failureThreshold: 60
+          httpGet:
+            path: /readyz
+            port: registry
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: registry
+        volumeMounts:
+          - name: containerd-sock
+            mountPath: /run/containerd/containerd.sock
+          - name: containerd-content
+            mountPath: /var/lib/containerd/io.containerd.content.v1.content
+            readOnly: true
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            memory: 128Mi
+      volumes:
+        - name: containerd-sock
+          hostPath:
+            path: /run/containerd/containerd.sock
+            type: Socket
+        - name: containerd-content
+          hostPath:
+            path: /var/lib/containerd/io.containerd.content.v1.content
+            type: Directory
+        - name: containerd-config
+          hostPath:
+            path: /etc/containerd/certs.d
+            type: DirectoryOrCreate
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+        - effect: NoSchedule
+          operator: Exists

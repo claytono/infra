@@ -1,12 +1,4 @@
 ---
-
-# Enable docker-registry-proxy for containerd
-# Set to false when bootstrapping cluster or if proxy is unavailable
-enable_docker_registry_proxy: true
-
-# Docker registry proxy configuration (external-dns will create DNS record)
-docker_registry_proxy_url: "http://docker-proxy.k.oneill.net:3128"
-
 kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
