@@ -45,7 +45,7 @@ app-name/
 4. **Reference in Kustomize**: List rendered templates in `kustomization.yaml`
    resources
 5. **Deploy**: ArgoCD deploys the kustomized manifests (note
-   `argoManaged: 'true'` annotations)
+   `argoManaged: 'true'` annotations is set via kustomize)
 
 ### Rendering Helm Charts
 
