@@ -19,3 +19,6 @@ helm_template spegel spegel \
 
 mv tmp/*/* helm
 rm -rf tmp/
+
+# Remove post-delete hooks (not compatible with GitOps)
+rm -f helm/templates/post-delete-hook.yaml
