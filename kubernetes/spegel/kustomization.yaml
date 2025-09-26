@@ -12,7 +12,6 @@ resources:
 - helm/templates/rbac.yaml
 - helm/templates/service.yaml
 - helm/templates/daemonset.yaml
-- helm/templates/post-delete-hook.yaml
 
 labels:
 
