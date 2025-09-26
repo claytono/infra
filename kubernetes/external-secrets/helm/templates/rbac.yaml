@@ -5,10 +5,10 @@ kind: ClusterRole
 metadata:
   name: external-secrets-controller
   labels:
-    helm.sh/chart: external-secrets-0.19.2
+    helm.sh/chart: external-secrets-0.20.1
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.19.2"
+    app.kubernetes.io/version: "v0.20.1"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -66,6 +66,7 @@ rules:
     - "generators.external-secrets.io"
     resources:
     - "acraccesstokens"
+    - "cloudsmithaccesstokens"
     - "clustergenerators"
     - "ecrauthorizationtokens"
     - "fakes"
@@ -93,6 +94,13 @@ rules:
     - "get"
     - "list"
     - "watch"
+  - apiGroups:
+    - ""
+    resources:
+    - "namespaces"
+    verbs:
+    - "update"
+    - "patch"
   - apiGroups:
     - ""
     resources:
@@ -149,10 +157,10 @@ kind: ClusterRole
 metadata:
   name: external-secrets-view
   labels:
-    helm.sh/chart: external-secrets-0.19.2
+    helm.sh/chart: external-secrets-0.20.1
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.19.2"
+    app.kubernetes.io/version: "v0.20.1"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-view: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
@@ -174,6 +182,7 @@ rules:
     - "generators.external-secrets.io"
     resources:
     - "acraccesstokens"
+    - "cloudsmithaccesstokens"
     - "clustergenerators"
     - "ecrauthorizationtokens"
     - "fakes"
@@ -199,10 +208,10 @@ kind: ClusterRole
 metadata:
   name: external-secrets-edit
   labels:
-    helm.sh/chart: external-secrets-0.19.2
+    helm.sh/chart: external-secrets-0.20.1
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.19.2"
+    app.kubernetes.io/version: "v0.20.1"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
@@ -225,6 +234,7 @@ rules:
     - "generators.external-secrets.io"
     resources:
     - "acraccesstokens"
+    - "cloudsmithaccesstokens"
     - "clustergenerators"
     - "ecrauthorizationtokens"
     - "fakes"
@@ -253,10 +263,10 @@ metadata:
   name: external-secrets-servicebindings
   labels:
     servicebinding.io/controller: "true"
-    helm.sh/chart: external-secrets-0.19.2
+    helm.sh/chart: external-secrets-0.20.1
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.19.2"
+    app.kubernetes.io/version: "v0.20.1"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -275,10 +285,10 @@ kind: ClusterRoleBinding
 metadata:
   name: external-secrets-controller
   labels:
-    helm.sh/chart: external-secrets-0.19.2
+    helm.sh/chart: external-secrets-0.20.1
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.19.2"
+    app.kubernetes.io/version: "v0.20.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -296,10 +306,10 @@ metadata:
   name: external-secrets-leaderelection
   namespace: external-secrets
   labels:
-    helm.sh/chart: external-secrets-0.19.2
+    helm.sh/chart: external-secrets-0.20.1
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.19.2"
+    app.kubernetes.io/version: "v0.20.1"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -335,10 +345,10 @@ metadata:
   name: external-secrets-leaderelection
   namespace: external-secrets
   labels:
-    helm.sh/chart: external-secrets-0.19.2
+    helm.sh/chart: external-secrets-0.20.1
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.19.2"
+    app.kubernetes.io/version: "v0.20.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
