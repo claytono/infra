@@ -11,7 +11,7 @@
 
 - name: Download CA certificate from docker-registry-proxy
   ansible.builtin.get_url:
-    url: "{{ docker_registry_proxy_url }}/ca.crt"
+    url: "{{ docker_registry_proxy_ca_url }}/ca.crt"
     dest: /usr/share/ca-certificates/docker_registry_proxy.crt
     mode: "0644"
     owner: root

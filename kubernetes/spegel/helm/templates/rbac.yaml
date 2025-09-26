@@ -1,0 +1,13 @@
+---
+# Source: spegel/templates/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spegel
+  namespace: spegel
+  labels:
+    helm.sh/chart: spegel-0.4.0
+    app.kubernetes.io/name: spegel
+    app.kubernetes.io/instance: spegel
+    app.kubernetes.io/version: "v0.4.0"
+    app.kubernetes.io/managed-by: Helm
