@@ -16,7 +16,7 @@ commonAnnotations:
 
 images:
 - name: dgtlmoon/changedetection.io
-  newTag: 0.50.12@sha256:d07d899166d6f145b01c060d10a2fd71831c091d3157aaa05341da8ac2af88c2
+  newTag: 0.50.14@sha256:d8113bf66f47895d29c6935000bbac4c0f33d79588ae37d9ed6000ed328c5833
 - name: dgtlmoon/sockpuppetbrowser
   newTag: 0.0.3@sha256:23a7be698216407648b6c78fc55de0411bde550635edc30347373c86a5176fad
 
