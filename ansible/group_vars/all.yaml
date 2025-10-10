@@ -191,7 +191,7 @@ aws_secret_access_token: !vault |-
 # fail2ban configuration
 fail2ban_jails:
   DEFAULT:
-    # Exclude localhost and Tailscale network from being banned
-    ignoreip: 127.0.0.1/8 ::1 100.64.0.0/10
+    # Exclude localhost, Tailscale network, and home network from being banned
+    ignoreip: 127.0.0.1/8 ::1 100.64.0.0/10 172.19.74.0/23
   sshd:
     enabled: "true"
