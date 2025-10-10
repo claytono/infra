@@ -7,6 +7,7 @@
 ansible-vault-password
 ansible/admin.conf
 ansible/super-admin.conf
+ansible/.ansible
 .galaxy_install_info
 ansible/galaxy/**/*.png
 
