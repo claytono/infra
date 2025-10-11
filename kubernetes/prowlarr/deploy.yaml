@@ -21,7 +21,7 @@ spec:
         app: prowlarr
     spec:
       containers:
-      - name: sonarr
+      - name: prowlarr
         image: linuxserver/prowlarr
         ports:
         - containerPort: 9696

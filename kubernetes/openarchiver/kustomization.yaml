@@ -1,7 +1,6 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: openarchiver
 
 resources:
@@ -16,7 +15,7 @@ resources:
 - meilisearch-service.yaml
 - meilisearch-statefulset.yaml
 - service.yaml
-- deployment.yaml
+- deploy.yaml
 - ingress.yaml
 
 images:
