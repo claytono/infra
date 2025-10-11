@@ -1,0 +1,21 @@
+---
+# Source: democratic-csi/templates/snapshot-classes.yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: synology-iscsi-snapshots
+  annotations:
+  labels:
+    app.kubernetes.io/name: democratic-csi
+    helm.sh/chart: democratic-csi-0.15.0
+    app.kubernetes.io/instance: democratic-csi
+    app.kubernetes.io/managed-by: Helm
+driver: org.democratic-csi.synology-iscsi
+deletionPolicy: Delete
+parameters:
+
+# this loop is deeply connected to the loop for Secret creation below
+
+
+
+# this loop is deeply connected to the loop for secret parameter settings above
