@@ -3,20 +3,6 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 
 metadata:
-  name: plexmediaserver-config
-
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-
-metadata:
   name: plexmediaserver-transcode
 
 spec:
