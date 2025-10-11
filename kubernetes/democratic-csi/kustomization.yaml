@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: democratic-csi
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- externalsecret.yaml
+- helm/templates/configmap.yaml
+- helm/templates/controller-rbac.yaml
+- helm/templates/controller.yaml
+- helm/templates/driver.yaml
+- helm/templates/node-rbac.yaml
+- helm/templates/node.yaml
+- helm/templates/required.yaml
+- helm/templates/snapshot-classes.yaml
+- helm/templates/storage-classes.yaml

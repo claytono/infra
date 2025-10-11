@@ -1,0 +1,19 @@
+---
+# Source: democratic-csi/templates/driver.yaml
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: org.democratic-csi.synology-iscsi
+  labels:
+    app.kubernetes.io/name: democratic-csi
+    helm.sh/chart: democratic-csi-0.15.0
+    app.kubernetes.io/instance: democratic-csi
+    app.kubernetes.io/managed-by: Helm
+spec:
+  attachRequired: true
+  podInfoOnMount: true
+  # https://kubernetes.io/blog/2020/12/14/kubernetes-release-1.20-fsgroupchangepolicy-fsgrouppolicy/
+  #  added in Kubernetes 1.16
+  #  volumeLifecycleModes:
+  #  - Persistent
+  #  - Ephemeral

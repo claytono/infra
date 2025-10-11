@@ -1,0 +1,56 @@
+---
+# Source: democratic-csi/templates/node-rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: democratic-csi-node-sa
+  namespace: democratic-csi
+  labels:
+    app.kubernetes.io/name: democratic-csi
+    helm.sh/chart: democratic-csi-0.15.0
+    app.kubernetes.io/instance: democratic-csi
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: democratic-csi/templates/node-rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: democratic-csi-node-cr
+  labels:
+    app.kubernetes.io/name: democratic-csi
+    helm.sh/chart: democratic-csi-0.15.0
+    app.kubernetes.io/instance: democratic-csi
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Allow listing and creating CRDs
+  - apiGroups: ['apiextensions.k8s.io']
+    resources: ['customresourcedefinitions']
+    verbs: ['list', 'create']
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch", "update"]
+---
+# Source: democratic-csi/templates/node-rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: democratic-csi-node-rb
+  labels:
+    app.kubernetes.io/name: democratic-csi
+    helm.sh/chart: democratic-csi-0.15.0
+    app.kubernetes.io/instance: democratic-csi
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: democratic-csi-node-cr
+subjects:
+- kind: ServiceAccount
+  name: democratic-csi-node-sa
+  namespace: democratic-csi

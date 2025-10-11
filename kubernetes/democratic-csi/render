@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir tmp helm
+
+# Template using Chart.yaml
+# Note: --api-versions is required to enable VolumeSnapshotClass rendering
+helm_template democratic-csi democratic-csi \
+	--create-namespace \
+	--namespace democratic-csi \
+	--values values.yaml \
+	--api-versions snapshot.storage.k8s.io/v1/VolumeSnapshotClass \
+	--output-dir tmp
+
+mv tmp/*/* helm
+rmdir tmp/*
+rmdir tmp
+rm -rf helm/tests
+
+echo "democratic-csi Helm templates rendered successfully"

@@ -1,0 +1,14 @@
+---
+# Source: democratic-csi/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: democratic-csi
+  namespace: democratic-csi
+  labels:
+    app.kubernetes.io/name: democratic-csi
+    helm.sh/chart: democratic-csi-0.15.0
+    app.kubernetes.io/instance: democratic-csi
+    app.kubernetes.io/managed-by: Helm
+data:
+  extra-ca-certs: ""
