@@ -27,7 +27,7 @@ spec:
             secretName: operator-oauth
       containers:
         - name: operator
-          image: tailscale/k8s-operator:v1.88.2
+          image: tailscale/k8s-operator:v1.88.3
           imagePullPolicy: Always
           env:
             - name: OPERATOR_INITIAL_TAGS
@@ -51,7 +51,7 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /oauth/client_secret
             - name: PROXY_IMAGE
-              value: tailscale/tailscale:v1.88.2
+              value: tailscale/tailscale:v1.88.3
             - name: PROXY_TAGS
               value: tag:k8s
             - name: APISERVER_PROXY
