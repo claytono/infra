@@ -16,7 +16,7 @@ jobs:
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
 
     - name: Install Nix
-      uses: DeterminateSystems/determinate-nix-action@2b30e20d523cfa36118f26933c9ec8dcf75cc8d3  # v3
+      uses: cachix/install-nix-action@9280e7aca88deada44c930f1e2c78e21c3ae3edd  # v31
 
     - name: Update flake.lock
       uses: DeterminateSystems/update-flake-lock@v27
