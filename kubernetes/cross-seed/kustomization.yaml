@@ -13,6 +13,7 @@ resources:
 - ingress.yaml
 - pvc.yaml
 - externalsecret.yaml
+- pvc-config.yaml
 
 images:
 - name: ghcr.io/cross-seed/cross-seed

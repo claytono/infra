@@ -13,6 +13,7 @@ resources:
 - pvc.yaml
 - service.yaml
 - externalsecret.yaml
+- pvc-config.yaml
 
 images:
 - name: plexinc/pms-docker

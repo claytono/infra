@@ -14,6 +14,7 @@ resources:
 - deploy.yaml
 - service.yaml
 - ingress.yaml
+- pvc-config.yaml
 
 images:
 - name: linuxserver/sonarr

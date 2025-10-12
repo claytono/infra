@@ -35,7 +35,6 @@ resources:
 - helm/templates/webhook-service.yaml
 - helm/templates/webhook-serviceaccount.yaml
 - clusterstore.yaml
-- iscsi-external-secret.yaml
 
 commonAnnotations:
   argoManaged: 'true'

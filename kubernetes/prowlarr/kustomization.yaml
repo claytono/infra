@@ -14,6 +14,7 @@ resources:
 - deploy.yaml
 - ingress.yaml
 - service.yaml
+- pvc-config.yaml
 
 images:
 - name: linuxserver/prowlarr
