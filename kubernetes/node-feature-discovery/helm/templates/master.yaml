@@ -6,10 +6,10 @@ metadata:
   name:  node-feature-discovery-master
   namespace: node-feature-discovery
   labels:
-    helm.sh/chart: node-feature-discovery-0.17.4
+    helm.sh/chart: node-feature-discovery-0.18.1
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.17.4"
+    app.kubernetes.io/version: "v0.18.1"
     app.kubernetes.io/managed-by: Helm
     role: master
 spec:
@@ -27,8 +27,10 @@ spec:
         app.kubernetes.io/instance: node-feature-discovery
         role: master
       annotations:
-        checksum/config: a8092f8e3d6a07c49be2e0011d538335e186a40954ae9caa79ad1285b269f776
+        checksum/config: 924ac50c81b9fed45507b5951a2d9e04c9570b1b12abd717ffe70fdef8e57601
     spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      imagePullSecrets: 
       serviceAccountName: node-feature-discovery
       enableServiceLinks: false
       securityContext:
@@ -43,24 +45,25 @@ spec:
               - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-          image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.4"
+          image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.1"
           imagePullPolicy: IfNotPresent
           startupProbe:
-            grpc:
-              port: 8082
+            httpGet:
+              path: /healthz
+              port: http
             failureThreshold: 30
           livenessProbe:
-            grpc:
-              port: 8082
+            httpGet:
+              path: /healthz
+              port: http
           readinessProbe:
-            grpc:
-              port: 8082
+            httpGet:
+              path: /healthz
+              port: http
             failureThreshold: 10
           ports:
-          - containerPort: 8081
-            name: metrics
-          - containerPort: 8082
-            name: health
+          - containerPort: 8080
+            name: http
           env:
           - name: NODE_NAME
             valueFrom:
@@ -78,8 +81,7 @@ spec:
             - "-enable-leader-election"
             # Go over featureGates and add the feature-gate flag
             - "-feature-gates=NodeFeatureGroupAPI=false"
-            - "-metrics=8081"
-            - "-grpc-health=8082"
+            - "-port=8080"
           volumeMounts:
             - name: nfd-master-conf
               mountPath: "/etc/kubernetes/node-feature-discovery"
@@ -96,23 +98,12 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution:
           - preference:
               matchExpressions:
-              - key: node-role.kubernetes.io/master
-                operator: In
-                values:
-                - ""
-            weight: 1
-          - preference:
-              matchExpressions:
               - key: node-role.kubernetes.io/control-plane
                 operator: In
                 values:
                 - ""
             weight: 1
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Equal
-          value: ""
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
           operator: Equal
