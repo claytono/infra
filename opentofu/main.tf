@@ -30,6 +30,10 @@ terraform {
       source  = "goauthentik/authentik"
       version = "~> 2025.8.0"
     }
+    openai = {
+      source  = "registry.terraform.io/mkdev-me/openai"
+      version = "~> 1.1"
+    }
   }
 
   backend "s3" {
@@ -71,6 +75,10 @@ provider "tailscale" {
 
 provider "github" {
   token = local.github_token
+}
+
+provider "openai" {
+  api_key = local.openai_api_key
 }
 
 module "dns" {

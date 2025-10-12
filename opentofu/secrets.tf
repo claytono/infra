@@ -39,6 +39,12 @@ data "onepassword_item" "cachix_auth_token" {
   title = "cachix-auth-token"
 }
 
+# OpenAI admin API key from 1Password (for managing API keys)
+data "onepassword_item" "openai_admin_api" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "terraform-openai-admin-key"
+}
+
 # Clean field mapping for B2 credentials
 locals {
   b2_fields = {
@@ -68,6 +74,9 @@ locals {
 
   # GitHub token for managing repository secrets
   github_token = data.onepassword_item.github_opentofu.password
+
+  # OpenAI admin API key for managing API keys
+  openai_api_key = data.onepassword_item.openai_admin_api.password
 }
 
 # Authentik credentials from 1Password (used to configure provider)

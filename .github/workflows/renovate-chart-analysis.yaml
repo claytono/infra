@@ -42,127 +42,21 @@ jobs:
           chart-files:
             - 'kubernetes/**/Chart.yaml'
 
-    - name: Get Chart.yaml and rendered template diffs
-      if: steps.chart-changes.outputs.chart-files == 'true'
-      id: get-diffs
-      run: |
-        BASE_SHA=${{ github.event.pull_request.base.sha }}
-        HEAD_SHA=${{ github.event.pull_request.head.sha }}
-
-        echo "Collecting Chart.yaml and helm/ changes..."
-
-        # Create a comprehensive diff that includes both Chart.yaml and rendered templates
-        DIFF_CONTENT=""
-        DIFF_CONTENT+="# Chart.yaml Changes"$'\n\n'
-
-        git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r file; do
-          echo "## $file"
-          echo ""
-          echo '```diff'
-          git diff $BASE_SHA $HEAD_SHA -- "$file"
-          echo '```'
-          echo ""
-        done > /tmp/chart-changes.txt
-
-        DIFF_CONTENT+="$(cat /tmp/chart-changes.txt)"
-
-        DIFF_CONTENT+=$'\n\n'"# Rendered Helm Template Changes"$'\n\n'
-
-        # For each changed Chart.yaml, show the corresponding helm/ directory changes
-        git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r chart_file; do
-          chart_dir=$(dirname "$chart_file")
-          helm_dir="$chart_dir/helm"
-
-          if [ -d "$helm_dir" ]; then
-            echo "## Changes in $helm_dir/"
-            echo ""
-
-            # Get stats first
-            echo "### Summary of template changes:"
-            git diff --stat $BASE_SHA $HEAD_SHA -- "$helm_dir" || echo "No changes in helm/ directory"
-            echo ""
-
-            # Show a sample of actual changes (first 100 lines to avoid overwhelming the AI)
-            echo "### Sample of template diffs (first 100 lines):"
-            echo '```diff'
-            git diff $BASE_SHA $HEAD_SHA -- "$helm_dir" | head -100
-            echo '```'
-            echo ""
-          fi
-        done > /tmp/helm-changes.txt
-
-        DIFF_CONTENT+="$(cat /tmp/helm-changes.txt)"
-
-        # Save to output for the AI step (use multiline output format)
-        echo "diff-content<<EOF" >> "$GITHUB_OUTPUT"
-        echo "$DIFF_CONTENT" >> "$GITHUB_OUTPUT"
-        echo "EOF" >> "$GITHUB_OUTPUT"
-
-        # Check if we have any diffs
-        if [ -n "$DIFF_CONTENT" ]; then
-          echo "has-diffs=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "has-diffs=false" >> "$GITHUB_OUTPUT"
-        fi
-
     - name: Analyze changes with AI
-      if: steps.get-diffs.outputs.has-diffs == 'true'
+      if: steps.chart-changes.outputs.chart-files == 'true'
       id: ai-analysis
-      uses: actions/ai-inference@a1c11829223a786afe3b5663db904a3aa1eac3a2  # v2
-      with:
-        model: gpt-4o
-        prompt: |
-          You are analyzing Helm Chart changes from a Renovate dependency update pull request.
-
-          This repository uses a GitOps approach where Helm charts are pre-rendered into static YAML
-          manifests stored in helm/ directories. When Chart.yaml is updated (usually a version bump),
-          the render script regenerates all the templates in helm/, which can result in many file changes.
-
-          Your task is to determine if the changes are:
-          1. **ROUTINE** - Only version/hash updates in Chart.yaml, and the helm/ template changes are
-             only metadata updates (labels, annotations, helm chart version references) that don't
-             change the actual deployed resources or configuration.
-          2. **SIGNIFICANT** - Changes that affect what gets deployed, including:
-             - Image tag changes (new versions of deployed applications)
-             - New dependencies or removed dependencies
-             - Changes to repository URLs
-             - Structural changes to deployed resources
-             - New or removed Kubernetes resources
-             - Changes to resource configurations (replicas, limits, etc.)
-             - Breaking changes or deprecations
-             - Security-relevant changes
-
-          Respond EXACTLY in this format (include the emoji but minimal markdown):
-
-          🟢 ROUTINE
-
-          [1-2 sentences describing what changed]
-
-          OR
-
-          🔴 SIGNIFICANT
-
-          [Brief intro sentence, then list the key changes as bullet points with details]
-          - Change 1: [describe what changed and why it matters]
-          - Change 2: [describe what changed and why it matters]
-          - etc.
-
-          IMPORTANT: Do not use bold (**), italics (*), headers (#), or code blocks in your response.
-          For ROUTINE changes: 1-2 sentence plain text description.
-          For SIGNIFICANT changes: intro sentence + detailed bullet points explaining what changed and impact.
-
-          ---
-
-          Here are the changes to review:
-
-          ${{ steps.get-diffs.outputs.diff-content }}
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 scripts/analyze-chart-changes.py
 
     - name: Post analysis comment and apply labels
-      if: steps.get-diffs.outputs.has-diffs == 'true'
+      if: steps.ai-analysis.outputs.response != ''
       env:
         GH_TOKEN: ${{ github.token }}
         AI_RESPONSE: ${{ steps.ai-analysis.outputs.response }}
-        DIFF_CONTENT: ${{ steps.get-diffs.outputs.diff-content }}
+        DIFF_CONTENT: ${{ steps.ai-analysis.outputs.diff-content }}
       run: |-
         # Create comment
         {

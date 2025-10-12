@@ -203,6 +203,7 @@ spec:
     metadata:
       annotations: 
         checksum/secrets: 142519ce4ec524bde8adda3fc765d9968ce7a4b024b37b9ca1c0231899e2cefc
+        reloader.stakater.com/auto: "true"
       labels: 
         app.kubernetes.io/component: karakeep
         app.kubernetes.io/instance: karakeep
