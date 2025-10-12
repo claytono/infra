@@ -2,6 +2,7 @@
   "extends": [
     "config:best-practices"
   ],
+  "timezone": "America/New_York",
   "schedule": [
     "before 6am on monday"
   ],
@@ -22,7 +23,7 @@
     "enabled": true
   },
   "lockFileMaintenance": {
-    "enabled": false
+    "enabled": true
   },
   "customManagers": [
     {
@@ -85,6 +86,13 @@
   ],
   "packageRules": [
     {
+      "matchUpdateTypes": [
+        "lockFileMaintenance"
+      ],
+      "enabled": false,
+      "description": "Disable lockFileMaintenance globally (re-enabled per-manager below)"
+    },
+    {
       "matchDatasources": [
         "helm"
       ],
@@ -132,6 +140,10 @@
       "matchManagers": [
         "nix"
       ],
+      "matchUpdateTypes": [
+        "lockFileMaintenance"
+      ],
+      "enabled": true,
       "minimumReleaseAge": "0 days",
       "automerge": true,
       "automergeType": "pr",
@@ -139,13 +151,7 @@
         "nix",
         "automerge"
       ],
-      "lockFileMaintenance": {
-        "enabled": true,
-        "schedule": [
-          "before 6am on monday"
-        ]
-      },
-      "description": "Auto-merge Nix (flake.lock) updates if CI passes"
+      "description": "Enable and auto-merge Nix flake.lock maintenance if CI passes"
     },
     {
       "matchDatasources": [
