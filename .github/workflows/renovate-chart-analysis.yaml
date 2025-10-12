@@ -108,7 +108,7 @@ jobs:
     - name: Analyze changes with AI
       if: steps.get-diffs.outputs.has-diffs == 'true'
       id: ai-analysis
-      uses: actions/ai-inference@a1c11829223a786afe3b5663db904a3aa1eac3a2 # v2
+      uses: actions/ai-inference@a1c11829223a786afe3b5663db904a3aa1eac3a2  # v2
       with:
         model: gpt-4o
         prompt: |
@@ -142,14 +142,14 @@ jobs:
 
           🔴 SIGNIFICANT
 
-          [For significant changes, list the key changes as bullet points, one item per line with a dash]
-          - Change 1
-          - Change 2
+          [Brief intro sentence, then list the key changes as bullet points with details]
+          - Change 1: [describe what changed and why it matters]
+          - Change 2: [describe what changed and why it matters]
           - etc.
 
           IMPORTANT: Do not use bold (**), italics (*), headers (#), or code blocks in your response.
-          For ROUTINE changes: plain text description only.
-          For SIGNIFICANT changes: use bullet points (- item) to list key changes.
+          For ROUTINE changes: 1-2 sentence plain text description.
+          For SIGNIFICANT changes: intro sentence + detailed bullet points explaining what changed and impact.
 
           ---
 
@@ -157,15 +157,17 @@ jobs:
 
           ${{ steps.get-diffs.outputs.diff-content }}
 
-    - name: Post analysis comment
+    - name: Post analysis comment and apply labels
       if: steps.get-diffs.outputs.has-diffs == 'true'
       env:
         GH_TOKEN: ${{ github.token }}
+        AI_RESPONSE: ${{ steps.ai-analysis.outputs.response }}
       run: |-
+        # Create comment
         {
           echo "## 🤖 Chart.yaml Change Analysis"
           echo ""
-          cat "${{ steps.ai-analysis.outputs.response-file }}"
+          echo "$AI_RESPONSE"
           echo ""
           echo ""
           echo "---"
@@ -176,3 +178,10 @@ jobs:
         # Post or update comment
         gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md --edit-last || \
         gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md
+
+        # Determine classification and apply label
+        if echo "$AI_RESPONSE" | grep -q "ROUTINE"; then
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "helm-metadata-only" --remove-label "helm-functional-changes" || true
+        elif echo "$AI_RESPONSE" | grep -q "SIGNIFICANT"; then
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "helm-functional-changes" --remove-label "helm-metadata-only" || true
+        fi
