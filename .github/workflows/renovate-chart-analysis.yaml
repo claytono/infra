@@ -1,0 +1,166 @@
+---
+name: Analyze Chart.yaml Changes
+
+# This workflow uses AI to analyze Chart.yaml changes in Renovate PRs to determine
+# if they are significant (structural/configuration changes) or routine (version/hash updates).
+# Since this repo uses pre-rendered Helm templates, we analyze both Chart.yaml changes and
+# the resulting changes in the rendered helm/ directories.
+# It posts a comment summarizing the analysis to help reviewers understand the impact.
+
+on:
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+  models: read
+
+jobs:
+  analyze-chart-changes:
+    name: Analyze Chart Changes with AI
+    runs-on: ubuntu-latest
+    # Only run on Renovate PRs
+    if: contains(github.event.pull_request.user.login, 'renovate')
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
+      with:
+        fetch-depth: 0
+        token: ${{ github.token }}
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Check for Chart.yaml changes
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3
+      id: chart-changes
+      with:
+        filters: |
+          chart-files:
+            - 'kubernetes/**/Chart.yaml'
+
+    - name: Get Chart.yaml and rendered template diffs
+      if: steps.chart-changes.outputs.chart-files == 'true'
+      id: get-diffs
+      run: |
+        BASE_SHA=${{ github.event.pull_request.base.sha }}
+        HEAD_SHA=${{ github.event.pull_request.head.sha }}
+
+        echo "Collecting Chart.yaml and helm/ changes..."
+
+        # Create a comprehensive diff that includes both Chart.yaml and rendered templates
+        {
+          echo "# Chart.yaml Changes"
+          echo ""
+          git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r file; do
+            echo "## $file"
+            echo ""
+            echo '```diff'
+            git diff $BASE_SHA $HEAD_SHA -- "$file"
+            echo '```'
+            echo ""
+          done
+
+          echo ""
+          echo "# Rendered Helm Template Changes"
+          echo ""
+
+          # For each changed Chart.yaml, show the corresponding helm/ directory changes
+          git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r chart_file; do
+            chart_dir=$(dirname "$chart_file")
+            helm_dir="$chart_dir/helm"
+
+            if [ -d "$helm_dir" ]; then
+              echo "## Changes in $helm_dir/"
+              echo ""
+
+              # Get stats first
+              echo "### Summary of template changes:"
+              git diff --stat $BASE_SHA $HEAD_SHA -- "$helm_dir" || echo "No changes in helm/ directory"
+              echo ""
+
+              # Show a sample of actual changes (first 100 lines to avoid overwhelming the AI)
+              echo "### Sample of template diffs (first 100 lines):"
+              echo '```diff'
+              git diff $BASE_SHA $HEAD_SHA -- "$helm_dir" | head -100
+              echo '```'
+              echo ""
+            fi
+          done
+        } > /tmp/chart-diffs.txt
+
+        # Check if we have any diffs
+        if [ -s /tmp/chart-diffs.txt ]; then
+          echo "has-diffs=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has-diffs=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Analyze changes with AI
+      if: steps.get-diffs.outputs.has-diffs == 'true'
+      id: ai-analysis
+      uses: actions/ai-inference@v1
+      with:
+        model: gpt-5
+        prompt: |
+          You are analyzing Helm Chart changes from a Renovate dependency update pull request.
+
+          This repository uses a GitOps approach where Helm charts are pre-rendered into static YAML
+          manifests stored in helm/ directories. When Chart.yaml is updated (usually a version bump),
+          the render script regenerates all the templates in helm/, which can result in many file changes.
+
+          Your task is to determine if the changes are:
+          1. **ROUTINE** - Only version/hash updates in Chart.yaml, and the helm/ template changes are
+             only metadata updates (labels, annotations, helm chart version references) that don't
+             change the actual deployed resources or configuration.
+          2. **SIGNIFICANT** - Changes that affect what gets deployed, including:
+             - Image tag changes (new versions of deployed applications)
+             - New dependencies or removed dependencies
+             - Changes to repository URLs
+             - Structural changes to deployed resources
+             - New or removed Kubernetes resources
+             - Changes to resource configurations (replicas, limits, etc.)
+             - Breaking changes or deprecations
+             - Security-relevant changes
+
+          Review the following changes:
+
+          $(cat /tmp/chart-diffs.txt)
+
+          Respond EXACTLY in this format (include the emoji):
+
+          🟢 **ROUTINE**
+
+          [1-2 sentences describing what changed]
+
+          OR
+
+          🔴 **SIGNIFICANT**
+
+          [1-2 sentences describing what changed and why it needs review]
+
+          Do not include any other formatting, headers, or sections. Just the emoji, classification, and brief description.
+
+    - name: Post analysis comment
+      if: steps.get-diffs.outputs.has-diffs == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |-
+        ANALYSIS="${{ steps.ai-analysis.outputs.response }}"
+
+        # Create comment body
+        cat > /tmp/comment.md <<EOF
+        ## 🤖 Chart.yaml Change Analysis
+
+        $ANALYSIS
+
+        ---
+        *This analysis was automatically generated using AI to help reviewers understand the scope of changes.*
+        EOF
+
+        # Post or update comment
+        gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md --edit-last || \
+        gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md
