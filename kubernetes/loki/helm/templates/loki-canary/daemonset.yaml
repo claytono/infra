@@ -6,10 +6,10 @@ metadata:
   name: loki-canary
   namespace: loki
   labels:
-    helm.sh/chart: loki-6.39.0
+    helm.sh/chart: loki-6.41.1
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
-    app.kubernetes.io/version: "3.5.3"
+    app.kubernetes.io/version: "3.5.5"
     app.kubernetes.io/component: canary
 spec:
   selector:
@@ -37,7 +37,7 @@ spec:
         runAsUser: 10001
       containers:
         - name: loki-canary
-          image: docker.io/grafana/loki-canary:3.5.3
+          image: docker.io/grafana/loki-canary:3.5.5
           imagePullPolicy: IfNotPresent
           args:
             - -addr=loki-gateway.loki.svc.cluster.local.:80
