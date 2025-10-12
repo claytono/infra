@@ -6,10 +6,10 @@ metadata:
   name:  node-feature-discovery-worker
   namespace: node-feature-discovery
   labels:
-    helm.sh/chart: node-feature-discovery-0.17.4
+    helm.sh/chart: node-feature-discovery-0.18.1
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.17.4"
+    app.kubernetes.io/version: "v0.18.1"
     app.kubernetes.io/managed-by: Helm
     role: worker
 spec:
@@ -26,9 +26,10 @@ spec:
         app.kubernetes.io/instance: node-feature-discovery
         role: worker
       annotations:
-        checksum/config: 3c119fe41e55c8e322fe17a252c123d0b71bda509d659564155021dbdacf5a07
+        checksum/config: fc53878bef3fa660f083aa22ab4c074eaa2a2eb11aa2286c2c6d1652fdf86f9e
     spec:
       dnsPolicy: ClusterFirstWithHostNet
+      imagePullSecrets: 
       serviceAccountName: node-feature-discovery-worker
       securityContext:
         {}
@@ -42,15 +43,17 @@ spec:
               - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-        image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.4"
+        image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.1"
         imagePullPolicy: IfNotPresent
         livenessProbe:
-          grpc:
-            port: 8082
+          httpGet:
+            path: /healthz
+            port: http
           initialDelaySeconds: 10
         readinessProbe:
-          grpc:
-            port: 8082
+          httpGet:
+            path: /healthz
+            port: http
           initialDelaySeconds: 5
           failureThreshold: 10
         env:
@@ -77,13 +80,10 @@ spec:
         args:
         # Go over featureGate and add the feature-gate flag
         - "-feature-gates=NodeFeatureGroupAPI=false"
-        - "-metrics=8081"
-        - "-grpc-health=8082"
+        - "-port=8080"
         ports:
-          - containerPort: 8081
-            name: metrics
-          - containerPort: 8082
-            name: health
+          - containerPort: 8080
+            name: http
         volumeMounts:
         - name: host-boot
           mountPath: "/host-boot"

@@ -6,10 +6,10 @@ metadata:
   name: node-feature-discovery-gc
   namespace: node-feature-discovery
   labels:
-    helm.sh/chart: node-feature-discovery-0.17.4
+    helm.sh/chart: node-feature-discovery-0.18.1
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.17.4"
+    app.kubernetes.io/version: "v0.18.1"
     app.kubernetes.io/managed-by: Helm
     role: gc
 spec:
@@ -29,13 +29,24 @@ spec:
     spec:
       serviceAccountName: node-feature-discovery-gc
       dnsPolicy: ClusterFirstWithHostNet
+      imagePullSecrets: 
       securityContext:
         {}
       hostNetwork: false
       containers:
       - name: gc
-        image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.4"
+        image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.1"
         imagePullPolicy: "IfNotPresent"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 5
         env:
         - name: NODE_NAME
           valueFrom:
@@ -58,5 +69,5 @@ spec:
           readOnlyRootFilesystem: true
           runAsNonRoot: true
         ports:
-          - name: metrics
-            containerPort: 8081
+          - name: http
+            containerPort: 8080
