@@ -104,7 +104,7 @@ jobs:
       id: ai-analysis
       uses: actions/ai-inference@v1
       with:
-        model: gpt-5
+        model: gpt-4o
         prompt: |
           You are analyzing Helm Chart changes from a Renovate dependency update pull request.
 
