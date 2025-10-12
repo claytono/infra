@@ -6,10 +6,10 @@ metadata:
   name: node-feature-discovery-gc
   namespace: node-feature-discovery
   labels:
-    helm.sh/chart: node-feature-discovery-0.17.3
+    helm.sh/chart: node-feature-discovery-0.17.4
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.17.3"
+    app.kubernetes.io/version: "v0.17.4"
     app.kubernetes.io/managed-by: Helm
     role: gc
 spec:
@@ -34,7 +34,7 @@ spec:
       hostNetwork: false
       containers:
       - name: gc
-        image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.3"
+        image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.4"
         imagePullPolicy: "IfNotPresent"
         env:
         - name: NODE_NAME
