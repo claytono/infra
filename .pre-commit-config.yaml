@@ -39,6 +39,12 @@ repos:
     language: system
     files: ^ansible/.*$
     require_serial: true
+  - id: format-kustomization
+    name: format kustomization.yaml files
+    entry: scripts/format-kustomization
+    language: system
+    files: ^kubernetes/.*/kustomization\.ya?ml$
+    pass_filenames: true
   - id: kubeconform
     name: kubeconform manifest validation
     entry: kubernetes/scripts/kubeconform-wrapper

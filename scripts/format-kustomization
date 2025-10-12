@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+"""
+Format kustomization.yaml files with consistent blank line spacing.
+
+This script ensures kustomization.yaml files have:
+- Proper key ordering (apiVersion, kind, namespace first)
+- Consistent blank lines between sections (except apiVersion → kind)
+- Preserved comments that move with their sections
+
+This formatter runs as a pre-commit hook after yamlfix. While yamlfix handles
+general YAML formatting, this script applies kustomization-specific rules.
+"""
+
+from __future__ import annotations
+
+import argparse
+import io
+import re
+import sys
+import traceback
+from pathlib import Path
+
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
+
+TOP_ORDER = ("apiVersion", "kind", "namespace")
+# Match top-level keys (with or without values on same line).
+# Quotes in character class handle YAML keys like 'foo': or "bar":
+RE_TOP_KEY = re.compile(r"^(?P<key>[A-Za-z0-9_'\".-]+):")
+
+
+def reorder_top_level(cm: CommentedMap) -> CommentedMap:
+    """Reorder keys: apiVersion, kind, namespace first, then rest in original order."""
+    out = CommentedMap()
+    # Carry document-level (header) comment if present
+    out.ca.comment = getattr(cm.ca, "comment", None)
+
+    seen = set()
+    for k in TOP_ORDER:
+        if k in cm:
+            out[k] = cm[k]
+            # Copy comment attributes for this key
+            if hasattr(cm, "ca") and getattr(cm.ca, "items", None) and k in cm.ca.items:
+                out.ca.items[k] = cm.ca.items[k]
+            seen.add(k)
+
+    for k in cm:
+        if k in seen:
+            continue
+        out[k] = cm[k]
+        # Copy comment attributes for this key
+        if hasattr(cm, "ca") and getattr(cm.ca, "items", None) and k in cm.ca.items:
+            out.ca.items[k] = cm.ca.items[k]
+
+    return out
+
+
+def normalize_blank_lines(doc: str) -> str:
+    """
+    Normalize blank lines between top-level sections.
+
+    Rules:
+    - One blank line between sections
+    - No blank line between apiVersion and kind (tightly coupled keys)
+    - Comments move with their sections
+    """
+    lines = doc.splitlines(True)  # True preserves line endings (\n, \r\n, etc.)
+    out: list[str] = []
+    i = 0
+    last_key: str | None = None
+
+    while i < len(lines):
+        line = lines[i]
+
+        # Pass through document start
+        if line.strip() == "---":
+            out.append(line)
+            i += 1
+            continue
+
+        # Collect a block of non-indented top-level comments
+        start = i
+        while i < len(lines):
+            s = lines[i]
+            if s.lstrip().startswith("#") and not s.startswith((" ", "\t", "-")):
+                i += 1
+            else:
+                break
+
+        # Next line decides whether this is a section start
+        m = RE_TOP_KEY.match(lines[i]) if i < len(lines) else None
+        is_top_key = m is not None and not lines[i].startswith((" ", "\t", "-"))
+
+        if is_top_key and m:  # Type guard: ensure m is not None
+            curr_key = m.group("key").strip("'\"")
+
+            # Insert a single blank line between sections, except apiVersion -> kind
+            if last_key and not (last_key == "apiVersion" and curr_key == "kind"):
+                if out and out[-1] != "\n":
+                    out.append("\n")
+
+            # Emit pending top-level comments then the key line
+            out.extend(lines[start:i])
+            out.append(lines[i])
+            i += 1
+            last_key = curr_key
+            continue
+
+        # Default path: emit current line and continue
+        out.append(line)
+        i += 1
+
+    return "".join(out)
+
+
+def format_kustomization(path: Path) -> tuple[bool, bool]:
+    """
+    Format a single kustomization.yaml file.
+
+    Returns:
+        (success, changed): success is True if formatting worked,
+                           changed is True if file was modified
+    """
+    yaml = YAML(typ="rt")
+    yaml.preserve_quotes = True
+    yaml.explicit_start = True  # Ensure --- document start marker
+    yaml.width = 4096  # Avoid reflowing long lines
+
+    # Read original content
+    with path.open("r", encoding="utf-8") as f:
+        original_content = f.read()
+        f.seek(0)
+        data = yaml.load(f)
+
+    if not isinstance(data, CommentedMap):
+        print(
+            f"Error: {path} is not a mapping at the top level",
+            file=sys.stderr,
+        )
+        return (False, False)
+
+    # Reorder keys
+    data = reorder_top_level(data)
+
+    # Dump to string buffer
+    buf = io.StringIO()
+    yaml.dump(data, buf)
+
+    # Normalize blank lines
+    text = normalize_blank_lines(buf.getvalue())
+
+    # Check if content changed
+    if text == original_content:
+        return (True, False)
+
+    # Write back
+    with path.open("w", encoding="utf-8", newline="") as f:
+        f.write(text)
+
+    return (True, True)
+
+
+def main():
+    """Main entry point."""
+    ap = argparse.ArgumentParser(
+        description="Format kustomization.yaml with stable key order and spacing"
+    )
+    ap.add_argument("files", nargs="+", help="Paths to kustomization.yaml files")
+    args = ap.parse_args()
+
+    ok = True
+    any_changed = False
+
+    for name in args.files:
+        p = Path(name)
+        if not p.exists():
+            print(f"Error: {p} does not exist", file=sys.stderr)
+            ok = False
+            continue
+        try:
+            success, changed = format_kustomization(p)
+            if not success:
+                ok = False
+            elif changed:
+                any_changed = True
+                print(f"Formatted: {p}")
+        except Exception as e:
+            ok = False
+            print(f"Error formatting {p}: {e}", file=sys.stderr)
+            traceback.print_exc()
+
+    # Exit with 1 if any files were changed (pre-commit convention)
+    # or if there were errors
+    sys.exit(1 if (any_changed or not ok) else 0)
+
+
+if __name__ == "__main__":
+    main()

@@ -40,6 +40,7 @@
             (python3.withPackages (ps: with ps; [
               jinja2
               pyyaml
+              ruamel-yaml
             ]))
             skopeo
             tflint
