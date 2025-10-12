@@ -27,6 +27,8 @@ storageClasses:
   allowVolumeExpansion: true
   parameters:
     fsType: ext4
+  mountOptions:
+  - discard
 
 volumeSnapshotClasses:
 - name: synology-iscsi-snapshots
