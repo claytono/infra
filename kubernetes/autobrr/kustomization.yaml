@@ -12,6 +12,7 @@ resources:
 - service.yaml
 - ingress.yaml
 - externalsecret.yaml
+- pvc-config.yaml
 
 configMapGenerator:
 - name: autobrr-config

@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: plexmediaserver-config
+
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: synology-iscsi
+  resources:
+    requests:
+      storage: 75Gi

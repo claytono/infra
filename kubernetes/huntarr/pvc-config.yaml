@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: huntarr-config
+
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: synology-iscsi
+  resources:
+    requests:
+      storage: 25Gi
