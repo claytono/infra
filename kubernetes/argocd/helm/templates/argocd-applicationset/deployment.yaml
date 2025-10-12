@@ -6,13 +6,13 @@ metadata:
   name: argocd-applicationset-controller
   namespace: argocd
   labels:
-    helm.sh/chart: argo-cd-8.5.7
+    helm.sh/chart: argo-cd-8.6.0
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/instance: argocd
     app.kubernetes.io/component: applicationset-controller
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.1.7"
+    app.kubernetes.io/version: "v3.1.8"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -24,20 +24,20 @@ spec:
     metadata:
       annotations:
       labels:
-        helm.sh/chart: argo-cd-8.5.7
+        helm.sh/chart: argo-cd-8.6.0
         app.kubernetes.io/name: argocd-applicationset-controller
         app.kubernetes.io/instance: argocd
         app.kubernetes.io/component: applicationset-controller
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.1.7"
+        app.kubernetes.io/version: "v3.1.8"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-applicationset-controller
       automountServiceAccountToken: true
       containers:
         - name: applicationset-controller
-          image: quay.io/argoproj/argocd:v3.1.7
+          image: quay.io/argoproj/argocd:v3.1.8
           imagePullPolicy: IfNotPresent
           args:
             - /usr/local/bin/argocd-applicationset-controller
