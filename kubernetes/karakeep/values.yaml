@@ -39,6 +39,9 @@ secrets:
 
 controllers:
   karakeep:
+    pod:
+      annotations:
+        reloader.stakater.com/auto: 'true'
     containers:
       karakeep:
         env:
@@ -71,6 +74,3 @@ meilisearch:
   persistence:
     enabled: true
     size: 10Gi
-
-podAnnotations:
-  reloader.stakater.com/auto: 'true'

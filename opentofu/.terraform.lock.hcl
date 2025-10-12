@@ -182,3 +182,18 @@ provider "registry.opentofu.org/vultr/vultr" {
     "zh:ff6ffae0eed9953dd68939f484460a58670c881fb9b7d828352b142dced662f7",
   ]
 }
+
+provider "registry.terraform.io/mkdev-me/openai" {
+  version     = "1.1.1"
+  constraints = "~> 1.1"
+  hashes = [
+    "h1:o6T0Bt/hsMRT3urwMYX2p+rUdE5OrtiiKH+B8bnSB+A=",
+    "h1:wnSuwFinWx5OloHZ27b91VmYajNpEWboMxh1phQG6Sg=",
+    "zh:04b1688746ada1bf61653227d55f08d88452478f6b554dab4462e92746de725b",
+    "zh:107f7798b9556b2048eeffce6543f829c43e57336a127485fa3e8345f8d3fa11",
+    "zh:3d74d1143a58a664b61ef242dc871bc8b905730ab5eff8de8a736423898e5382",
+    "zh:4f70ef117972a695c15607d77954f483f307702766875b9f32a8b6ea6f88a381",
+    "zh:6ee0a9268635914b70ec1cba40b3b3181c51f8365b58f0cdca1177f760d3b79f",
+    "zh:77be78b52b1b3714ff071398f0b5a356dfa3868fbecdf7d7ea1f46f408c95bba",
+  ]
+}
