@@ -157,17 +157,14 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |-
-        ANALYSIS="${{ steps.ai-analysis.outputs.response }}"
-
-        # Create comment body
-        cat > /tmp/comment.md <<EOF
-        ## 🤖 Chart.yaml Change Analysis
-
-        $ANALYSIS
-
-        ---
-        *This analysis was automatically generated using AI to help reviewers understand the scope of changes.*
-        EOF
+        {
+          echo "## 🤖 Chart.yaml Change Analysis"
+          echo ""
+          cat "${{ steps.ai-analysis.outputs.response-file }}"
+          echo ""
+          echo "---"
+          echo "*This analysis was automatically generated using AI to help reviewers understand the scope of changes.*"
+        } > /tmp/comment.md
 
         # Post or update comment
         gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md --edit-last || \
