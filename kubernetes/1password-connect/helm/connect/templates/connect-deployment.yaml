@@ -7,10 +7,10 @@ metadata:
   namespace: 1password
   labels:
     app.kubernetes.io/component: connect
-    helm.sh/chart: connect-2.0.3
+    helm.sh/chart: connect-2.0.5
     app.kubernetes.io/name: connect
     app.kubernetes.io/instance: connect
-    app.kubernetes.io/version: "1.7.3"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
     reloader.stakater.com/auto: "true"
@@ -23,7 +23,7 @@ spec:
     metadata:
       labels:
         app: onepassword-connect
-        version: "1.7.3"
+        version: "1.8.1"
         app.kubernetes.io/component: connect
     spec:
       volumes:
@@ -37,7 +37,7 @@ spec:
         []
       containers:
         - name: connect-api
-          image: 1password/connect-api:1.7.3
+          image: 1password/connect-api:1.8.1
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 999
@@ -82,7 +82,7 @@ spec:
             - mountPath: /home/opuser/.op/data
               name: shared-data
         - name: connect-sync
-          image: 1password/connect-sync:1.7.3
+          image: 1password/connect-sync:1.8.1
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 999
