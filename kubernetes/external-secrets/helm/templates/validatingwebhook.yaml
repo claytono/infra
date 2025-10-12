@@ -6,10 +6,10 @@ metadata:
   name: secretstore-validate
   labels:
     
-    helm.sh/chart: external-secrets-0.20.1
+    helm.sh/chart: external-secrets-0.20.2
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.20.1"
+    app.kubernetes.io/version: "v0.20.2"
     app.kubernetes.io/managed-by: Helm
     external-secrets.io/component: webhook
   annotations:
@@ -54,10 +54,10 @@ metadata:
   name: externalsecret-validate
   labels:
     
-    helm.sh/chart: external-secrets-0.20.1
+    helm.sh/chart: external-secrets-0.20.2
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.20.1"
+    app.kubernetes.io/version: "v0.20.2"
     app.kubernetes.io/managed-by: Helm
     external-secrets.io/component: webhook
   annotations:
