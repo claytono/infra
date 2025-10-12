@@ -18,6 +18,8 @@ parameters:
   fsType: "ext4"
 
 # this loop is deeply connected to the loop for Secret creation below
+mountOptions:
+- discard
 
 
 # this loop is deeply connected to the loop for secret parameter settings above
