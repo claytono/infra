@@ -6,10 +6,10 @@ metadata:
   name:  node-feature-discovery-worker
   namespace: node-feature-discovery
   labels:
-    helm.sh/chart: node-feature-discovery-0.17.3
+    helm.sh/chart: node-feature-discovery-0.17.4
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.17.3"
+    app.kubernetes.io/version: "v0.17.4"
     app.kubernetes.io/managed-by: Helm
     role: worker
 spec:
@@ -26,7 +26,7 @@ spec:
         app.kubernetes.io/instance: node-feature-discovery
         role: worker
       annotations:
-        checksum/config: e5d2bbbc0c8bac1980ecb41a66a198286924aab3971251bb02db0eb94ab38fc0
+        checksum/config: 3c119fe41e55c8e322fe17a252c123d0b71bda509d659564155021dbdacf5a07
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: node-feature-discovery-worker
@@ -42,7 +42,7 @@ spec:
               - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-        image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.3"
+        image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.4"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           grpc:

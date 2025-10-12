@@ -6,10 +6,10 @@ metadata:
   name:  node-feature-discovery-master
   namespace: node-feature-discovery
   labels:
-    helm.sh/chart: node-feature-discovery-0.17.3
+    helm.sh/chart: node-feature-discovery-0.17.4
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.17.3"
+    app.kubernetes.io/version: "v0.17.4"
     app.kubernetes.io/managed-by: Helm
     role: master
 spec:
@@ -27,7 +27,7 @@ spec:
         app.kubernetes.io/instance: node-feature-discovery
         role: master
       annotations:
-        checksum/config: 8498990861054deb5ed87fd3936a6063af4d6ba2536a05bfb34b5228593e57fc
+        checksum/config: a8092f8e3d6a07c49be2e0011d538335e186a40954ae9caa79ad1285b269f776
     spec:
       serviceAccountName: node-feature-discovery
       enableServiceLinks: false
@@ -43,7 +43,7 @@ spec:
               - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-          image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.3"
+          image: "registry.k8s.io/nfd/node-feature-discovery:v0.17.4"
           imagePullPolicy: IfNotPresent
           startupProbe:
             grpc:
