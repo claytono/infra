@@ -6,10 +6,10 @@ metadata:
   name: loki
   namespace: loki
   labels:
-    helm.sh/chart: loki-6.39.0
+    helm.sh/chart: loki-6.41.1
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
-    app.kubernetes.io/version: "3.5.3"
+    app.kubernetes.io/version: "3.5.5"
     app.kubernetes.io/component: single-binary
     app.kubernetes.io/part-of: memberlist
 spec:
@@ -55,7 +55,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: loki
-          image: docker.io/grafana/loki:3.5.3
+          image: docker.io/grafana/loki:3.5.5
           imagePullPolicy: IfNotPresent
           args:
             - -config.file=/etc/loki/config/config.yaml
