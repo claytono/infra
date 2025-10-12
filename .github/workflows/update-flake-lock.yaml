@@ -1,0 +1,35 @@
+---
+name: Update Nix Flake Lock
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 5am UTC Monday = midnight ET Monday (matches Renovate schedule)
+  - cron: 0 5 * * 1
+
+jobs:
+  update-flake-lock:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
+
+    - name: Install Nix
+      uses: DeterminateSystems/determinate-nix-action@2b30e20d523cfa36118f26933c9ec8dcf75cc8d3  # v3
+
+    - name: Update flake.lock
+      uses: DeterminateSystems/update-flake-lock@v27
+      id: update-flake-lock
+      with:
+        token: ${{ secrets.PAT }}
+        pr-title: Update Nix flake inputs
+        pr-labels: |-
+          nix
+          automerge
+
+    - name: Enable automerge
+      if: steps.update-flake-lock.outputs.pull-request-number != ''
+      run: gh pr merge --auto --rebase "${{ steps.update-flake-lock.outputs.pull-request-number }}"
+      env:
+        GH_TOKEN: ${{ secrets.PAT }}

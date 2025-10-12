@@ -19,9 +19,6 @@
   "pre-commit": {
     "enabled": true
   },
-  "nix": {
-    "enabled": true
-  },
   "lockFileMaintenance": {
     "enabled": true
   },
@@ -135,23 +132,6 @@
         "automerge"
       ],
       "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
-    },
-    {
-      "matchManagers": [
-        "nix"
-      ],
-      "matchUpdateTypes": [
-        "lockFileMaintenance"
-      ],
-      "enabled": true,
-      "minimumReleaseAge": "0 days",
-      "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "nix",
-        "automerge"
-      ],
-      "description": "Enable and auto-merge Nix flake.lock maintenance if CI passes"
     },
     {
       "matchDatasources": [
