@@ -21,6 +21,9 @@
   "nix": {
     "enabled": true
   },
+  "lockFileMaintenance": {
+    "enabled": false
+  },
   "customManagers": [
     {
       "customType": "regex",
@@ -136,6 +139,12 @@
         "nix",
         "automerge"
       ],
+      "lockFileMaintenance": {
+        "enabled": true,
+        "schedule": [
+          "before 6am on monday"
+        ]
+      },
       "description": "Auto-merge Nix (flake.lock) updates if CI passes"
     },
     {
