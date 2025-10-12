@@ -7,13 +7,6 @@ on:
     paths: [kubernetes/**]
   workflow_dispatch:
 
-permissions:
-  contents: read
-
-concurrency:
-  group: argocd-production-deploy
-  cancel-in-progress: false
-
 jobs:
   production-deploy:
     runs-on: ubuntu-latest
@@ -22,6 +15,9 @@ jobs:
       ARGOCD_OPTS: --grpc-web
 
     steps:
+    - name: Wait for previous deployments
+      uses: softprops/turnstyle@9d692f15fa9f84928799bccac2dba6565e024bdf  # v3.2.0
+
     - name: Checkout code
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
       with:
