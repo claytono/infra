@@ -52,48 +52,54 @@ jobs:
         echo "Collecting Chart.yaml and helm/ changes..."
 
         # Create a comprehensive diff that includes both Chart.yaml and rendered templates
-        {
-          echo "# Chart.yaml Changes"
+        DIFF_CONTENT=""
+        DIFF_CONTENT+="# Chart.yaml Changes"$'\n\n'
+
+        git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r file; do
+          echo "## $file"
           echo ""
-          git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r file; do
-            echo "## $file"
+          echo '```diff'
+          git diff $BASE_SHA $HEAD_SHA -- "$file"
+          echo '```'
+          echo ""
+        done > /tmp/chart-changes.txt
+
+        DIFF_CONTENT+="$(cat /tmp/chart-changes.txt)"
+
+        DIFF_CONTENT+=$'\n\n'"# Rendered Helm Template Changes"$'\n\n'
+
+        # For each changed Chart.yaml, show the corresponding helm/ directory changes
+        git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r chart_file; do
+          chart_dir=$(dirname "$chart_file")
+          helm_dir="$chart_dir/helm"
+
+          if [ -d "$helm_dir" ]; then
+            echo "## Changes in $helm_dir/"
             echo ""
+
+            # Get stats first
+            echo "### Summary of template changes:"
+            git diff --stat $BASE_SHA $HEAD_SHA -- "$helm_dir" || echo "No changes in helm/ directory"
+            echo ""
+
+            # Show a sample of actual changes (first 100 lines to avoid overwhelming the AI)
+            echo "### Sample of template diffs (first 100 lines):"
             echo '```diff'
-            git diff $BASE_SHA $HEAD_SHA -- "$file"
+            git diff $BASE_SHA $HEAD_SHA -- "$helm_dir" | head -100
             echo '```'
             echo ""
-          done
+          fi
+        done > /tmp/helm-changes.txt
 
-          echo ""
-          echo "# Rendered Helm Template Changes"
-          echo ""
+        DIFF_CONTENT+="$(cat /tmp/helm-changes.txt)"
 
-          # For each changed Chart.yaml, show the corresponding helm/ directory changes
-          git diff --name-only $BASE_SHA $HEAD_SHA | grep 'Chart.yaml$' | while read -r chart_file; do
-            chart_dir=$(dirname "$chart_file")
-            helm_dir="$chart_dir/helm"
-
-            if [ -d "$helm_dir" ]; then
-              echo "## Changes in $helm_dir/"
-              echo ""
-
-              # Get stats first
-              echo "### Summary of template changes:"
-              git diff --stat $BASE_SHA $HEAD_SHA -- "$helm_dir" || echo "No changes in helm/ directory"
-              echo ""
-
-              # Show a sample of actual changes (first 100 lines to avoid overwhelming the AI)
-              echo "### Sample of template diffs (first 100 lines):"
-              echo '```diff'
-              git diff $BASE_SHA $HEAD_SHA -- "$helm_dir" | head -100
-              echo '```'
-              echo ""
-            fi
-          done
-        } > /tmp/chart-diffs.txt
+        # Save to output for the AI step (use multiline output format)
+        echo "diff-content<<EOF" >> "$GITHUB_OUTPUT"
+        echo "$DIFF_CONTENT" >> "$GITHUB_OUTPUT"
+        echo "EOF" >> "$GITHUB_OUTPUT"
 
         # Check if we have any diffs
-        if [ -s /tmp/chart-diffs.txt ]; then
+        if [ -n "$DIFF_CONTENT" ]; then
           echo "has-diffs=true" >> "$GITHUB_OUTPUT"
         else
           echo "has-diffs=false" >> "$GITHUB_OUTPUT"
@@ -126,10 +132,6 @@ jobs:
              - Breaking changes or deprecations
              - Security-relevant changes
 
-          Review the following changes:
-
-          $(cat /tmp/chart-diffs.txt)
-
           Respond EXACTLY in this format (include the emoji):
 
           🟢 **ROUTINE**
@@ -143,6 +145,12 @@ jobs:
           [1-2 sentences describing what changed and why it needs review]
 
           Do not include any other formatting, headers, or sections. Just the emoji, classification, and brief description.
+
+          ---
+
+          Here are the changes to review:
+
+          ${{ steps.get-diffs.outputs.diff-content }}
 
     - name: Post analysis comment
       if: steps.get-diffs.outputs.has-diffs == 'true'
