@@ -18,7 +18,7 @@ resources:
 
 images:
 - name: linuxserver/bazarr
-  newTag: 1.5.2@sha256:e1f05f60dada5f7bc83c52037e222a34c26ad04339c22ea685de680ddcd58487
+  newTag: 1.5.3@sha256:005f97fcab0fd7402cd7ff3c09f5ff4da4c63ca51be487e90d5c4dc8a8f85a45
 
 labels:
 
