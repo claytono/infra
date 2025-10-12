@@ -162,6 +162,7 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         AI_RESPONSE: ${{ steps.ai-analysis.outputs.response }}
+        DIFF_CONTENT: ${{ steps.get-diffs.outputs.diff-content }}
       run: |-
         # Create comment
         {
@@ -169,6 +170,13 @@ jobs:
           echo ""
           echo "$AI_RESPONSE"
           echo ""
+
+          # For ROUTINE changes, include the diff formatted as a diff block
+          if echo "$AI_RESPONSE" | grep -q "ROUTINE"; then
+            echo ""
+            echo "$DIFF_CONTENT"
+          fi
+
           echo ""
           echo "---"
           echo ""
@@ -176,12 +184,13 @@ jobs:
         } > /tmp/comment.md
 
         # Post or update comment
-        gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md --edit-last || \
-        gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md
+        if ! gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md --edit-last; then
+          gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md
+        fi
 
         # Determine classification and apply label
         if echo "$AI_RESPONSE" | grep -q "ROUTINE"; then
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "helm-metadata-only" --remove-label "helm-functional-changes" || true
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "helm-metadata-only" --remove-label "helm-functional-changes"
         elif echo "$AI_RESPONSE" | grep -q "SIGNIFICANT"; then
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "helm-functional-changes" --remove-label "helm-metadata-only" || true
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "helm-functional-changes" --remove-label "helm-metadata-only"
         fi
