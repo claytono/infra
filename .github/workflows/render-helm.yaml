@@ -143,8 +143,45 @@ jobs:
           chart-files:
             - 'kubernetes/**/Chart.yaml'
 
-    - name: Analyze changes with AI
+    - name: Check for existing analysis
       if: steps.chart-changes.outputs.chart-files == 'true'
+      id: check-existing
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Run script to get diff hash (without OpenAI key so it fails before AI call)
+        TEMP_OUTPUT=$(mktemp)
+        python3 scripts/analyze-chart-changes.py --output-file "$TEMP_OUTPUT" 2>/dev/null || true
+
+        DIFF_HASH=$(grep "^diff-hash=" "$TEMP_OUTPUT" 2>/dev/null | cut -d= -f2 || echo "")
+        rm -f "$TEMP_OUTPUT"
+
+        if [ -z "$DIFF_HASH" ]; then
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "Could not calculate diff hash. Running AI evaluation."
+          exit 0
+        fi
+
+        # Check if comment with this hash already exists
+        EXISTING_COMMENT=$(gh pr view ${{ github.event.pull_request.number }} --json comments --jq '.comments[] | select(.author.login == "github-actions") | select(.body | contains("<!-- diff-hash:")) | .body' | head -1 || echo "")
+
+        if [ -n "$EXISTING_COMMENT" ]; then
+          EXISTING_HASH=$(echo "$EXISTING_COMMENT" | grep -o "<!-- diff-hash:[^ ]*" | cut -d: -f2)
+          if [ "$EXISTING_HASH" = "$DIFF_HASH" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Found existing analysis for this diff (hash: $DIFF_HASH). Skipping AI evaluation."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Diff has changed (old hash: $EXISTING_HASH, new hash: $DIFF_HASH). Running AI evaluation."
+          fi
+        else
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "No existing analysis found. Running AI evaluation."
+        fi
+
+    - name: Analyze changes with AI
+      if: steps.chart-changes.outputs.chart-files == 'true' && steps.check-existing.outputs.skip
+        != 'true'
       id: ai-analysis
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -158,9 +195,11 @@ jobs:
         GH_TOKEN: ${{ github.token }}
         AI_RESPONSE: ${{ steps.ai-analysis.outputs.response }}
         DIFF_CONTENT: ${{ steps.ai-analysis.outputs.diff-content }}
+        DIFF_HASH: ${{ steps.ai-analysis.outputs.diff-hash }}
       run: |-
         # Create comment
         {
+          echo "<!-- diff-hash:$DIFF_HASH -->"
           echo "## 🤖 Chart.yaml Change Analysis"
           echo ""
           echo "$AI_RESPONSE"

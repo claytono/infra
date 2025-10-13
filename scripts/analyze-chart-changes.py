@@ -9,6 +9,7 @@ Can be run in GitHub Actions or standalone for testing.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -16,7 +17,7 @@ import sys
 import time
 import urllib.request
 import urllib.error
-from typing import Optional
+from typing import Optional, Tuple
 
 
 def exponential_backoff_retry(
@@ -53,7 +54,7 @@ def exponential_backoff_retry(
             time.sleep(wait_time)
 
 
-def get_chart_diffs(pr_number: Optional[int] = None) -> str:
+def get_chart_diffs(pr_number: Optional[int] = None) -> Tuple[str, str]:
     """
     Get diffs for Chart.yaml files and corresponding helm/ directories.
 
@@ -61,7 +62,7 @@ def get_chart_diffs(pr_number: Optional[int] = None) -> str:
         pr_number: PR number to get diffs for (optional, for standalone mode)
 
     Returns:
-        Formatted diff content with Chart.yaml and helm/ changes
+        Tuple of (formatted diff content, diff hash)
     """
     # Get full diff using gh pr diff
     cmd = ["gh", "pr", "diff"]
@@ -76,6 +77,12 @@ def get_chart_diffs(pr_number: Optional[int] = None) -> str:
     )
 
     full_diff = result.stdout
+
+    # Calculate hash of diff content excluding index lines (which change with git hashes)
+    diff_for_hash = "\n".join(
+        line for line in full_diff.splitlines() if not line.startswith("index ")
+    )
+    diff_hash = hashlib.sha256(diff_for_hash.encode()).hexdigest()
 
     # Parse the diff to extract Chart.yaml and helm/ changes
     diff_content = "# Chart.yaml Changes\n\n"
@@ -140,7 +147,7 @@ def get_chart_diffs(pr_number: Optional[int] = None) -> str:
         diff_content += "\n".join(sample_lines)
         diff_content += "\n```\n\n"
 
-    return diff_content
+    return diff_content, diff_hash
 
 
 def get_openai_api_key() -> str:
@@ -315,7 +322,7 @@ def main():
 
     # Get diffs
     print("Collecting Chart.yaml and helm/ changes...", file=sys.stderr)
-    diff_content = get_chart_diffs(args.pr)
+    diff_content, diff_hash = get_chart_diffs(args.pr)
 
     if (
         not diff_content.strip()
@@ -341,6 +348,7 @@ def main():
             f.write("diff-content<<EOF\n")
             f.write(diff_content)
             f.write("\nEOF\n")
+            f.write(f"diff-hash={diff_hash}\n")
         print("Analysis complete. Results written to output file.", file=sys.stderr)
     else:
         # Standalone output
