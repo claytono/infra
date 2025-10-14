@@ -23,7 +23,6 @@ node:
 storageClasses:
 - name: synology-iscsi
   reclaimPolicy: Delete
-  volumeBindingMode: WaitForFirstConsumer
   allowVolumeExpansion: true
   parameters:
     fsType: ext4

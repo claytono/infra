@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: network-storage-benchmark-nfs-slow
+
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: nfs-slow
+  resources:
+    requests:
+      storage: 80Gi

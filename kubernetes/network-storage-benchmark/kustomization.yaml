@@ -1,0 +1,40 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: network-storage-benchmark
+
+resources:
+- namespace.yaml
+- pvc-iscsi.yaml
+- pvc-nfs.yaml
+- pvc-nfs-slow.yaml
+- pvc-results.yaml
+
+# Network and storage benchmark resources are deployed by run-benchmark.sh
+
+configMapGenerator:
+- name: fio-jobs
+  options:
+    disableNameSuffixHash: true
+  files:
+  - seq-read.fio=fio-jobs/seq-read.fio
+  - seq-write.fio=fio-jobs/seq-write.fio
+  - rand-4k-read.fio=fio-jobs/rand-4k-read.fio
+  - rand-4k-write.fio=fio-jobs/rand-4k-write.fio
+  - mixed-rw.fio=fio-jobs/mixed-rw.fio
+
+- name: test-runner
+  options:
+    disableNameSuffixHash: true
+  files:
+  - run-storage-tests.py=scripts/run-storage-tests.py
+  - cleanup-volume.sh=scripts/cleanup-volume.sh
+
+- name: network-test
+  options:
+    disableNameSuffixHash: true
+  files:
+  - parse-results.py=scripts/parse-results.py
+  - run-iperf-server.sh=scripts/run-iperf-server.sh
+  - run-iperf-client.sh=scripts/run-iperf-client.sh

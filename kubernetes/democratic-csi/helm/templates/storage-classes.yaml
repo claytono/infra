@@ -12,7 +12,7 @@ metadata:
 provisioner: org.democratic-csi.synology-iscsi
 reclaimPolicy: Delete
 allowVolumeExpansion: true
-volumeBindingMode: WaitForFirstConsumer
+volumeBindingMode: 
 
 parameters:
   fsType: "ext4"

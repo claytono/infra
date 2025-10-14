@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: Pod
+
+metadata:
+  name: {{ pod_name }}
+  labels:
+    app: results-copy
+
+spec:
+  restartPolicy: Never
+  containers:
+  - name: results-copy
+    image: alpine:3.18
+    command: [sleep, infinity]
+    volumeMounts:
+    - name: results
+      mountPath: /results
+  volumes:
+  - name: results
+    persistentVolumeClaim:
+      claimName: network-storage-benchmark-results
