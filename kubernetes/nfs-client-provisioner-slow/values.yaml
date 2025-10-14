@@ -1,0 +1,18 @@
+---
+fullnameOverride: nfs-subdir-external-provisioner-slow
+
+image:
+  tag: v4.0.2
+
+nfs:
+  server: fs2.oneill.net
+  path: /volume2/k8s-pv-slow
+  volumeName: nfs-client-root-slow
+
+storageClass:
+  name: nfs-slow
+  provisionerName: nfs-slow
+  defaultClass: false
+  archiveOnDelete: false
+  onDelete: retain
+  pathPattern: ${.PVC.namespace}-${.PVC.name}

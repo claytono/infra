@@ -1,0 +1,62 @@
+---
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: network-benchmark
+
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400  # Keep job for 24 hours after completion
+  template:
+    metadata:
+      labels:
+        app: network-benchmark
+    spec:
+      restartPolicy: Never
+      priorityClassName: system-cluster-critical
+
+      # Pin to specific source node
+      nodeSelector:
+        kubernetes.io/hostname: {{ source_node }}
+
+      # Allow scheduling on control plane nodes (k1)
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+
+      containers:
+      - name: iperf-client
+        image: alpine:3.18
+        command: [/bin/sh, -c]
+        args:
+        - |
+          apk add --no-cache iperf3 python3 py3-pip
+          echo "Starting iperf3 client tests"
+          /bin/sh /scripts/run-iperf-client.sh
+        env:
+        - name: SERVER_HOST
+          value: iperf-server.network-storage-benchmark.svc.cluster.local
+        - name: OUTPUT_DIR
+          value: /results
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: DEST_NODE
+          value: {{ dest_node }}
+        volumeMounts:
+        - name: results
+          mountPath: /results
+        - name: network-test
+          mountPath: /scripts
+
+      volumes:
+      - name: results
+        persistentVolumeClaim:
+          claimName: network-storage-benchmark-results
+      - name: network-test
+        configMap:
+          name: network-test
+          defaultMode: 0755

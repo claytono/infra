@@ -1,0 +1,17 @@
+[global]
+directory=/mnt/storage
+filename_format=data.$filenum
+nrfiles=4
+filesize=8G
+unlink=0
+fallocate=1
+file_service_type=sequential
+
+[seq-write]
+rw=write
+bs=1M
+iodepth=32
+direct=1
+ioengine=libaio
+time_based=1
+runtime=180

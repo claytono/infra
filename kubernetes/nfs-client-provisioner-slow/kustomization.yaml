@@ -1,0 +1,25 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: nfs-client-provisioner-slow
+
+resources:
+- namespace.yaml
+- helm/templates/storageclass.yaml
+- helm/templates/role.yaml
+- helm/templates/rolebinding.yaml
+- helm/templates/serviceaccount.yaml
+- helm/templates/clusterrole.yaml
+- helm/templates/clusterrolebinding.yaml
+- helm/templates/deployment.yaml
+
+commonAnnotations:
+  argoManaged: 'true'
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: nfs-client-provisioner-slow
+    app.kubernetes.io/instance: nfs-client-provisioner-slow
+  includeSelectors: true
