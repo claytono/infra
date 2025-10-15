@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- deploy.yaml
+- service.yaml
+- ingress.yaml
+- externalsecret.yaml
+- pvc-config.yaml
+
+images:
+- name: ghcr.io/autobrr/qui
+  newTag: latest
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: qui
+    app.kubernetes.io/instance: qui
+  includeSelectors: true

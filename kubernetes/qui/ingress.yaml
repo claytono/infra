@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: qui
+  annotations:
+    ak-type: oidc
+    ak-oidc-callback: /api/auth/oidc/callback
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: qui
+    gethomepage.dev/description: qBittorrent Web UI
+    gethomepage.dev/group: Downloaders
+    gethomepage.dev/icon: qbittorrent.png
+
+spec:
+  tls:
+  - hosts:
+    - qui.k.oneill.net
+    secretName: qui-tls
+  rules:
+  - host: qui.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: qui
+            port:
+              number: 7476
+  ingressClassName: nginx
