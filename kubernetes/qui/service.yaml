@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: qui
+  labels:
+    app: qui
+
+spec:
+  ports:
+  - port: 7476
+    targetPort: 7476
+    protocol: TCP
+    name: http
+  selector:
+    app: qui
