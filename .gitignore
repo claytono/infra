@@ -24,6 +24,9 @@ kubernetes/resticprofile/.cache
 kubernetes/resticprofile/.tmp
 kubernetes/network-storage-benchmark/results/
 
+# Python
+__pycache__/
+
 # ESPHome
 esphome/secrets.yaml
 .DS_Store
