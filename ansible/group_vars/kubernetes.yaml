@@ -12,6 +12,11 @@ kubectl_version: "1.32.8-1.1"
 cri_tools_version: "1.32.0-1.1"
 kubernetes_cni_version: "1.6.0-1.1"
 
+# Kubernetes repository versions to maintain (current + previous for rollback)
+kubernetes_repo_versions:
+  - "1.32" # Current
+  - "1.31" # Previous
+
 kubernetes_master: "k1.oneill.net"
 
 kubeadm_bootstrap_token: !vault |
