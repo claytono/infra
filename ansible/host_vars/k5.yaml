@@ -1,5 +1,6 @@
 ---
 manage_network: true
+tailscale_args: --accept-dns=false
 interfaces_bond_interfaces:
   - device: bond0
     bond_slaves: [enp2s0f0, enp2s0f1]

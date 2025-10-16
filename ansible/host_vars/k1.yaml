@@ -1,0 +1,2 @@
+---
+tailscale_args: --accept-dns=false
