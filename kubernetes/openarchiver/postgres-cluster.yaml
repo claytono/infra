@@ -9,6 +9,7 @@ metadata:
 spec:
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:17.6-standard-bookworm@sha256:8f4e09a218ba49c8e719cd7e77512f0b2a3ad7d2a6c2225cf2901bf677b482f3
+  enablePDB: false
 
   storage:
     size: 20Gi
