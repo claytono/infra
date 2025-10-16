@@ -79,11 +79,43 @@
     dest: "/etc/apt/trusted.gpg.d/kubernetes-apt-keyring.gpg"
     mode: "0644"
 
-- name: "Add Kubernetes APT repo"
+- name: "Remove old unversioned Kubernetes sources file"
+  ansible.builtin.file:
+    path: "/etc/apt/sources.list.d/kubernetes.list"
+    state: absent
+
+- name: "Find existing Kubernetes APT source files"
+  ansible.builtin.find:
+    paths: /etc/apt/sources.list.d/
+    patterns: "kubernetes-v*.list"
+  register: kubeadm_existing_repo_files
+
+- name: "Extract version numbers from existing files"
+  ansible.builtin.set_fact:
+    kubeadm_existing_versions: "{{ kubeadm_existing_repo_files.files | map(attribute='path') | map('basename') | map('regex_replace', '^kubernetes-v([0-9.]+)\\.list$',
+      '\\1') | list }}"
+
+- name: "Remove unmanaged Kubernetes APT repositories"
+  ansible.builtin.file:
+    path: "/etc/apt/sources.list.d/kubernetes-v{{ item }}.list"
+    state: absent
+  loop: "{{ kubeadm_existing_versions }}"
+  when: item not in kubernetes_repo_versions
+  register: kubeadm_remove_repos
+
+- name: "Add managed Kubernetes APT repositories"
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/trusted.gpg.d/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_short_version }}/deb/ /"
-    filename: "kubernetes"
+    repo: "deb [signed-by=/etc/apt/trusted.gpg.d/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ item }}/deb/ /"
+    filename: "kubernetes-v{{ item }}"
+    state: present
+    update_cache: false
+  loop: "{{ kubernetes_repo_versions }}"
+  register: kubeadm_add_repos
+
+- name: "Update APT cache"
+  ansible.builtin.apt:
     update_cache: true
+  when: kubeadm_remove_repos is changed or kubeadm_add_repos is changed
 
 - name: "Create kubeadm package pin for version"
   ansible.builtin.copy:
