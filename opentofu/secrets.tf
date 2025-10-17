@@ -95,3 +95,14 @@ locals {
   authentik_url   = local.ak_tool_fields["base_url"]
   authentik_token = local.ak_tool_fields["api_token"]
 }
+
+# Unifi credentials from 1Password (used to configure provider for DHCP reservations)
+data "onepassword_item" "unifi_terraform" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "unifi-opentofu-api-key"
+}
+
+locals {
+  unifi_api_key = data.onepassword_item.unifi_terraform.password
+  unifi_api_url = "https://udmp.oneill.net"
+}

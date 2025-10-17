@@ -1,2 +1,12 @@
 ---
+manage_network: true
 tailscale_args: --accept-dns=false
+interfaces_ether_interfaces:
+  - device: ens3
+    bootproto: static
+    address: "172.19.74.134"
+    netmask: "255.255.255.0"
+    gateway: 172.19.74.1
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
+    allowclass: allow-hotplug

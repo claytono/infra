@@ -34,6 +34,10 @@ terraform {
       source  = "registry.terraform.io/mkdev-me/openai"
       version = "~> 1.1"
     }
+    unifi = {
+      source  = "filipowm/unifi"
+      version = "~> 1.0"
+    }
   }
 
   backend "s3" {
@@ -79,6 +83,11 @@ provider "github" {
 
 provider "openai" {
   api_key = local.openai_api_key
+}
+
+provider "unifi" {
+  api_key = local.unifi_api_key
+  api_url = local.unifi_api_url
 }
 
 module "dns" {
