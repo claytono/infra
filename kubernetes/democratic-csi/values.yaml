@@ -19,6 +19,12 @@ node:
     image:
       registry: docker.io/democraticcsi/democratic-csi
       tag: v1.9.0
+  # Enable automatic filesystem checks on mount to handle unclean shutdowns
+  # from network-induced iSCSI disconnects
+  mount:
+    checkFilesystem:
+      ext4:
+        enabled: true
 
 storageClasses:
 - name: synology-iscsi

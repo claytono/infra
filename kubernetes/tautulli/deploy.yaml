@@ -31,10 +31,10 @@ spec:
         - name: TZ
           value: EST5EDT
         livenessProbe:
-          failureThreshold: 10000
           httpGet:
-            path: /
+            path: /status
             port: 8181
+          failureThreshold: 3
         volumeMounts:
         - mountPath: /config
           name: config

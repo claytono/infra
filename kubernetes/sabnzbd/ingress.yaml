@@ -6,7 +6,7 @@ metadata:
   name: sabnzbd
   annotations:
     ak-type: basic-auth
-    ak-path-exclude: /api(/|$)
+    ak-path-exclude: /api.*
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: SABnzbd
