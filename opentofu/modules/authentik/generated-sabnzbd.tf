@@ -17,7 +17,7 @@ resource "authentik_provider_proxy" "sabnzbd" {
   basic_auth_password_attribute = "password"
 
   skip_path_regex = <<-EOT
-^https://sabnzbd.k.oneill.net/api(/|$)
+^https://sabnzbd.k.oneill.net/api.*
   EOT
 }
 
