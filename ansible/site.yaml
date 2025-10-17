@@ -21,23 +21,15 @@
     - role: hostname
       tags: hostname
 
-- name: Common and network roles
+- name: Common role
   hosts: all
   roles:
     - role: common
       tags: common
-    - role: layereight.wifi
-      when: "wifi_ssid is defined"
-      tags: [wifi, network]
-    - role: michaelrigart.interfaces
-      become: true
-      tags: network
-      when: "manage_network | default(false) | bool"
-    - role: boutetnico.fail2ban
-      tags: fail2ban
 
 - name: User group management
   hosts: all
+  tags: users
   roles:
     - anxs.generic-users
   tasks:
@@ -53,6 +45,56 @@
       when: item in ansible_facts.getent_group
       loop:
         - libvirt
+
+- name: SSH hardening
+  hosts: all
+  tags: [users, ssh]
+  tasks:
+    - name: "Ensure SSH drop-in config directory exists"
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config.d
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+
+    - name: "Configure SSH to allow root login only with keys"
+      ansible.builtin.copy:
+        content: |
+          # Ansible managed - allow root SSH login only with keys, not passwords
+          PermitRootLogin prohibit-password
+        dest: "/etc/ssh/sshd_config.d/01-root-keys-only.conf"
+        mode: "0644"
+        owner: root
+        group: root
+      notify:
+        - Validate sshd configuration
+        - Restart sshd
+
+  handlers:
+    - name: Validate sshd configuration
+      ansible.builtin.command: /usr/sbin/sshd -t
+      changed_when: false
+      when: sshd_config_validation | default(true) | bool
+
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+      when: sshd_config_validation | default(true) | bool
+
+- name: Network and security roles
+  hosts: all
+  roles:
+    - role: layereight.wifi
+      when: "wifi_ssid is defined"
+      tags: [wifi, network]
+    - role: michaelrigart.interfaces
+      become: true
+      tags: network
+      when: "manage_network | default(false) | bool"
+    - role: boutetnico.fail2ban
+      tags: fail2ban
 
 - name: Chrony, relaymail, and resticprofile
   hosts: all
