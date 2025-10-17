@@ -42,7 +42,7 @@ resource "unifi_user" "k5" {
 
 # fs2 - Synology NAS
 resource "unifi_user" "fs2" {
-  mac              = "00:11:32:94:97:11"
+  mac              = "b4:96:91:4e:1b:ac"
   name             = "fs2"
   note             = "Synology NAS"
   fixed_ip         = "172.19.74.139"
