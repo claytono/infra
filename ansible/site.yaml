@@ -143,7 +143,17 @@
 
 - name: Prometheus node exporter
   hosts: all
+  tags: prom
   roles:
-    - role: undergreen.prometheus-node-exporter
-      tags: prom
+    - role: geerlingguy.node_exporter
+      when: "node_exporter_enabled | default(false)"
+
+  tasks:
+    - name: Create textfile collector directory
+      ansible.builtin.file:
+        path: /var/lib/node_exporter/textfile_collector
+        state: directory
+        mode: '0755'
+        owner: node_exporter
+        group: node_exporter
       when: "node_exporter_enabled | default(false)"

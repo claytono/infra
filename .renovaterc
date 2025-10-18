@@ -48,6 +48,17 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
+        "ansible/group_vars/all.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*node_exporter_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
+      ],
+      "depNameTemplate": "prometheus/node_exporter",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
         "/.*\\.ya?ml$/"
       ],
       "matchStrings": [

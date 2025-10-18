@@ -11,9 +11,8 @@ roles:
   - name: yannik.relaymail
     src: https://github.com/Yannik/ansible-role-relaymail.git
     version: v2.3.0
-  - src: https://github.com/undergreen/ansible-prometheus-node-exporter
-    name: undergreen.prometheus-node-exporter
-    version: "v1.5.1"
+  - name: geerlingguy.node_exporter
+    version: "2.1.2"
   - src: michaelrigart.interfaces
     version: "v1.15.6"
   - src: https://github.com/layereight/ansible-wifi
