@@ -2,11 +2,10 @@
 ec2_region: us-east-1
 falcon_eip: 50.16.92.207
 
-prometheus_node_exporter_version: 1.0.1
-prometheus_node_exporter_config_flags:
-  collector.textfile.directory: /var/lib/node_exporter/textfile_collector
-  web.listen-address: 0.0.0.0:9100
-  log.level: info
+node_exporter_version: 1.9.1
+node_exporter_host: 0.0.0.0
+node_exporter_port: 9100
+node_exporter_options: --collector.textfile.directory=/var/lib/node_exporter/textfile_collector --log.level=info
 enable_ufw: false
 
 ssh_keys:

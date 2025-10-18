@@ -1,6 +1,5 @@
 ---
 node_exporter_enabled: true
-prometheus_node_exporter_release_name: "node_exporter-{{ prometheus_node_exporter_version }}.linux-armv6"
 
 restic_arch: arm
 resticprofile_arch: armv6
