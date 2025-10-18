@@ -44,7 +44,6 @@
             ]))
             skopeo
             tflint
-            trivy
             yamlfix
             yq-go
           ];
