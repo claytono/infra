@@ -16,7 +16,7 @@ resources:
 
 images:
 - name: ghcr.io/autobrr/qui
-  newTag: v1.4.0
+  newTag: v1.4.0@sha256:e01fff49529667f16e6eb0dab797befa5614a318c8c60f0c77f0fdb3044ae9c8
 
 labels:
 
