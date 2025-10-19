@@ -1,5 +1,8 @@
 ---
 manage_network: true
+manage_resolv_conf: true
+dns_nameservers: ["172.19.74.1"]
+dns_search: ["oneill.net"]
 tailscale_args: --accept-dns=false
 interfaces_bond_interfaces:
   - device: bond0
@@ -9,8 +12,6 @@ interfaces_bond_interfaces:
     address: "172.19.74.75"
     netmask: "255.255.255.0"
     gateway: 172.19.74.1
-    dnsnameservers: 172.19.74.1
-    dnssearch: oneill.net
     bond_mode: 802.3ad
     bond_miimon: 100
     bond_downdelay: 200

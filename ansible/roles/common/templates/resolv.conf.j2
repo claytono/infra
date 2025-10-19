@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# DNS configuration managed by Ansible
+
+{% for nameserver in dns_nameservers %}
+nameserver {{ nameserver }}
+{% endfor %}
+{% if dns_search is defined and dns_search | length > 0 %}
+search {{ dns_search | join(' ') }}
+{% endif %}
