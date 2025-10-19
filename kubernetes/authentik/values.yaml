@@ -18,6 +18,9 @@ authentik:
 
 # Server configuration
 server:
+  # Enable 2 replicas for high availability
+  replicas: 2
+
   # Reloader annotations to restart when secrets change
   podAnnotations:
     reloader.stakater.com/auto: 'true'
