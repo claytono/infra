@@ -27,3 +27,16 @@
     state: present
     regexp: "^%sudo"
     line: "%sudo ALL=(ALL) NOPASSWD: ALL"
+
+# Note: This task exists because the michaelrigart.interfaces galaxy role's
+# bond_Debian.j2 template doesn't support dnsnameservers/dnssearch variables
+# (unlike ethernet_Debian.j2 which does). Rather than patching the galaxy role,
+# we manage resolv.conf directly for hosts that need it.
+- name: "Manage /etc/resolv.conf"
+  ansible.builtin.template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    mode: "0644"
+    owner: root
+    group: root
+  when: manage_resolv_conf | default(false) | bool
