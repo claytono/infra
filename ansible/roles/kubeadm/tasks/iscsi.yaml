@@ -3,10 +3,12 @@
   ansible.builtin.apt:
     name: "open-iscsi"
 
-- name: "Set iscsi node.startup to automatic"
+# CSI driver manages all iSCSI connections and explicitly logs in/out.
+# Setting to manual prevents automatic login on boot or after discovery.
+- name: "Set iscsi node.startup to manual"
   ansible.builtin.lineinfile:
     path: "/etc/iscsi/iscsid.conf"
-    line: "node.startup = automatic"
+    line: "node.startup = manual"
     regexp: "^node.startup.*="
   notify: "Restart iscsid"
 
@@ -30,3 +32,33 @@
     line: "node.session.auth.password = {{ iscsi_chap_password }}"
     regexp: "^node.session.auth.password*="
   notify: "Restart iscsid"
+
+# Clean up all iSCSI node database entries on boot to prevent stale sessions
+# after reboot from blocking CSI volume mounts. The CSI driver manages all
+# iSCSI connections and will recreate sessions as needed when pods are scheduled.
+- name: "Create iSCSI cleanup on boot service"
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/iscsi-cleanup-on-boot.service
+    mode: "0644"
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Clean up iSCSI node database on boot
+      Before=iscsid.service open-iscsi.service
+      After=network.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c '/bin/rm -rfv /etc/iscsi/nodes/* /etc/iscsi/send_targets/*'
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  notify: "Reload systemd"
+
+- name: "Enable iSCSI cleanup on boot service"
+  ansible.builtin.systemd:
+    name: iscsi-cleanup-on-boot.service
+    enabled: true
+    daemon_reload: true

@@ -1,4 +1,8 @@
 ---
+- name: "Reload systemd"
+  ansible.builtin.systemd:
+    daemon_reload: true
+
 - name: "Restart iscsid"
   ansible.builtin.service:
     name: iscsid
