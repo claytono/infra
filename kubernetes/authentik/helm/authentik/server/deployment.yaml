@@ -14,7 +14,7 @@ metadata:
     app.kubernetes.io/part-of: "authentik"
     app.kubernetes.io/version: "2025.8.4"
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 3
   selector:
     matchLabels:

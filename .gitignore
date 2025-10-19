@@ -2,6 +2,7 @@
 *.swp
 .vscode/
 .direnv/
+.tmp/
 
 # Ansible
 ansible-vault-password
