@@ -11,7 +11,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: results-copy
-    image: alpine:3.18
+    image: {{ alpine_image }}
     command: [sleep, infinity]
     volumeMounts:
     - name: results

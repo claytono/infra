@@ -4,6 +4,10 @@ kind: Kustomization
 
 namespace: network-storage-benchmark
 
+images:
+- name: alpine
+  newTag: "3.22"
+
 resources:
 - namespace.yaml
 - pvc-iscsi.yaml
