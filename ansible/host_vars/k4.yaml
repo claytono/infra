@@ -1,20 +1,15 @@
 ---
 manage_network: true
-manage_resolv_conf: true
-dns_nameservers: ["172.19.74.1"]
-dns_search: ["oneill.net"]
 tailscale_args: --accept-dns=false
-interfaces_bond_interfaces:
-  - device: bond0
-    bond_slaves: [enp2s0f0, enp2s0f1]
-    hwaddr: "06:bc:96:51:3a:b1"
+interfaces_ether_interfaces:
+  - device: enp1s0f0
     bootproto: static
     address: "172.19.74.75"
     netmask: "255.255.255.0"
     gateway: 172.19.74.1
-    bond_mode: 802.3ad
-    bond_miimon: 100
-    bond_downdelay: 200
-    bond_updelay: 100
-    bond_lacp_rate: 1
-    bond_xmit_hash_policy: layer3+4
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
+    allowclass: allow-hotplug
+  - device: eno1
+    bootproto: manual
+    allowclass: manual
