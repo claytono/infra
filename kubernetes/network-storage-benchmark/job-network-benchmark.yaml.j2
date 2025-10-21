@@ -28,13 +28,13 @@ spec:
 
       containers:
       - name: iperf-client
-        image: alpine:3.18
+        image: {{ alpine_image }}
         command: [/bin/sh, -c]
         args:
         - |
-          apk add --no-cache iperf3 python3 py3-pip
+          apk add --no-cache bash iperf3 python3 py3-pip
           echo "Starting iperf3 client tests"
-          /bin/sh /scripts/run-iperf-client.sh
+          /scripts/run-iperf-client.sh
         env:
         - name: SERVER_HOST
           value: iperf-server.network-storage-benchmark.svc.cluster.local

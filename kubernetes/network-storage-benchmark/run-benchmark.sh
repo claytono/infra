@@ -201,11 +201,28 @@ stream_job_logs() {
   return 0
 }
 
+get_alpine_image() {
+  # Extract alpine image version from kustomization.yaml
+  local image_name
+  image_name=$(yq eval \
+    '.images[] | select(.name == "alpine") | .name + ":" + .newTag' \
+    "${SCRIPT_DIR}/kustomization.yaml")
+
+  if [ -z "$image_name" ]; then
+    log_error "Alpine image not found in kustomization.yaml"
+    log_error "Expected 'images' section with 'name: alpine' entry"
+    exit 1
+  fi
+
+  echo "$image_name"
+}
+
 render_storage_job_template() {
   local storage_type=$1
   local node_name=$2
   local fast_mode=$3
   local dev_mode=$4
+  local alpine_image=$(get_alpine_image)
   local template_file="${SCRIPT_DIR}/job-storage-benchmark.yaml.j2"
 
   python3 - <<EOF
@@ -220,7 +237,8 @@ rendered = template.render(
     storage_type="${storage_type}",
     node_name="${node_name}",
     fast_mode="${fast_mode}",
-    dev_mode="${dev_mode}"
+    dev_mode="${dev_mode}",
+    alpine_image="${alpine_image}"
 )
 
 print(rendered)
@@ -230,6 +248,7 @@ EOF
 render_network_job_template() {
   local source_node=$1
   local dest_node=$2
+  local alpine_image=$(get_alpine_image)
   local template_file="${SCRIPT_DIR}/job-network-benchmark.yaml.j2"
 
   python3 - <<EOF
@@ -242,7 +261,8 @@ with open(template_file, 'r') as f:
 
 rendered = template.render(
     source_node="${source_node}",
-    dest_node="${dest_node}"
+    dest_node="${dest_node}",
+    alpine_image="${alpine_image}"
 )
 
 print(rendered)
@@ -273,13 +293,14 @@ copy_results() {
   log "Copying results from cluster..."
 
   local pod="results-copy-$(date +%s)"
+  local alpine_image=$(get_alpine_image)
   local template_file="${SCRIPT_DIR}/pod-results-copy.yaml.j2"
 
   if python3 - <<EOF | kubectl apply -n "${namespace}" -f - >/dev/null 2>&1
 from jinja2 import Template
 with open("${template_file}", 'r') as f:
     template = Template(f.read())
-print(template.render(pod_name="${pod}"))
+print(template.render(pod_name="${pod}", alpine_image="${alpine_image}"))
 EOF
   then
     log "Created results-copy pod: ${pod}"
@@ -631,7 +652,7 @@ run_network_matrix_benchmark() {
   fi
 
   local node_array
-  mapfile -t node_array <<< "$all_nodes"
+  IFS=$'\n' read -rd '' -a node_array <<< "$all_nodes" || true
   local total_tests=$(( ${#node_array[@]} * (${#node_array[@]} - 1) ))
   local test_num=0
   local failed_tests=0

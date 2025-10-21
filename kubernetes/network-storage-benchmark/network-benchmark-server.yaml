@@ -43,8 +43,12 @@ spec:
 
       containers:
       - name: iperf-server
-        image: networkstatic/iperf3:latest
-        command: [/bin/sh, /scripts/run-iperf-server.sh]
+        image: alpine
+        command: [/bin/sh, -c]
+        args:
+        - |
+          apk add --no-cache bash iperf3
+          /scripts/run-iperf-server.sh
         env:
         - name: NODE_NAME
           valueFrom:

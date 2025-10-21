@@ -26,7 +26,7 @@ spec:
 
       containers:
       - name: test-storage
-        image: alpine:3.18
+        image: {{ alpine_image }}
         command: ["/bin/sh", "-c"]
         args:
           - |
