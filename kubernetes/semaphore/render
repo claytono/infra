@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir -p tmp helm
+
+# Render semaphore chart
+helm_template semaphore semaphore --namespace semaphore --values values.yaml --output-dir tmp
+
+mv tmp/semaphore/templates/* helm/
+rm -f helm/secret-general.yaml
+rm -f helm/secret-runner.yaml
+rm -rf tmp
+rm -rf helm/tests
+
+# Remove checksum annotation for secret-runner since we're not using it
+sed -i.bak '/checksum\/secret-runner:/d' helm/deployment.yaml
+rm -f helm/deployment.yaml.bak

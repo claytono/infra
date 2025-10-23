@@ -1,0 +1,53 @@
+---
+replicaCount: 1
+
+database:
+  type: postgres
+  host: semaphore-postgres-rw
+  port: 5432
+  name: semaphore
+  username: semaphore
+  usernameFromSecret: true
+  usernameKey: username
+  passwordKey: password
+  existingSecret: semaphore-postgres-app
+
+admin:
+  create: false
+  username: admin
+  fullname: Admin
+  email: clayton@oneill.net
+  existingSecret: semaphore-admin
+
+general:
+  host: https://semaphore.k.oneill.net
+  passwordLoginDisable: true
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+  - host: semaphore.k.oneill.net
+    paths:
+    - path: /
+      pathType: Prefix
+  tls:
+  - secretName: semaphore-tls
+    hosts:
+    - semaphore.k.oneill.net
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    ak-type: oidc
+    ak-oidc-callback: /api/auth/oidc/authentik/redirect
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Semaphore
+    gethomepage.dev/description: Ansible & OpenTofu UI
+    gethomepage.dev/group: Home Lab
+    gethomepage.dev/icon: semaphore.png
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=semaphore
+
+secrets:
+  existingSecret: semaphore-encryption
+
+annotations:
+  reloader.stakater.com/auto: 'true'

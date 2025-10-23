@@ -1,0 +1,9 @@
+---
+apiVersion: v2
+name: semaphore
+version: 1.0.0
+
+dependencies:
+  - name: semaphore
+    version: 16.0.5
+    repository: https://semaphoreui.github.io/charts

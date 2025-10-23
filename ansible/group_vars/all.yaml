@@ -58,6 +58,7 @@ genericusers_users:
     groups: [sudo]
     ssh_keys:
       - *xtal_ed25519
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN7AvFF/VhzuKYU/RraQF0+vSYXbD9qYchfAbAZ96X2r semaphore-ansible-user
 
 # relaymail
 relaymail_smtp_host: smtp.gmail.com

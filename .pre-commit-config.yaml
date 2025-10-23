@@ -51,7 +51,7 @@ repos:
     language: system
     files: ^kubernetes/.*\.(ya?ml)$
     pass_filenames: true
-    exclude: helm.yaml$
+    exclude: (helm\.yaml|patch-.*\.yaml)$
   - id: ak-tool-generate
     name: generate authentik terraform configs
     entry: kubernetes/scripts/ak-tool generate

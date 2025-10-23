@@ -1,0 +1,36 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: semaphore
+
+resources:
+- namespace.yaml
+- semaphore-postgres-cluster.yaml
+- externalsecret.yaml
+- externalsecret-ansible-vault.yaml
+- externalsecret-encryption.yaml
+- externalsecret-oidc.yaml
+- helm/configmap.yaml
+- helm/deployment.yaml
+- helm/ingress.yaml
+- helm/pvc.yaml
+- helm/service.yaml
+- helm/serviceaccount.yaml
+
+configMapGenerator:
+- name: semaphore-init-tools
+  files:
+  - init-tools.sh
+  - ansible-wrapper.sh
+  options:
+    disableNameSuffixHash: true
+
+patches:
+- path: patch-deployment.yaml
+  target:
+    kind: Deployment
+    name: semaphore
+
+commonAnnotations:
+  argoManaged: 'true'
