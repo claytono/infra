@@ -136,7 +136,7 @@
       "matchManagers": [
         "kustomize"
       ],
-      "minimumReleaseAge": "2 days",
+      "minimumReleaseAge": "0 days",
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -157,7 +157,7 @@
       "matchManagers": [
         "custom.regex"
       ],
-      "minimumReleaseAge": "2 days",
+      "minimumReleaseAge": "0 days",
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
