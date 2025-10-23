@@ -1,0 +1,27 @@
+---
+# Source: semaphore/templates/service.yaml
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: semaphore
+  namespace: semaphore
+  labels:
+    helm.sh/chart: "semaphore-16.0.5"
+    app.kubernetes.io/name: "semaphore"
+    app.kubernetes.io/instance: "semaphore"
+    app.kubernetes.io/version: "2.16.34"
+    app.kubernetes.io/managed-by: "Helm"
+
+spec:
+  type: ClusterIP
+
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+      protocol: TCP
+
+  selector:
+    app.kubernetes.io/name: semaphore
+    app.kubernetes.io/instance: semaphore

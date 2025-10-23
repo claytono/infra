@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: semaphore
+
+spec:
+  template:
+    spec:
+      # Run container as root to allow nix installation
+      securityContext:
+        runAsUser: 0
+        fsGroup: 1001
+
+      containers:
+      - name: semaphore
+          # Override command to run our init script
+        command:
+        - /scripts/init-tools.sh
+
+          # Remove liveness probe during init
+        livenessProbe:
+
+          # Add OIDC configuration environment variable
+        env:
+        - name: SEMAPHORE_OIDC_PROVIDERS
+          valueFrom:
+            secretKeyRef:
+              name: semaphore-oidc
+              key: oidc-config
+
+          # Add volume mounts for init script and ansible vault password
+        volumeMounts:
+        - name: init-tools-script
+          mountPath: /scripts
+          readOnly: true
+        - name: ansible-vault-password
+          mountPath: /secrets/ansible-vault
+          readOnly: true
+
+      # Add volumes for init script ConfigMap and ansible vault secret
+      volumes:
+      - name: init-tools-script
+        configMap:
+          name: semaphore-init-tools
+          defaultMode: 0755
+      - name: ansible-vault-password
+        secret:
+          secretName: ansible-vault-password

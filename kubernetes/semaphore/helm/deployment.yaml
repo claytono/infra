@@ -1,0 +1,151 @@
+---
+# Source: semaphore/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: semaphore
+  namespace: semaphore
+  labels:
+    helm.sh/chart: "semaphore-16.0.5"
+    app.kubernetes.io/name: "semaphore"
+    app.kubernetes.io/instance: "semaphore"
+    app.kubernetes.io/version: "2.16.34"
+    app.kubernetes.io/managed-by: "Helm"
+
+spec:
+  replicas: 1
+
+  strategy:
+    
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: semaphore
+      app.kubernetes.io/instance: semaphore
+
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: "semaphore-16.0.5"
+        app.kubernetes.io/name: "semaphore"
+        app.kubernetes.io/instance: "semaphore"
+        app.kubernetes.io/version: "2.16.34"
+        app.kubernetes.io/managed-by: "Helm"
+      annotations:
+        checksum/config: 6db2d80fdda45e7be278174345179b6ece77d6ca957902f08bb3ba861921e4a8
+        reloader.stakater.com/auto: "true"
+
+    spec:
+      serviceAccountName: semaphore
+
+      securityContext:
+        fsGroup: 1001
+
+      containers:
+        - name: semaphore
+          image: semaphoreui/semaphore:v2.16.34
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: SEMAPHORE_PORT
+              value: "3000"
+            - name: SEMAPHORE_WEB_ROOT
+              value: "https://semaphore.k.oneill.net"
+            - name: SEMAPHORE_GIT_CLIENT
+              value: "cmd_git"
+            - name: SEMAPHORE_TMP_PATH
+              value: "/tmp/semaphore"
+            - name: SEMAPHORE_MAX_PARALLEL_TASKS
+              value: "0"
+            - name: SEMAPHORE_PASSWORD_LOGIN_DISABLED
+              value: "true"
+            - name: SEMAPHORE_NON_ADMIN_CAN_CREATE_PROJECT
+              value: "false"
+            - name: SEMAPHORE_USE_REMOTE_RUNNER
+              value: "false"
+            - name: SEMAPHORE_DB_DIALECT
+              value: "postgres"
+            - name: SEMAPHORE_DB_HOST
+              value: "semaphore-postgres-rw"
+            - name: SEMAPHORE_DB_PORT
+              value: "5432"
+            - name: SEMAPHORE_DB
+              value: "semaphore"
+            - name: SEMAPHORE_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: semaphore-postgres-app
+                  key: username
+            - name: SEMAPHORE_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: semaphore-postgres-app
+                  key: password
+            - name: SEMAPHORE_DB_OPTIONS
+              value: "{\"sslmode\":\"disable\"}"
+            - name: SEMAPHORE_LDAP_ENABLE
+              value: "false"
+            - name: SEMAPHORE_EMAIL_ALERT
+              value: "false"
+            - name: SEMAPHORE_TELEGRAM_ALERT
+              value: "false"
+            - name: SEMAPHORE_SLACK_ALERT
+              value: "false"
+            - name: SEMAPHORE_RUNNER_REGISTRATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: semaphore-runner
+                  key: token
+            - name: SEMAPHORE_COOKIE_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: semaphore-encryption
+                  key: cookieHash
+            - name: SEMAPHORE_COOKIE_ENCRYPTION
+              valueFrom:
+                secretKeyRef:
+                  name: semaphore-encryption
+                  key: cookieEncryption
+            - name: SEMAPHORE_ACCESS_KEY_ENCRYPTION
+              valueFrom:
+                secretKeyRef:
+                  name: semaphore-encryption
+                  key: accesskeyEncryption
+
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+
+          resources:
+            limits: {}
+            requests:
+              cpu: 100m
+              memory: 64Mi
+
+          volumeMounts:
+            - name: config
+              mountPath: /etc/semaphore/config.json
+              subPath: config.json
+            - name: workdir
+              mountPath: /tmp/semaphore
+
+      volumes:
+        - name: config
+          configMap:
+            name: semaphore-config
+        - name: workdir
+          persistentVolumeClaim:
+            claimName: semaphore-workdir

@@ -1,0 +1,42 @@
+---
+# Source: semaphore/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: semaphore
+  namespace: semaphore
+  labels:
+    helm.sh/chart: "semaphore-16.0.5"
+    app.kubernetes.io/name: "semaphore"
+    app.kubernetes.io/instance: "semaphore"
+    app.kubernetes.io/version: "2.16.34"
+    app.kubernetes.io/managed-by: "Helm"
+  annotations:
+    ak-oidc-callback: /api/auth/oidc/authentik/redirect
+    ak-type: oidc
+    cert-manager.io/cluster-issuer: zerossl
+    gethomepage.dev/description: Ansible & OpenTofu UI
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Home Lab
+    gethomepage.dev/icon: semaphore.png
+    gethomepage.dev/name: Semaphore
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=semaphore
+
+spec:
+  ingressClassName: nginx
+  tls:
+    - secretName: semaphore-tls
+      hosts:
+        - "semaphore.k.oneill.net"
+  rules:
+    - host: semaphore.k.oneill.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: semaphore
+                port:
+                  name: http
