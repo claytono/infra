@@ -13,3 +13,4 @@ interfaces_ether_interfaces:
   - device: eno1
     bootproto: manual
     allowclass: manual
+    ignore_status_check: true
