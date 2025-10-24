@@ -6,7 +6,6 @@ namespace: karakeep
 
 resources:
 - namespace.yaml
-- tailscale-ingress.yaml
 - externalsecret.yaml
 - externalsecret-oidc.yaml
 - postgres-cluster.yaml
