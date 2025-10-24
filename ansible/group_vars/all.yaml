@@ -8,6 +8,9 @@ node_exporter_port: 9100
 node_exporter_options: --collector.textfile.directory=/var/lib/node_exporter/textfile_collector --log.level=info
 enable_ufw: false
 
+# containerd configuration - use subdirectory to avoid changing /tmp permissions
+containerd_tmp_directory: "/tmp/containerd"
+
 ssh_keys:
   - &xtal_ed25519 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB3URIT9ojo8mqsEjxmFu1C+Bxa3jdcKkUzM++IfDVmu coneill@xtal.oneill.net
 
