@@ -199,9 +199,14 @@ aws_secret_access_token: !vault |-
   6462666334623832306137303838353432656232333539313838
 
 # fail2ban configuration
+fail2ban_dependencies:
+  - fail2ban
+  - python3-systemd  # Required for systemd backend on Debian 12
+
 fail2ban_jails:
   DEFAULT:
     # Exclude localhost, Tailscale network, and home network from being banned
     ignoreip: 127.0.0.1/8 ::1 100.64.0.0/10 172.19.74.0/23
   sshd:
     enabled: "true"
+    backend: systemd
