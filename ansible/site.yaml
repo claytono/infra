@@ -113,6 +113,23 @@
 
 - name: Tailscale sysctl config
   hosts: all,!tailscale_disabled
+  pre_tasks:
+    # Temporary workaround for Tailscale TPM state migration issue
+    # Pin version 1.90.1 to prevent installation due to bug
+    # See: https://github.com/tailscale/tailscale/issues/17622
+    - name: "Pin Tailscale 1.90.1 to prevent installation"
+      ansible.builtin.copy:
+        dest: /etc/apt/preferences.d/tailscale
+        content: |
+          # Temporary workaround for Tailscale TPM state migration issue
+          # See: https://github.com/tailscale/tailscale/issues/17622
+          Package: tailscale
+          Pin: version 1.90.1
+          Pin-Priority: -1
+        mode: "0644"
+        owner: root
+        group: root
+      tags: tailscale
   roles:
     - role: artis3n.tailscale.machine
       tags: tailscale
