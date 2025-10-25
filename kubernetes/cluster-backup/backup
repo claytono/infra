@@ -1,19 +1,39 @@
 #!/bin/sh -xveu
 
+# renovate: datasource=github-releases depName=etcd-io/etcd
+ETCD_VERSION=3.5.16
+
 TIMESTAMP=$(date -u -Isec | sed -e 's/UTC/Z/' | sed -e 's/+00:00/Z/')
 BACKUPDIR=/backups/$TIMESTAMP
-ETCD_VERSION=3.0.17
-ETCDCTL=etcd-v${ETCD_VERSION}-linux-amd64/etcdctl
+ETCD_ENDPOINTS=https://127.0.0.1:2379
+CACERT=/etc/kubernetes/pki/etcd/ca.crt
+CERT=/etc/kubernetes/pki/etcd/healthcheck-client.crt
+KEY=/etc/kubernetes/pki/etcd/healthcheck-client.key
 
 apt update
 apt install wget rsync -y
 
+# Download etcd tools
 wget "https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz"
-tar xvf etcd-v${ETCD_VERSION}-linux-amd64.tar.gz --wildcards '*/etcdctl'
+tar xvf etcd-v${ETCD_VERSION}-linux-amd64.tar.gz
 
-mkdir -p "$BACKUPDIR/etcd"
-$ETCDCTL backup \
-	--data-dir /var/lib/etcd \
-	--backup-dir "$BACKUPDIR/etcd"
+mkdir -p "$BACKUPDIR"
 
+# Modern snapshot using ETCDCTL_API=3
+ETCDCTL_API=3 ./etcd-v${ETCD_VERSION}-linux-amd64/etcdctl \
+  --endpoints=$ETCD_ENDPOINTS \
+  --cacert=$CACERT \
+  --cert=$CERT \
+  --key=$KEY \
+  snapshot save "$BACKUPDIR/etcd-snapshot.db"
+
+# Verify snapshot integrity
+./etcd-v${ETCD_VERSION}-linux-amd64/etcdutl \
+  snapshot status "$BACKUPDIR/etcd-snapshot.db" \
+  --write-out=table
+
+# Backup Kubernetes configs
 rsync -av --exclude tmp /etc/kubernetes/ "$BACKUPDIR/kubernetes/"
+
+# Prune backups older than 180 days (6 months)
+find /backups -maxdepth 1 -type d -mtime +180 -exec rm -rf {} \;
