@@ -17,6 +17,7 @@ spec:
         metadata:
           name: cluster-backup
         spec:
+          hostNetwork: true
           containers:
           - name: cluster-backup
             image: debian
