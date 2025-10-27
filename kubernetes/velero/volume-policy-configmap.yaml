@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: volume-policy
+  namespace: velero
+
+data:
+  volume-policy.yaml: |-
+    version: v1
+    volumePolicies:
+    - conditions:
+        storageClass:
+        - nfs
+      action:
+        type: skip

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Script to run kopia with access to Velero's encrypted Kopia repository
+# Connects via the rclone S3 gateway running in Kubernetes (same as Velero)
+# For local development use only
+
+# Directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+source "$SCRIPT_DIR/get-1password-secrets"
+
+# Fetch secrets from 1Password
+echo "Fetching secrets from 1Password..."
+export_velero_b2_variables
+
+# Create temporary directory for kopia config
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+# Kopia repository is accessed via the rclone S3 gateway
+# This matches how Velero accesses it
+S3_ENDPOINT="rclone-s3-velero.k.oneill.net"
+S3_BUCKET="data"
+S3_PREFIX="velero/kopia/default"
+
+# S3 credentials (for accessing the rclone S3 gateway)
+export AWS_ACCESS_KEY_ID="$RCLONE_S3_ACCESS_KEY"
+export AWS_SECRET_ACCESS_KEY="$RCLONE_S3_SECRET_KEY"
+
+# Kopia password is fetched from 1Password (exported by get-1password-secrets)
+# This is separate from the rclone encryption! Data is encrypted twice:
+# 1. Kopia encrypts with KOPIA_PASSWORD
+# 2. Rclone encrypts the already-encrypted data with RCLONE_ENCRYPTION_PASSWORD
+# KOPIA_PASSWORD is already set from get-1password-secrets
+
+# Disable Kopia update checks
+export KOPIA_CHECK_FOR_UPDATES=false
+
+# Use persistent kopia config directory in user's cache
+KOPIA_CONFIG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/kopia"
+mkdir -p "$KOPIA_CONFIG_DIR"
+KOPIA_CONFIG="$KOPIA_CONFIG_DIR/velero.config"
+
+# Connect to the repository if not already connected
+if [ ! -f "$KOPIA_CONFIG" ]; then
+    echo "Connecting to Kopia repository via S3 gateway..."
+    kopia --config-file="$KOPIA_CONFIG" repository connect s3 \
+        --bucket="$S3_BUCKET" \
+        --prefix="$S3_PREFIX/" \
+        --endpoint="$S3_ENDPOINT" \
+        --region="rclone" \
+        --override-hostname=default \
+        --override-username=default \
+        --readonly
+fi
+
+# Run kopia command
+echo "Running kopia command..."
+exec kopia --config-file="$KOPIA_CONFIG" "$@"

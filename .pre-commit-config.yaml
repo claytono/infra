@@ -52,6 +52,12 @@ repos:
     files: ^kubernetes/.*\.(ya?ml)$
     pass_filenames: true
     exclude: (helm\.yaml|patch-.*\.yaml)$
+  - id: validate-iscsi-labels
+    name: validate iSCSI PVC labels
+    entry: kubernetes/scripts/validate-iscsi-labels
+    language: system
+    files: ^kubernetes/.*\.(ya?ml)$
+    pass_filenames: true
   - id: ak-tool-generate
     name: generate authentik terraform configs
     entry: kubernetes/scripts/ak-tool generate

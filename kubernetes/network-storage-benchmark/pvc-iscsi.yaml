@@ -4,6 +4,8 @@ kind: PersistentVolumeClaim
 
 metadata:
   name: network-storage-benchmark-iscsi
+  labels:
+    velero.io/backup: 'false'
 
 spec:
   accessModes:

@@ -1,0 +1,68 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: velero
+
+resources:
+- namespace.yaml
+- volumesnapshotclass.yaml
+- helm/crds/backuprepositories.yaml
+- helm/crds/backups.yaml
+- helm/crds/backupstoragelocations.yaml
+- helm/crds/datadownloads.yaml
+- helm/crds/datauploads.yaml
+- helm/crds/deletebackuprequests.yaml
+- helm/crds/downloadrequests.yaml
+- helm/crds/podvolumebackups.yaml
+- helm/crds/podvolumerestores.yaml
+- helm/crds/restores.yaml
+- helm/crds/schedules.yaml
+- helm/crds/serverstatusrequests.yaml
+- helm/crds/volumesnapshotlocations.yaml
+- helm/serviceaccount-server.yaml
+- helm/clusterrolebinding.yaml
+- helm/role.yaml
+- helm/rolebinding.yaml
+- helm/repo-maintenance-configmap.yaml
+- helm/service.yaml
+- helm/node-agent-daemonset.yaml
+- helm/deployment.yaml
+- helm/backupstoragelocation.yaml
+- helm/volumesnapshotlocation.yaml
+- externalsecret.yaml
+- repo-credentials-externalsecret.yaml
+- rclone-deployment.yaml
+- rclone-service.yaml
+- rclone-ingress.yaml
+- rclone-externalsecret.yaml
+- schedule-daily.yaml
+- volume-policy-configmap.yaml
+
+configMapGenerator:
+- name: velero-encrypt-startup
+  options:
+    disableNameSuffixHash: true
+  files:
+  - start.sh
+
+patches:
+
+- target:
+    kind: Deployment
+    name: velero
+  patch: |-
+    - op: add
+      path: /metadata/annotations/reloader.stakater.com~1auto
+      value: "true"
+
+- target:
+    kind: DaemonSet
+    name: node-agent
+  patch: |-
+    - op: add
+      path: /metadata/annotations/reloader.stakater.com~1auto
+      value: "true"
+
+commonAnnotations:
+  argoManaged: 'true'
