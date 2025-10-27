@@ -1,0 +1,23 @@
+---
+# Source: velero/templates/backupstoragelocation.yaml
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: default
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: velero
+    app.kubernetes.io/instance: velero
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: velero-11.1.1
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: "data"
+    prefix: "velero"
+  config:
+    checksumAlgorithm: ""
+    region: "rclone"
+    s3ForcePathStyle: "true"
+    s3Url: "https://rclone-s3-velero.k.oneill.net"

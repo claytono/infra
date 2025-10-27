@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Script to run rclone with secrets from 1Password
+# For local development use only
+
+# Directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+source "$SCRIPT_DIR/get-1password-secrets"
+
+# Fetch secrets from 1Password
+echo "Fetching secrets from 1Password..."
+export_velero_b2_variables
+
+# Create temporary directory for rclone config
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+# Obscure the encryption password for rclone
+OBSCURED_PASSWORD=$(rclone obscure "$RCLONE_ENCRYPTION_PASSWORD")
+
+# Create rclone config matching the Velero deployment
+cat > "$TMPDIR/rclone.conf" <<EOF
+[b2]
+type = b2
+account = $RCLONE_CONFIG_B2_ACCOUNT
+key = $RCLONE_CONFIG_B2_KEY
+
+[crypt_b2]
+type = crypt
+remote = b2:cmo-velero
+directory_name_encryption = true
+password = $OBSCURED_PASSWORD
+EOF
+
+# Set rclone config location
+export RCLONE_CONFIG="$TMPDIR/rclone.conf"
+
+# Run the actual rclone command with all arguments passed to this script
+echo "Running rclone with secure configuration..."
+exec rclone "$@"

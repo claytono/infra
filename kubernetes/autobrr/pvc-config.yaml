@@ -4,6 +4,8 @@ kind: PersistentVolumeClaim
 
 metadata:
   name: autobrr-config
+  labels:
+    velero.io/backup: 'true'
 
 spec:
   accessModes:

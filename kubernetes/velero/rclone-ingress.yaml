@@ -1,0 +1,28 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: velero-encrypt
+  labels:
+    app.kubernetes.io/name: velero-encrypt
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - rclone-s3-velero.k.oneill.net
+    secretName: rclone-s3-velero-tls
+  rules:
+  - host: rclone-s3-velero.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: velero-encrypt
+            port:
+              number: 80

@@ -27,6 +27,7 @@
             awscli2
             curl
             jq
+            kopia
             kubeconform
             kubecolor
             kubectl
@@ -42,8 +43,10 @@
               pyyaml
               ruamel-yaml
             ]))
+            rclone
             skopeo
             tflint
+            velero
             yamlfix
             yq-go
           ];

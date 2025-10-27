@@ -1,0 +1,24 @@
+---
+apiVersion: velero.io/v1
+kind: Schedule
+
+metadata:
+  name: daily-iscsi-backups
+
+spec:
+  # Run daily at 2 AM EST/EDT (6 AM UTC)
+  schedule: 0 6 * * *
+  template:
+    # Include all namespaces
+    includedNamespaces:
+    - '*'
+    # Only backup resources with velero.io/backup label
+    labelSelector:
+      matchLabels:
+        velero.io/backup: 'true'
+    # Skip NFS volumes using resource policy
+    resourcePolicy:
+      kind: configmap
+      name: volume-policy
+    # Backup TTL: 30 days
+    ttl: 720h0m0s

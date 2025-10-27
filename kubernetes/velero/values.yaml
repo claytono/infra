@@ -1,0 +1,40 @@
+---
+configuration:
+  backupStorageLocation:
+  - name: default
+    provider: aws
+    bucket: data
+    prefix: velero
+    config:
+      region: rclone
+      s3Url: https://rclone-s3-velero.k.oneill.net
+      s3ForcePathStyle: 'true'
+      checksumAlgorithm: ''
+
+  volumeSnapshotLocation:
+  - name: default
+    provider: aws
+    config:
+      region: us-west-000
+
+  features: EnableCSI
+  defaultVolumesToFsBackup: false
+  defaultSnapshotMoveData: true
+
+deployNodeAgent: true
+
+nodeAgent:
+  privileged: false
+
+uploaderType: kopia
+
+credentials:
+  existingSecret: velero-b2-credentials
+
+initContainers:
+- name: velero-plugin-for-aws
+  # renovate: datasource=docker depName=velero/velero-plugin-for-aws
+  image: velero/velero-plugin-for-aws:v1.13.0
+  volumeMounts:
+  - mountPath: /target
+    name: plugins

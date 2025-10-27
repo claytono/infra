@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$BASEDIR/scripts/chart-version"
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+rm -rf helm tmp crds && mkdir -p tmp helm
+
+helm_template velero velero \
+  --values values.yaml \
+  --namespace velero \
+  --include-crds \
+  --output-dir tmp
+
+mv tmp/velero/templates/* helm/
+mkdir -p helm/crds
+mv tmp/velero/crds/* helm/crds/
+rmdir tmp/velero/crds tmp/velero/templates tmp/velero tmp
+
+# Remove obsolete upgrade-crds job (CRDs are applied directly via kustomize)
+rm -rf helm/upgrade-crds
