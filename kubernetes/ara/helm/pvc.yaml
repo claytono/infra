@@ -1,0 +1,15 @@
+---
+# Source: ara/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ara-ara-pvc
+  labels:
+    app: ara
+spec:
+  storageClassName: "nfs"
+  resources:
+    requests:
+      storage: 10Gi
+  accessModes:
+    - ReadWriteOnce

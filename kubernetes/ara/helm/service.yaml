@@ -1,0 +1,16 @@
+---
+# Source: ara/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ara
+  name: ara-ara-service
+spec:
+  ports:
+    - port: 8000
+      protocol: TCP
+      targetPort: 8000
+  selector:
+    app: ara
+  type: ClusterIP

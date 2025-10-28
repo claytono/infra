@@ -30,7 +30,7 @@ spec:
               name: semaphore-oidc
               key: oidc-config
 
-          # Add volume mounts for init script and ansible vault password
+          # Add volume mounts for init script and secrets
         volumeMounts:
         - name: init-tools-script
           mountPath: /scripts
@@ -38,8 +38,11 @@ spec:
         - name: ansible-vault-password
           mountPath: /secrets/ansible-vault
           readOnly: true
+        - name: ara-api-password
+          mountPath: /secrets/ara
+          readOnly: true
 
-      # Add volumes for init script ConfigMap and ansible vault secret
+      # Add volumes for init script ConfigMap and secrets
       volumes:
       - name: init-tools-script
         configMap:
@@ -48,3 +51,6 @@ spec:
       - name: ansible-vault-password
         secret:
           secretName: ansible-vault-password
+      - name: ara-api-password
+        secret:
+          secretName: ara-basic-auth-password

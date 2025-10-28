@@ -1,0 +1,91 @@
+---
+# Source: ara/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ara-ara
+  labels:
+    app: ara
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ara
+  template:
+    metadata:
+      labels:
+        app: ara
+    spec:
+      securityContext: 
+        fsGroup: 2000
+        runAsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - image: docker.io/recordsansible/ara-api@sha256:435dbcc0154b0494f245d79ec1c20af3b8f0d31bccf010522dc6125e08e7691d
+        imagePullPolicy: IfNotPresent
+        name: ara
+        env:
+          - name: ARA_ALLOWED_HOSTS
+            value: "['ara.k.oneill.net', 'ara.ara.svc.cluster.local']"
+          - name: ARA_CORS_ORIGIN_WHITELIST
+            value: "['https://ara.k.oneill.net']"
+          - name: ARA_DATABASE_ENGINE
+            value: "django.db.backends.postgresql"
+          - name: ARA_DATABASE_HOST
+            value: "ara-postgres-rw"
+          - name: ARA_DATABASE_NAME
+            value: "ara"
+          - name: ARA_DATABASE_PORT
+            value: "5432"
+          - name: ARA_DATABASE_USER
+            value: "ara"
+          - name: ARA_EXTERNAL_AUTH
+            value: "true"
+          - name: ARA_LOG_LEVEL
+            value: "INFO"
+          - name: ARA_READ_LOGIN_REQUIRED
+            value: "false"
+          - name: ARA_WRITE_LOGIN_REQUIRED
+            value: "false"
+        volumeMounts:
+        - mountPath: /opt/ara
+          name: ara
+        ports:
+          - containerPort: 8000
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            httpHeaders:
+            - name: Host
+              value: 'ara.k.oneill.net'
+            path: '/api/'
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            httpHeaders:
+            - name: Host
+              value: 'ara.k.oneill.net'
+            path: '/api/'
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 1
+        startupProbe:
+          failureThreshold: 30
+          httpGet:
+            httpHeaders:
+            - name: Host
+              value: 'ara.k.oneill.net'
+            path: '/api/'
+            port: 8000
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
+      volumes:
+      - name: ara
+        persistentVolumeClaim:
+          claimName: ara-ara-pvc

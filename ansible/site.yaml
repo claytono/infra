@@ -170,7 +170,53 @@
       ansible.builtin.file:
         path: /var/lib/node_exporter/textfile_collector
         state: directory
-        mode: '0755'
+        mode: "0755"
         owner: node_exporter
         group: node_exporter
       when: "node_exporter_enabled | default(false)"
+
+# Print ARA playbook URL - runs last regardless of tag filters
+- name: ARA Reporting
+  hosts: all
+  gather_facts: false
+  tags: [always]
+  tasks:
+    - name: Get current playbook ID from ARA
+      ansible.builtin.shell: |
+        python3 -c "
+        import os
+        import sys
+        try:
+            from ara.clients.http import AraHttpClient
+            client = AraHttpClient(
+                endpoint=os.environ.get('ARA_API_SERVER', ''),
+                timeout=int(os.environ.get('ARA_API_TIMEOUT', '30')),
+                auth=(os.environ.get('ARA_API_USERNAME'), os.environ.get('ARA_API_PASSWORD'))
+            )
+            playbooks = client.get('/api/v1/playbooks', order='-id', limit=1)
+            if playbooks.get('results'):
+                print(playbooks['results'][0]['id'])
+                sys.exit(0)
+        except Exception:
+            pass
+        sys.exit(1)
+        "
+      delegate_to: localhost
+      run_once: true # noqa: run-once[task]
+      register: ara_playbook_id
+      when: lookup('env', 'ARA_API_SERVER') != ''
+      ignore_errors: true
+      changed_when: false
+
+    - name: Print ARA playbook URL
+      ansible.builtin.debug:
+        # URL format is valid for ARA 1.7.x - may need updating if ARA changes URL scheme
+        msg: "View this playbook at: {{ lookup('env', 'ARA_API_SERVER') }}/playbooks/{{ ara_playbook_id.stdout }}.html"
+      delegate_to: localhost
+      run_once: true # noqa: run-once[task]
+      when:
+        - lookup('env', 'ARA_API_SERVER') != ''
+        - ara_playbook_id is defined
+        - ara_playbook_id is not failed
+        - ara_playbook_id.stdout is defined
+        - ara_playbook_id.stdout != ''
