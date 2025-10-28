@@ -19,6 +19,7 @@ eval "$(direnv hook bash)"
 
 git clone --depth=1 https://github.com/claytono/infra /infra
 cd /infra
+
 direnv allow .
 
 # Load the direnv environment
@@ -39,13 +40,22 @@ if [ -f /usr/local/bin/tofu ]; then
   echo "Replaced tofu at /usr/local/bin/tofu"
 fi
 
-# Create /ansible-bins directory and symlink nix ansible binaries there
+# Create /ansible-bins directory and symlink ansible binaries from Python environment
+# Find the nix Python environment (not system python or venv)
+PYTHON_ENV_DIR=$(find /nix/store -maxdepth 1 -name "*python3-*-env" -type d 2>/dev/null | head -1)
+if [ -z "$PYTHON_ENV_DIR" ] || [ ! -d "$PYTHON_ENV_DIR" ]; then
+  echo "ERROR: Could not find nix Python environment in /nix/store" >&2
+  exit 1
+fi
+PYTHON_ENV_BIN="$PYTHON_ENV_DIR/bin"
+
 mkdir -p /ansible-bins
 for tool in ansible ansible-playbook ansible-galaxy ansible-vault; do
-  TOOL_PATH="$(which $tool)"
-  if [ -n "$TOOL_PATH" ]; then
-    ln -sf "$TOOL_PATH" "/ansible-bins/$tool"
-    echo "Symlinked $tool to /ansible-bins/$tool"
+  if [ -x "$PYTHON_ENV_BIN/$tool" ]; then
+    ln -sf "$PYTHON_ENV_BIN/$tool" "/ansible-bins/$tool"
+    echo "Symlinked $tool from Python environment: $PYTHON_ENV_BIN/$tool"
+  else
+    echo "WARNING: $tool not found in Python environment at $PYTHON_ENV_BIN"
   fi
 done
 
@@ -73,7 +83,7 @@ else
   exit 1
 fi
 
-echo "Starting Semaphore server wrapper..."
+echo "Starting Semaphore server..."
 
 # Prepend ansible venv to PATH so wrapper scripts are found first
 export PATH="$ANSIBLE_VENV:$PATH"

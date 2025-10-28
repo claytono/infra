@@ -29,14 +29,56 @@
             mkdir -p $out/bin
             ln -s ${pkgs.managarr}/bin/managarr $out/bin/.managarr
           '';
+
         in
         {
           default = pkgs.mkShell {
             # Pinned packages available in the environment
             packages = with pkgs; [
               act
-              ansible
               ansible-lint
+              # Ansible with ARA in same Python environment
+              (python3.withPackages (ps: with ps; [
+                ansible
+                jinja2
+                pyyaml
+                ruamel-yaml
+                # ARA (Ansible Run Analysis) for recording playbook runs
+                (ps.buildPythonPackage rec {
+                  pname = "ara";
+                  version = "1.7.3";
+                  pyproject = true;
+
+                  src = ps.fetchPypi {
+                    inherit pname version;
+                    hash = "sha256-kUeBOXfqlrZiXQvq+4TlIDuEgQYfEX5aib2CRihuGPQ=";
+                  };
+
+                  build-system = with ps; [
+                    setuptools
+                    pbr
+                  ];
+
+                  dependencies = with ps; [
+                    cliff
+                    django
+                    djangorestframework
+                    django-cors-headers
+                    dynaconf
+                    pygments
+                    requests
+                    whitenoise
+                  ];
+
+                  doCheck = false;
+
+                  meta = with pkgs.lib; {
+                    description = "ARA Records Ansible playbooks and makes them easier to understand and troubleshoot";
+                    homepage = "https://ara.recordsansible.org/";
+                    license = licenses.gpl3Plus;
+                  };
+                })
+              ]))
               awscli2
               curl
               jq
@@ -52,12 +94,6 @@
               pluto
               pre-commit
               recyclarr-bin
-              # Python with required packages
-              (python3.withPackages (ps: with ps; [
-                jinja2
-                pyyaml
-                ruamel-yaml
-              ]))
               rclone
               skopeo
               tflint

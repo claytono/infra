@@ -9,6 +9,7 @@ resources:
 - semaphore-postgres-cluster.yaml
 - externalsecret.yaml
 - externalsecret-ansible-vault.yaml
+- externalsecret-ara.yaml
 - externalsecret-encryption.yaml
 - externalsecret-oidc.yaml
 - helm/configmap.yaml

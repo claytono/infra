@@ -121,3 +121,8 @@ GitHub Actions automatically:
 - Commits rendered manifests back to pull requests
 - Validates manifests haven't diverged on main branch
 - Uses Nix development environment for consistent tooling
+
+## Authentik
+
+When setting up Authentik for new services, you must run ak-tool to provision
+them via terraform. Run ak-tool --help for details.
