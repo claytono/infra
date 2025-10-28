@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")"
+export MANAGARR_CONFIG_FILE="$PWD/config.yml"
+exec .managarr "$@"
