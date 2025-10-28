@@ -31,3 +31,13 @@ __pycache__/
 # ESPHome
 esphome/secrets.yaml
 .DS_Store
+
+# Tools - Recyclarr
+tools/recyclarr/data/cache/
+tools/recyclarr/data/configs/
+tools/recyclarr/data/includes/
+tools/recyclarr/data/logs/
+tools/recyclarr/data/repositories/
+tools/recyclarr/data/settings.yml
+
+# Tools - Managarr (nothing to ignore - config.yml is committed)

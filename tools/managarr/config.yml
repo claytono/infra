@@ -1,0 +1,12 @@
+---
+theme: default
+
+radarr:
+  - name: radarr
+    uri: https://radarr.k.oneill.net
+    api_token: !env ${RADARR_API_KEY}
+
+sonarr:
+  - name: sonarr
+    uri: https://sonarr.k.oneill.net
+    api_token: !env ${SONARR_API_KEY}

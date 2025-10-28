@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")"
+export RECYCLARR_APP_DATA="$PWD/data"
+exec .recyclarr "$@"
