@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: cwa
+  annotations:
+    ak-type: simple
+    ak-path-exclude: |-
+      /opds.*
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Calibre Web
+    gethomepage.dev/description: Ebook Library
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: calibre-web.png
+
+spec:
+  tls:
+  - hosts:
+    - cwa.k.oneill.net
+    secretName: cwa-tls
+  rules:
+  - host: cwa.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cwa
+            port:
+              number: 8083
+  ingressClassName: nginx

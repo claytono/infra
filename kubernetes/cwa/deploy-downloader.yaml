@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: cwa-downloader
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cwa-downloader
+  template:
+    metadata:
+      labels:
+        app: cwa-downloader
+    spec:
+      containers:
+      - name: cwa-downloader
+        image: ghcr.io/calibrain/calibre-web-automated-book-downloader
+        ports:
+        - containerPort: 8084
+        volumeMounts:
+        - mountPath: /cwa-book-ingest
+          name: ingestion
+        env:
+        - name: PUID
+          value: '10001'
+        - name: PGID
+          value: '10001'
+        - name: TZ
+          value: EST5EDT
+      volumes:
+      - nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads/cwa-ingestion
+        name: ingestion
