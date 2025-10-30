@@ -1,0 +1,27 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ara
+
+components:
+- ../components/authentik
+
+resources:
+- namespace.yaml
+- ara-postgres-cluster.yaml
+- ara-basic-auth-secret.yaml
+- ingress.yaml
+- helm/deployment.yaml
+- helm/extra-objects.yaml
+- helm/pvc.yaml
+- helm/service.yaml
+
+patches:
+- path: patch-deployment-password.yaml
+  target:
+    kind: Deployment
+    name: ara-ara
+
+commonAnnotations:
+  argoManaged: 'true'

@@ -1,0 +1,9 @@
+---
+apiVersion: v2
+name: ara
+version: 1.0.0
+
+dependencies:
+- name: ara
+  version: 0.4.6
+  repository: https://lib42.github.io/charts

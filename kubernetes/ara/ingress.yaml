@@ -1,0 +1,67 @@
+---
+# API ingress - nginx basic auth for callback plugin writes
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: ara-api
+  namespace: ara
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: ara-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: ARA API - Authentication Required
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ara.k.oneill.net
+    secretName: ara-tls
+  rules:
+  - host: ara.k.oneill.net
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: ara-ara-service
+            port:
+              number: 8000
+
+---
+# Web UI ingress - Authentik forward auth for browser access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: ara
+  namespace: ara
+  annotations:
+    ak-type: simple
+    cert-manager.io/cluster-issuer: zerossl
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: ARA
+    gethomepage.dev/description: Ansible Run Analysis
+    gethomepage.dev/group: Home Lab
+    gethomepage.dev/icon: ansible.png
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=ara
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ara.k.oneill.net
+    secretName: ara-tls
+  rules:
+  - host: ara.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ara-ara-service
+            port:
+              number: 8000

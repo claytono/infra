@@ -8,6 +8,7 @@ resource "authentik_outpost" "embedded" {
   service_connection = data.authentik_service_connection_kubernetes.local.id
   protocol_providers = [
     authentik_provider_proxy.alertmanager.id,
+    authentik_provider_proxy.ara.id,
     authentik_provider_proxy.bazarr.id,
     authentik_provider_proxy.changedetection.id,
     authentik_provider_proxy.cwa-cwa.id,
