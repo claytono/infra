@@ -9,7 +9,14 @@ on:
 
 jobs:
   ansible-integration-test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - arch: amd64
+          runner: ubuntu-latest
+        - arch: arm64
+          runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
@@ -37,9 +44,9 @@ jobs:
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-buildx-
+          ${{ runner.os }}-buildx-${{ matrix.arch }}-
 
     - name: Write vault password file
       if: steps.changes.outputs.ansible == 'true'

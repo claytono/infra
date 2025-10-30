@@ -6,6 +6,15 @@ node_exporter_version: 1.9.1
 node_exporter_host: 0.0.0.0
 node_exporter_port: 9100
 node_exporter_options: --collector.textfile.directory=/var/lib/node_exporter/textfile_collector --log.level=info
+# Map Ansible architecture names to node_exporter release architecture names
+node_exporter_arch: >-
+  {{
+    {
+      'x86_64': 'amd64',
+      'aarch64': 'arm64',
+      'armv7l': 'armv7'
+    }[ansible_architecture] | default(ansible_architecture)
+  }}
 enable_ufw: false
 
 # containerd configuration - use subdirectory to avoid changing /tmp permissions
@@ -205,7 +214,7 @@ aws_secret_access_token: !vault |-
 # fail2ban configuration
 fail2ban_dependencies:
   - fail2ban
-  - python3-systemd  # Required for systemd backend on Debian 12
+  - python3-systemd # Required for systemd backend on Debian 12
 
 fail2ban_jails:
   DEFAULT:
