@@ -13,6 +13,9 @@ resource "authentik_provider_proxy" "cwa-downloader" {
   access_token_validity = "hours=1"
 
 
+  skip_path_regex = <<-EOT
+^https://cwa-downloader.k.oneill.net/api/.*
+  EOT
 }
 
 resource "authentik_application" "cwa-downloader" {
