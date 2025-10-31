@@ -1,0 +1,34 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+commonAnnotations:
+  argoManaged: 'true'
+
+components:
+- ../components/authentik
+
+resources:
+- deploy.yaml
+- service.yaml
+- ingress.yaml
+- pvc-config.yaml
+
+configMapGenerator:
+- name: bookshelf-scripts
+  options:
+    disableNameSuffixHash: true
+  files:
+  - copy-to-cwa.sh
+
+images:
+- name: ghcr.io/pennydreadful/bookshelf
+  newTag: hardcover-v0.4.20.91
+
+labels:
+- pairs:
+    app.kubernetes.io/name: bookshelf
+    app.kubernetes.io/instance: bookshelf
+  includeSelectors: true
