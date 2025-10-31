@@ -46,6 +46,8 @@ spec:
             value: "INFO"
           - name: ARA_READ_LOGIN_REQUIRED
             value: "false"
+          - name: ARA_TIME_ZONE
+            value: "America/New_York"
           - name: ARA_WRITE_LOGIN_REQUIRED
             value: "false"
         volumeMounts:

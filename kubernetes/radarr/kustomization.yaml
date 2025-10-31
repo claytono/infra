@@ -18,7 +18,7 @@ resources:
 
 images:
 - name: linuxserver/radarr
-  newTag: 5.28.0@sha256:fae2aafa6ecace3524fc79d102f5bfd25fb151caed6a454cee46479236ac33bf
+  newTag: 5.28.0@sha256:c984533510abe0219a70e80d15bd0d212b7df21baa0913759c4ce6cc9092240b
 
 labels:
 

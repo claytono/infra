@@ -31,6 +31,9 @@ env:
   # Logging
   ARA_LOG_LEVEL: INFO
 
+  # Timezone - display timestamps in local time instead of UTC
+  ARA_TIME_ZONE: America/New_York
+
 # Database password will be set via environment variable from secret
 # Note: ara-postgres-app secret contains 'password' key, we need ARA_DATABASE_PASSWORD
 
