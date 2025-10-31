@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: bookshelf
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookshelf
+      app.kubernetes.io/name: bookshelf
+      app.kubernetes.io/instance: bookshelf
+  template:
+    metadata:
+      labels:
+        app: bookshelf
+        app.kubernetes.io/name: bookshelf
+        app.kubernetes.io/instance: bookshelf
+    spec:
+      containers:
+      - name: bookshelf
+        image: ghcr.io/pennydreadful/bookshelf
+        ports:
+        - containerPort: 8787
+        volumeMounts:
+        - mountPath: /config
+          name: config
+        - mountPath: /books
+          name: books
+        - mountPath: /downloads/qbittorrent
+          name: qbittorrent-downloads
+        - mountPath: /cwa-book-ingest
+          name: cwa-ingest
+        - mountPath: /scripts
+          name: scripts
+        env:
+        - name: PUID
+          value: '10001'
+        - name: PGID
+          value: '10001'
+        - name: TZ
+          value: EST5EDT
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: bookshelf-config
+      - nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/books/bookshelf
+        name: books
+      - nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads/qbittorrent
+        name: qbittorrent-downloads
+      - nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads/cwa-ingestion
+        name: cwa-ingest
+      - name: scripts
+        configMap:
+          name: bookshelf-scripts
+          defaultMode: 0755
