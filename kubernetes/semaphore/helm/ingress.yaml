@@ -7,10 +7,10 @@ metadata:
   name: semaphore
   namespace: semaphore
   labels:
-    helm.sh/chart: "semaphore-16.0.5"
+    helm.sh/chart: "semaphore-16.0.6"
     app.kubernetes.io/name: "semaphore"
     app.kubernetes.io/instance: "semaphore"
-    app.kubernetes.io/version: "2.16.34"
+    app.kubernetes.io/version: "2.16.35"
     app.kubernetes.io/managed-by: "Helm"
   annotations:
     ak-oidc-callback: /api/auth/oidc/authentik/redirect

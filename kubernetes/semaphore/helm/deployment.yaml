@@ -7,10 +7,10 @@ metadata:
   name: semaphore
   namespace: semaphore
   labels:
-    helm.sh/chart: "semaphore-16.0.5"
+    helm.sh/chart: "semaphore-16.0.6"
     app.kubernetes.io/name: "semaphore"
     app.kubernetes.io/instance: "semaphore"
-    app.kubernetes.io/version: "2.16.34"
+    app.kubernetes.io/version: "2.16.35"
     app.kubernetes.io/managed-by: "Helm"
 
 spec:
@@ -28,10 +28,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: "semaphore-16.0.5"
+        helm.sh/chart: "semaphore-16.0.6"
         app.kubernetes.io/name: "semaphore"
         app.kubernetes.io/instance: "semaphore"
-        app.kubernetes.io/version: "2.16.34"
+        app.kubernetes.io/version: "2.16.35"
         app.kubernetes.io/managed-by: "Helm"
       annotations:
         checksum/config: 6db2d80fdda45e7be278174345179b6ece77d6ca957902f08bb3ba861921e4a8
@@ -45,7 +45,7 @@ spec:
 
       containers:
         - name: semaphore
-          image: semaphoreui/semaphore:v2.16.34
+          image: semaphoreui/semaphore:v2.16.35
           imagePullPolicy: IfNotPresent
 
           env:
