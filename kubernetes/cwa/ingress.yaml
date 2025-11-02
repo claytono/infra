@@ -14,7 +14,12 @@ metadata:
     gethomepage.dev/description: Ebook Library
     gethomepage.dev/group: Media
     gethomepage.dev/icon: calibre-web.png
-
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      if ($uri ~* ^/opds) {
+        if ($request_method = HEAD) {
+          return 204;
+        }
+      }
 spec:
   tls:
   - hosts:
@@ -25,6 +30,37 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cwa
+            port:
+              number: 8083
+  ingressClassName: nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: cwa-opds
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+#    nginx.ingress.kubernetes.io/configuration-snippet: |
+#      if ($uri ~* ^/opds) {
+#        if ($request_method = HEAD) {
+#          return 204;
+#        }
+#      }
+spec:
+  tls:
+  - hosts:
+    - cwa.k.oneill.net
+    secretName: cwa-tls
+  rules:
+  - host: cwa.k.oneill.net
+    http:
+      paths:
+      - path: /opds
         pathType: Prefix
         backend:
           service:

@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: bookshelf
+  annotations:
+    ak-type: basic-auth
+    ak-path-exclude: /api(/|$)
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Bookshelf
+    gethomepage.dev/description: Book Manager
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: readarr.png
+
+spec:
+  tls:
+  - hosts:
+    - bookshelf.k.oneill.net
+    secretName: bookshelf-tls
+  rules:
+  - host: bookshelf.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bookshelf
+            port:
+              number: 8787
+  ingressClassName: nginx
