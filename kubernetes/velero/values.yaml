@@ -31,6 +31,13 @@ uploaderType: kopia
 credentials:
   existingSecret: velero-b2-credentials
 
+metrics:
+  enabled: true
+  service:
+    annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port: '8085'
+
 initContainers:
 - name: velero-plugin-for-aws
   # renovate: datasource=docker depName=velero/velero-plugin-for-aws

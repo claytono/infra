@@ -56,5 +56,11 @@ if [ ! -f "$KOPIA_CONFIG" ]; then
 fi
 
 # Run kopia command
-echo "Running kopia command..."
-exec kopia --config-file="$KOPIA_CONFIG" "$@"
+# Default to "snapshot list -d --storage-stats" if no arguments provided
+if [ $# -eq 0 ]; then
+    echo "Running kopia snapshot list -d --storage-stats..."
+    exec kopia --config-file="$KOPIA_CONFIG" snapshot list -d --storage-stats
+else
+    echo "Running kopia command..."
+    exec kopia --config-file="$KOPIA_CONFIG" "$@"
+fi

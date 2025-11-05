@@ -5,6 +5,9 @@ kind: Service
 metadata:
   name: velero
   namespace: velero
+  annotations:
+    prometheus.io/port: "8085"
+    prometheus.io/scrape: "true"
   labels:
     app.kubernetes.io/name: velero
     app.kubernetes.io/instance: velero
