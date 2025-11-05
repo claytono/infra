@@ -38,6 +38,8 @@ resources:
 - rclone-externalsecret.yaml
 - schedule-daily.yaml
 - volume-policy-configmap.yaml
+- healthcheck-externalsecret.yaml
+- healthcheck-cronjob.yaml
 
 configMapGenerator:
 - name: velero-encrypt-startup
@@ -45,6 +47,11 @@ configMapGenerator:
     disableNameSuffixHash: true
   files:
   - start.sh
+- name: velero-healthcheck-script
+  options:
+    disableNameSuffixHash: true
+  files:
+  - healthcheck.sh
 
 patches:
 

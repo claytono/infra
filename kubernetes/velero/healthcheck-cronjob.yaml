@@ -1,0 +1,39 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: velero-healthcheck
+  namespace: velero
+
+spec:
+  # Run daily at 8:00 AM UTC (2 hours after backup at 6:00 AM)
+  schedule: 0 8 * * *
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: velero-server
+          restartPolicy: OnFailure
+          containers:
+          - name: healthcheck
+            image: alpine:3.22
+            env:
+            - name: HEALTHCHECK_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: velero-healthcheck
+                  key: HEALTHCHECK_PING_KEY
+            command:
+            - /bin/sh
+            - /scripts/healthcheck.sh
+            volumeMounts:
+            - name: healthcheck-script
+              mountPath: /scripts
+          volumes:
+          - name: healthcheck-script
+            configMap:
+              name: velero-healthcheck-script
+              defaultMode: 0755
