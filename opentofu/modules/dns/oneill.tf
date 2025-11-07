@@ -117,14 +117,6 @@ resource "aws_route53_record" "clayton" {
   records = ["claytono.github.io."]
 }
 
-resource "aws_route53_record" "frank" {
-  zone_id = aws_route53_zone.oneill_net.zone_id
-  name    = "frank.oneill.net"
-  type    = "A"
-  ttl     = 300
-  records = ["20.241.73.44"]
-}
-
 resource "aws_route53_record" "k_subdomain_ns" {
   zone_id = aws_route53_zone.oneill_net.zone_id
   name    = "k.oneill.net"
@@ -147,6 +139,20 @@ resource "aws_route53_record" "router" {
   type    = "A"
   ttl     = 3600
   records = ["172.19.74.1"]
+}
+
+# Infrastructure hosts - automatically synced with UniFi DHCP reservations
+# Host definitions are in ../../locals.tf (infrastructure_hosts) and shared
+# with unifi_user resources to ensure DNS and DHCP stay automatically in sync.
+
+resource "aws_route53_record" "infrastructure_hosts" {
+  for_each = var.infrastructure_hosts
+
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = each.value.hostname
+  type    = "A"
+  ttl     = 300
+  records = [each.value.ip]
 }
 
 # Nameserver records for delegation set

@@ -42,6 +42,10 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
+    dns = {
+      source  = "hashicorp/dns"
+      version = "~> 3.4"
+    }
   }
 
   backend "s3" {
@@ -95,7 +99,8 @@ provider "unifi" {
 }
 
 module "dns" {
-  source = "./modules/dns"
+  source               = "./modules/dns"
+  infrastructure_hosts = local.infrastructure_hosts
 }
 
 # Authentik provider configuration via 1Password (see locals in secrets.tf)
