@@ -1,0 +1,71 @@
+---
+- alias: Change HDFury VRRoom Source
+  id: change_hdfury_vrroom_source
+  trigger:
+  - platform: state
+    entity_id: input_select.hdfury_vrroom_source
+  action:
+  - service: rest_command.set_vrroom_input
+    data:
+      input: >
+        {% if is_state("input_select.hdfury_vrroom_source", "Apple TV") %}
+        0
+        {% elif is_state("input_select.hdfury_vrroom_source", "PS5") %}
+        1
+        {% elif is_state("input_select.hdfury_vrroom_source", "Xbox Series X") %}
+        2
+        {% elif is_state("input_select.hdfury_vrroom_source", "Windows PC") %}
+        3
+        {% else %}
+        -1
+        {% endif %}
+
+  - delay:
+      seconds: 2  # Allow time for change to take effect
+
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.hdfury_vrroom_status
+
+- alias: Sync VRRoom Source Selector
+  trigger:
+  - platform: state
+    entity_id: sensor.hdfury_vrroom_source
+  action:
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.hdfury_vrroom_source
+    data:
+      option: "{{ states('sensor.hdfury_vrroom_source') }}"
+
+- alias: Force VRRoom to Follow Harmony Activity
+  id: force_vrroom_follow_harmony
+  trigger:
+  - platform: state
+    entity_id: sensor.hdfury_vrroom_source
+    for:
+      seconds: 1  # Wait to confirm it's not intentional
+  condition:
+  - condition: template
+    value_template: "{{ states('sensor.hdfury_vrroom_source') | string != states('sensor.harmony_vrroom_input') }}"
+  action:
+  - condition: template
+    value_template: "{{ states('sensor.harmony_vrroom_input') | int != -1 }}"  # Do nothing if input is unknown
+  - service: rest_command.set_vrroom_input
+    data:
+      input: "{{ states('sensor.harmony_vrroom_input') }}"
+
+- alias: Sleep Windows PC When Stopping PC Activity
+  id: sleep_windows_pc_when_stopping_pc_activity
+  trigger:
+  - platform: state
+    entity_id: remote.harmony_hub
+  condition:
+  - condition: template
+    value_template: >-
+      {{ state_attr('remote.harmony_hub', 'last_activity') == 'Watch PC' and
+          state_attr('remote.harmony_hub', 'current_activity') != 'Watch PC' }}
+  action:
+  - service: button.press  # Sleep PC via Harmony SSH button
+    target:
+      entity_id: button.szamar_sleep_windows

@@ -189,7 +189,7 @@ def get_openai_api_key() -> str:
 
 def call_openai_api(prompt: str, api_key: str, model: str = "gpt-5") -> str:
     """
-    Call OpenAI API with the given prompt.
+    Call OpenAI Responses API with the given prompt.
 
     Args:
         prompt: The prompt to send to the AI
@@ -203,11 +203,12 @@ def call_openai_api(prompt: str, api_key: str, model: str = "gpt-5") -> str:
         urllib.error.HTTPError: If API call fails
         KeyError: If response format is unexpected
     """
-    url = "https://api.openai.com/v1/chat/completions"
+    url = "https://api.openai.com/v1/responses"
 
     data = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "input": prompt,
+        "tools": [{"type": "web_search"}],
     }
 
     headers = {
@@ -225,7 +226,17 @@ def call_openai_api(prompt: str, api_key: str, model: str = "gpt-5") -> str:
     try:
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode("utf-8"))
-            return response_data["choices"][0]["message"]["content"]
+            # Extract text content from the response output array
+            output = response_data.get("output", [])
+            for item in output:
+                if item.get("type") == "message":
+                    content = item.get("content", [])
+                    for block in content:
+                        # Handle both 'text' and 'output_text' types
+                        if block.get("type") in ("text", "output_text"):
+                            return block.get("text", "")
+            # Fallback if structure is different
+            return str(response_data.get("output", ""))
     except urllib.error.HTTPError as e:
         error_body = e.read().decode("utf-8")
         raise Exception(f"OpenAI API error (HTTP {e.code}): {error_body}")
@@ -243,6 +254,7 @@ def analyze_changes(diff_content: str, api_key: str, model: str = "gpt-5") -> st
     Returns:
         AI analysis response
     """
+    # Build the prompt
     prompt = f"""You are analyzing Helm Chart changes from a Renovate dependency update pull request.
 
 This repository uses a GitOps approach where Helm charts are pre-rendered into static YAML
@@ -281,6 +293,28 @@ OR
 IMPORTANT: Do not use bold (**), italics (*), headers (#), or code blocks in your response.
 For ROUTINE changes: 1-2 sentence plain text description.
 For SIGNIFICANT changes: intro sentence + detailed bullet points explaining what changed and impact.
+
+---
+
+SPECIAL INSTRUCTIONS FOR HOME ASSISTANT UPGRADES:
+
+If you detect that this is a Home Assistant upgrade (check for ghcr.io/home-assistant/home-assistant
+image tag changes in ANY of the diff files, including Chart.yaml and rendered templates),
+please search the web to find the official Home Assistant release blog posts on www.home-assistant.io.
+
+You MUST find and include blog post links for ALL versions between the old version and the new version.
+For example, if upgrading from 2025.1 to 2025.3, you must include blog posts for 2025.2 and 2025.3.
+
+If this is a Home Assistant upgrade, you MUST start your response with:
+
+🏠 HOME ASSISTANT UPGRADE from [old version] to [new version]
+
+Release Blog Posts:
+- [version]: [URL you found]
+- [version]: [URL you found]
+(list all intermediate versions)
+
+Then continue with the ROUTINE or SIGNIFICANT classification below that.
 
 ---
 

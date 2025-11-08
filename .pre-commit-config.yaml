@@ -17,7 +17,7 @@ repos:
   hooks:
   - id: yamlfix
     args: [-c, .yamlfix.toml]
-    exclude: ^ansible/|service-blueprint\.template\.yaml$
+    exclude: ^ansible/|service-blueprint\.template\.yaml$|kubernetes/hass/config/configuration\.yaml$
 
 - repo: https://github.com/adrienverge/yamllint.git
   rev: v1.37.1
@@ -65,6 +65,12 @@ repos:
     files: ^kubernetes/.*/.*\.(ya?ml)$
     pass_filenames: false
     always_run: false
+  - id: hass-check-config
+    name: validate home assistant config
+    entry: scripts/hass-check-config
+    language: system
+    files: ^(kubernetes/hass/|scripts/hass-check-config)
+    pass_filenames: false
 
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1

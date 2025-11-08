@@ -1,0 +1,83 @@
+---
+# Pin to current version temporarily during migration
+image:
+  tag: '2025.7'
+
+# Host networking required for Lutron Caseta and Harmony Hub
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+# Persistence configuration
+persistence:
+  enabled: true
+  size: 10Gi
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Home Assistant
+    gethomepage.dev/group: Miscellaneous
+    gethomepage.dev/icon: home-assistant.png
+  hosts:
+  - host: hass.k.oneill.net
+    paths:
+    - path: /
+      pathType: Prefix
+  tls:
+  - secretName: hass-tls
+    hosts:
+    - hass.k.oneill.net
+
+# Environment variables for PostgreSQL connection
+env:
+- name: DB_URL
+  valueFrom:
+    secretKeyRef:
+      name: hass-postgres-app
+      key: uri
+
+# Init containers to sync config files into PVC
+initContainers:
+- name: config-setup
+  image: alpine:3.22
+  command:
+  - sh
+  - -c
+  - |
+    apk add --no-cache rsync
+    rsync -av --copy-links /config-map/ /config/
+  volumeMounts:
+  - name: config-map
+    mountPath: /config-map
+  - name: hass-home-assistant
+    mountPath: /config
+
+# Additional volumes for config files and secrets
+additionalVolumes:
+- name: config-map
+  projected:
+    sources:
+    - configMap:
+        name: hass-config
+    - secret:
+        name: hass-secrets-file
+    - secret:
+        name: hass-caseta-certificates
+        items:
+        - key: caseta-bridge.crt
+          path: caseta-bridge.crt
+          mode: 420
+        - key: caseta.crt
+          path: caseta.crt
+          mode: 420
+        - key: caseta.key
+          path: caseta.key
+          mode: 384
+
+# Pod annotations for Reloader
+podAnnotations:
+  reloader.stakater.com/auto: 'true'

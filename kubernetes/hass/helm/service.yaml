@@ -1,0 +1,22 @@
+---
+# Source: home-assistant/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hass-home-assistant
+  labels:
+    helm.sh/chart: home-assistant-0.3.29
+    app.kubernetes.io/name: home-assistant
+    app.kubernetes.io/instance: hass
+    app.kubernetes.io/version: "2025.11.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: home-assistant
+    app.kubernetes.io/instance: hass
