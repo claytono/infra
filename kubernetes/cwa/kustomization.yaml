@@ -25,7 +25,7 @@ images:
 - name: ghcr.io/crocodilestick/calibre-web-automated
   newTag: dev@sha256:d20e14144634d542d2f0f61691606a903c895efec9fc255357647d37f7a9d515
 - name: ghcr.io/calibrain/calibre-web-automated-book-downloader
-  newTag: v0.2.3@sha256:c2850991e99e278269003d92efa86e865f7df039093fbd03e85141b035cf7a80
+  newTag: v0.2.4@sha256:b1296c5edc89eee8742d86392ce40707233671044a454e002821e5c76cd58deb
 
 labels:
 - pairs:
