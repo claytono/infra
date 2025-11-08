@@ -6,10 +6,10 @@ metadata:
   name: cloudnative-pg
   namespace: cnpg-system
   labels:
-    helm.sh/chart: cloudnative-pg-0.26.0
+    helm.sh/chart: cloudnative-pg-0.26.1
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.27.0"
+    app.kubernetes.io/version: "1.27.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -20,9 +20,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/rbac: 3e9db4a0bd672acba7352d745dd4431ce388a077cdd18f0deff860e13a6e0620
-        checksum/config: 80069cfc7497c6a462c45d8a9371528088ca13a1163980a47f425767940fe61b
-        checksum/monitoring-config: dc7f08fcd3dd34e65bd93b0a1bb538c9c97176630353c01fbf0351053909bc6d
+        checksum/rbac: a3b7533a85fb6428b91879547664f5c556b8cef8c2ec2feb9ce2d4a97ef3fbd4
+        checksum/config: a4b4684d33249d344b424e9987b8c95cb32ceebef8f2a1c5d43058f78c30ec7a
+        checksum/monitoring-config: b412697918d2a29dbce947c9ec6a3bc3cf7adf76e0e23e6ba7368bb6a04adde9
       labels:
         app.kubernetes.io/name: cloudnative-pg
         app.kubernetes.io/instance: cloudnative-pg
@@ -38,14 +38,14 @@ spec:
         - /manager
         env:
         - name: OPERATOR_IMAGE_NAME
-          value: "ghcr.io/cloudnative-pg/cloudnative-pg:1.27.0"
+          value: "ghcr.io/cloudnative-pg/cloudnative-pg:1.27.1"
         - name: OPERATOR_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
         - name: MONITORING_QUERIES_CONFIGMAP
           value: "cnpg-default-monitoring"
-        image: "ghcr.io/cloudnative-pg/cloudnative-pg:1.27.0"
+        image: "ghcr.io/cloudnative-pg/cloudnative-pg:1.27.1"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -108,7 +108,8 @@ spec:
 ---
 # Source: cloudnative-pg/templates/deployment.yaml
 #
-# Copyright The CloudNativePG Contributors
+# Copyright © contributors to CloudNativePG, established as
+# CloudNativePG a Series of LF Projects, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -121,4 +122,6 @@ spec:
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
 #
