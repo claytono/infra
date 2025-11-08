@@ -21,6 +21,7 @@ backend.tf
 
 # Kubernetes
 kubernetes/hass/configmap.yaml
+kubernetes/hass/config-check/
 kubernetes/resticprofile/.cache
 kubernetes/resticprofile/.tmp
 kubernetes/network-storage-benchmark/results/

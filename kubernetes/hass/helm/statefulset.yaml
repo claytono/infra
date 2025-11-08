@@ -1,0 +1,112 @@
+---
+# Source: home-assistant/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hass-home-assistant
+  labels:
+    helm.sh/chart: home-assistant-0.3.29
+    app.kubernetes.io/name: home-assistant
+    app.kubernetes.io/instance: hass
+    app.kubernetes.io/version: "2025.11.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  serviceName: hass-home-assistant
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: home-assistant
+      app.kubernetes.io/instance: hass
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: home-assistant
+        app.kubernetes.io/instance: hass
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: hass-home-assistant
+      securityContext:
+        {}
+      containers:
+        - name: home-assistant
+          securityContext:
+            {}
+          image: "ghcr.io/home-assistant/home-assistant:2025.7"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  key: uri
+                  name: hass-postgres-app
+          ports:
+            - name: http
+              containerPort: 8123
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+          - mountPath: /config
+            name: hass-home-assistant
+      initContainers:
+        - command:
+          - sh
+          - -c
+          - |
+            apk add --no-cache rsync
+            rsync -av --copy-links /config-map/ /config/
+          image: alpine:3.22
+          name: config-setup
+          volumeMounts:
+          - mountPath: /config-map
+            name: config-map
+          - mountPath: /config
+            name: hass-home-assistant
+      volumes:
+      - name: config-map
+        projected:
+          sources:
+          - configMap:
+              name: hass-config
+          - secret:
+              name: hass-secrets-file
+          - secret:
+              items:
+              - key: caseta-bridge.crt
+                mode: 420
+                path: caseta-bridge.crt
+              - key: caseta.crt
+                mode: 420
+                path: caseta.crt
+              - key: caseta.key
+                mode: 384
+                path: caseta.key
+              name: hass-caseta-certificates
+  volumeClaimTemplates:
+  - metadata:
+      name: hass-home-assistant
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi

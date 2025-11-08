@@ -1,0 +1,812 @@
+---
+default_config:
+
+homeassistant:
+  packages: !include_dir_named packages
+
+# Enables the frontend
+frontend:
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+  - 10.244.0.0/16
+  - 172.19.74.0/24
+
+# Enables configuration UI
+config:
+
+recorder:
+  db_url: !env_var DB_URL
+
+input_select:
+  hdfury_vrroom_source:
+    name: HDFury VRRoom Source
+    options:
+    - Apple TV
+    - PS5
+    - Xbox Series X
+    - Windows PC
+    icon: mdi:video-input-hdmi
+
+rest_command:
+  set_vrroom_input:
+    url: http://vrroom-37.oneill.net/cmd?insel={{ input }}
+    method: GET
+
+# Enables prometheus exporter
+prometheus:
+  namespace: hass
+
+twilio:
+  account_sid: !secret twilio_account_sid
+  auth_token: !secret twilio_auth_token
+
+notify:
+- name: twilio_call
+  platform: twilio_call
+  from_number: !secret twilio_number
+- name: twilio_sms
+  platform: twilio_sms
+  from_number: !secret twilio_number
+- name: call_me
+  platform: group
+  services:
+  - service: twilio_call
+    data:
+      target: !secret my_phone
+- name: text_me
+  platform: group
+  services:
+  - service: twilio_sms
+    data:
+      target: !secret my_phone
+
+lutron_caseta:
+- host: lutron-032e18fd.oneill.net
+  keyfile: caseta.key
+  certfile: caseta.crt
+  ca_certs: caseta-bridge.crt
+
+person:
+
+logger:
+  default: info
+
+homekit:
+  filter:
+    include_entities:
+    - cover.left_garage_door
+    - cover.right_garage_door
+    - light.bathroom_light_106
+    - light.dining_room_light_108
+    - light.family_room_standing_lamp_44
+    - light.garage_overhead_lights_8
+    - light.office_floor_lamp_19
+    - light.office_light_76
+    - light.office_sink_light
+    - lock.front_door_lock
+    - lock.garage_door_lock
+    - sensor.garage_humidity
+    - sensor.garage_temperature
+    - sensor.netatmo_indoor_humidity
+    - sensor.netatmo_indoor_temperature
+    - sensor.netatmo_outdoor_humidity
+    - sensor.netatmo_outdoor_temperature
+    - switch.smoker_158
+    - binary_sensor.family_room_humidifier_empty
+    - binary_sensor.dining_room_humidifier_empty
+    #    - climate.bed_jet_climate
+    - scene.get_ready_for_bed
+    - scene.good_night
+    - scene.good_morning
+
+    # Caseta items
+    - light.basement_office_main_lights
+    - switch.basement_stairs_main_lights
+    - switch.exterior_basement_stairs_light
+    - switch.guest_bathroom_exhaust_fan
+    - light.guest_bathroom_vanity_lights
+    - light.guest_bedroom_main_lights
+    - light.guest_bedroom_floor_lamp
+    - light.rec_room_main_lights
+    - fan.master_bedroom_ceiling_fan
+    - light.master_bedroom_ceiling_fan_light
+    - light.rec_room_floor_lamp
+    - light.office_floor_lamp
+    - binary_sensor.office_occupancy
+    - light.rec_room_back_right_floor_lamp
+    - light.rec_room_front_left_floor_lamp
+
+    # Harmony
+    - switch.basement_tv
+    - switch.appletv
+    - switch.xbox
+    - switch.playstation
+    - switch.nintendo_switch
+    - switch.windows_pc
+
+# Allows you to issue voice commands from the frontend in enabled browsers
+conversation:
+
+# View all events in a logbook
+logbook:
+
+# Track the sun
+sun:
+
+climate:
+- platform: generic_thermostat
+  name: Office Thermostat
+  heater: switch.office_heater
+  target_sensor: sensor.office_bme280_temperature
+  precision: 0.1
+  min_temp: 60
+  max_temp: 85
+  hot_tolerance: 0
+
+- platform: generic_thermostat
+  name: Office Foot Warmer
+  heater: switch.office_foot_warmer_switch
+  target_sensor: sensor.office_foot_warmer_temperature
+  precision: 0.1
+  min_temp: 60
+  max_temp: 130
+  hot_tolerance: 0
+
+generic_hygrostat:
+- name: Main Floor
+  humidifier: switch.main_floor_humidifiers
+  target_sensor: sensor.living_room_humidity
+  target_humidity: 40
+
+light:
+- platform: switch
+  name: Office Sink Light
+  entity_id: switch.office_sink
+- platform: switch
+  name: Office Closet Light
+  entity_id: switch.office_closet_relay
+- platform: group
+  name: Office lights
+  entities:
+  - light.office_floor_lamp
+  - light.basement_office_main_lights
+  - light.office_sink_light
+  - light.office_closet_light
+
+switch:
+- platform: template
+  switches:
+    basement_tv:
+      friendly_name: Basement TV
+      value_template: "{{ not is_state_attr('remote.harmony_hub', 'current_activity', 'power_off') }}"
+      turn_on:
+        service: remote.turn_on
+        data:
+          entity_id: remote.harmony_hub
+          activity: Watch Apple TV
+      turn_off:
+        service: remote.turn_off
+        data:
+          entity_id: remote.harmony_hub
+    appletv:
+      friendly_name: Apple TV
+      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch Apple TV') }}"
+      turn_on:
+        service: remote.turn_on
+        data:
+          entity_id: remote.harmony_hub
+          activity: Watch Apple TV
+      turn_off:
+        service: remote.turn_off
+        data:
+          entity_id: remote.harmony_hub
+    xbox:
+      friendly_name: XBox
+      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Xbox') }}"
+      turn_on:
+        service: remote.turn_on
+        data:
+          entity_id: remote.harmony_hub
+          activity: Play Xbox
+      turn_off:
+        service: remote.turn_off
+        data:
+          entity_id: remote.harmony_hub
+    playstation:
+      friendly_name: Playstation
+      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play PS5') }}"
+      turn_on:
+        service: remote.turn_on
+        data:
+          entity_id: remote.harmony_hub
+          activity: Play PS5
+      turn_off:
+        service: remote.turn_off
+        data:
+          entity_id: remote.harmony_hub
+    nintendo_switch:
+      friendly_name: Nintendo Switch
+      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Nintendo Switch') }}"
+      turn_on:
+        service: remote.turn_on
+        data:
+          entity_id: remote.harmony_hub
+          activity: Play Nintendo Switch
+      turn_off:
+        service: remote.turn_off
+        data:
+          entity_id: remote.harmony_hub
+    windows_pc:
+      friendly_name: Windows PC
+      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch PC') }}"
+      turn_on:
+      - service: button.press  # Wake-on-LAN
+        target:
+          entity_id: button.wake_on_lan_szamar
+      - service: remote.turn_on  # Start Harmony Hub activity
+        data:
+          entity_id: remote.harmony_hub
+          activity: Watch PC
+      turn_off:
+      - service: remote.turn_off
+        data:
+          entity_id: remote.harmony_hub
+
+    main_floor_humidifiers:
+      friendly_name: Main Floor Humidifiers
+      value_template: "{{ is_state('switch.dining_room_humidifier', 'on') }}"
+      turn_on:
+      - service: switch.turn_on
+        entity_id: switch.dining_room_humidifier
+      - service: switch.turn_on
+        entity_id: switch.family_room_humidifier_relay
+      turn_off:
+      - service: switch.turn_off
+        entity_id: switch.dining_room_humidifier
+      - service: switch.turn_off
+        entity_id: switch.family_room_humidifier_relay
+
+    foot_warmer_thermostat:
+      friendly_name: Foot Warmer Thermostat
+      value_template: "{{ is_state('climate.office_foot_warmer', 'heat') }}"
+      turn_on:
+      - service: climate.set_hvac_mode
+        target:
+          entity_id: climate.office_foot_warmer
+        data:
+          hvac_mode: heat
+      turn_off:
+      - service: climate.set_hvac_mode
+        target:
+          entity_id: climate.office_foot_warmer
+        data:
+          hvac_mode: 'off'
+    office_heater_thermostat:
+      friendly_name: Office Heater Thermostat
+      value_template: "{{ is_state('climate.office_thermostat', 'heat') }}"
+      turn_on:
+      - service: climate.set_hvac_mode
+        target:
+          entity_id: climate.office_thermostat
+        data:
+          hvac_mode: heat
+      turn_off:
+      - service: climate.set_hvac_mode
+        target:
+          entity_id: climate.office_thermostat
+        data:
+          hvac_mode: 'off'
+
+template:
+
+- sensor:
+  - name: Dead ZWave Devices
+    unique_id: dead_zwave_devices
+    unit_of_measurement: entities
+    state: >
+      {% if state_attr('sensor.dead_zwave_devices','entity_id') != none %}
+        {{ state_attr('sensor.dead_zwave_devices','entity_id') | count }}
+      {% else %}
+        {{ 0 }}
+      {% endif %}
+    attributes:
+      entity_id: >
+        {% set exclude_filter = ['sensor.700_series_based_controller_node_status']
+        %}
+        {{
+          expand(integration_entities('Z-Wave JS') )
+          | rejectattr("entity_id", "in", exclude_filter)
+          | selectattr("entity_id", "search", "node_status")
+          | selectattr('state', 'in', 'dead, unavailable, unknown')
+          | map(attribute="object_id")
+          | map('regex_replace', find='(.*)_node_status', replace='button.\\1_ping',
+        ignorecase=False)
+          | list
+        }}
+
+- binary_sensor:
+  - name: Washer Running
+    unique_id: washer_running
+    device_class: running
+    state: >
+      {% set p = states('sensor.washing_machine_electric_consumption_w')|float(0)
+      %}
+      {% set was_on = (this.state == 'on') %}
+      {{ p > 18 or (was_on and p > 5) }}
+    delay_on:
+      seconds: 10
+    delay_off:
+      seconds: 10
+    availability: >
+      {{ states('sensor.washing_machine_electric_consumption_w')|float(-1) >= 0 }}
+
+  # This exists to give Alexa a clean motion sensor event when the washer finishes
+  # so it can announce it.  The debounce is done in the washer_running sensor above.
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.washer_running
+    to: 'off'  # no extra 'for:' needed; we already debounce via delay_off
+  binary_sensor:
+  - name: Washer Done (Alexa)
+    unique_id: washer_done_alexa
+    device_class: motion
+    state: 'true'
+    auto_off:
+      seconds: 3  # self-resets so each finish creates a clean edge
+
+input_number:
+  moisture_base: &moisture_base
+    min: 0
+    max: 100
+    step: 0.1
+    mode: slider
+
+  plant_sensor_a_d1f5_moisture_min:
+    <<: *moisture_base
+    name: Plant A Moisture Min
+    initial: 0
+
+  plant_sensor_a_d1f5_moisture_max:
+    <<: *moisture_base
+    name: Plant A Moisture Max
+    initial: 45
+
+  plant_sensor_b_d1d7_moisture_min:
+    <<: *moisture_base
+    name: Plant B Moisture Min
+    initial: 5
+
+  plant_sensor_b_d1d7_moisture_max:
+    <<: *moisture_base
+    name: Plant B Moisture Max
+    initial: 68
+
+  plant_sensor_c_f419_moisture_min:
+    <<: *moisture_base
+    name: Plant C Moisture Min
+    initial: 6
+
+  plant_sensor_c_f419_moisture_max:
+    <<: *moisture_base
+    name: Plant C Moisture Max
+    initial: 55
+
+  plant_sensor_d_d0ad_moisture_min:
+    <<: *moisture_base
+    name: Plant D Moisture Min
+    initial: 4.5
+
+  plant_sensor_d_d0ad_moisture_max:
+    <<: *moisture_base
+    name: Plant D Moisture Max
+    initial: 52
+
+# Sensors
+sensor:
+- platform: template
+    # Airvisual sensors
+  sensors:
+    airvisual_co2:
+      friendly_name: Airvisual CO2
+      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'carbon_dioxide') | default(0) }}"
+      unit_of_measurement: ppm
+    airvisual_pm01:
+      friendly_name: Airvisual PM0.1
+      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_0_1') | default(0) }}"
+      unit_of_measurement: ug/m3
+    airvisual_pm25:
+      friendly_name: Airvisual PM2.5
+      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_2_5') | default(0) }}"
+      unit_of_measurement: ug/m3
+    airvisual_pm10:
+      friendly_name: Airvisual PM10
+      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_10') | default(0) }}"
+      unit_of_measurement: ug/m3
+    airvisual_pm25_sensor_life:
+      friendly_name: Airvisual PM2.5 Sensor Life
+      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'pm2_5_sensor_life') | default(0) }}"
+      unit_of_measurement: ug/m3
+    harmony_vrroom_input:
+      friendly_name: Harmony Expected VRRoom Input
+      value_template: >-
+        {% set mapping = {
+          "Watch Apple TV": 0,
+          "Play PS5": 1,
+          "Play Xbox": 2,
+          "Watch PC": 3
+        } %}
+        {{ mapping.get(state_attr('remote.harmony_hub', 'current_activity'), -1) }}
+- platform: rest
+  name: HDFury VRRoom Status
+  resource: http://vrroom-37.oneill.net/ssi/infopage.ssi
+  value_template: '{{ value_json.portseltx0}}'
+  json_attributes:
+  - portseltx0
+  - RX0
+  - RX1
+  - TX0
+  - TX1
+  - AUD0
+  - AUD1
+  - AUDOUT
+  - SINK0
+  - SINK1
+  scan_interval: 00:01
+- platform: template
+  sensors:
+    hdfury_vrroom_source:
+      friendly_name: HDFury VRRoom Source
+      value_template: >-
+        {% if states('sensor.hdfury_vrroom_status') | float == 0 %}
+        Apple TV
+        {% elif states('sensor.hdfury_vrroom_status') | float == 1 %}
+        PS5
+        {% elif states('sensor.hdfury_vrroom_status') | float == 2 %}
+        Xbox Series X
+        {% elif states('sensor.hdfury_vrroom_status') | float == 3 %}
+        Windows PC
+        {% else %}
+        Unknown
+        {% endif %}
+- platform: template
+  sensors:
+    plant_sensor_a_d1f5_moisture_calibrated:
+      friendly_name: Plant A Soil Moisture
+      unit_of_measurement: '%'
+      device_class: moisture
+      unique_id: plant_sensor_a_d1f5_moisture_calibrated
+      value_template: >-
+        {% set raw = states('sensor.plant_sensor_a_d1f5_moisture') | float %}
+        {% set mn  = states('input_number.plant_sensor_a_d1f5_moisture_min') | float
+        %}
+        {% set mx  = states('input_number.plant_sensor_a_d1f5_moisture_max') | float
+        %}
+        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+        {%- endif %}
+
+    plant_sensor_b_d1d7_moisture_calibrated:
+      friendly_name: Plant B Soil Moisture
+      unit_of_measurement: '%'
+      device_class: moisture
+      unique_id: plant_sensor_b_d1d7_moisture_calibrated
+      value_template: >-
+        {% set raw = states('sensor.plant_sensor_b_d1d7_moisture') | float %}
+        {% set mn  = states('input_number.plant_sensor_b_d1d7_moisture_min') | float
+        %}
+        {% set mx  = states('input_number.plant_sensor_b_d1d7_moisture_max') | float
+        %}
+        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+        {%- endif %}
+
+    plant_sensor_c_f419_moisture_calibrated:
+      friendly_name: Plant C Soil Moisture
+      unit_of_measurement: '%'
+      device_class: moisture
+      unique_id: plant_sensor_c_f419_moisture_calibrated
+      value_template: >-
+        {% set raw = states('sensor.plant_sensor_c_f419_moisture') | float %}
+        {% set mn  = states('input_number.plant_sensor_c_f419_moisture_min') | float
+        %}
+        {% set mx  = states('input_number.plant_sensor_c_f419_moisture_max') | float
+        %}
+        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+        {%- endif %}
+
+    plant_sensor_d_d0ad_moisture_calibrated:
+      friendly_name: Plant D Soil Moisture
+      unit_of_measurement: '%'
+      device_class: moisture
+      unique_id: plant_sensor_d_d0ad_moisture_calibrated
+      value_template: >-
+        {% set raw = states('sensor.plant_sensor_d_d0ad_moisture') | float %}
+        {% set mn  = states('input_number.plant_sensor_d_d0ad_moisture_min') | float
+        %}
+        {% set mx  = states('input_number.plant_sensor_d_d0ad_moisture_max') | float
+        %}
+        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+        {%- endif %}
+
+binary_sensor:
+- platform: template
+  sensors:
+    garage_freezer_too_warm:
+      friendly_name: Garage Freezer Too Warm
+      device_class: problem
+      delay_on: 00:20:00
+      value_template: >
+        {{ states("sensor.garage_freezer_temperature") | float(999.0) == 999.0
+           or states("sensor.garage_freezer_temperature") | float > 10 }}
+    refrigerator_too_warm:
+      friendly_name: Refrigerator Too Warm
+      device_class: problem
+      delay_on: 00:20:00
+      value_template: >
+        {{ states("sensor.refrigerator_temperature") | float(999.0) == 999.0
+           or states("sensor.refrigerator_temperature") | float > 47 }}
+    refrigerator_freezer_too_warm:
+      friendly_name: Refrigerator Freezer Too Warm
+      device_class: problem
+      delay_on: 00:20:00
+      value_template: >
+        {{ states("sensor.refrigerator_freezer_temperature") | float(999.0) == 999.0
+           or states("sensor.refrigerator_freezer_temperature") | float > 0 }}
+    freezer_door_open_delayed:
+      friendly_name: Freezer Door Open Too Long
+      delay_on: 00:05:00
+      value_template: "{{ is_state('binary_sensor.freezer_door_closed', 'on') }}"
+    main_floor_humidity_low:
+      value_template: >
+        {{ state_attr('sensor.main_floor_humidifier', 'humidity') | float(999.0) >
+             states('sensor.living_room_humidity') | float(0.0)
+        }}
+    family_room_humidifier_empty:
+      friendly_name: Family Room Humidifier Empty
+      device_class: problem
+      value_template: >
+        {{ states("main_floor_humidity_low")
+             and states("switch.family_room_humidifier_relay")
+             and states("sensor.family_room_humidifier_power") |float(0.0) < 1.0
+        }}
+
+    dining_room_humidifier_empty:
+      friendly_name: Dining Room Humidifier Empty
+      device_class: problem
+      value_template: >
+        {{ states("main_floor_humidity_low")
+             and states("switch.dining_room_humidifier")
+             and states("sensor.dining_room_humidifier_electric_consumption_w") |float(0.0)
+        < 1.0
+        }}
+
+alert:
+  basement_sump_water:
+    name: Water is detected in the basement near the sump!
+    entity_id: binary_sensor.water_sensor_157
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  basement_back_door_water:
+    name: Water is detected in the basement near the back door!
+    entity_id: binary_sensor.basement_door_water_159
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  computer_room_water:
+    name: Water is detected in the computer room!
+    entity_id: binary_sensor.computer_room_water_sensor_water_leak_detected
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  storage_room_water:
+    name: Water is detected in the storage room!
+    entity_id: binary_sensor.storage_room_water_sensor_water_leak_detected
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  garage_freezer_too_warm:
+    name: Temperature in the garage freezer is too warm!
+    entity_id: binary_sensor.garage_freezer_too_warm
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  refrigerator_too_warm:
+    name: Temperature in the refrigerator is too warm!
+    entity_id: binary_sensor.refrigerator_too_warm
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  refrigerator_freezer_too_warm:
+    name: Temperature in the refrigerator freezer is too warm!
+    entity_id: binary_sensor.refrigerator_freezer_too_warm
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  freezer_sensor_offline:
+    name: Freezer sensor is offline
+    entity_id: binary_sensor.freezer_sensor_status
+    state: 'off'
+    repeat: 10
+    skip_first: true
+    notifiers:
+    - call_me
+  freezer_door_open:
+    name: Freezer Door Left Open
+    done_message: Freezer door is now closed.
+    entity_id: binary_sensor.freezer_door_open_delayed
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - future_planning_committee
+    - call_me
+  freezer_door_sensor_offline:
+    name: Freezer sensor is offline
+    entity_id: binary_sensor.freezer_door_sensor_status
+    state: 'off'
+    repeat: 10
+    skip_first: true
+    notifiers:
+    - future_planning_committee
+    - call_me
+
+# Text to speech
+tts:
+- platform: google_translate
+
+input_boolean: !include input_boolean.yaml
+# input_select: !include input_select.yaml
+automation: !include automations.yaml
+automation manual: !include automations-manual.yaml
+scene: !include scenes.yaml
+script: !include scripts.yaml
+
+mqtt:
+  sensor:
+  - name: Soil Moisture WH51 0eb421
+    unique_id: wh51_0eb421_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0eb421]
+      name: WH51 Soil Moisture 0eb421
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Soil Moisture WH51 0eb446
+    unique_id: wh51_0eb446_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0eb446
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0eb446]
+      name: WH51 Soil Moisture 0eb446
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Soil Moisture WH51 0eadc9 (Other Veggies)
+    unique_id: wh51_0eadc9_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0eadc9]
+      name: WH51 Soil Moisture 0eadc9 (Other Veggies)
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Soil Moisture WH51 0ed338 (Strawberries)
+    unique_id: wh51_0ed338_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ed338
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0ed338
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0ed338]
+      name: WH51 Soil Moisture 0ed338 (Strawberries)
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Rain Meter WH40 51409
+    unique_id: wh40_51409_rain
+    state_topic: rtl_433/devices/EcoWitt-WH40/51409
+    value_template: '{{ value_json.rain_mm }}'
+    unit_of_measurement: mm
+    device_class: precipitation
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/EcoWitt-WH40/51409
+    json_attributes_template: >-
+      {{
+        {
+          "battery_V": value_json.battery_V,
+          "battery_ok": value_json.battery_ok,
+          "data": value_json.data
+        } | tojson
+      }}
+    device:
+      identifiers: [wh40_51409]
+      name: WH40 Rain Meter 51409
+      model: WH40
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Gas Meter Consumption
+    unique_id: scmplus_98864084_consumption
+    state_topic: rtl_433/devices/SCMplus/98864084
+    value_template: '{{ (value_json.Consumption / 100) | round(2) }}'
+    unit_of_measurement: CCF
+    device_class: gas
+    state_class: total_increasing
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/SCMplus/98864084
+    json_attributes_template: >-
+      {{
+        {
+          "MeterType": value_json.MeterType,
+          "Tamper": value_json.Tamper
+        } | tojson
+      }}
+    device:
+      identifiers: [scmplus_98864084]
+      name: SCM+ Gas Meter 98864084
+      model: SCM+
+      via_device: rtl_433

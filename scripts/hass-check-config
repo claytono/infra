@@ -1,0 +1,41 @@
+#!/bin/bash -xveu
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASEDIR/../kubernetes/hass"
+
+# Create temporary config directory
+mkdir -p config-check
+rsync -avP config/ config-check/
+
+# Create empty files for Home Assistant-managed includes
+:>config-check/automations.yaml
+:>config-check/scenes.yaml
+:>config-check/scripts.yaml
+
+# Create secrets.yaml with stub values for config validation
+cat >config-check/secrets.yaml <<'EOF'
+---
+# Stub secrets for config validation
+latitude: 0.0
+longitude: 0.0
+roomba_password: "fake"
+telegram_api_key: "fake"
+mqtt_password: "fake"
+netatmo_client_id: fake
+netatmo_client_secret: fake
+gmail_smtp_password: "fake"
+twilio_account_sid: fake
+twilio_auth_token: fake
+twilio_number: "+15555555555"
+my_phone: "+15555555555"
+opengarage_device_key: fake
+EOF
+
+# Run Home Assistant config check in Docker
+# Note: DB_URL set to fake since we're only checking config syntax
+docker run \
+  -e DB_URL=fake \
+  --rm \
+  -v "$(pwd)/config-check:/config:ro" \
+  "ghcr.io/home-assistant/home-assistant:2025.7" \
+  hass --script check_config -c /config

@@ -2,18 +2,26 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: default
+namespace: hass
 
 resources:
-- deploy.yaml
-- configmap.yaml
-- externalsecret.yaml
-- ingress.yaml
-- mysql-deploy.yaml
-- mysql-pvc.yaml
-- mysql-service.yaml
-- pvc.yaml
-- service.yaml
+- namespace.yaml
+- hass-postgres-cluster.yaml
+- hass-externalsecrets.yaml
+- helm/serviceaccount.yaml
+- helm/service.yaml
+- helm/statefulset.yaml
+- helm/ingress.yaml
+
+configMapGenerator:
+- name: hass-config
+  options:
+    disableNameSuffixHash: true
+  files:
+  - config/configuration.yaml
+  - config/automations-manual.yaml
+  - config/input_boolean.yaml
+  - config/input_select.yaml
 
 labels:
 

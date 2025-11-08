@@ -1,0 +1,35 @@
+---
+# Source: home-assistant/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hass-home-assistant
+  labels:
+    helm.sh/chart: home-assistant-0.3.29
+    app.kubernetes.io/name: home-assistant
+    app.kubernetes.io/instance: hass
+    app.kubernetes.io/version: "2025.11.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Miscellaneous
+    gethomepage.dev/icon: home-assistant.png
+    gethomepage.dev/name: Home Assistant
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - "hass.k.oneill.net"
+      secretName: hass-tls
+  rules:
+    - host: "hass.k.oneill.net"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hass-home-assistant
+                port:
+                  number: 8080

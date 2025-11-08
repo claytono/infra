@@ -1,0 +1,20 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+
+metadata:
+  name: hass-postgres
+
+spec:
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.6-standard-bookworm@sha256:c6bf720c2f6f24a4091c160363e26ef158a41f32f03314b116d37f2ef68edbc8
+  enablePDB: true
+
+  storage:
+    size: 10Gi
+
+  bootstrap:
+    initdb:
+      database: hass
+      owner: hass
+      encoding: UTF8
