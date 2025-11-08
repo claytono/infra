@@ -166,6 +166,21 @@
       "description": "Auto-merge CNPG digest refreshes for regex-managed imageName"
     },
     {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "minimumReleaseAge": "0 days",
+      "automerge": true,
+      "automergeType": "pr",
+      "addLabels": [
+        "automerge"
+      ],
+      "description": "Auto-merge GitHub Actions digest updates if CI passes"
+    },
+    {
       "matchDatasources": [
         "docker"
       ],
