@@ -5,10 +5,10 @@ kind: Ingress
 metadata:
   name: hass-home-assistant
   labels:
-    helm.sh/chart: home-assistant-0.3.29
+    helm.sh/chart: home-assistant-0.3.30
     app.kubernetes.io/name: home-assistant
     app.kubernetes.io/instance: hass
-    app.kubernetes.io/version: "2025.11.0"
+    app.kubernetes.io/version: "2025.11.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
