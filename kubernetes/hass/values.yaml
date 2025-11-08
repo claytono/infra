@@ -1,8 +1,4 @@
 ---
-# Pin to current version temporarily during migration
-image:
-  tag: '2025.7'
-
 # Host networking required for Lutron Caseta and Harmony Hub
 hostNetwork: true
 dnsPolicy: ClusterFirstWithHostNet
