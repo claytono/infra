@@ -63,7 +63,7 @@ scrape_configs:
   metrics_path: /api/prometheus
   static_configs:
   - targets:
-    - hass.default:8123
+    - hass-home-assistant.hass:8080
 
 - job_name: vera
   scrape_interval: 15s
