@@ -5,22 +5,21 @@ esphome:
 esp32:
   variant: esp32s3
   board: lolin_s3_mini
+  framework:
+    type: esp-idf
 
 # Enable logging
 logger:
 
 light:
-- platform: neopixelbus
-  type: GRB
-  variant: 800KBPS
+- platform: esp32_rmt_led_strip
+  rgb_order: GRB
   pin: 47
   num_leds: 1
+  chipset: ws2812
   name: Internal RGB LED
   icon: mdi:led-outline
   id: ${device_id}_rgb_led
   entity_category: config
   restore_mode: ALWAYS_OFF
   default_transition_length: 500ms
-  method:
-    type: esp32_rmt
-    channel: 0

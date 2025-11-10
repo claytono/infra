@@ -5,6 +5,8 @@ esphome:
 
 esp32:
   board: az-delivery-devkit-v4
+  framework:
+    type: esp-idf
 
 # Enable logging
 logger:
