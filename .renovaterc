@@ -90,16 +90,6 @@
         "VERSION=\"(?<currentValue>[^\"]+)\"\\s*\\nGIT_URL=\"https://github.com/(?<depName>[^/]+/[^/]+)\\.git\""
       ],
       "datasourceTemplate": "github-tags"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/ansible/roles/nut/files/Dockerfile/"
-      ],
-      "matchStrings": [
-        "--with github\\.com/(?<depName>[^@]+)@(?<currentValue>v[0-9.]+)"
-      ],
-      "datasourceTemplate": "github-releases"
     }
   ],
   "packageRules": [
@@ -235,17 +225,6 @@
       ],
       "pinDigests": false,
       "description": "Disable digest pinning for ESPHome Docker images managed by custom regex"
-    },
-    {
-      "matchFileNames": [
-        "ansible/roles/nut/files/Dockerfile"
-      ],
-      "groupName": "Caddy and plugins",
-      "description": "Group Caddy Docker images with caddy-dns plugins",
-      "matchPackageNames": [
-        "/^caddy$/",
-        "/^caddy-dns//"
-      ]
     }
   ],
   "gitIgnoredAuthors": [
