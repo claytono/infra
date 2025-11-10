@@ -21,6 +21,35 @@
     state: present
   when: ansible_distribution == 'Debian'
 
+- name: "Install smartmontools on non-VM amd64 hosts"
+  ansible.builtin.apt:
+    name: smartmontools
+    state: present
+  when:
+    - ansible_architecture == 'x86_64'
+    - ansible_virtualization_role != 'guest'
+
+- name: "Configure smartd for disk monitoring"
+  ansible.builtin.template:
+    src: smartd.conf.j2
+    dest: /etc/smartd.conf
+    mode: "0644"
+    owner: root
+    group: root
+  when:
+    - ansible_architecture == 'x86_64'
+    - ansible_virtualization_role != 'guest'
+  notify: Restart smartd
+
+- name: "Ensure smartd service is enabled and started"
+  ansible.builtin.service:
+    name: smartd
+    state: started
+    enabled: true
+  when:
+    - ansible_architecture == 'x86_64'
+    - ansible_virtualization_role != 'guest'
+
 - name: "Turn on passwordless sudo for sudo group"
   ansible.builtin.lineinfile:
     dest: /etc/sudoers
@@ -40,3 +69,13 @@
     owner: root
     group: root
   when: manage_resolv_conf | default(false) | bool
+
+- name: "Configure NMI watchdog sysctl"
+  ansible.posix.sysctl:
+    name: kernel.nmi_watchdog
+    value: "1"
+    state: present
+    reload: true
+  when:
+    - ansible_architecture in ['x86_64', 'i386']
+    - ansible_virtualization_role != 'guest'
