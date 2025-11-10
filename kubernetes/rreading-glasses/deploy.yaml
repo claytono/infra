@@ -32,11 +32,6 @@ spec:
         - --verbose
         ports:
         - containerPort: 8788
-        resources:
-          limits:
-            memory: 128Mi
-          requests:
-            memory: 64Mi
         env:
         - name: HARDCOVER_AUTH
           valueFrom:
