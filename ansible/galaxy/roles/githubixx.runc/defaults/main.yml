@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # runc version to install
-runc_version: "1.3.0"
+runc_version: "1.3.2"
 
 # Where to install "runc" binaries.
 runc_bin_directory: "/usr/local/sbin"
