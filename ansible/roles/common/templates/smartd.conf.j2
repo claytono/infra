@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+# smartd configuration for disk health monitoring
+# See smartd.conf(5) man page for details
+
+# Scan SATA/ATA devices only (excludes iSCSI and other SCSI devices):
+#
+# -d sat: Only monitor SATA/ATA devices (physical SSDs/HDDs)
+# -a: Monitor all SMART attributes
+# -o on: Enable automatic offline tests
+# -S on: Enable attribute autosave
+# -s (S/../.././02|L/../../6/03): Schedule tests
+#     S = Short test daily at 2:00-3:00 AM
+#     L = Long test every Saturday at 3:00-4:00 AM
+# -m root: Send alerts to root (forwarded to {{ relaymail_overwrite_to_target | default('root') }} via Postfix)
+# -M exec: Use smartd-runner for email delivery (Debian/Ubuntu default)
+#
+# Email notifications are sent for:
+# - SMART health status failures
+# - Increases in error counts
+# - Self-test failures
+# - Temperature excursions (if supported)
+# - Changes in SMART attributes beyond thresholds
+
+DEVICESCAN -d sat -a -o on -S on -s (S/../.././02|L/../../6/03) -m root -M exec /usr/share/smartmontools/smartd-runner
