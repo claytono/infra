@@ -30,6 +30,7 @@ kubernetes/network-storage-benchmark/results/
 __pycache__/
 
 # ESPHome
+esphome/.esphome/
 esphome/secrets.yaml
 .DS_Store
 
