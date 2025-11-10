@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: rreading-glasses
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rreading-glasses
+      app.kubernetes.io/name: rreading-glasses
+      app.kubernetes.io/instance: rreading-glasses
+  template:
+    metadata:
+      labels:
+        app: rreading-glasses
+        app.kubernetes.io/name: rreading-glasses
+        app.kubernetes.io/instance: rreading-glasses
+    spec:
+      containers:
+      - name: rreading-glasses
+        image: blampe/rreading-glasses:hardcover
+        command:
+        - /main
+        - serve
+        - --verbose
+        ports:
+        - containerPort: 8788
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            memory: 64Mi
+        env:
+        - name: HARDCOVER_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: rreading-glasses-secrets
+              key: HARDCOVER_AUTH
+        - name: POSTGRES_HOST
+          value: rreading-glasses-postgres-rw
+        - name: POSTGRES_DATABASE
+          value: rreading_glasses
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: rreading-glasses-postgres-app
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rreading-glasses-postgres-app
+              key: password

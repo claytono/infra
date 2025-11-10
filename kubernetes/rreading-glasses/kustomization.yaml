@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- postgres-cluster.yaml
+- externalsecret.yaml
+- deploy.yaml
+- service.yaml
+- ingress.yaml
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: rreading-glasses
+    app.kubernetes.io/instance: rreading-glasses
+  includeSelectors: true

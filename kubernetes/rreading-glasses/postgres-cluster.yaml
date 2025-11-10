@@ -1,0 +1,19 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+
+metadata:
+  name: rreading-glasses-postgres
+
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.6-standard-bookworm@sha256:de94ee3c8b01defe1d641a37a70d421740c7f90681604352f1b7c4039e94d313
+  enablePDB: false
+
+  storage:
+    size: 10Gi
+
+  bootstrap:
+    initdb:
+      database: rreading_glasses
+      owner: rreading_glasses
