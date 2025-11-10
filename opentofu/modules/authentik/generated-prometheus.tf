@@ -13,6 +13,9 @@ resource "authentik_provider_proxy" "prometheus" {
   access_token_validity = "hours=1"
 
 
+  skip_path_regex = <<-EOT
+^https://prometheus.k.oneill.net/api/.*
+  EOT
 }
 
 resource "authentik_application" "prometheus" {
