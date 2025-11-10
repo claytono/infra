@@ -93,8 +93,8 @@
     },
     {
       "customType": "regex",
-      "fileMatch": [
-        "ansible/roles/nut/files/Dockerfile"
+      "managerFilePatterns": [
+        "/ansible/roles/nut/files/Dockerfile/"
       ],
       "matchStrings": [
         "--with github\\.com/(?<depName>[^@]+)@(?<currentValue>v[0-9.]+)"
@@ -240,12 +240,12 @@
       "matchFileNames": [
         "ansible/roles/nut/files/Dockerfile"
       ],
-      "matchPackagePatterns": [
-        "^caddy$",
-        "^caddy-dns/"
-      ],
       "groupName": "Caddy and plugins",
-      "description": "Group Caddy Docker images with caddy-dns plugins"
+      "description": "Group Caddy Docker images with caddy-dns plugins",
+      "matchPackageNames": [
+        "/^caddy$/",
+        "/^caddy-dns//"
+      ]
     }
   ],
   "gitIgnoredAuthors": [
