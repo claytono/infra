@@ -6,14 +6,7 @@
     mode: "0755"
   become: true
 
-- name: Copy Dockerfile for custom Caddy image
-  ansible.builtin.copy:
-    src: Dockerfile
-    dest: /etc/nut/peanut/Dockerfile
-    mode: "0644"
-  become: true
-  notify: Rebuild peanut caddy image
-
+# Deploy PeaNUT and Traefik
 - name: Deploy PeaNUT settings.yml config file
   ansible.builtin.template:
     src: peanut-settings.yml.j2
@@ -23,39 +16,32 @@
     mode: "0644"
   notify: Restart peanut containers
 
-- name: Deploy Caddyfile for Docker Compose
-  ansible.builtin.template:
-    src: Caddyfile.j2
-    dest: /etc/nut/peanut/Caddyfile
-    mode: "0644"
-  become: true
-  notify: Restart peanut containers
-
-- name: Write compose .env with AWS creds (for caddy)
+- name: Write compose .env with AWS creds (for Traefik Route53)
   ansible.builtin.template:
     src: peanut.env.j2
     dest: /etc/nut/peanut/.env
     owner: root
-    group: root
-    mode: "0600"
+    group: docker
+    mode: "0640"
   no_log: true
   become: true
 
-- name: Deploy docker-compose.yaml for peanut and caddy
+- name: Deploy docker-compose.yaml for peanut and Traefik
   ansible.builtin.copy:
     src: docker-compose.yaml
     dest: /etc/nut/peanut/docker-compose.yaml
     mode: "0644"
   become: true
+  notify: Restart peanut containers
 
-- name: Ensure /etc/ssl/caddy exists
+- name: Ensure /etc/ssl/traefik exists with correct permissions
   ansible.builtin.file:
-    path: /etc/ssl/caddy
+    path: /etc/ssl/traefik
     state: directory
     mode: "0755"
   become: true
 
-- name: Start docker compose up for peanut and caddy
+- name: Start docker compose up for peanut and Traefik
   community.docker.docker_compose_v2:
     project_src: /etc/nut/peanut
     state: present
