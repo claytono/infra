@@ -12,7 +12,7 @@
   ansible.builtin.file:
     path: "{{ containerd_tmp_directory }}"
     state: directory
-    mode: 0700
+    mode: "0700"
     owner: root
     group: root
   tags:
@@ -24,7 +24,7 @@
     url: "{{ containerd_url }}"
     dest: "{{ containerd_tmp_directory }}/containerd.tar.gz"
     checksum: "sha256:{{ containerd_url }}.sha256sum"
-    mode: 0600
+    mode: "0600"
   tags:
     - containerd-install
     - containerd-download
@@ -58,7 +58,7 @@
   ansible.builtin.file:
     path: "{{ containerd_config_directory }}"
     state: directory
-    mode: 0755
+    mode: "0755"
     owner: root
     group: root
   tags:
@@ -71,7 +71,7 @@
     dest: "{{ containerd_config_directory }}/config.toml"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - Restart containerd
   tags:
@@ -109,7 +109,7 @@
     dest: /etc/systemd/system/containerd.service
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - Reload systemd
     - Restart containerd

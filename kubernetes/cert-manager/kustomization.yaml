@@ -5,7 +5,12 @@ kind: Kustomization
 namespace: cert-manager
 
 resources:
-- helm/templates/crds.yaml
+- helm/templates/crd-acme.cert-manager.io_challenges.yaml
+- helm/templates/crd-acme.cert-manager.io_orders.yaml
+- helm/templates/crd-cert-manager.io_certificaterequests.yaml
+- helm/templates/crd-cert-manager.io_certificates.yaml
+- helm/templates/crd-cert-manager.io_clusterissuers.yaml
+- helm/templates/crd-cert-manager.io_issuers.yaml
 - helm/templates/deployment.yaml
 - helm/templates/webhook-deployment.yaml
 - helm/templates/webhook-serviceaccount.yaml
