@@ -15,6 +15,17 @@ See full [CHANGELOG](https://github.com/githubixx/ansible-role-containerd/blob/m
 
 **Recent changes:**
 
+## 0.16.0+2.1.4
+
+- **Breaking**
+  - `meta/main.yml`: Change `min_ansible_version` to 2.15. Ansible 2.9 is end-of-life (EOL).
+
+- **UPDATE**
+  - update `containerd` to `v2.1.4`
+  - update `.gitignore`
+  - update `.yamllint`
+  - fix `ansible-lint` issues
+
 ## 0.15.0+2.1.3
 
 - **UPDATE**
@@ -56,7 +67,7 @@ See full [CHANGELOG](https://github.com/githubixx/ansible-role-containerd/blob/m
 roles:
   - name: githubixx.containerd
     src: https://github.com/githubixx/ansible-role-containerd.git
-    version: 0.15.0+2.1.3
+    version: 0.16.0+2.1.4
 ```
 
 ## Role Variables
@@ -66,7 +77,7 @@ roles:
 containerd_flavor: "base"
 
 # containerd version to install
-containerd_version: "2.1.3"
+containerd_version: "2.1.4"
 
 # Directory where to store "containerd" binaries
 containerd_binary_directory: "/usr/local/bin"
