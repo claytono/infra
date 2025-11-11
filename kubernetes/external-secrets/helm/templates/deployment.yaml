@@ -6,10 +6,10 @@ metadata:
   name: external-secrets
   namespace: external-secrets
   labels:
-    helm.sh/chart: external-secrets-0.20.4
+    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.20.4"
+    app.kubernetes.io/version: "v1.0.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -21,10 +21,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: external-secrets-0.20.4
+        helm.sh/chart: external-secrets-1.0.0
         app.kubernetes.io/name: external-secrets
         app.kubernetes.io/instance: external-secrets
-        app.kubernetes.io/version: "v0.20.4"
+        app.kubernetes.io/version: "v1.0.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: external-secrets
@@ -42,7 +42,7 @@ spec:
             runAsUser: 1000
             seccompProfile:
               type: RuntimeDefault
-          image: oci.external-secrets.io/external-secrets/external-secrets:v0.20.4
+          image: oci.external-secrets.io/external-secrets/external-secrets:v1.0.0
           imagePullPolicy: IfNotPresent
           args:
           - --concurrent=1

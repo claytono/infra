@@ -6,7 +6,7 @@
 containerd_flavor: "base"
 
 # containerd version to install
-containerd_version: "2.1.3"
+containerd_version: "2.1.4"
 
 # Directory where to store "containerd" binaries
 containerd_binary_directory: "/usr/local/bin"

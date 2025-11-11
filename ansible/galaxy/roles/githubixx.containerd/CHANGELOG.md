@@ -5,6 +5,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 0.16.0+2.1.4
+
+- **Breaking**
+  - `meta/main.yml`: Change `min_ansible_version` to 2.15. Ansible 2.9 is end-of-life (EOL).
+
+- **UPDATE**
+  - update `containerd` to `v2.1.4`
+  - update `.gitignore`
+  - update `.yamllint`
+  - fix `ansible-lint` issues
+
 ## 0.15.0+2.1.3
 
 - **UPDATE**

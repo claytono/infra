@@ -7,10 +7,10 @@ metadata:
   namespace: external-secrets
   labels:
     
-    helm.sh/chart: external-secrets-0.20.4
+    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v0.20.4"
+    app.kubernetes.io/version: "v1.0.0"
     app.kubernetes.io/managed-by: Helm
     external-secrets.io/component: webhook
 spec:
@@ -23,5 +23,5 @@ spec:
     group: cert-manager.io
     kind: ClusterIssuer
     name: my-ca-issuer
-  duration: "8760h"
+  duration: "8760h0m0s"
   secretName: external-secrets-webhook
