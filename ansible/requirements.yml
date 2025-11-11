@@ -3,7 +3,7 @@ roles:
   - src: tbaczynski.chrony
     version: "v1.0.7"
   - name: githubixx.containerd
-    version: "0.15.0+2.1.3"
+    version: "0.16.0+2.1.4"
   - name: githubixx.runc
     version: "0.7.1+1.3.2"
   - src: anxs.generic-users
