@@ -4,18 +4,18 @@ kernel_parameters: "nofb vga=normal"
 node_exporter_enabled: true
 
 # Our goal is to stay one version behind
-kubernetes_short_version: "1.32"
-kubernetes_version: "1.32.8"
-kubeadm_version: "1.32.8-1.1"
-kubelet_version: "1.32.8-1.1"
-kubectl_version: "1.32.8-1.1"
-cri_tools_version: "1.32.0-1.1"
+kubernetes_short_version: "1.33"
+kubernetes_version: "1.33.5"
+kubeadm_version: "1.33.5-1.1"
+kubelet_version: "1.33.5-1.1"
+kubectl_version: "1.33.5-1.1"
+cri_tools_version: "1.33.0-1.1"
 kubernetes_cni_version: "1.6.0-1.1"
 
 # Kubernetes repository versions to maintain (current + previous for rollback)
 kubernetes_repo_versions:
-  - "1.32" # Current
-  - "1.31" # Previous
+  - "1.33"
+  - "1.32"
 
 kubernetes_master: "k1.oneill.net"
 
