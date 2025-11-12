@@ -71,6 +71,12 @@ repos:
     language: system
     files: ^(kubernetes/hass/|scripts/hass-check-config)
     pass_filenames: false
+  - id: validate-goldilocks-namespaces
+    name: validate goldilocks VPA annotations
+    entry: kyverno apply --policy .kyverno/policies/ --resource kubernetes/
+    language: system
+    pass_filenames: false
+    files: kubernetes/.*namespace\.yaml$
 
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1

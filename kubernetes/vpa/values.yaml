@@ -1,6 +1,46 @@
 ---
+recommender:
+  extraArgs:
+    target-cpu-percentile: "0.75"           # 75th percentile (default: 0.9)
+    target-memory-percentile: "0.75"        # 75th percentile (default: 0.9)
+    recommendation-margin-fraction: "0.0"   # No safety margin (default: 0.15)
+    pod-recommendation-min-cpu-millicores: "15"
+    pod-recommendation-min-memory-mb: "100"
+
 updater:
-  enabled: false
+  enabled: true
+  replicaCount: 0
+  extraArgs:
+    min-replicas: "1"
+    eviction-rate-limit: "0.0667"
+    eviction-rate-burst: "1"
+    eviction-tolerance: "0.15"
+    updater-interval: "2m"
+    use-admission-controller-status: "true"
+    feature-gates: "InPlaceOrRecreate=true"
 
 admissionController:
-  enabled: false
+  enabled: true  # Apply recommendations to NEW pods
+  generateCertificate: false  # Use cert-manager instead of Helm hooks
+  secretName: vpa-webhook-tls
+  extraArgs:
+    feature-gates: "InPlaceOrRecreate=true"
+  tlsSecretKeys:
+    - key: ca.crt
+      path: caCert.pem
+    - key: tls.crt
+      path: serverCert.pem
+    - key: tls.key
+      path: serverKey.pem
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  mutatingWebhookConfiguration:
+    annotations:
+      cert-manager.io/inject-ca-from: vpa/vpa-webhook-cert
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [vpa]

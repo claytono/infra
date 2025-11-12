@@ -1,0 +1,31 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-goldilocks-vpa-config
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: require-vpa-annotations
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+          selector:
+            matchLabels:
+              goldilocks.fairwinds.com/enabled: "true"
+    validate:
+      message: >-
+        Namespaces with goldilocks.fairwinds.com/enabled=true MUST have both annotations:
+        1. goldilocks.fairwinds.com/vpa-update-mode (values: Off, Initial, Recreate, Auto, InPlaceOrRecreate)
+        2. goldilocks.fairwinds.com/vpa-resource-policy (JSON format)
+
+        Standard configurations:
+        - Cluster-critical: Initial + RequestsOnly
+        - All others: InPlaceOrRecreate + RequestsOnly
+      pattern:
+        metadata:
+          annotations:
+            goldilocks.fairwinds.com/vpa-update-mode: "?*"
+            goldilocks.fairwinds.com/vpa-resource-policy: "?*"

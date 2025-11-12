@@ -6,6 +6,8 @@ metadata:
   name: plexmediaserver
   annotations:
     reloader.stakater.com/auto: 'true'
+    goldilocks.fairwinds.com/vpa-update-mode: Initial
+    goldilocks.fairwinds.com/vpa-resource-policy: '{"containerPolicies":[{"containerName":"*","controlledValues":"RequestsOnly"}]}'
 
 spec:
   replicas: 1
