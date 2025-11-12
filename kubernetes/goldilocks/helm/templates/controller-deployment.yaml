@@ -38,7 +38,7 @@ spec:
             - /goldilocks
             - controller
             - -v2
-            - --on-by-default=true
+            - --on-by-default=false
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
