@@ -1,0 +1,36 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vpa-updater-disable
+  namespace: vpa
+spec:
+  schedule: "0 5 * * *"
+  timeZone: America/New_York
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: vpa-maintenance
+          restartPolicy: OnFailure
+          containers:
+          - name: toggle-updater
+            image: alpine:3.21
+            command: ["/bin/sh", "-c"]
+            args:
+            - |
+              apk add --no-cache curl
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+              chmod +x kubectl
+              mv kubectl /usr/local/bin/
+              /scripts/toggle-updater off
+            volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          volumes:
+          - name: scripts
+            configMap:
+              name: vpa-maintenance-scripts
+              defaultMode: 0755

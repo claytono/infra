@@ -11,7 +11,7 @@ rm -rf helm tmp
 mkdir tmp helm
 
 # Render VPA chart
-helm_template vpa vpa --include-crds --values values.yaml --output-dir tmp
+helm_template vpa vpa --namespace vpa --include-crds --values values.yaml --output-dir tmp
 
 mv tmp/*/* helm
 rmdir tmp/*
