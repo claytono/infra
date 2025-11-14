@@ -6,6 +6,7 @@ resource "authentik_provider_oauth2" "karakeep" {
   name               = "karakeep"
   client_id          = local.karakeep_oidc_client_id
   client_secret      = local.karakeep_oidc_secret
+  client_type        = "confidential"
   authorization_flow = data.authentik_flow.default_authorization.id
   invalidation_flow  = data.authentik_flow.default_invalidation.id
   property_mappings = [

@@ -648,7 +648,7 @@ def cmd_generate(_: argparse.Namespace) -> int:
 
     except Exception as e:
         print(f"Error generating files: {e}", file=sys.stderr)
-        return 1
+        return 2
 
 
 def cmd_plan(args: argparse.Namespace) -> int:
