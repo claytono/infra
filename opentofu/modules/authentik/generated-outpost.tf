@@ -14,6 +14,7 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.changedetection.id,
     authentik_provider_proxy.cwa-cwa.id,
     authentik_provider_proxy.cwa-downloader.id,
+    authentik_provider_proxy.ephemera.id,
     authentik_provider_proxy.goldilocks.id,
     authentik_provider_proxy.homepage.id,
     authentik_provider_proxy.huntarr.id,
