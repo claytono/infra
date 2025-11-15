@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: ephemera
+  labels:
+    app: ephemera
+  annotations:
+    ak-type: simple
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Ephemera
+    gethomepage.dev/description: Book Downloader
+    gethomepage.dev/group: Media Tools
+    gethomepage.dev/icon: mdi-book-search
+
+spec:
+  tls:
+  - hosts:
+    - ephemera.k.oneill.net
+    secretName: ephemera-tls
+  rules:
+  - host: ephemera.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ephemera
+            port:
+              number: 8286
+  ingressClassName: nginx

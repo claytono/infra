@@ -1,0 +1,31 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+commonAnnotations:
+  argoManaged: 'true'
+
+components:
+- ../components/authentik
+
+resources:
+- deploy-ephemera.yaml
+- deploy-flaresolverr.yaml
+- service-ephemera.yaml
+- service-flaresolverr.yaml
+- ingress.yaml
+- pvc-data.yaml
+
+images:
+- name: ghcr.io/orwellianepilogue/ephemera
+  newTag: latest
+- name: ghcr.io/flaresolverr/flaresolverr
+  newTag: latest
+
+labels:
+- pairs:
+    app.kubernetes.io/name: ephemera
+    app.kubernetes.io/instance: ephemera
+  includeSelectors: true

@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: ephemera
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ephemera
+  template:
+    metadata:
+      labels:
+        app: ephemera
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+      - name: ephemera
+        image: ghcr.io/orwellianepilogue/ephemera:latest
+        ports:
+        - containerPort: 8286
+        volumeMounts:
+        - mountPath: /app/data
+          name: data
+        - mountPath: /app/downloads
+          name: downloads
+        - mountPath: /app/ingest
+          name: ingest
+        env:
+        - name: AA_BASE_URL
+          value: https://annas-archive.org
+        - name: LG_BASE_URL
+          value: https://libgen.rs
+        - name: FLARESOLVERR_URL
+          value: http://flaresolverr.default.svc.cluster.local:8191
+        - name: PUID
+          value: '10001'
+        - name: PGID
+          value: '10001'
+        - name: TZ
+          value: EST5EDT
+        - name: MAX_CONCURRENT_DOWNLOADS
+          value: '3'
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8286
+          initialDelaySeconds: 40
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8286
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: ephemera-data
+      - name: downloads
+        emptyDir: {}
+      - name: ingest
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads/booklore-ingestion

@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: flaresolverr
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flaresolverr
+  template:
+    metadata:
+      labels:
+        app: flaresolverr
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: flaresolverr
+        image: ghcr.io/flaresolverr/flaresolverr:latest
+        ports:
+        - containerPort: 8191
+        env:
+        - name: TZ
+          value: EST5EDT
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8191
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8191
+          initialDelaySeconds: 10
+          periodSeconds: 10
