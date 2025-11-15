@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-data
+  namespace: booklore
+spec:
+  accessModes:
+    - ReadWriteOncePod
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 10Gi

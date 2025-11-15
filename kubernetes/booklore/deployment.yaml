@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booklore
+  namespace: booklore
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: booklore
+  template:
+    metadata:
+      labels:
+        app: booklore
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+        - name: booklore
+          image: booklore/booklore:v1.10.0
+          ports:
+            - containerPort: 6060
+              name: http
+          env:
+            - name: BOOKLORE_PORT
+              value: "6060"
+            - name: DATABASE_URL
+              value: jdbc:mariadb://mariadb.booklore.svc.cluster.local:3306/booklore
+            - name: DATABASE_USERNAME
+              value: booklore
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secrets
+                  key: user-password
+            - name: TZ
+              value: EST5EDT
+            - name: USER_ID
+              value: "10001"
+            - name: GROUP_ID
+              value: "10001"
+            - name: SWAGGER_ENABLED
+              value: "false"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: books
+              mountPath: /books
+            - name: bookdrop
+              mountPath: /bookdrop
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: booklore-data
+        - name: books
+          nfs:
+            server: fs2.oneill.net
+            path: /volume2/shared/books/booklore
+        - name: bookdrop
+          nfs:
+            server: fs2.oneill.net
+            path: /volume2/shared/downloads/booklore-ingestion
