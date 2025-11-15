@@ -1,0 +1,14 @@
+---
+# Source: vpa/templates/admission-controller-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vpa-webhook
+spec:
+  ports:
+    - port: 443
+      targetPort: 8000
+  selector:
+    app.kubernetes.io/component: admission-controller
+    app.kubernetes.io/name: vpa
+    app.kubernetes.io/instance: vpa

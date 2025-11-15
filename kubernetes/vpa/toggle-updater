@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+# VPA Updater Toggle Script
+# Usage: toggle-updater [on|off]
+#   on  - Scale updater to 1 replica (enable updates)
+#   off - Scale updater to 0 replicas (disable updates)
+
+ACTION="${1:-}"
+NAMESPACE="${VPA_NAMESPACE:-vpa}"
+DEPLOYMENT="vpa-updater"
+
+if [[ "$ACTION" != "on" && "$ACTION" != "off" ]]; then
+  echo "Usage: $0 [on|off]" >&2
+  exit 1
+fi
+
+if [[ "$ACTION" == "on" ]]; then
+  REPLICAS=1
+  echo "Enabling VPA updater (scaling to 1 replica)..."
+else
+  REPLICAS=0
+  echo "Disabling VPA updater (scaling to 0 replicas)..."
+fi
+
+kubectl scale deployment "$DEPLOYMENT" -n "$NAMESPACE" --replicas="$REPLICAS"
+
+echo "VPA updater ${ACTION} complete at $(date)"

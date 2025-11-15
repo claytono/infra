@@ -6,6 +6,7 @@ resource "authentik_provider_oauth2" "{{ app }}" {
   name               = "{{ app }}"
   client_id          = local.{{ ident }}_client_id
   client_secret      = local.{{ ident }}_secret
+  client_type        = "{{ client_type }}"
   authorization_flow = data.authentik_flow.default_authorization.id
   invalidation_flow  = data.authentik_flow.default_invalidation.id
   property_mappings = [

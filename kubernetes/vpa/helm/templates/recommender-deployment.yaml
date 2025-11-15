@@ -45,6 +45,9 @@ spec:
           args:
             - --pod-recommendation-min-cpu-millicores=15
             - --pod-recommendation-min-memory-mb=100
+            - --recommendation-margin-fraction=0.0
+            - --target-cpu-percentile=0.75
+            - --target-memory-percentile=0.75
             - --v=4
           livenessProbe:
             failureThreshold: 6

@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: booklore
+  namespace: booklore
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    ak-type: oidc
+    ak-oidc-callback: /oauth2-callback
+    ak-oidc-client-type: public
+    ak-path-exclude: /api(/|$)
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - booklore.k.oneill.net
+      secretName: booklore-tls
+  rules:
+    - host: booklore.k.oneill.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: booklore
+                port:
+                  number: 6060

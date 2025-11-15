@@ -32,7 +32,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: goldilocks
-          image: "us-docker.pkg.dev/fairwinds-ops/oss/goldilocks:v4.14.1"
+          image: "us-docker.pkg.dev/fairwinds-ops/oss/goldilocks:v4.14.7"
           imagePullPolicy: Always
           command:
             - /goldilocks

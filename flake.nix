@@ -87,6 +87,7 @@
               kubecolor
               kubectl
               kustomize
+              kyverno
               managarr-bin
               mosquitto
               nodejs_24
