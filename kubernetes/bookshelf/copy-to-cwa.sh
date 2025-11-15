@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Bookshelf Custom Script - Copy to CWA Ingest
+# Bookshelf Custom Script - Copy to Book Ingest Directories
 #
 # Triggered on:
 # - On Release Import (Readarr_EventType=Download)
@@ -15,12 +15,51 @@
 # - readarr_author_name: Author name
 # - readarr_book_title: Book title
 # - readarr_deletedpaths: Pipe-separated list of deleted files (upgrades only)
+#
+# Command-line flags:
+# --cwa: Copy to CWA only
+# --booklore: Copy to Booklore only
+# --both: Copy to both (default if no flags specified)
 
 set -e
 
+# Parse command-line arguments
+COPY_CWA=false
+COPY_BOOKLORE=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --cwa)
+            COPY_CWA=true
+            shift
+            ;;
+        --booklore)
+            COPY_BOOKLORE=true
+            shift
+            ;;
+        --both)
+            COPY_CWA=true
+            COPY_BOOKLORE=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--cwa] [--booklore] [--both]"
+            exit 1
+            ;;
+    esac
+done
+
+# Default to both if no flags specified
+if [ "$COPY_CWA" = false ] && [ "$COPY_BOOKLORE" = false ]; then
+    COPY_CWA=true
+    COPY_BOOKLORE=true
+fi
+
 # Configuration
 CWA_INGEST_DIR="/cwa-book-ingest"
-LOG_FILE="/config/logs/copy-to-cwa.log"
+BOOKLORE_INGEST_DIR="/booklore-book-ingest"
+LOG_FILE="/config/logs/copy-to-ingest.log"
 
 # Logging function
 log() {
@@ -28,8 +67,10 @@ log() {
 }
 
 # Copy function
-copy_to_cwa() {
+copy_book() {
     local book_path="$1"
+    local dest_dir="$2"
+    local dest_name="$3"
 
     if [ -z "$book_path" ]; then
         log "WARNING: Empty book path provided, skipping"
@@ -43,19 +84,53 @@ copy_to_cwa() {
 
     local filename=$(basename "$book_path")
 
-    log "Copying: $filename"
-    if cp -v "$book_path" "$CWA_INGEST_DIR/$filename" 2>&1 | tee -a "$LOG_FILE"; then
-        log "SUCCESS: Copied to $CWA_INGEST_DIR/$filename"
+    log "Copying to $dest_name: $filename"
+    if cp -v "$book_path" "$dest_dir/$filename" 2>&1 | tee -a "$LOG_FILE"; then
+        log "SUCCESS: Copied to $dest_dir/$filename"
         return 0
     else
-        log "ERROR: Failed to copy $filename"
+        log "ERROR: Failed to copy $filename to $dest_name"
         return 1
+    fi
+}
+
+# Process a book to configured destinations
+process_book() {
+    local book_path="$1"
+    local any_success=false
+    local any_failure=false
+
+    if [ "$COPY_CWA" = true ]; then
+        if copy_book "$book_path" "$CWA_INGEST_DIR" "CWA"; then
+            any_success=true
+        else
+            any_failure=true
+        fi
+    fi
+
+    if [ "$COPY_BOOKLORE" = true ]; then
+        if copy_book "$book_path" "$BOOKLORE_INGEST_DIR" "Booklore"; then
+            any_success=true
+        else
+            any_failure=true
+        fi
+    fi
+
+    # Return failure if any copy failed
+    if [ "$any_failure" = true ]; then
+        return 1
+    else
+        return 0
     fi
 }
 
 # Ensure log directory exists
 mkdir -p "$(dirname "$LOG_FILE")"
 
+log "=========================================="
+log "Configuration:"
+log "  Copy to CWA: $COPY_CWA"
+log "  Copy to Booklore: $COPY_BOOKLORE"
 log "=========================================="
 log "DEBUG: All Readarr environment variables:"
 env | grep -i readarr | sort >> "$LOG_FILE" 2>&1 || log "No readarr environment variables found"
@@ -88,7 +163,7 @@ case "$readarr_eventtype" in
         fail_count=0
 
         for book_path in "${BOOK_PATHS[@]}"; do
-            if copy_to_cwa "$book_path"; then
+            if process_book "$book_path"; then
                 ((success_count++))
             else
                 ((fail_count++))
@@ -111,12 +186,20 @@ case "$readarr_eventtype" in
             exit 1
         fi
 
-        copy_to_cwa "$readarr_bookfile_path"
+        if ! process_book "$readarr_bookfile_path"; then
+            log "ERROR: Failed to process book"
+            exit 1
+        fi
         ;;
 
     Test)
         log "Test event received - script is working correctly!"
-        log "Script will copy books to: $CWA_INGEST_DIR"
+        if [ "$COPY_CWA" = true ]; then
+            log "Script will copy books to CWA: $CWA_INGEST_DIR"
+        fi
+        if [ "$COPY_BOOKLORE" = true ]; then
+            log "Script will copy books to Booklore: $BOOKLORE_INGEST_DIR"
+        fi
         log "Logs are written to: $LOG_FILE"
         exit 0
         ;;
