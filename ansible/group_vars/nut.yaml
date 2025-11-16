@@ -69,8 +69,7 @@ nut_users:
     extra: |
       upsmon secondary
 
-nut_peanut_enabled: true
-nut_peanut_nut_host: "{{ inventory_hostname }}"
+nut_webgui_enabled: true
 
 caddy_bin: /usr/local/sbin/caddy
 caddy_update: false

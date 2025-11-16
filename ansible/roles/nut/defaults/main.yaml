@@ -1,5 +1,2 @@
 ---
-nut_peanut_enabled: false
-nut_peanut_port: 8080
-nut_peanut_nut_host: "localhost"
-nut_peanut_nut_port: 3493
+nut_webgui_enabled: false

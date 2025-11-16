@@ -1,28 +1,34 @@
 ---
 services:
-  peanut:
-    image: brandawg93/peanut:latest@sha256:5a067c06814b193180c4e2487c2454f598702984c9f7fa6e1d2ffc8300ce0ed0
+  nut_webgui:
+    image: ghcr.io/superioone/nut_webgui:0.7.0@sha256:9de0af2305c94033931acaa629965673e54884633fae7aed05434c72a3d0b06a
     restart: unless-stopped
-    volumes:
-      - /etc/nut/peanut-settings.yml:/config/settings.yml:ro
+    environment:
+      UPSD_ADDR: "${HOSTNAME}.oneill.net"
+      UPSD_PORT: "3493"
+      UPSD_USER: "monuser"
+      UPSD_PASS: "secret"
+      POLL_FREQ: "30"
+      POLL_INTERVAL: "2"
+      LOG_LEVEL: "info"
     labels:
       # Enable Traefik for this container (since exposedbydefault=false)
       - "traefik.enable=true"
       # Define the routing rule: route traffic for this specific hostname to this service
-      - "traefik.http.routers.peanut.rule=Host(`${HOSTNAME}.oneill.net`)"
+      - "traefik.http.routers.nut_webgui.rule=Host(`${HOSTNAME}.oneill.net`)"
       # Use the "websecure" entrypoint (port 443) for this router
-      - "traefik.http.routers.peanut.entrypoints=websecure"
+      - "traefik.http.routers.nut_webgui.entrypoints=websecure"
       # Enable TLS and use the "letsencrypt" certificate resolver for auto-HTTPS
-      - "traefik.http.routers.peanut.tls.certresolver=letsencrypt"
-      # Tell Traefik which port the peanut container is listening on (8080)
-      - "traefik.http.services.peanut.loadbalancer.server.port=8080"
+      - "traefik.http.routers.nut_webgui.tls.certresolver=letsencrypt"
+      # Tell Traefik which port nut_webgui is listening on (9000)
+      - "traefik.http.services.nut_webgui.loadbalancer.server.port=9000"
 
   traefik:
     image: traefik:3.6.0@sha256:18112aed2bfe3dfb8534f1045622390c3316596cff0cefab64f44e43d23e1640
     restart: unless-stopped
     ports:
-      - "80:80"   # HTTP (redirects to HTTPS)
-      - "443:443" # HTTPS
+      - "80:80"
+      - "443:443"
     environment:
       # AWS credentials for Route53 DNS challenge (for Let's Encrypt)
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
@@ -49,4 +55,4 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.email=admin@oneill.net"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     depends_on:
-      - peanut
+      - nut_webgui

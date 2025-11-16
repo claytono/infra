@@ -39,9 +39,9 @@
   when: "nut_onbatt_timer is defined"
   tags: nut
 
-- name: Include peanut tasks if enabled
-  ansible.builtin.include_tasks: peanut.yaml
-  when: nut_peanut_enabled | default(false) | bool
+- name: Include webgui tasks if enabled
+  ansible.builtin.include_tasks: webgui.yaml
+  when: nut_webgui_enabled | default(false) | bool
   tags: nut
 
 - name: Stop nut services if disabled
