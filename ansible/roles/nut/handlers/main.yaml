@@ -1,7 +1,7 @@
 ---
-- name: Restart peanut containers
+- name: Restart webgui containers
   community.docker.docker_compose_v2:
-    project_src: /etc/nut/peanut
+    project_src: /etc/nut/webgui
     state: restarted
     wait: true
   become: true

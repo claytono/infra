@@ -1,4 +1,4 @@
 ---
 dependencies:
   - role: geerlingguy.docker
-    when: nut_peanut_enabled | default(false) | bool
+    when: nut_webgui_enabled | default(false) | bool
