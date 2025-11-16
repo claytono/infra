@@ -1,0 +1,21 @@
+---
+# UPS server host - monitors all UPS devices but does NOT shut down
+# Clients will shut themselves down when they see LOWBATT
+
+# Override shutdown command to prevent upspi from shutting down
+# This allows upsmon to run and send notifications, but won't trigger shutdown
+nut_upsmon_extra: |
+  SHUTDOWNCMD "/bin/true"
+  HOSTSYNC 60
+  FINALDELAY 120
+  RUN_AS_USER root
+  NOTIFYCMD /usr/sbin/upssched
+  NOTIFYFLAG ONBATT WALL+EXEC
+  NOTIFYFLAG ONLINE WALL+EXEC
+  NOTIFYFLAG LOWBATT WALL+EXEC
+  NOTIFYFLAG FSD WALL+EXEC
+  NOTIFYFLAG COMMBAD WALL+EXEC
+  NOTIFYFLAG COMMOK WALL+EXEC
+  NOTIFYFLAG REPLBATT WALL+EXEC
+  NOTIFYFLAG NOCOMM WALL+EXEC
+  NOTIFYFLAG SHUTDOWN WALL+EXEC

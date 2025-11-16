@@ -28,6 +28,11 @@ k5
 [nut]
 upspi
 
+[nut_client]
+luser
+k2
+k4
+k5
 
 [pi]
 #voron2-pizero

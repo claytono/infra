@@ -6,22 +6,22 @@ nut_packages:
   - nut-server
 
 nut_ups:
-  - name: "ups1"
+  - name: "ups"
     driver: "usbhid-ups"
     device: auto
-    description: "UPS 1"
+    description: "UPS for Synology"
     extra: |
-      serial = "CXXPV7000092"
+      serial = "CXXPV7000091"
   - name: "ups2"
     driver: "usbhid-ups"
     device: auto
-    description: "UPS 2"
+    description: "UPS for luser, k2, k4, k5"
     extra: |
-      serial = "CXXPV7000091"
+      serial = "CXXPV7000092"
   - name: "ups3"
     driver: "usbhid-ups"
     device: auto
-    description: "UPS 3"
+    description: "UPS for network gear"
     extra: |
       serial = "CXXPX7007632"
 
@@ -62,8 +62,12 @@ nut_users:
       66613138623232623838633063393238373662303864356664643663653365346265643164303666
       3838663262303561326139663665363065663362643739343863
     extra: |
-      upsmon user
+      upsmon primary
       actions = MONITOR
+  - name: "monuser"
+    password: "secret"
+    extra: |
+      upsmon secondary
 
 nut_peanut_enabled: true
 nut_peanut_nut_host: "{{ inventory_hostname }}"
@@ -75,3 +79,4 @@ nut_enabled: true
 
 nut_services:
   - nut-server
+  - nut-monitor
