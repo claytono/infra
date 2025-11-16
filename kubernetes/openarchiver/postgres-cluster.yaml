@@ -8,7 +8,7 @@ metadata:
 
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.6-standard-bookworm@sha256:de94ee3c8b01defe1d641a37a70d421740c7f90681604352f1b7c4039e94d313
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.6-standard-bookworm@sha256:a62c149a342b2b1955dda3a9d75e2c6851622e43302a577f393271c19a3c8622
   enablePDB: false
 
   storage:
