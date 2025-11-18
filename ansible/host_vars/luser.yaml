@@ -47,7 +47,7 @@ restic_host_config:
 manage_network: true
 interfaces_bond_interfaces:
   - device: bond0
-    mtu: 9000
+    mtu: 1500
     bond_slaves: [enp3s0f0, enp3s0f1]
     bootproto: manual
     bond_mode: 802.3ad
@@ -69,16 +69,5 @@ interfaces_bridge_interfaces:
     hwaddr: "06:bc:96:51:3a:a1"
     stp: "off"
     ports: [bond0.1]
-    maxwait: 5
-    fd: 0
-  - device: br1
-    type: bridge
-    bootproto: static
-    address: "172.19.75.161"
-    netmask: "255.255.255.0"
-    mtu: 9000
-    hwaddr: "06:bc:96:51:3a:a2"
-    stp: "off"
-    ports: [bond0.2]
     maxwait: 5
     fd: 0
