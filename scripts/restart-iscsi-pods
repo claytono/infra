@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Find all pods using iSCSI storage and restart them coordinately This script:
+# Find all pods using iSCSI storage and restart them. This script:
 # 1. Identifies pods with synology-iscsi persistent volumes
 # 2. Deletes them all simultaneously
 # 3. Monitors their recreation and health status until all are healthy
