@@ -58,7 +58,7 @@ if [[ -z "$iscsi_pvcs" ]]; then
     exit 0
 fi
 
-pvc_count=$(echo "$iscsi_pvcs" | wc -l | tr -d ' ')
+pvc_count=$(grep -c . <<< "$iscsi_pvcs" || echo 0)
 log_info "Found $pvc_count iSCSI PVC(s)"
 
 # Find all pods using these PVCs and track which PVCs have pods
@@ -174,6 +174,7 @@ while true; do
     pending_count=0
     starting_count=0
     missing_count=0
+    failed_count=0
 
     # Check each PVC that had a pod
     for pvc_ref in "${!pvcs_with_pods[@]}"; do
@@ -211,12 +212,32 @@ while true; do
             current_pvc_status["$pvc_ref"]="Starting"
         elif [[ "$phase" == "Pending" ]]; then
             pending_count=$((pending_count + 1))
+            # Determine pending reason: container waiting reason → PodScheduled condition → default "Pending"
             reason=$(echo "$pod_json" | jq -r '(.status.containerStatuses[0].state.waiting.reason) // ([.status.conditions[]? | select(.type == "PodScheduled" and .status == "False")] | .[0].reason) // "Pending"')
-            current_pvc_status["$pvc_ref"]="Pending ($reason)"
+
+            # Check for terminal failure states in waiting reason
+            if [[ "$reason" =~ ^(CrashLoopBackOff|ImagePullBackOff|ErrImagePull|ImageInspectError)$ ]]; then
+                failed_count=$((failed_count + 1))
+                current_pvc_status["$pvc_ref"]="Failed ($reason)"
+                log_error "$pvc_ref: Pod in terminal failure state - $reason"
+            else
+                current_pvc_status["$pvc_ref"]="Pending ($reason)"
+            fi
+        elif [[ "$phase" == "Failed" ]] || [[ "$phase" == "Unknown" ]]; then
+            failed_count=$((failed_count + 1))
+            reason=$(echo "$pod_json" | jq -r '.status.reason // .status.message // "Unknown"')
+            current_pvc_status["$pvc_ref"]="Failed ($reason)"
+            log_error "$pvc_ref: Pod failed - $reason"
         else
             current_pvc_status["$pvc_ref"]="$phase"
         fi
     done
+
+    # Exit if any pods are in failed state
+    if [[ $failed_count -gt 0 ]]; then
+        log_error "$failed_count pod(s) in terminal failure state - cannot continue"
+        exit 1
+    fi
 
     # Check if all ready
     if [[ $ready_count -eq $total_pvcs ]]; then
@@ -248,7 +269,7 @@ while true; do
     done
 
     # Report summary
-    log_info "PVCs (${elapsed}s): Ready: $ready_count/$total_pvcs, Pending: $pending_count, Starting: $starting_count, Missing: $missing_count"
+    log_info "PVCs (${elapsed}s): Ready: $ready_count/$total_pvcs, Pending: $pending_count, Starting: $starting_count, Missing: $missing_count, Failed: $failed_count"
 
     # Update previous status
     unset prev_pvc_status
