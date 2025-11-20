@@ -102,7 +102,7 @@ repos:
   - id: markdownlint
 
 - repo: https://github.com/antonbabenko/pre-commit-terraform
-  rev: v1.103.0
+  rev: v1.104.0
   hooks:
   - id: terraform_fmt
   - id: terraform_validate
