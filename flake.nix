@@ -19,11 +19,6 @@
       # Development environments
       devShells = forEachSupportedSystem ({ pkgs }:
         let
-          # Install recyclarr as .recyclarr to avoid name conflict with wrapper
-          recyclarr-bin = pkgs.runCommand "recyclarr-bin" {} ''
-            mkdir -p $out/bin
-            ln -s ${pkgs.recyclarr}/bin/recyclarr $out/bin/.recyclarr
-          '';
           # Install managarr as .managarr to avoid name conflict with wrapper
           managarr-bin = pkgs.runCommand "managarr-bin" {} ''
             mkdir -p $out/bin
@@ -94,7 +89,6 @@
               opentofu
               pluto
               pre-commit
-              recyclarr-bin
               rclone
               skopeo
               tflint

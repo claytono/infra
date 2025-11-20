@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")"
-export RECYCLARR_APP_DATA="$PWD/data"
-exec .recyclarr "$@"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -v "$SCRIPT_DIR/data:/config" \
+  -e RADARR_API_KEY="${RADARR_API_KEY:-}" \
+  -e SONARR_API_KEY="${SONARR_API_KEY:-}" \
+  recyclarr/recyclarr:latest \
+  "$@"
