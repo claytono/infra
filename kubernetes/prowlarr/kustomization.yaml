@@ -18,7 +18,7 @@ resources:
 
 images:
 - name: linuxserver/prowlarr
-  newTag: 2.1.5@sha256:643220338204525524db787ff38a607261597f49d1f550694acdb3e908e2b43e
+  newTag: 2.3.0@sha256:3dd3a316f60ea4e6714863286549a6ccaf0b8cf4efe5578ce3fe0e85475cb1cf
 
 labels:
 
