@@ -1,0 +1,23 @@
+---
+# Source: valkey/templates/service-internal.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey-headless
+  labels:
+    helm.sh/chart: valkey-2.1.6
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: valkey
+    app.kubernetes.io/version: "8.1.4"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: 6379
+      targetPort: valkey
+      protocol: TCP
+      name: valkey
+  selector:
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: valkey

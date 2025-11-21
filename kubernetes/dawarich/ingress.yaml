@@ -1,0 +1,32 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: dawarich
+  namespace: dawarich
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Dawarich
+    gethomepage.dev/description: Location History Tracking
+    gethomepage.dev/group: Personal
+    gethomepage.dev/icon: dawarich.png
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - dawarich.k.oneill.net
+    secretName: dawarich-tls
+  rules:
+  - host: dawarich.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dawarich
+            port:
+              number: 80

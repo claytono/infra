@@ -1,0 +1,128 @@
+---
+# Source: valkey/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkey
+  labels:
+    helm.sh/chart: valkey-2.1.6
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: valkey
+    app.kubernetes.io/version: "8.1.4"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: valkey
+      app.kubernetes.io/instance: valkey
+  template:
+    metadata:
+      annotations:
+        checksum/customconfig: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/scripts: e9e628b7105af9dc16bd5231fd15b96ba049f52e4078b7543ff3205cefe4bf08
+        reloader.stakater.com/auto: "true"
+      labels:
+        app.kubernetes.io/name: valkey
+        app.kubernetes.io/instance: valkey
+    spec:
+      serviceAccountName: default
+      securityContext:
+        fsGroup: 999
+        supplementalGroups:
+        - 999
+      initContainers:
+        - name: valkey-init
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 999
+            runAsNonRoot: true
+            runAsUser: 999
+          image: "docker.io/valkey/valkey:8.1.4"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+            - name: scripts
+              mountPath: /scripts
+            - mountPath: /extravalkeyconfigs
+              name: extravalkeyconfigs-volume
+          command: [ "/scripts/init.sh" ]
+      containers:
+        - name: valkey-server
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 999
+            runAsNonRoot: true
+            runAsUser: 999
+          image: "docker.io/valkey/valkey:8.1.4"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: valkey
+              containerPort: 6379
+              protocol: TCP
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+            successThreshold: 1
+            periodSeconds: 10              
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+          command:
+            - valkey-server
+          args:
+            - /data/conf/valkey.conf
+          envFrom:
+          volumeMounts:
+            - name: valkey-data
+              mountPath: /data
+      volumes:
+        - name: scripts
+          configMap:
+            name: valkey-scripts
+            defaultMode: 0555
+        - name: extravalkeyconfigs-volume
+          secret:
+            secretName: dawarich-valkey-config
+        - name: valkey-data
+          persistentVolumeClaim:
+            claimName: valkey
