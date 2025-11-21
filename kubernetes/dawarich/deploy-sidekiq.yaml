@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: dawarich-sidekiq
+  namespace: dawarich
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dawarich
+      app.kubernetes.io/component: sidekiq
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: 'true'
+      labels:
+        app.kubernetes.io/name: dawarich
+        app.kubernetes.io/component: sidekiq
+    spec:
+      containers:
+      - name: sidekiq
+        image: freikin/dawarich:0.35.1
+        command: ['bundle', 'exec', 'sidekiq']
+        args: []
+        env:
+        - name: RAILS_ENV
+          value: production
+        # Secret environment variables
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-secrets
+              key: SECRET_KEY_BASE
+        # Database credentials from CNPG
+        - name: DATABASE_HOST
+          value: dawarich-postgres-rw
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-postgres-app
+              key: dbname
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-postgres-app
+              key: username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-postgres-app
+              key: password
+        # Valkey connection
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-valkey-config
+              key: REDIS_URL
+        volumeMounts:
+        - name: public
+          mountPath: /var/app/public
+        - name: watched
+          mountPath: /var/app/tmp/imports/watched
+        - name: storage
+          mountPath: /var/app/storage
+      volumes:
+      - name: public
+        persistentVolumeClaim:
+          claimName: dawarich-public
+      - name: watched
+        persistentVolumeClaim:
+          claimName: dawarich-watched
+      - name: storage
+        persistentVolumeClaim:
+          claimName: dawarich-storage
