@@ -14,6 +14,7 @@ resource "tailscale_acl" "main" {
             "tag:k8s": ["tag:k8s-operator"],
             "tag:github-actions": [],
             "tag:argocd": ["tag:k8s-operator"],
+            "tag:flux": ["autogroup:admin"],
         },
 
         // Define access control lists for users, groups, autogroups, tags,
@@ -24,6 +25,14 @@ resource "tailscale_acl" "main" {
                 "action": "accept",
                 "src":    ["autogroup:member"],
                 "dst":    ["*:*"],
+            },
+
+            // Allow flux to reach other hosts via SSH only
+            {
+                "action": "accept",
+                "src":    ["tag:flux"],
+                "proto":  "tcp",
+                "dst":    ["*:22"],
             },
 
             // Allow GitHub Actions to reach ArgoCD only
