@@ -45,19 +45,9 @@ restic_host_config:
 
 
 manage_network: true
-interfaces_bond_interfaces:
-  - device: bond0
-    mtu: 1500
-    bond_slaves: [enp3s0f0, enp3s0f1]
+interfaces_ether_interfaces:
+  - device: enp3s0f0
     bootproto: manual
-    bond_mode: 802.3ad
-    bond_miimon: 100
-    bond_downdelay: 200
-    bond_updelay: 100
-    bond_lacp_rate: 1
-    bond_xmit_hash_policy: layer3+4
-    dnsnameservers: 172.19.74.1
-    dnssearch: oneill.net
 interfaces_bridge_interfaces:
   - device: br0
     type: bridge
@@ -68,6 +58,8 @@ interfaces_bridge_interfaces:
     mtu: 1500
     hwaddr: "06:bc:96:51:3a:a1"
     stp: "off"
-    ports: [bond0.1]
+    ports: [enp3s0f0]
     maxwait: 5
     fd: 0
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
