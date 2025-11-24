@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6
 
 # Debian 12 = bookworm
-FROM geerlingguy/docker-debian12-ansible:latest@sha256:72f67e0e73515e05eea9dcb9f47afe867dd877a8b1bf0b4f3f5d1e0fc4a0c804
+FROM geerlingguy/docker-debian12-ansible:latest@sha256:7d1063848458957867bea3817266ccdf7e7b0e78cf579a892bcbe2c1d73ae55e
 
 # Enable non-free repositories for firmware packages
 RUN sed -i 's/Components: main/Components: main non-free-firmware/' /etc/apt/sources.list.d/debian.sources
