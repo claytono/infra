@@ -21,6 +21,12 @@
     state: present
   when: ansible_distribution == 'Debian'
 
+- name: "Install qemu-guest-agent on VMs"
+  ansible.builtin.apt:
+    name: qemu-guest-agent
+    state: present
+  when: ansible_virtualization_role == 'guest'
+
 - name: "Install smartmontools on non-VM amd64 hosts"
   ansible.builtin.apt:
     name: smartmontools
