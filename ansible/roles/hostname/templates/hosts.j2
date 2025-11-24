@@ -1,5 +1,9 @@
 127.0.0.1   localhost
-127.0.1.1   {{ hostname_fqdn }} {{ hostname_short }}
+{% if hostname_hosts_ip == "real" %}
+{{ ansible_default_ipv4.address }}   {{ hostname_fqdn }} {{ hostname_short }}
+{% else %}
+{{ hostname_hosts_ip }}   {{ hostname_fqdn }} {{ hostname_short }}
+{% endif %}
 
 # The following lines are desirable for IPv6 capable hosts
 ::1     localhost ip6-localhost ip6-loopback

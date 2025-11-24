@@ -40,5 +40,11 @@ locals {
       hostname = "fs2.oneill.net"
       note     = "Synology NAS"
     }
+    p9 = {
+      mac      = "b4:96:91:39:e0:70"
+      ip       = "172.19.74.155"
+      hostname = "p9.oneill.net"
+      note     = "Proxmox VE host"
+    }
   }
 }

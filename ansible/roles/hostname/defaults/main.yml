@@ -8,6 +8,12 @@ hostname_fqdn: "{{ inventory_hostname }}.{{ domain }}"
 # /etc/hosts management
 hostname_manage_etc_hosts: true
 
+# IP address to use for hostname in /etc/hosts
+# Options:
+#   - "127.0.1.1" (default for Debian/Ubuntu systems)
+#   - "real" (use ansible_default_ipv4.address)
+hostname_hosts_ip: "127.0.1.1"
+
 # Additional hosts entries to add to /etc/hosts
 hostname_additional_hosts: []
 # Example:

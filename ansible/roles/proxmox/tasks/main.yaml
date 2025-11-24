@@ -1,0 +1,24 @@
+---
+- name: "Verify required API token variables are defined"
+  ansible.builtin.assert:
+    that:
+      - proxmox_api_token_id is defined
+      - proxmox_api_token_secret is defined
+      - proxmox_admin_password is defined
+    fail_msg: "Missing required Proxmox API token or password variables. Check group_vars/proxmox.yaml"
+
+- name: "Configure network interfaces"
+  ansible.builtin.import_tasks: network.yaml
+  when: proxmox_manage_network | default(false)
+
+- name: "Configure Let's Encrypt ACME certificates"
+  ansible.builtin.import_tasks: acme.yaml
+
+- name: "Initialize Proxmox cluster"
+  ansible.builtin.import_tasks: cluster.yaml
+
+- name: "Configure NFS storage"
+  ansible.builtin.import_tasks: storage.yaml
+
+- name: "Configure Proxmox users and permissions"
+  ansible.builtin.import_tasks: users.yaml

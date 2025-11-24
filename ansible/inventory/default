@@ -10,6 +10,7 @@ k5 ansible_host=k5.oneill.net domain=oneill.net
 #gasherbrum-display ansible_host=gasherbrum-display.oneill.net domain=oneill.net
 zwavejs ansible_host=zwavejs.oneill.net domain=oneill.net
 upspi ansible_host=upspi.oneill.net domain=oneill.net
+p9 ansible_host=p9.oneill.net domain=oneill.net
 
 [kubernetes]
 k1
@@ -44,6 +45,9 @@ upspi
 [pizero]
 #voron2-pizero
 #gasherbrum-display
+
+[proxmox]
+p9
 
 [tailscale_disabled]
 #voron2-pizero

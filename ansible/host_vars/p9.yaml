@@ -1,0 +1,25 @@
+---
+# Enable network management for this host
+proxmox_manage_network: true
+
+# Physical interfaces (Proxmox 9.1+ naming)
+proxmox_interfaces:
+  - name: nic0
+    type: manual
+    comment: "1G onboard - unused"
+  - name: nic1
+    type: manual
+    comment: "10G port 1"
+  - name: nic2
+    type: manual
+    comment: "10G port 2 - unused"
+
+# Bridges
+proxmox_bridges:
+  - name: vmbr0
+    address: "172.19.74.155/24"
+    gateway: "172.19.74.1"
+    bridge_ports: nic1
+    bridge_stp: "off"
+    bridge_fd: "0"
+    comment: "Primary VM bridge on 10G"

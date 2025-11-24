@@ -1,6 +1,5 @@
 ---
 manage_network: true
-tailscale_args: --accept-dns=false
 interfaces_ether_interfaces:
   - device: ens3
     bootproto: static

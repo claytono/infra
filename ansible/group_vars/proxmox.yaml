@@ -1,0 +1,45 @@
+---
+# Proxmox host configuration
+
+# Disable restic backups by default for Proxmox hosts
+resticprofile_sftp_client: false
+
+# API token for Proxmox automation (root@pam)
+proxmox_api_token_id: "ansible-provisioning"
+proxmox_api_token_secret: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          37306336346261376564373335373465396562613038346231623433646533613532653332643263
+          3237373335616262326133346264393732653465393161340a396132643735376265376233353738
+          34313232316535663163396232313463363435306665646538666235393433326332306133363830
+          6533653365313961330a323330373435353530366265393937393638353639363730323933346163
+          64663735313933383566396138376330306539366263623630343136623836643832313136393634
+          3632333435616631353136376439663162626630343037323432
+
+# Password for admin@pve user
+proxmox_admin_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          39306265383162323739393533656632386634303934323732386333613438363330323763356137
+          3536343637616634656138326638623337316538376566650a633233653561613462633530366333
+          33303836333934613233333161393039383732653135363062333363636533386139373630656132
+          3334336465656633350a636439666435343638653962346634303961643061336338396633386434
+          62343930633331653634343633376339386530326534363739313032366332646535
+
+# ACME / Let's Encrypt configuration
+proxmox_acme_email: "clayton@oneill.net"
+proxmox_acme_account_name: "default"
+proxmox_acme_plugin_name: "route53"
+
+# Use real IP in /etc/hosts (required for Proxmox clustering)
+hostname_hosts_ip: "real"
+
+# Cluster configuration
+proxmox_cluster_name: "pve1"
+
+# NFS storage configuration
+proxmox_nfs_server: "fs2.oneill.net"
+proxmox_nfs_storage:
+  - name: "proxmox-ssd"
+    export: "/volume1/proxmox-ssd"
+    content: ["images", "iso", "vztmpl", "backup", "rootdir"]
+    options: "vers=4.1,nconnect=4,async,rsize=131072,wsize=131072"
+

@@ -1,0 +1,21 @@
+---
+- name: "Check if node is already clustered"
+  ansible.builtin.stat:
+    path: /etc/pve/corosync.conf
+  register: proxmox_cluster_check
+
+- name: "Initialize Proxmox cluster"
+  ansible.builtin.command:
+    cmd: pvecm create {{ proxmox_cluster_name }}
+  when: not proxmox_cluster_check.stat.exists
+  run_once: true
+
+- name: "Wait for cluster to be ready"
+  ansible.builtin.command:
+    cmd: pvecm status
+  register: proxmox_cluster_status
+  changed_when: false
+  failed_when: proxmox_cluster_status.rc != 0
+  when: not proxmox_cluster_check.stat.exists
+  run_once: true
+

@@ -1,0 +1,37 @@
+---
+- name: "Verify network configuration variables are defined"
+  ansible.builtin.assert:
+    that:
+      - proxmox_interfaces is defined
+      - proxmox_bridges is defined
+      - proxmox_interfaces | length > 0
+      - proxmox_bridges | length > 0
+    fail_msg: "Network configuration variables not defined for this host. Check host_vars."
+
+- name: "Install ifupdown2 for network reloading"
+  ansible.builtin.apt:
+    name: ifupdown2
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Deploy network interfaces configuration"
+  ansible.builtin.template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  register: network_config
+
+- name: "Reload network configuration with ifreload"
+  ansible.builtin.command:
+    cmd: ifreload -a
+  when: network_config.changed
+  register: network_reload
+
+- name: "Notify if network configuration reloaded"
+  ansible.builtin.debug:
+    msg: "Network configuration reloaded successfully."
+  when: network_reload is defined and network_reload is changed

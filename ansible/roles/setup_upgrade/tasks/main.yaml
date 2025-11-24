@@ -3,18 +3,48 @@
   ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"
 
+- name: "Check if Proxmox is installed"
+  ansible.builtin.stat:
+    path: /usr/bin/pvesh
+  register: setup_upgrade_proxmox_check
+
+- name: "Disable Proxmox enterprise repository (PVE .sources)"
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/pve-enterprise.sources
+    state: absent
+  when: setup_upgrade_proxmox_check.stat.exists
+
+- name: "Disable Proxmox enterprise repository (Ceph .sources)"
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/ceph.sources
+    state: absent
+  when: setup_upgrade_proxmox_check.stat.exists
+
+- name: "Add Proxmox no-subscription repository"
+  ansible.builtin.deb822_repository:
+    name: pve-no-subscription
+    types: deb
+    uris: http://download.proxmox.com/debian/pve
+    suites: "{{ ansible_distribution_release }}"
+    components: pve-no-subscription
+    state: present
+    enabled: true
+  when: setup_upgrade_proxmox_check.stat.exists
+
 - name: "Dist upgrade"
   ansible.builtin.apt:
     update_cache: true
     install_recommends: false
     autoremove: true
     upgrade: dist
+  when: not setup_upgrade_proxmox_check.stat.exists
   notify:
     - "Update grub"
 
 - name: "Autoremove unneeded apt packages"
   ansible.builtin.apt:
     autoremove: true
+  when: not setup_upgrade_proxmox_check.stat.exists
 
 - name: "Set grub kernel parameters"
   ansible.builtin.lineinfile:

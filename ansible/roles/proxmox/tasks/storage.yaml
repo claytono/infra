@@ -1,0 +1,36 @@
+---
+- name: "Check if NFS storage exists"
+  ansible.builtin.shell:
+    cmd: pvesm status --storage {{ item.name }} 2>/dev/null
+  register: proxmox_storage_check
+  changed_when: false
+  failed_when: false
+  loop: "{{ proxmox_nfs_storage }}"
+  loop_control:
+    label: "{{ item.name }}"
+  run_once: true
+
+- name: "Add NFS storage to Proxmox"
+  ansible.builtin.command:
+    cmd: >
+      pvesm add nfs {{ item.item.name }}
+      --server {{ proxmox_nfs_server }}
+      --export {{ item.item.export }}
+      --content {{ item.item.content | join(',') }}
+      --options {{ item.item.options }}
+      --nodes {{ groups['proxmox'] | join(',') }}
+  when: item.rc != 0
+  loop: "{{ proxmox_storage_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  run_once: true
+
+- name: "Update NFS storage options if changed"
+  ansible.builtin.command:
+    cmd: pvesm set {{ item.name }} --options {{ item.options }}
+  loop: "{{ proxmox_nfs_storage }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.options is defined
+  changed_when: false
+  run_once: true

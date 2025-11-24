@@ -1,6 +1,5 @@
 ---
 manage_network: true
-tailscale_args: --accept-dns=false
 interfaces_ether_interfaces:
   - device: enp1s0f0
     bootproto: static

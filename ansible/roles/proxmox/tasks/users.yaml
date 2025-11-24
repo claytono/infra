@@ -1,0 +1,67 @@
+---
+# Bug in community.proxmox.proxmox_user module (v1.4.0):
+# Documentation says password parameter is ignored when user exists, but code actually
+# tries to update it via /access/password API which requires session ticket (not API token).
+# Workaround: Check if user exists first, only include password on creation.
+# See: plugins/modules/proxmox_user.py lines 217-223
+- name: "Check if admin@pve user exists"
+  ansible.builtin.command:
+    cmd: /usr/sbin/pveum user list --output-format json
+  register: proxmox_user_list
+  changed_when: false
+  run_once: true
+
+- name: "Parse user list to check if admin@pve exists"
+  ansible.builtin.set_fact:
+    proxmox_admin_exists: "{{ (proxmox_user_list.stdout | from_json) | selectattr('userid', 'equalto', proxmox_admin_user ~ '@' ~ proxmox_admin_realm) | list | length > 0 }}"
+
+- name: "Create admin@pve user (with password)"
+  community.proxmox.proxmox_user:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    userid: "{{ proxmox_admin_user }}@{{ proxmox_admin_realm }}"
+    password: "{{ proxmox_admin_password }}"
+    email: "{{ proxmox_admin_email }}"
+    comment: "{{ proxmox_admin_comment }}"
+    enable: true
+    state: present
+  delegate_to: localhost
+  become: false
+  no_log: true
+  when: not proxmox_admin_exists
+  run_once: true
+
+- name: "Update admin@pve user (without password)"
+  community.proxmox.proxmox_user:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    userid: "{{ proxmox_admin_user }}@{{ proxmox_admin_realm }}"
+    email: "{{ proxmox_admin_email }}"
+    comment: "{{ proxmox_admin_comment }}"
+    enable: true
+    state: present
+  delegate_to: localhost
+  become: false
+  no_log: true
+  when: proxmox_admin_exists
+  run_once: true
+
+- name: "Grant Administrator role to admin@pve on root path"
+  community.proxmox.proxmox_access_acl:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    state: present
+    path: /
+    type: user
+    ugid: "{{ proxmox_admin_user }}@{{ proxmox_admin_realm }}"
+    roleid: Administrator
+    propagate: true
+  delegate_to: localhost
+  become: false
+  run_once: true
