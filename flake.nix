@@ -36,6 +36,7 @@
               (python3.withPackages (ps: with ps; [
                 ansible
                 jinja2
+                proxmoxer
                 pyyaml
                 ruamel-yaml
                 # ARA (Ansible Run Analysis) for recording playbook runs

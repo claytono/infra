@@ -1,0 +1,61 @@
+---
+- name: "Install pexpect for expect module"
+  ansible.builtin.apt:
+    name: python3-pexpect
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Deploy AWS Route53 credentials for ACME"
+  ansible.builtin.template:
+    src: aws-credentials.j2
+    dest: /root/.aws-route53-credentials
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: "Check if ACME account exists"
+  ansible.builtin.shell:
+    cmd: pvenode acme account list | grep -q "{{ proxmox_acme_account_name }}"
+  register: proxmox_acme_account_check
+  changed_when: false
+  failed_when: false
+
+- name: "Register ACME account with Let's Encrypt"
+  ansible.builtin.expect:
+    command: pvenode acme account register {{ proxmox_acme_account_name }} {{ proxmox_acme_email }} --directory https://acme-v02.api.letsencrypt.org/directory
+    responses:
+      "Do you agree to the above terms.*": "y"
+    timeout: 30
+  when: proxmox_acme_account_check.rc != 0
+  run_once: true
+
+- name: "Check if Route53 DNS plugin exists"
+  ansible.builtin.shell:
+    cmd: pvenode acme plugin list | grep -q "{{ proxmox_acme_plugin_name }}"
+  register: proxmox_acme_plugin_check
+  changed_when: false
+  failed_when: false
+
+- name: "Add Route53 DNS plugin for ACME"
+  ansible.builtin.command:
+    cmd: pvenode acme plugin add dns {{ proxmox_acme_plugin_name }} --api aws --data /root/.aws-route53-credentials
+  when: proxmox_acme_plugin_check.rc != 0
+  run_once: true
+
+- name: "Get current node ACME configuration"
+  ansible.builtin.command:
+    cmd: pvenode config get
+  register: proxmox_node_config
+  changed_when: false
+
+- name: "Configure ACME domains for node"
+  ansible.builtin.command:
+    cmd: >
+      pvenode config set
+      --acmedomain0 '{{ inventory_hostname }}.{{ domain }},plugin={{ proxmox_acme_plugin_name }}'
+      --acmedomain1 'proxmox.{{ domain }},plugin={{ proxmox_acme_plugin_name }}'
+  when: >
+    (inventory_hostname + '.' + domain + ',plugin=' + proxmox_acme_plugin_name) not in proxmox_node_config.stdout or
+    ('proxmox.' + domain + ',plugin=' + proxmox_acme_plugin_name) not in proxmox_node_config.stdout

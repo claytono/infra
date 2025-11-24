@@ -46,6 +46,12 @@
       loop:
         - libvirt
 
+- name: Proxmox configuration
+  hosts: proxmox
+  roles:
+    - role: proxmox
+      tags: proxmox
+
 - name: SSH hardening
   hosts: all
   tags: [users, ssh]

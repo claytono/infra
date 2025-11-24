@@ -15,6 +15,7 @@ common_packages_to_install:
   - htop
   - lsb-release
   - psmisc
+  - sudo
   - tmux
   - vim
   - openssh-client

@@ -15,11 +15,18 @@
     state: present
     autoremove: true
 
-- name: "Install non-free on Debian"
+- name: "Check if Proxmox is installed"
+  ansible.builtin.stat:
+    path: /usr/bin/pvesh
+  register: common_proxmox_check
+
+- name: "Install non-free firmware on Debian"
   ansible.builtin.apt:
     name: firmware-misc-nonfree
     state: present
-  when: ansible_distribution == 'Debian'
+  when:
+    - ansible_distribution == 'Debian'
+    - not common_proxmox_check.stat.exists
 
 - name: "Install qemu-guest-agent on VMs"
   ansible.builtin.apt:
