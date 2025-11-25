@@ -18,4 +18,3 @@
   failed_when: proxmox_cluster_status.rc != 0
   when: not proxmox_cluster_check.stat.exists
   run_once: true
-
