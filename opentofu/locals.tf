@@ -46,5 +46,11 @@ locals {
       hostname = "p9.oneill.net"
       note     = "Proxmox VE host"
     }
+    infrapi = {
+      mac      = "d8:3a:dd:1c:15:2f"
+      ip       = "172.19.74.224"
+      hostname = "infrapi.oneill.net"
+      note     = "Infrastructure services (NUT)"
+    }
   }
 }

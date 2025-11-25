@@ -13,7 +13,8 @@
 
 - name: "Parse user list to check if admin@pve exists"
   ansible.builtin.set_fact:
-    proxmox_admin_exists: "{{ (proxmox_user_list.stdout | from_json) | selectattr('userid', 'equalto', proxmox_admin_user ~ '@' ~ proxmox_admin_realm) | list | length > 0 }}"
+    proxmox_admin_exists: "{{ (proxmox_user_list.stdout | from_json) | selectattr('userid', 'equalto', proxmox_admin_user ~ '@' ~ proxmox_admin_realm) | list | length
+      > 0 }}"
 
 - name: "Create admin@pve user (with password)"
   community.proxmox.proxmox_user:

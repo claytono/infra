@@ -9,7 +9,7 @@ k5 ansible_host=k5.oneill.net domain=oneill.net
 #gasherbrum ansible_host=gasherbrum.oneill.net domain=oneill.net
 #gasherbrum-display ansible_host=gasherbrum-display.oneill.net domain=oneill.net
 zwavejs ansible_host=zwavejs.oneill.net domain=oneill.net
-upspi ansible_host=upspi.oneill.net domain=oneill.net
+infrapi ansible_host=infrapi.oneill.net domain=oneill.net
 p9 ansible_host=p9.oneill.net domain=oneill.net
 
 [kubernetes]
@@ -27,7 +27,7 @@ k4
 k5
 
 [nut]
-upspi
+infrapi
 
 [nut_client]
 luser
@@ -40,7 +40,7 @@ k5
 #gasherbrum
 #gasherbrum-display
 zwavejs
-upspi
+infrapi
 
 [pizero]
 #voron2-pizero
@@ -54,4 +54,4 @@ p9
 #gasherbrum-display
 
 [nut_server]
-upspi
+infrapi
