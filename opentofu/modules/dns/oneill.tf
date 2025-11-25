@@ -155,10 +155,18 @@ resource "aws_route53_record" "infrastructure_hosts" {
   records = [each.value.ip]
 }
 
-# Service CNAME for NUT web interface
+# Service CNAMEs for infrapi services
 resource "aws_route53_record" "nut" {
   zone_id = aws_route53_zone.oneill_net.zone_id
   name    = "nut.oneill.net"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["infrapi.oneill.net"]
+}
+
+resource "aws_route53_record" "pxe" {
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = "pxe.oneill.net"
   type    = "CNAME"
   ttl     = 300
   records = ["infrapi.oneill.net"]

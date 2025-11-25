@@ -1,0 +1,5 @@
+---
+- name: Restart PXE services
+  community.docker.docker_compose_v2:
+    project_src: /etc/pxe
+    state: restarted

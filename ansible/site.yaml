@@ -123,6 +123,12 @@
     - role: nut
       tags: nut
 
+- name: PXE boot server
+  hosts: infrapi
+  roles:
+    - role: pxe
+      tags: pxe
+
 - name: Tailscale sysctl config
   hosts: all,!tailscale_disabled
   pre_tasks:

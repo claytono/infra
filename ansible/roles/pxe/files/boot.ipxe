@@ -1,0 +1,52 @@
+#!ipxe
+
+set menu-timeout 30000
+set pxe-server http://infrapi.oneill.net:8081
+
+menu PXE Boot Menu
+item --gap -- -------- Default --------
+item localdisk         Boot from local disk
+item --gap -- -------- Debian Trixie --------
+item trixie-preseed    Debian Trixie - Preseed
+item trixie-expert     Debian Trixie - Expert
+item --gap -- -------- Debian Bookworm --------
+item bookworm-preseed  Debian Bookworm - Preseed
+item bookworm-expert   Debian Bookworm - Expert
+item --gap -- -------- Tools --------
+item memtest           Memtest86+
+item shell             iPXE Shell
+choose --timeout ${menu-timeout} --default localdisk target && goto ${target}
+
+:localdisk
+exit
+
+:trixie-preseed
+set base http://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64
+kernel ${base}/linux auto=true priority=critical preseed/url=${pxe-server}/preseed.trixie.cfg interface=auto
+initrd ${base}/initrd.gz
+boot
+
+:trixie-expert
+set base http://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64
+kernel ${base}/linux priority=low
+initrd ${base}/initrd.gz
+boot
+
+:bookworm-preseed
+set base http://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64
+kernel ${base}/linux auto=true priority=critical preseed/url=${pxe-server}/preseed.bookworm.cfg interface=auto
+initrd ${base}/initrd.gz
+boot
+
+:bookworm-expert
+set base http://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64
+kernel ${base}/linux priority=low
+initrd ${base}/initrd.gz
+boot
+
+:memtest
+kernel ${pxe-server}/memtest64.bin
+boot
+
+:shell
+shell
