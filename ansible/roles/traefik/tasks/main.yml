@@ -1,0 +1,37 @@
+---
+- name: Create traefik directory
+  ansible.builtin.file:
+    path: /etc/traefik
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create traefik acme directory
+  ansible.builtin.file:
+    path: /etc/traefik/acme
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Deploy traefik environment file
+  ansible.builtin.template:
+    src: traefik.env.j2
+    dest: /etc/traefik/traefik.env
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Deploy traefik docker-compose file
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: /etc/traefik/docker-compose.yml
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Start traefik
+  community.docker.docker_compose_v2:
+    project_src: /etc/traefik
+    state: present

@@ -36,13 +36,13 @@
 
 - name: "Get ACME plugin list"
   ansible.builtin.command:
-    cmd: pvenode acme plugin list
+    cmd: pvenode acme plugin list --output-format json
   register: proxmox_acme_plugin_list
   changed_when: false
 
 - name: "Check if Route53 DNS plugin exists"
   ansible.builtin.set_fact:
-    proxmox_acme_plugin_exists: "{{ proxmox_acme_plugin_name in proxmox_acme_plugin_list.stdout }}"
+    proxmox_acme_plugin_exists: "{{ proxmox_acme_plugin_name in (proxmox_acme_plugin_list.stdout | from_json | map(attribute='plugin') | list) }}"
 
 - name: "Add Route53 DNS plugin for ACME"
   ansible.builtin.command:
