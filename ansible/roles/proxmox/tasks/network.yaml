@@ -23,15 +23,4 @@
     group: root
     mode: "0644"
     backup: true
-  register: network_config
-
-- name: "Reload network configuration with ifreload"
-  ansible.builtin.command:
-    cmd: ifreload -a
-  when: network_config.changed
-  register: network_reload
-
-- name: "Notify if network configuration reloaded"
-  ansible.builtin.debug:
-    msg: "Network configuration reloaded successfully."
-  when: network_reload is defined and network_reload is changed
+  notify: Reload network configuration

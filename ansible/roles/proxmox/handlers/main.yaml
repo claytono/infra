@@ -1,0 +1,5 @@
+---
+- name: Reload network configuration
+  ansible.builtin.command:
+    cmd: ifreload -a
+  listen: Reload network configuration
