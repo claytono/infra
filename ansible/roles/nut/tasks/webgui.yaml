@@ -6,33 +6,23 @@
     mode: "0755"
   become: true
 
-# Deploy nut_webgui and Traefik
-- name: Write compose .env with AWS creds (for Traefik Route53)
-  ansible.builtin.template:
-    src: webgui.env.j2
-    dest: /etc/nut/webgui/.env
-    owner: root
-    group: docker
-    mode: "0640"
-  no_log: true
-  become: true
-
-- name: Deploy docker-compose.yaml for nut_webgui and Traefik
+- name: Deploy docker-compose.yaml for nut_webgui
   ansible.builtin.copy:
     src: docker-compose.yaml
     dest: /etc/nut/webgui/docker-compose.yaml
     mode: "0644"
   become: true
-  notify: Restart webgui containers
 
-- name: Ensure /etc/ssl/traefik exists with correct permissions
-  ansible.builtin.file:
-    path: /etc/ssl/traefik
-    state: directory
-    mode: "0755"
+- name: Deploy nut_webgui environment file
+  ansible.builtin.template:
+    src: webgui.env.j2
+    dest: /etc/nut/webgui/nut_webgui.env
+    owner: root
+    group: root
+    mode: "0644"
   become: true
 
-- name: Start docker compose up for nut_webgui and Traefik
+- name: Start nut_webgui
   community.docker.docker_compose_v2:
     project_src: /etc/nut/webgui
     state: present

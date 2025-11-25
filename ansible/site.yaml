@@ -111,6 +111,12 @@
     - role: resticprofile
       tags: restic
 
+- name: Traefik
+  hosts: infrapi
+  roles:
+    - role: traefik
+      tags: traefik
+
 - name: NUT
   hosts: nut
   roles:

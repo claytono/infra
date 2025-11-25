@@ -155,6 +155,15 @@ resource "aws_route53_record" "infrastructure_hosts" {
   records = [each.value.ip]
 }
 
+# Service CNAME for NUT web interface
+resource "aws_route53_record" "nut" {
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = "nut.oneill.net"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["infrapi.oneill.net"]
+}
+
 # Nameserver records for delegation set
 resource "aws_route53_record" "oneill_ns1_a" {
   zone_id = aws_route53_zone.oneill_net.zone_id

@@ -3,6 +3,8 @@ services:
   nut_webgui:
     image: ghcr.io/superioone/nut_webgui:0.7.0@sha256:9de0af2305c94033931acaa629965673e54884633fae7aed05434c72a3d0b06a
     restart: unless-stopped
+    env_file:
+      - nut_webgui.env
     environment:
       UPSD_ADDR: "${HOSTNAME}.oneill.net"
       UPSD_PORT: "3493"
@@ -14,45 +16,17 @@ services:
     labels:
       # Enable Traefik for this container (since exposedbydefault=false)
       - "traefik.enable=true"
-      # Define the routing rule: route traffic for this specific hostname to this service
-      - "traefik.http.routers.nut_webgui.rule=Host(`${HOSTNAME}.oneill.net`)"
+      # Define the routing rule: route traffic for nut.oneill.net to this service
+      - "traefik.http.routers.nut_webgui.rule=Host(`nut.oneill.net`)"
       # Use the "websecure" entrypoint (port 443) for this router
       - "traefik.http.routers.nut_webgui.entrypoints=websecure"
       # Enable TLS and use the "letsencrypt" certificate resolver for auto-HTTPS
       - "traefik.http.routers.nut_webgui.tls.certresolver=letsencrypt"
       # Tell Traefik which port nut_webgui is listening on (9000)
       - "traefik.http.services.nut_webgui.loadbalancer.server.port=9000"
+    networks:
+      - traefik
 
+networks:
   traefik:
-    image: traefik:3.6.0@sha256:18112aed2bfe3dfb8534f1045622390c3316596cff0cefab64f44e43d23e1640
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      # AWS credentials for Route53 DNS challenge (for Let's Encrypt)
-      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
-      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
-      AWS_REGION: "${AWS_REGION}"
-    volumes:
-      # Read-only Docker socket for service discovery
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Persistent storage for Let's Encrypt certificates
-      - /etc/ssl/traefik:/letsencrypt
-    command:
-      # Docker provider configuration
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      # Entry points (HTTP and HTTPS)
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      # Automatic HTTP to HTTPS redirect
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      # Let's Encrypt certificate resolver with Route53 DNS challenge
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=route53"
-      - "--certificatesresolvers.letsencrypt.acme.email=admin@oneill.net"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-    depends_on:
-      - nut_webgui
+    external: true
