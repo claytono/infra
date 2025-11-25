@@ -1,0 +1,19 @@
+---
+services:
+  dnsmasq:
+    image: dockurr/dnsmasq:2.91
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    volumes:
+      - /etc/pxe/dnsmasq.conf:/etc/dnsmasq.conf:ro
+      - /etc/pxe/assets:/tftpboot:ro
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - /etc/pxe/assets:/usr/share/nginx/html:ro

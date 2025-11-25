@@ -1,0 +1,70 @@
+---
+- name: Create PXE directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /etc/pxe
+    - /etc/pxe/assets
+
+- name: Download iPXE bootloader
+  ansible.builtin.get_url:
+    url: https://boot.ipxe.org/undionly.kpxe
+    dest: /etc/pxe/assets/undionly.kpxe
+    mode: "0644"
+
+- name: Check if memtest exists
+  ansible.builtin.stat:
+    path: /etc/pxe/assets/memtest64.bin
+  register: pxe_memtest_stat
+
+- name: Download memtest86+
+  ansible.builtin.get_url:
+    url: https://memtest.org/download/v7.00/mt86plus_7.00.binaries.zip
+    dest: /tmp/memtest.zip
+    mode: "0644"
+  when: not pxe_memtest_stat.stat.exists
+
+- name: Extract memtest86+ binary
+  ansible.builtin.unarchive:
+    src: /tmp/memtest.zip
+    dest: /etc/pxe/assets/
+    remote_src: true
+    include:
+      - memtest64.bin
+  when: not pxe_memtest_stat.stat.exists
+
+- name: Deploy boot.ipxe script
+  ansible.builtin.copy:
+    src: boot.ipxe
+    dest: /etc/pxe/assets/boot.ipxe
+    mode: "0644"
+
+- name: Deploy preseed files
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /etc/pxe/assets/
+    mode: "0644"
+  loop:
+    - preseed.trixie.cfg
+    - preseed.bookworm.cfg
+
+- name: Deploy dnsmasq configuration
+  ansible.builtin.copy:
+    src: dnsmasq.conf
+    dest: /etc/pxe/dnsmasq.conf
+    mode: "0644"
+  notify: Restart PXE services
+
+- name: Deploy docker-compose file
+  ansible.builtin.copy:
+    src: docker-compose.yaml
+    dest: /etc/pxe/docker-compose.yaml
+    mode: "0644"
+  notify: Restart PXE services
+
+- name: Start PXE services
+  community.docker.docker_compose_v2:
+    project_src: /etc/pxe
+    state: present

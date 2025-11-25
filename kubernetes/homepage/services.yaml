@@ -1,7 +1,7 @@
 ---
 - Miscellaneous:
   - NUT WebGUI:
-      href: https://upspi.oneill.net
+      href: https://nut.oneill.net
       description: UPS Monitoring
       icon: mdi-battery-charging
   - Z-Wave JS:
