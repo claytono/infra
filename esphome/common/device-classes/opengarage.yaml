@@ -1,0 +1,164 @@
+---
+# OpenGarage ESPHome Package
+#
+# Replaces stock OpenGarage firmware with ESPHome while preserving similar behavior.
+# Based on verified working configs from:
+#   - https://gist.github.com/edwork/fdc4afe2a1aa3212dbb78c7bbed2043e
+#   - https://github.com/gabe565/esphome-configs
+#   - https://community.home-assistant.io/t/opengarage-anyone-has-flashed-esphome/120144
+#
+# Required substitutions:
+#   devicename: left-garage-door
+#   device_id: left_garage_door
+#   human_devicename: Left Garage Door
+#   icon: mdi:garage
+#   door_threshold: "75"  # cm - door open when distance <= this
+#
+# GPIO Pin Mapping (from OpenGarage firmware defines.h):
+#   GPIO 15 - Relay (door trigger)
+#   GPIO 12 - Ultrasonic trigger
+#   GPIO 14 - Ultrasonic echo
+#   GPIO 13 - Buzzer (PWM)
+#   GPIO 2  - Status LED (inverted)
+#   GPIO 0  - Button (INPUT_PULLUP)
+
+esphome:
+  name: ${devicename}
+
+esp8266:
+  board: esp_wroom_02
+  restore_from_flash: true
+
+preferences:
+  flash_write_interval: 10min
+
+logger:
+  logs:
+    ultrasonic.sensor: INFO  # Suppress per-reading debug messages
+
+# Ultrasonic distance sensor for door state detection
+# Settings based on OpenGarage stock firmware defaults:
+#   - Read interval (DRI): 500ms
+#   - Timeout: Cap at 450cm
+#   - Filter: Median of 15 readings
+sensor:
+  - platform: ultrasonic
+    trigger_pin: 12
+    echo_pin: 14
+    name: "${human_devicename} Distance"
+    id: ${device_id}_distance
+    update_interval: 500ms
+    timeout: 4.5m
+    unit_of_measurement: cm
+    accuracy_decimals: 1
+    icon: mdi:ruler
+    filters:
+      - multiply: 100
+      - median:
+          window_size: 15
+          send_every: 1
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 1
+      - round: 1  # Round to nearest 0.1cm
+      - delta: 1  # Only report changes >= 1cm
+
+# Garage door cover entity
+cover:
+  - platform: template
+    name: "${human_devicename}"
+    id: ${device_id}_cover
+    device_class: garage
+    icon: ${icon}
+    lambda: |-
+      if (id(${device_id}_distance).state <= ${door_threshold}) {
+        return COVER_OPEN;
+      }
+      return COVER_CLOSED;
+    open_action:
+      - script.execute: ${device_id}_trigger_door
+    close_action:
+      - script.execute: ${device_id}_trigger_door
+
+# Relay for door trigger (internal - controlled via script)
+switch:
+  - platform: gpio
+    pin: 15
+    id: ${device_id}_relay
+    internal: true
+    restore_mode: ALWAYS_OFF
+
+# Buzzer output for RTTTL alarm tones
+output:
+  - platform: esp8266_pwm
+    pin: 13
+    id: ${device_id}_buzzer_output
+
+# RTTTL component for playing alarm tones before door action
+rtttl:
+  output: ${device_id}_buzzer_output
+  id: ${device_id}_buzzer
+
+# Configurable alarm duration before door action (stock OpenGarage behavior)
+# Minimum 5 seconds enforced by stock firmware for auto-close
+number:
+  - platform: template
+    name: "${human_devicename} Alarm Duration"
+    id: ${device_id}_alarm_duration
+    icon: mdi:timer
+    min_value: 0
+    max_value: 30
+    step: 1
+    initial_value: 5
+    unit_of_measurement: s
+    optimistic: true
+    restore_value: true
+
+# Door trigger script - plays alarm then pulses relay
+script:
+  - id: ${device_id}_trigger_door
+    then:
+      - if:
+          condition:
+            lambda: 'return id(${device_id}_alarm_duration).state > 0;'
+          then:
+            - rtttl.play:
+                rtttl: 'alarm:d=4,o=5,b=120:d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p'
+            - delay: !lambda 'return id(${device_id}_alarm_duration).state * 1000;'
+            - rtttl.stop:
+      - switch.turn_on: ${device_id}_relay
+      - delay: 500ms
+      - switch.turn_off: ${device_id}_relay
+
+# Physical button on device
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: 0
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "${human_devicename} Button"
+    id: ${device_id}_button
+    internal: true
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+    on_press:
+      - script.execute: ${device_id}_trigger_door
+
+  # Door state sensor for chime triggers
+  - platform: template
+    id: ${device_id}_door_state
+    internal: true
+    lambda: |-
+      return id(${device_id}_cover).position == COVER_OPEN;
+    on_press:
+      - rtttl.play: 'open:d=16,o=4,b=160:c,g'
+    on_release:
+      - rtttl.play: 'close:d=16,o=4,b=160:g,c'
+
+# Status LED
+status_led:
+  pin:
+    number: 2
+    inverted: true

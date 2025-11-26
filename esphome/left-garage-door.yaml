@@ -1,0 +1,13 @@
+---
+substitutions:
+  devicename: left-garage-door
+  device_id: left_garage_door
+  human_devicename: Left Garage Door
+  icon: mdi:garage
+  door_threshold: "75"
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  web: !include common/web.yaml
+  opengarage: !include common/device-classes/opengarage.yaml
