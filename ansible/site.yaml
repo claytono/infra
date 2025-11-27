@@ -91,6 +91,15 @@
 
 - name: Network and security roles
   hosts: all
+  pre_tasks:
+    - name: Remove NetworkManager when managing network via interfaces
+      ansible.builtin.apt:
+        name: network-manager
+        state: absent
+        purge: true
+      become: true
+      tags: network
+      when: "manage_network | default(false) | bool"
   roles:
     - role: layereight.wifi
       when: "wifi_ssid is defined"
