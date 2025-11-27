@@ -206,6 +206,7 @@
 - name: ARA Reporting
   hosts: all
   gather_facts: false
+  become: false
   tags: [always]
   tasks:
     - name: Get current playbook ID from ARA
