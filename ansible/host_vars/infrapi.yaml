@@ -2,6 +2,17 @@
 # UPS server host - monitors all UPS devices but does NOT shut down
 # Clients will shut themselves down when they see LOWBATT
 
+# Configure ethernet-only networking (disable wifi)
+manage_network: true
+interfaces_ether_interfaces:
+  - device: eth0
+    bootproto: static
+    address: "172.19.74.224"
+    netmask: "255.255.255.0"
+    gateway: 172.19.74.1
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
+
 # Override shutdown command to prevent upspi from shutting down
 # This allows upsmon to run and send notifications, but won't trigger shutdown
 nut_upsmon_extra: |
