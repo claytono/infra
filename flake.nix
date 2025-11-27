@@ -93,6 +93,7 @@
               rclone
               skopeo
               tflint
+              uv
               velero
               yamlfix
               yq-go

@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 
-# ESPHome Docker wrapper script
-# Uses the official ESPHome Docker image to run ESPHome commands
+# ESPHome wrapper script using uvx
+# Runs ESPHome via uv's tool execution for native serial port access
 
-# Fail fast
 set -Eeuo pipefail
 
 # ESPHome version
-ESPHOME_VERSION="2025.10.4"
+ESPHOME_VERSION="2025.10.5"
 
 # Get the directory where this script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Set the ESPHome config directory (parent of scripts directory)
 ESPHOME_DIR="${ESPHOME_DIR:-$(dirname "$SCRIPT_DIR")}"
@@ -18,58 +17,5 @@ ESPHOME_DIR="${ESPHOME_DIR:-$(dirname "$SCRIPT_DIR")}"
 # Ensure we're in the ESPHome directory
 cd "$ESPHOME_DIR" || exit 1
 
-# Docker image
-DOCKER_IMAGE="ghcr.io/esphome/esphome:${ESPHOME_VERSION}"
-
-# Ensure docker is available
-if ! command -v docker >/dev/null 2>&1; then
-  echo "Error: docker not found in PATH" >&2
-  exit 127
-fi
-
-# Version-specific volume name for platformio
-PLATFORMIO_VOLUME="esphome-platformio-${ESPHOME_VERSION}"
-
-# Clean up platformio volumes from other ESPHome versions
-cleanup_old_volumes() {
-  # Get all esphome volumes
-  mapfile -t volumes < <(docker volume ls --format "{{.Name}}" | grep "^esphome-" || true)
-
-  for volume in "${volumes[@]}"; do
-    # Skip current version volume
-    if [[ "$volume" == "$PLATFORMIO_VOLUME" ]]; then
-      continue
-    fi
-
-    # Remove old version volumes
-    if [[ "$volume" =~ ^esphome-platformio- ]]; then
-      echo "Removing old ESPHome volume: $volume" >&2
-      docker volume rm "$volume" 2>/dev/null || true
-    fi
-  done
-}
-
-# Clean up old volumes on first run of a new version
-cleanup_old_volumes
-
-# Build Docker command array
-DOCKER_CMD=(docker run --rm)
-
-# Add interactive flags if running in a terminal
-if [ -t 0 ] && [ -t 1 ]; then
-  DOCKER_CMD+=(-it)
-fi
-
-# Add volume mounts and other options
-DOCKER_CMD+=(
-  -v "${ESPHOME_DIR}:/config"
-  -v "${PLATFORMIO_VOLUME}:/root/.platformio"
-  -v "/tmp/esphome:/config/.esphome"
-  -v /etc/localtime:/etc/localtime:ro
-  --network host
-  --privileged
-  "$DOCKER_IMAGE"
-)
-
-# Run ESPHome in Docker
-"${DOCKER_CMD[@]}" "$@"
+# Run ESPHome via uv with pip included (required by PlatformIO)
+exec uv run --with pip --with "esphome==${ESPHOME_VERSION}" esphome "$@"

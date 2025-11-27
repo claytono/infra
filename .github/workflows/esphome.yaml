@@ -35,6 +35,9 @@ jobs:
     steps:
     - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
 
+    - name: Install Nix
+      uses: cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72  # v30
+
     - name: Create CI secrets.yaml (ephemeral)
       run: |
         mkdir -p esphome
@@ -56,8 +59,8 @@ jobs:
     - name: Run esphome-all compile (shard ${{ matrix.shard_index }}/${{ matrix.shard_total
         }})
       working-directory: esphome
-      run: ./scripts/esphome-all compile -j 1 --shard ${{ matrix.shard_index }}/${{
-        matrix.shard_total }}
+      run: nix develop ..#default --command ./scripts/esphome-all compile -j 1 --shard
+        ${{ matrix.shard_index }}/${{ matrix.shard_total }}
 
     - name: Collect failed logs
       if: always()
