@@ -106,3 +106,13 @@ locals {
   unifi_api_key = data.onepassword_item.unifi_terraform.password
   unifi_api_url = "https://udmp.oneill.net"
 }
+
+# Proxmox credentials from 1Password (used to configure provider for VM management)
+data "onepassword_item" "proxmox_opentofu" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "proxmox-opentofu"
+}
+
+locals {
+  proxmox_api_token = "${data.onepassword_item.proxmox_opentofu.username}=${data.onepassword_item.proxmox_opentofu.credential}"
+}
