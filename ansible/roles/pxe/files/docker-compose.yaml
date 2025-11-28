@@ -1,7 +1,7 @@
 ---
 services:
   dnsmasq:
-    image: dockurr/dnsmasq:2.91
+    image: dockurr/dnsmasq:2.91@sha256:7873ce2dae1b0aa51d2c13dd4bd3aad47890c233088b3c7f6eb099a01e6e4307
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -11,7 +11,7 @@ services:
       - /etc/pxe/assets:/tftpboot:ro
 
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
     restart: unless-stopped
     ports:
       - "8081:80"
