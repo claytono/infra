@@ -6,7 +6,6 @@ metadata:
   name: cloudnative-pg
   namespace: cnpg-system
   labels:
-    helm.sh/chart: cloudnative-pg-0.26.1
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/version: "1.27.1"
@@ -18,7 +17,6 @@ kind: ClusterRole
 metadata:
   name: cloudnative-pg
   labels:
-    helm.sh/chart: cloudnative-pg-0.26.1
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/version: "1.27.1"
@@ -258,7 +256,6 @@ kind: ClusterRole
 metadata:
   name: cloudnative-pg-view
   labels:
-    helm.sh/chart: cloudnative-pg-0.26.1
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/version: "1.27.1"
@@ -289,7 +286,6 @@ kind: ClusterRole
 metadata:
   name: cloudnative-pg-edit
   labels:
-    helm.sh/chart: cloudnative-pg-0.26.1
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/version: "1.27.1"
@@ -322,7 +318,6 @@ kind: ClusterRoleBinding
 metadata:
   name: cloudnative-pg
   labels:
-    helm.sh/chart: cloudnative-pg-0.26.1
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/version: "1.27.1"

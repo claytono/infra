@@ -7,7 +7,6 @@ metadata:
   annotations:
   labels:
     app.kubernetes.io/name: democratic-csi
-    helm.sh/chart: democratic-csi-0.15.0
     app.kubernetes.io/instance: democratic-csi
     app.kubernetes.io/managed-by: Helm
 driver: org.democratic-csi.synology-iscsi

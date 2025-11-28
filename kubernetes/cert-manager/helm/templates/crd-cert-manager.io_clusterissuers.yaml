@@ -13,7 +13,6 @@ metadata:
     app.kubernetes.io/component: "crds"
     app.kubernetes.io/version: "v1.19.1"
     app.kubernetes.io/managed-by: Helm
-    helm.sh/chart: cert-manager-v1.19.1
 spec:
   group: cert-manager.io
   names:

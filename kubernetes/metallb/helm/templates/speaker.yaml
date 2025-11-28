@@ -8,7 +8,6 @@ metadata:
   name: metallb-frr-startup
   namespace: "metallb-system"
   labels:
-    helm.sh/chart: metallb-0.15.2
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/version: "v0.15.2"
@@ -114,7 +113,6 @@ metadata:
   name: metallb-speaker
   namespace: "metallb-system"
   labels:
-    helm.sh/chart: metallb-0.15.2
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/version: "v0.15.2"

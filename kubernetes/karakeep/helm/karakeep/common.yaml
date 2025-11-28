@@ -9,7 +9,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/version: 0.27.0
-    helm.sh/chart: karakeep-0.27.0
   namespace: karakeep
 stringData:
   MEILI_MASTER_KEY: 'bogus'
@@ -24,7 +23,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/version: 0.27.0
-    helm.sh/chart: karakeep-0.27.0
   namespace: karakeep
 spec:
   accessModes:
@@ -44,7 +42,6 @@ metadata:
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep-chrome
     app.kubernetes.io/version: 0.27.0
-    helm.sh/chart: karakeep-0.27.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -69,7 +66,6 @@ metadata:
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep
     app.kubernetes.io/version: 0.27.0
-    helm.sh/chart: karakeep-0.27.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -94,7 +90,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/version: 0.27.0
-    helm.sh/chart: karakeep-0.27.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -185,7 +180,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/version: 0.27.0
-    helm.sh/chart: karakeep-0.27.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -299,7 +293,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/version: 0.27.0
-    helm.sh/chart: karakeep-0.27.0
   annotations:
     ak-oidc-callback: /api/auth/callback/custom
     ak-type: oidc

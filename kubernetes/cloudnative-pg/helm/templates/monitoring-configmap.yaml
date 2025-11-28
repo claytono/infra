@@ -6,7 +6,6 @@ metadata:
   name: cnpg-default-monitoring
   namespace: cnpg-system
   labels:
-    helm.sh/chart: cloudnative-pg-0.26.1
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/version: "1.27.1"

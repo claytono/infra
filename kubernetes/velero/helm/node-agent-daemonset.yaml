@@ -9,7 +9,6 @@ metadata:
     app.kubernetes.io/name: velero
     app.kubernetes.io/instance: velero
     app.kubernetes.io/managed-by: Helm
-    helm.sh/chart: velero-11.1.1
 spec:
   selector:
     matchLabels:
@@ -22,7 +21,6 @@ spec:
         app.kubernetes.io/name: velero
         app.kubernetes.io/instance: velero
         app.kubernetes.io/managed-by: Helm
-        helm.sh/chart: velero-11.1.1
       annotations:
         prometheus.io/path: /metrics
         prometheus.io/port: "8085"

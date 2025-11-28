@@ -9,7 +9,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
-    helm.sh/chart: homepage-2.1.0
 secrets:
   - name: homepage-sa-token
 ---
@@ -24,7 +23,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
-    helm.sh/chart: homepage-2.1.0
   annotations:
     kubernetes.io/service-account.name: homepage
 ---
@@ -38,7 +36,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
-    helm.sh/chart: homepage-2.1.0
 rules:
   - apiGroups:
       - ""
@@ -98,7 +95,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
-    helm.sh/chart: homepage-2.1.0
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -119,7 +115,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
-    helm.sh/chart: homepage-2.1.0
   annotations:
 spec:
   type: ClusterIP
@@ -142,7 +137,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
-    helm.sh/chart: homepage-2.1.0
   annotations:
     values-checksum: 65a9a18b832c342d95effc7458a57defa0132e5b9a2142a387daa34de3d59c5a
 spec:
@@ -241,7 +235,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
-    helm.sh/chart: homepage-2.1.0
   annotations:
     ak-type: simple
     cert-manager.io/cluster-issuer: letsencrypt

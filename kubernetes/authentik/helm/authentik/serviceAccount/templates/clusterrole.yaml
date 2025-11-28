@@ -5,7 +5,6 @@ kind: ClusterRole
 metadata:
   name: "authentik-authentik"
   labels:
-    helm.sh/chart: "serviceAccount-2.1.0"
     app.kubernetes.io/name: "serviceAccount"
     app.kubernetes.io/instance: "authentik"
     app.kubernetes.io/managed-by: "Helm"

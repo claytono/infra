@@ -5,7 +5,6 @@ kind: ClusterRole
 metadata:
   name: external-secrets-controller
   labels:
-    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
     app.kubernetes.io/version: "v1.0.0"
@@ -157,7 +156,6 @@ kind: ClusterRole
 metadata:
   name: external-secrets-view
   labels:
-    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
     app.kubernetes.io/version: "v1.0.0"
@@ -208,7 +206,6 @@ kind: ClusterRole
 metadata:
   name: external-secrets-edit
   labels:
-    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
     app.kubernetes.io/version: "v1.0.0"
@@ -263,7 +260,6 @@ metadata:
   name: external-secrets-servicebindings
   labels:
     servicebinding.io/controller: "true"
-    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
     app.kubernetes.io/version: "v1.0.0"
@@ -285,7 +281,6 @@ kind: ClusterRoleBinding
 metadata:
   name: external-secrets-controller
   labels:
-    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
     app.kubernetes.io/version: "v1.0.0"
@@ -306,7 +301,6 @@ metadata:
   name: external-secrets-leaderelection
   namespace: external-secrets
   labels:
-    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
     app.kubernetes.io/version: "v1.0.0"
@@ -345,7 +339,6 @@ metadata:
   name: external-secrets-leaderelection
   namespace: external-secrets
   labels:
-    helm.sh/chart: external-secrets-1.0.0
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
     app.kubernetes.io/version: "v1.0.0"

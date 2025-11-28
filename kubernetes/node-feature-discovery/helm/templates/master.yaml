@@ -6,7 +6,6 @@ metadata:
   name:  node-feature-discovery-master
   namespace: node-feature-discovery
   labels:
-    helm.sh/chart: node-feature-discovery-0.18.1
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
     app.kubernetes.io/version: "v0.18.1"
