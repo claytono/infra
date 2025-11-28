@@ -121,6 +121,6 @@ repos:
   - id: actionlint
 
 - repo: https://github.com/renovatebot/pre-commit-hooks
-  rev: 42.17.1
+  rev: 42.26.5
   hooks:
   - id: renovate-config-validator
