@@ -5,7 +5,6 @@ kind: APIService
 metadata:
   name: v1beta1.metrics.k8s.io
   labels:
-    helm.sh/chart: metrics-server-3.13.0
     app.kubernetes.io/name: metrics-server
     app.kubernetes.io/instance: metrics-server
     app.kubernetes.io/version: "0.8.0"

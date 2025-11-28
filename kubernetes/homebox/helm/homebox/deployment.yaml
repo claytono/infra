@@ -5,7 +5,6 @@ kind: Deployment
 metadata:
   name: homebox
   labels:
-    helm.sh/chart: homebox-0.2.0
     app.kubernetes.io/name: homebox
     app.kubernetes.io/instance: homebox
     app.kubernetes.io/version: "0.21.0"
@@ -22,7 +21,6 @@ spec:
         checksum/secret: 0ec8b33b18b21dd857c89bfa93092da22e9875cdf3382ad71d5b2b50293308fe
         reloader.stakater.com/auto: "true"
       labels:
-        helm.sh/chart: homebox-0.2.0
         app.kubernetes.io/name: homebox
         app.kubernetes.io/instance: homebox
         app.kubernetes.io/version: "0.21.0"

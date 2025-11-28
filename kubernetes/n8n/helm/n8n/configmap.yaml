@@ -6,7 +6,6 @@ metadata:
   name: n8n-app-config
   namespace: n8n
   labels:
-    helm.sh/chart: n8n-1.0.15
     app.kubernetes.io/name: n8n
     app.kubernetes.io/instance: n8n
     app.kubernetes.io/version: "1.112.0"

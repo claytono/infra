@@ -12,7 +12,6 @@ metadata:
     app.kubernetes.io/component: "controller"
     app.kubernetes.io/version: "v1.19.1"
     app.kubernetes.io/managed-by: Helm
-    helm.sh/chart: cert-manager-v1.19.1
 spec:
   replicas: 1
   selector:
@@ -29,7 +28,6 @@ spec:
         app.kubernetes.io/component: "controller"
         app.kubernetes.io/version: "v1.19.1"
         app.kubernetes.io/managed-by: Helm
-        helm.sh/chart: cert-manager-v1.19.1
       annotations:
         prometheus.io/path: "/metrics"
         prometheus.io/scrape: 'true'

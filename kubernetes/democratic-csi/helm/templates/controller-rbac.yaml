@@ -7,7 +7,6 @@ metadata:
   namespace: democratic-csi
   labels:
     app.kubernetes.io/name: democratic-csi
-    helm.sh/chart: democratic-csi-0.15.0
     app.kubernetes.io/instance: democratic-csi
     app.kubernetes.io/managed-by: Helm
 ---
@@ -18,7 +17,6 @@ metadata:
   name: democratic-csi-controller-cr
   labels:
     app.kubernetes.io/name: democratic-csi
-    helm.sh/chart: democratic-csi-0.15.0
     app.kubernetes.io/instance: democratic-csi
     app.kubernetes.io/managed-by: Helm
 rules:
@@ -101,7 +99,6 @@ metadata:
   name: democratic-csi-controller-rb
   labels:
     app.kubernetes.io/name: democratic-csi
-    helm.sh/chart: democratic-csi-0.15.0
     app.kubernetes.io/instance: democratic-csi
     app.kubernetes.io/managed-by: Helm
 roleRef:

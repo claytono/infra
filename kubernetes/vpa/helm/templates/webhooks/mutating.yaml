@@ -6,7 +6,6 @@ metadata:
   name: vpa-webhook-config
   labels:
     app.kubernetes.io/component: admission-controller
-    helm.sh/chart: vpa-4.10.0
     app.kubernetes.io/name: vpa
     app.kubernetes.io/instance: vpa
     app.kubernetes.io/version: "1.4.1"

@@ -37,15 +37,41 @@ helm_chart_args() {
 }
 
 # Function to call helm template with correct chart args and any extra options
+# Automatically removes helm.sh/chart labels when --output-dir is specified
 helm_template() {
   local release="$1"
   local chart_key="$2"
   shift 2
-  local chart_args
-  # Use a more compatible approach for older shells
-  chart_args=()
+
+  # Parse args to find output directory for post-processing
+  local output_dir=""
+  local args=("$@")
+  for ((i = 0; i < ${#args[@]}; i++)); do
+    if [[ "${args[i]}" == "--output-dir" ]]; then
+      output_dir="${args[i + 1]}"
+      break
+    fi
+  done
+
+  local chart_args=()
   while IFS= read -r line; do
     chart_args+=("$line")
   done < <(helm_chart_args "$chart_key")
+
   helm template "$release" "${chart_args[@]}" "$@"
+
+  # Auto-remove helm.sh/chart labels to reduce diff noise on upgrades
+  if [[ -n "$output_dir" && -d "$output_dir" ]]; then
+    remove_helm_chart_labels "$output_dir"
+  fi
+}
+
+# Remove helm.sh/chart labels from rendered YAML files
+# Usage: remove_helm_chart_labels <directory>
+remove_helm_chart_labels() {
+  local dir="$1"
+  find "$dir" \( -name '*.yaml' -o -name '*.yml' \) -type f | while read -r file; do
+    # Use temp file approach for portability (works on both macOS and Linux)
+    sed '/^[[:space:]]*helm\.sh\/chart:/d' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+  done
 }

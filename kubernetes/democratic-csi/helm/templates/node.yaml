@@ -7,7 +7,6 @@ metadata:
   namespace: democratic-csi
   labels:
     app.kubernetes.io/name: democratic-csi
-    helm.sh/chart: democratic-csi-0.15.0
     app.kubernetes.io/instance: democratic-csi
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/csi-role: "node"

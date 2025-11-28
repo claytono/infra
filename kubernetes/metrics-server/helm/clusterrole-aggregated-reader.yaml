@@ -5,7 +5,6 @@ kind: ClusterRole
 metadata:
   name: system:metrics-server-aggregated-reader
   labels:
-    helm.sh/chart: metrics-server-3.13.0
     app.kubernetes.io/name: metrics-server
     app.kubernetes.io/instance: metrics-server
     app.kubernetes.io/version: "0.8.0"

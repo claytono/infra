@@ -5,7 +5,6 @@ kind: ClusterRole
 metadata:
   name: alloy
   labels:
-    helm.sh/chart: alloy-1.2.1
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
     app.kubernetes.io/version: "v1.10.1"
@@ -105,7 +104,6 @@ kind: ClusterRoleBinding
 metadata:
   name: alloy
   labels:
-    helm.sh/chart: alloy-1.2.1
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
     app.kubernetes.io/version: "v1.10.1"

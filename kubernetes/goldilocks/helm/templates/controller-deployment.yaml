@@ -7,7 +7,6 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: goldilocks
-    helm.sh/chart: goldilocks-10.1.0
     app.kubernetes.io/instance: goldilocks
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: controller

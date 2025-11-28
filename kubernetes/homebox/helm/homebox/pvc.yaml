@@ -5,7 +5,6 @@ kind: PersistentVolumeClaim
 metadata:
   name: homebox-data
   labels:
-    helm.sh/chart: homebox-0.2.0
     app.kubernetes.io/name: homebox
     app.kubernetes.io/instance: homebox
     app.kubernetes.io/version: "0.21.0"

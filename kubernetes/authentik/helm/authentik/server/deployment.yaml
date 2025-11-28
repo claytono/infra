@@ -6,7 +6,6 @@ metadata:
   name: authentik-server
   namespace: "authentik"
   labels:
-    helm.sh/chart: "authentik-2025.8.4"
     app.kubernetes.io/name: "authentik"
     app.kubernetes.io/instance: "authentik"
     app.kubernetes.io/component: "server"
@@ -24,7 +23,6 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: "authentik-2025.8.4"
         app.kubernetes.io/name: "authentik"
         app.kubernetes.io/instance: "authentik"
         app.kubernetes.io/component: "server"

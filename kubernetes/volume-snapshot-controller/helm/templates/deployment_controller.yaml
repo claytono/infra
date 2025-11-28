@@ -6,7 +6,6 @@ metadata:
   name: volume-snapshot-controller
   namespace: volume-snapshot-controller
   labels:
-    helm.sh/chart: snapshot-controller-4.1.0
     app.kubernetes.io/name: snapshot-controller
     app.kubernetes.io/instance: volume-snapshot-controller
     app.kubernetes.io/version: "v8.3.0"
