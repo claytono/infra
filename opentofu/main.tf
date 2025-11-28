@@ -46,6 +46,10 @@ terraform {
       source  = "hashicorp/dns"
       version = "~> 3.4"
     }
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = "~> 0.85"
+    }
   }
 
   backend "s3" {
@@ -96,6 +100,17 @@ provider "openai" {
 provider "unifi" {
   api_key = local.unifi_api_key
   api_url = local.unifi_api_url
+}
+
+provider "proxmox" {
+  endpoint  = "https://p9.oneill.net:8006"
+  api_token = local.proxmox_api_token
+  insecure  = false
+
+  ssh {
+    agent    = true
+    username = "root"
+  }
 }
 
 module "dns" {
