@@ -42,7 +42,7 @@ jobs:
     - name: Update flake.lock
       if: steps.check-day.outputs.is_monday == 'true' || steps.check-pr.outputs.existing_pr
         == 'true'
-      uses: DeterminateSystems/update-flake-lock@c5930b397a673a70ca70be06020e943aeac310a1  # v27
+      uses: DeterminateSystems/update-flake-lock@834c491b2ece4de0bbd00d85214bb5e83b4da5c6  # v28
       id: update-flake-lock
       with:
         token: ${{ secrets.PAT }}
