@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
+HASS_BEARER_TOKEN=$(op item get --vault infra prometheus --fields hass-bearer-token)
+
+exec curl -X GET -q -H "Authorization:Bearer $HASS_BEARER_TOKEN" https://hass.k.oneill.net/api/prometheus
