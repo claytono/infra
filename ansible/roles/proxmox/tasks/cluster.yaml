@@ -1,20 +1,94 @@
 ---
+# Gather cluster state from all nodes
 - name: "Check if node is already clustered"
   ansible.builtin.stat:
     path: /etc/pve/corosync.conf
   register: proxmox_cluster_check
 
-- name: "Initialize Proxmox cluster"
-  ansible.builtin.command:
-    cmd: pvecm create {{ proxmox_cluster_name }}
-  when: not proxmox_cluster_check.stat.exists
+- name: "Record cluster membership"
+  ansible.builtin.set_fact:
+    proxmox_node_is_clustered: "{{ proxmox_cluster_check.stat.exists }}"
+
+# Check all proxmox hosts for existing cluster membership (not just those in --limit)
+- name: "Query cluster status on all proxmox hosts"
+  ansible.builtin.stat:
+    path: /etc/pve/corosync.conf
+  register: proxmox_all_cluster_check
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['proxmox'] }}"
   run_once: true
+  ignore_unreachable: true
+
+- name: "Identify existing cluster member"
+  ansible.builtin.set_fact:
+    proxmox_cluster_member: >-
+      {{ proxmox_all_cluster_check.results |
+         rejectattr('unreachable', 'defined') |
+         selectattr('stat.exists', 'defined') |
+         selectattr('stat.exists') |
+         map(attribute='item') |
+         first | default('') }}
+  run_once: true
+
+# Create cluster if no existing cluster found
+- name: "Create Proxmox cluster"
+  community.proxmox.proxmox_cluster:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_password: "{{ proxmox_root_password }}"
+    cluster_name: "{{ proxmox_cluster_name }}"
+    state: present
+  delegate_to: localhost
+  become: false
+  when:
+    - not proxmox_node_is_clustered
+    - proxmox_cluster_member == ''
+  run_once: true
+
+# Get join info using official module (supports token auth)
+- name: "Get cluster join info from existing member"
+  community.proxmox.proxmox_cluster_join_info:
+    api_host: "{{ hostvars[proxmox_cluster_member].ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+  delegate_to: localhost
+  become: false
+  register: proxmox_join_info
+  when: proxmox_cluster_member != ''
+  run_once: true
+
+- name: "Validate cluster join info"
+  ansible.builtin.assert:
+    that:
+      - proxmox_join_info.cluster_join.nodelist | length > 0
+    fail_msg: "Cluster join info returned empty nodelist"
+  when: proxmox_cluster_member != ''
+  run_once: true
+
+# Join existing cluster
+- name: "Join existing Proxmox cluster"
+  community.proxmox.proxmox_cluster:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_password: "{{ proxmox_root_password }}"
+    cluster_name: "{{ proxmox_cluster_name }}"
+    master_ip: "{{ proxmox_join_info.cluster_join.preferred_node }}"
+    fingerprint: "{{ proxmox_join_info.cluster_join.nodelist[0].pve_fp }}"
+    state: present
+  delegate_to: localhost
+  become: false
+  no_log: true
+  when:
+    - not proxmox_node_is_clustered
+    - proxmox_cluster_member != ''
+  throttle: 1
 
 - name: "Wait for cluster to be ready"
   ansible.builtin.command:
     cmd: pvecm status
   register: proxmox_cluster_status
   changed_when: false
-  failed_when: proxmox_cluster_status.rc != 0
-  when: not proxmox_cluster_check.stat.exists
-  run_once: true
+  retries: 6
+  delay: 10
+  until: proxmox_cluster_status.rc == 0

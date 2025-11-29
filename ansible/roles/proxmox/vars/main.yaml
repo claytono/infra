@@ -1,6 +1,9 @@
 ---
 # Default variables for Proxmox role
 
+# Proxmox ISO version for automated installs
+proxmox_iso_version: "9.1-1"
+
 # Admin user configuration
 proxmox_admin_user: "admin"
 proxmox_admin_realm: "pve"

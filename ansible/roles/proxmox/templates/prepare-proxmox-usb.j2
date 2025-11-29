@@ -1,0 +1,52 @@
+#!/bin/bash
+# Prepare Proxmox VE automated install USB
+# Usage: prepare-proxmox-usb <device>
+# Deployed by Ansible - version managed via proxmox_iso_version
+#
+# The ISO is prepared for HTTP fetch mode. At boot, the installer
+# looks up proxmox-auto-installer.oneill.net TXT record to find
+# the answer file URL.
+
+set -euo pipefail
+
+DEVICE="${1:-}"
+VERSION="{{ proxmox_iso_version }}"
+ISO_URL="https://enterprise.proxmox.com/iso/proxmox-ve_${VERSION}.iso"
+WORKDIR="/tmp/proxmox-usb"
+
+if [[ -z "$DEVICE" ]]; then
+    echo "Usage: $0 <device>"
+    echo "Example: $0 /dev/sdb"
+    exit 1
+fi
+
+if [[ ! -b "$DEVICE" ]]; then
+    echo "Error: $DEVICE is not a block device"
+    exit 1
+fi
+
+echo "This will ERASE $DEVICE. Press Ctrl+C to cancel."
+read -p "Continue? [y/N] " -n 1 -r
+echo
+[[ $REPLY =~ ^[Yy]$ ]] || exit 1
+
+mkdir -p "$WORKDIR"
+cd "$WORKDIR"
+
+ISO_FILE="proxmox-ve_${VERSION}.iso"
+if [[ ! -f "$ISO_FILE" ]]; then
+    echo "Downloading Proxmox VE ${VERSION}..."
+    wget -q --show-progress "$ISO_URL"
+fi
+
+echo "Preparing ISO for HTTP fetch via DNS discovery..."
+proxmox-auto-install-assistant prepare-iso "$ISO_FILE" \
+    --fetch-from http
+
+OUTPUT_ISO="proxmox-ve_${VERSION}-auto-from-http.iso"
+echo "Writing to $DEVICE..."
+dd if="$OUTPUT_ISO" of="$DEVICE" bs=4M status=progress
+sync
+
+echo "Done. USB ready for automated Proxmox installation."
+echo "The installer will look up proxmox-auto-installer.oneill.net for the answer URL."
