@@ -1,4 +1,15 @@
 ---
+- name: "Install proxmox-auto-install-assistant"
+  ansible.builtin.apt:
+    name: proxmox-auto-install-assistant
+    state: present
+
+- name: "Deploy USB preparation script"
+  ansible.builtin.template:
+    src: prepare-proxmox-usb.j2
+    dest: /usr/local/bin/prepare-proxmox-usb
+    mode: "0755"
+
 - name: "Verify required API token variables are defined"
   ansible.builtin.assert:
     that:
