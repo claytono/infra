@@ -34,6 +34,7 @@ services:
     restart: unless-stopped
     volumes:
       - /etc/os-install/proxmox-answers:/app/answers:ro
+      - /etc/os-install/proxmox-default.toml:/app/default.toml:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.os-install-answer.rule=Host(`os-install.oneill.net`) && PathPrefix(`/answer`)"

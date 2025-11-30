@@ -1,6 +1,6 @@
 ---
 # Auto-installer configuration
-proxmox_install_mac: "b4:96:91:39:e0:70"
+proxmox_install_mac: "b4:96:91:a0:83:54"
 proxmox_install_nic: "enp1s0f0"
 
 # Enable network management for this host
@@ -21,7 +21,7 @@ proxmox_interfaces:
 # Bridges
 proxmox_bridges:
   - name: vmbr0
-    address: "172.19.74.155/24"
+    address: "172.19.74.44/24"
     gateway: "172.19.74.1"
     bridge_ports: nic1
     bridge_stp: "off"

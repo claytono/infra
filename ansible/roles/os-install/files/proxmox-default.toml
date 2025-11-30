@@ -1,0 +1,22 @@
+# Default answer file for unknown hosts
+# This will fail with a clear error message if no MAC-specific answer file exists
+
+[global]
+keyboard = "en-us"
+country = "us"
+fqdn = "UNKNOWN-HOST.invalid"
+mailto = "unknown@invalid"
+timezone = "UTC"
+root-password = "UNKNOWN_HOST_NO_ANSWER_FILE"
+root-ssh-keys = []
+
+[network]
+source = "from-dhcp"
+
+[disk-setup]
+filesystem = "zfs"
+zfs.raid = "raid0"
+
+[disk-setup.filter]
+# This filter will match nothing, causing installation to fail
+ID_SERIAL = "NO_ANSWER_FILE_FOR_THIS_HOST"

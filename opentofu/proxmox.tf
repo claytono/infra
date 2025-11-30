@@ -160,3 +160,54 @@ resource "proxmox_virtual_environment_vm" "k3" {
     ignore_changes = [node_name, started]
   }
 }
+
+resource "proxmox_virtual_environment_vm" "k4" {
+  name      = "k4"
+  node_name = "p4"
+  vm_id     = 1075
+
+  started = false
+  on_boot = true
+
+  cpu {
+    cores   = 4
+    sockets = 1
+    type    = "x86-64-v3"
+    units   = 100
+  }
+
+  memory {
+    dedicated = 20480
+  }
+
+  agent {
+    enabled = true
+    trim    = true
+  }
+
+  scsi_hardware = "virtio-scsi-single"
+
+  disk {
+    interface    = "scsi0"
+    datastore_id = "local-zfs"
+    size         = 100
+    file_format  = "raw"
+    iothread     = true
+    discard      = "on"
+  }
+
+  network_device {
+    bridge      = "vmbr0"
+    mac_address = "52:54:72:19:74:75"
+    model       = "virtio"
+    queues      = 4
+  }
+
+  operating_system {
+    type = "l26"
+  }
+
+  lifecycle {
+    ignore_changes = [node_name, started]
+  }
+}

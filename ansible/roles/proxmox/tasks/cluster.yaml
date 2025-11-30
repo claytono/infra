@@ -66,6 +66,15 @@
   when: proxmox_cluster_member != ''
   run_once: true
 
+- name: "Extract preferred node info"
+  ansible.builtin.set_fact:
+    proxmox_preferred_node: >-
+      {{ proxmox_join_info.cluster_join.nodelist |
+         selectattr('name', 'equalto', proxmox_join_info.cluster_join.preferred_node) |
+         first }}
+  when: proxmox_cluster_member != ''
+  run_once: true
+
 # Join existing cluster
 - name: "Join existing Proxmox cluster"
   community.proxmox.proxmox_cluster:
@@ -73,8 +82,8 @@
     api_user: "root@pam"
     api_password: "{{ proxmox_root_password }}"
     cluster_name: "{{ proxmox_cluster_name }}"
-    master_ip: "{{ proxmox_join_info.cluster_join.preferred_node }}"
-    fingerprint: "{{ proxmox_join_info.cluster_join.nodelist[0].pve_fp }}"
+    master_ip: "{{ proxmox_preferred_node.pve_addr }}"
+    fingerprint: "{{ proxmox_preferred_node.pve_fp }}"
     state: present
   delegate_to: localhost
   become: false
