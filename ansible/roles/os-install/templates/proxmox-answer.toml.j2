@@ -18,6 +18,9 @@ gateway = "172.19.74.1"
 [network.filter]
 ID_NET_NAME_PATH = "{{ hostvars[host]['proxmox_install_nic'] }}"
 
+[network.interface-name-pinning]
+enabled = true
+
 [disk-setup]
 filesystem = "zfs"
 zfs.raid = "raid0"
