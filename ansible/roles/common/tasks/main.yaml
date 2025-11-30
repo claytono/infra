@@ -83,11 +83,23 @@
     group: root
   when: manage_resolv_conf | default(false) | bool
 
+- name: "Configure sysctl for inotify"
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_file: /etc/sysctl.d/99-common.conf
+    reload: true
+  loop:
+    - { name: "fs.inotify.max_user_watches", value: "1048576" }
+    - { name: "fs.inotify.max_user_instances", value: "4096" }
+
 - name: "Configure NMI watchdog sysctl"
   ansible.posix.sysctl:
     name: kernel.nmi_watchdog
     value: "1"
     state: present
+    sysctl_file: /etc/sysctl.d/99-common.conf
     reload: true
   when:
     - ansible_architecture in ['x86_64', 'i386']
