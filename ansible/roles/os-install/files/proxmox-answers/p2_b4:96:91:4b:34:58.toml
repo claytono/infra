@@ -1,0 +1,32 @@
+[global]
+keyboard = "en-us"
+country = "us"
+fqdn = "p2.oneill.net"
+mailto = "admin@oneill.net"
+timezone = "America/New_York"
+root-password-hashed = "$6$rounds=1000000$cokzO6b5JXHIg14R$WxBbuuOlpy.Tx9AygtMYXy8hfJ21NjpYsBqJ/GMn0e7SrdPDcCGh2hA1JiymFzO4sy2k4nLPCL6kXBA9lgkQS1"
+root-ssh-keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB3URIT9ojo8mqsEjxmFu1C+Bxa3jdcKkUzM++IfDVmu coneill@xtal.oneill.net"
+]
+
+[network]
+source = "from-answer"
+cidr = "172.19.74.42/24"
+dns = "172.19.74.1"
+gateway = "172.19.74.1"
+
+[network.filter]
+# Match 10G NIC (nic1) - Intel X520
+ID_NET_NAME_PATH = "enp1s0f0"
+
+[disk-setup]
+filesystem = "zfs"
+zfs.raid = "raid0"
+
+[disk-setup.filter]
+# Match ATA disks only (excludes USB drives)
+ID_BUS = "ata"
+
+[first-boot]
+source = "from-url"
+url = "https://os-install.oneill.net/post-install.sh"
