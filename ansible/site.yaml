@@ -132,11 +132,11 @@
     - role: nut
       tags: nut
 
-- name: PXE boot server
+- name: OS install server
   hosts: infrapi
   roles:
-    - role: pxe
-      tags: pxe
+    - role: os-install
+      tags: os-install
 
 - name: Tailscale sysctl config
   hosts: all,!tailscale_disabled

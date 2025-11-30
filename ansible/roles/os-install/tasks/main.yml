@@ -1,0 +1,91 @@
+---
+- name: Create os-install directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /etc/os-install
+    - /etc/os-install/assets
+    - /etc/os-install/proxmox-answers
+
+- name: Download iPXE bootloader
+  ansible.builtin.get_url:
+    url: https://boot.ipxe.org/undionly.kpxe
+    dest: /etc/os-install/assets/undionly.kpxe
+    mode: "0644"
+
+- name: Check if memtest exists
+  ansible.builtin.stat:
+    path: /etc/os-install/assets/memtest64.bin
+  register: os_install_memtest_stat
+
+- name: Download memtest86+
+  ansible.builtin.get_url:
+    url: https://memtest.org/download/v7.00/mt86plus_7.00.binaries.zip
+    dest: /tmp/memtest.zip
+    mode: "0644"
+  when: not os_install_memtest_stat.stat.exists
+
+- name: Extract memtest86+ binary
+  ansible.builtin.unarchive:
+    src: /tmp/memtest.zip
+    dest: /etc/os-install/assets/
+    remote_src: true
+    include:
+      - memtest64.bin
+  when: not os_install_memtest_stat.stat.exists
+
+- name: Deploy boot.ipxe script
+  ansible.builtin.copy:
+    src: boot.ipxe
+    dest: /etc/os-install/assets/boot.ipxe
+    mode: "0644"
+
+- name: Deploy preseed files
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /etc/os-install/assets/
+    mode: "0644"
+  loop:
+    - preseed.trixie.cfg
+    - preseed.bookworm.cfg
+
+- name: Deploy post-install script
+  ansible.builtin.copy:
+    src: post-install.sh
+    dest: /etc/os-install/assets/
+    mode: "0644"
+
+- name: Deploy Proxmox answer files
+  ansible.builtin.copy:
+    src: proxmox-answers/
+    dest: /etc/os-install/proxmox-answers/
+    mode: "0644"
+  notify: Restart os-install services
+
+- name: Deploy dnsmasq configuration
+  ansible.builtin.copy:
+    src: dnsmasq.conf
+    dest: /etc/os-install/dnsmasq.conf
+    mode: "0644"
+  notify: Restart os-install services
+
+- name: Deploy nginx configuration
+  ansible.builtin.copy:
+    src: nginx.conf
+    dest: /etc/os-install/nginx.conf
+    mode: "0644"
+  notify: Restart os-install services
+
+- name: Deploy docker-compose file
+  ansible.builtin.copy:
+    src: docker-compose.yaml
+    dest: /etc/os-install/docker-compose.yaml
+    mode: "0644"
+  notify: Restart os-install services
+
+- name: Start os-install services
+  community.docker.docker_compose_v2:
+    project_src: /etc/os-install
+    state: present

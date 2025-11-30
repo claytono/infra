@@ -1,0 +1,49 @@
+---
+services:
+  dnsmasq:
+    image: dockurr/dnsmasq:2.91@sha256:7873ce2dae1b0aa51d2c13dd4bd3aad47890c233088b3c7f6eb099a01e6e4307
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    volumes:
+      - /etc/os-install/dnsmasq.conf:/etc/dnsmasq.conf:ro
+      - /etc/os-install/assets:/tftpboot:ro
+
+  nginx:
+    image: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+    restart: unless-stopped
+    ports:
+      # Keep 8081 for iPXE boot (can't use HTTPS)
+      - "8081:80"
+    volumes:
+      - /etc/os-install/assets:/usr/share/nginx/html:ro
+      - /etc/os-install/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.os-install-static.rule=Host(`os-install.oneill.net`)"
+      - "traefik.http.routers.os-install-static.entrypoints=websecure"
+      - "traefik.http.routers.os-install-static.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.os-install-static.priority=1"
+      - "traefik.http.services.os-install-static.loadbalancer.server.port=80"
+    networks:
+      - traefik
+
+  proxmox-answer:
+    image: slothcroissant/proxmox-auto-installer-server:0.3.2
+    restart: unless-stopped
+    volumes:
+      - /etc/os-install/proxmox-answers:/app/answers:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.os-install-answer.rule=Host(`os-install.oneill.net`) && PathPrefix(`/answer`)"
+      - "traefik.http.routers.os-install-answer.entrypoints=websecure"
+      - "traefik.http.routers.os-install-answer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.os-install-answer.priority=10"
+      - "traefik.http.services.os-install-answer.loadbalancer.server.port=8000"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

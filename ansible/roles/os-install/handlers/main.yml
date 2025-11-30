@@ -1,0 +1,5 @@
+---
+- name: Restart os-install services
+  community.docker.docker_compose_v2:
+    project_src: /etc/os-install
+    state: restarted
