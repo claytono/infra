@@ -1,4 +1,8 @@
 ---
+# Auto-installer configuration
+proxmox_install_mac: "b4:96:91:4b:34:58"
+proxmox_install_nic: "enp1s0f0"
+
 # Enable network management for this host
 proxmox_manage_network: true
 

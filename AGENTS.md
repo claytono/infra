@@ -1,8 +1,13 @@
 # AGENTS.md
 
+## Overview
+
+This is a homelab infrastructure monorepo.  Solutions should be appropriate for
+that sort of environment.   We do not manually hack things together, but instead
+we focus on automation, repeatability, and infrastructure as code.
+
 ## Repository Structure
 
-This is a homelab infrastructure monorepo managing:
 
 - **`ansible/`** - System configuration and provisioning
 - **`kubernetes/`** - Kubernetes application manifests using GitOps

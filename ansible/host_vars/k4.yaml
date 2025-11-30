@@ -1,7 +1,7 @@
 ---
 manage_network: true
 interfaces_ether_interfaces:
-  - device: enp1s0f0
+  - device: ens18
     bootproto: static
     address: "172.19.74.75"
     netmask: "255.255.255.0"
@@ -9,7 +9,3 @@ interfaces_ether_interfaces:
     dnsnameservers: 172.19.74.1
     dnssearch: oneill.net
     allowclass: allow-hotplug
-  - device: eno1
-    bootproto: manual
-    allowclass: manual
-    ignore_status_check: true

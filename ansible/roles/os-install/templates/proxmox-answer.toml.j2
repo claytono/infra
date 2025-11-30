@@ -1,7 +1,7 @@
 [global]
 keyboard = "en-us"
 country = "us"
-fqdn = "p2.oneill.net"
+fqdn = "{{ host }}.{{ hostvars[host]['domain'] }}"
 mailto = "admin@oneill.net"
 timezone = "America/New_York"
 root-password-hashed = "$6$rounds=1000000$cokzO6b5JXHIg14R$WxBbuuOlpy.Tx9AygtMYXy8hfJ21NjpYsBqJ/GMn0e7SrdPDcCGh2hA1JiymFzO4sy2k4nLPCL6kXBA9lgkQS1"
@@ -11,20 +11,18 @@ root-ssh-keys = [
 
 [network]
 source = "from-answer"
-cidr = "172.19.74.42/24"
+cidr = "{{ hostvars[host]['proxmox_bridges'][0]['address'] }}"
 dns = "172.19.74.1"
 gateway = "172.19.74.1"
 
 [network.filter]
-# Match 10G NIC (nic1) - Intel X520
-ID_NET_NAME_PATH = "enp1s0f0"
+ID_NET_NAME_PATH = "{{ hostvars[host]['proxmox_install_nic'] }}"
 
 [disk-setup]
 filesystem = "zfs"
 zfs.raid = "raid0"
 
 [disk-setup.filter]
-# Match ATA disks only (excludes USB drives)
 ID_BUS = "ata"
 
 [first-boot]

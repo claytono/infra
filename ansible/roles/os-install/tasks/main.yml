@@ -58,9 +58,19 @@
     mode: "0644"
 
 - name: Deploy Proxmox answer files
+  ansible.builtin.template:
+    src: proxmox-answer.toml.j2
+    dest: "/etc/os-install/proxmox-answers/{{ host }}_{{ hostvars[host]['proxmox_install_mac'] }}.toml"
+    mode: "0644"
+  loop: "{{ groups['proxmox'] }}"
+  loop_control:
+    loop_var: host
+  notify: Restart os-install services
+
+- name: Deploy Proxmox default answer file
   ansible.builtin.copy:
-    src: proxmox-answers/
-    dest: /etc/os-install/proxmox-answers/
+    src: proxmox-default.toml
+    dest: /etc/os-install/proxmox-default.toml
     mode: "0644"
   notify: Restart os-install services
 
