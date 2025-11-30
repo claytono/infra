@@ -1,31 +1,40 @@
 ---
-- name: "Check if NFS storage exists"
-  ansible.builtin.shell:
-    cmd: pvesm status --storage {{ item.name }} 2>/dev/null
-  register: proxmox_storage_check
-  changed_when: false
-  failed_when: false
+# Create NFS storage if it doesn't exist
+# Note: community.proxmox.proxmox_storage only supports create, not update
+- name: "Create NFS storage"
+  community.proxmox.proxmox_storage:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    state: present
+    name: "{{ item.name }}"
+    type: nfs
+    nodes: "{{ groups['proxmox'] }}"
+    content: "{{ item.content }}"
+    nfs_options:
+      server: "{{ proxmox_nfs_server }}"
+      export: "{{ item.export }}"
+      options: "{{ item.options | default(omit) }}"
+  delegate_to: localhost
+  become: false
   loop: "{{ proxmox_nfs_storage }}"
   loop_control:
     label: "{{ item.name }}"
   run_once: true
 
-- name: "Add NFS storage to Proxmox"
+# Update nodes list for existing storage
+- name: "Update NFS storage nodes"
   ansible.builtin.command:
-    cmd: >
-      pvesm add nfs {{ item.item.name }}
-      --server {{ proxmox_nfs_server }}
-      --export {{ item.item.export }}
-      --content {{ item.item.content | join(',') }}
-      --options {{ item.item.options }}
-      --nodes {{ groups['proxmox'] | join(',') }}
-  when: item.rc != 0
-  loop: "{{ proxmox_storage_check.results }}"
+    cmd: pvesm set {{ item.name }} --nodes {{ groups['proxmox'] | join(',') }}
+  loop: "{{ proxmox_nfs_storage }}"
   loop_control:
-    label: "{{ item.item.name }}"
+    label: "{{ item.name }}"
+  changed_when: false
   run_once: true
 
-- name: "Update NFS storage options if changed"
+# Update mount options if defined
+- name: "Update NFS storage options"
   ansible.builtin.command:
     cmd: pvesm set {{ item.name }} --options {{ item.options }}
   loop: "{{ proxmox_nfs_storage }}"
