@@ -1,6 +1,6 @@
 *.retry
 *.swp
-.vscode/
+.vscode/extensions.json
 .direnv/
 .tmp/
 
