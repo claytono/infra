@@ -61,7 +61,5 @@
     cmd: >
       pvenode config set
       --acmedomain0 '{{ inventory_hostname }}.{{ domain }},plugin={{ proxmox_acme_plugin_name }}'
-      --acmedomain1 'proxmox.{{ domain }},plugin={{ proxmox_acme_plugin_name }}'
   when: >
-    (inventory_hostname + '.' + domain + ',plugin=' + proxmox_acme_plugin_name) not in proxmox_node_config.stdout or
-    ('proxmox.' + domain + ',plugin=' + proxmox_acme_plugin_name) not in proxmox_node_config.stdout
+    (inventory_hostname + '.' + domain + ',plugin=' + proxmox_acme_plugin_name) not in proxmox_node_config.stdout
