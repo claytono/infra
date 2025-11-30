@@ -32,6 +32,12 @@ locals {
       hostname = "k1.oneill.net"
       note     = "Kubernetes control-plane node (VM)"
     }
+    k2 = {
+      mac      = "52:54:72:19:74:72"
+      ip       = "172.19.74.112"
+      hostname = "k2.oneill.net"
+      note     = "Kubernetes worker node (VM)"
+    }
     k3 = {
       mac      = "52:54:72:19:74:74"
       ip       = "172.19.74.74"
