@@ -4,7 +4,7 @@ k1 ansible_host=k1.oneill.net domain=oneill.net
 k2 ansible_host=k2.oneill.net domain=oneill.net
 k3 ansible_host=k3.oneill.net domain=oneill.net
 k4 ansible_host=k4.oneill.net domain=oneill.net
-k5 ansible_host=k5.oneill.net domain=oneill.net
+p3 ansible_host=p3.oneill.net domain=oneill.net
 #voron2 ansible_host=voron2.oneill.net domain=oneill.net
 #voron2-pizero ansible_host=voron2-pizero.oneill.net domain=oneill.net
 #gasherbrum ansible_host=gasherbrum.oneill.net domain=oneill.net
@@ -20,7 +20,6 @@ k1
 k2
 k3
 k4
-k5
 
 [kubernetes_master]
 k1
@@ -29,7 +28,6 @@ k1
 k2
 k3
 k4
-k5
 
 [nut]
 infrapi
@@ -37,8 +35,8 @@ infrapi
 [nut_client]
 luser
 p2
+p3
 k4
-k5
 
 [pi]
 #voron2-pizero
@@ -53,6 +51,7 @@ infrapi
 
 [proxmox]
 p2
+p3
 p4
 p9
 
