@@ -17,19 +17,25 @@ locals {
       mac      = "b4:96:91:4b:34:58"
       ip       = "172.19.74.42"
       hostname = "p2.oneill.net"
-      note     = "Proxmox VE host (formerly k2)"
+      note     = "Proxmox VE host"
     }
-    p9 = {
-      mac      = "b4:96:91:39:e0:70"
-      ip       = "172.19.74.155"
-      hostname = "p9.oneill.net"
+    p3 = {
+      mac      = "b4:96:91:39:e0:94"
+      ip       = "172.19.74.43"
+      hostname = "p3.oneill.net"
       note     = "Proxmox VE host"
     }
     p4 = {
       mac      = "b4:96:91:a0:83:54"
       ip       = "172.19.74.44"
       hostname = "p4.oneill.net"
-      note     = "Proxmox VE host (formerly k4)"
+      note     = "Proxmox VE host"
+    }
+    p9 = {
+      mac      = "b4:96:91:39:e0:70"
+      ip       = "172.19.74.155"
+      hostname = "p9.oneill.net"
+      note     = "Proxmox VE host"
     }
     # AMT/vPro management interfaces
     p2-amt = {
@@ -38,17 +44,17 @@ locals {
       hostname = "p2-amt.oneill.net"
       note     = "p2 AMT interface"
     }
+    p3-amt = {
+      mac      = "98:90:96:b8:cc:3d"
+      ip       = "172.19.74.82"
+      hostname = "p3-amt.oneill.net"
+      note     = "p3 AMT interface"
+    }
     p4-amt = {
       mac      = "64:00:6a:4d:46:30"
       ip       = "172.19.74.83"
       hostname = "p4-amt.oneill.net"
       note     = "p4 AMT interface"
-    }
-    k5-amt = {
-      mac      = "98:90:96:b8:cc:3d"
-      ip       = "172.19.74.82"
-      hostname = "k5-amt.oneill.net"
-      note     = "k5 AMT interface"
     }
     # Kubernetes nodes
     k1 = {
@@ -74,12 +80,6 @@ locals {
       ip       = "172.19.74.75"
       hostname = "k4.oneill.net"
       note     = "Kubernetes worker node (VM)"
-    }
-    k5 = {
-      mac      = "b4:96:91:39:e0:94"
-      ip       = "172.19.74.76"
-      hostname = "k5.oneill.net"
-      note     = "Kubernetes worker node"
     }
     # Other infrastructure
     fs2 = {
