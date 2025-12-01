@@ -15,8 +15,10 @@ resource "authentik_provider_oauth2" "argocd" {
     data.authentik_property_mapping_provider_scope.profile.id,
   ]
   access_token_validity = "hours=1"
-  allowed_redirect_uris = [{ url = "https://argocd.k.oneill.net/api/dex/callback", matching_mode = "strict" }]
-  signing_key           = data.authentik_certificate_key_pair.self_signed.id
+  allowed_redirect_uris = [
+    { url = "https://argocd.k.oneill.net/api/dex/callback", matching_mode = "strict" },
+  ]
+  signing_key = data.authentik_certificate_key_pair.self_signed.id
 }
 
 resource "authentik_application" "argocd" {

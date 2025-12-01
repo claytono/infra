@@ -237,12 +237,23 @@ def build_app_info_from_ingress(ingress, file_path):
         info["oidc_callback_path"] = cb
 
         # Optional: OIDC client type (public or confidential, defaults to confidential)
-        client_type = annotations.get("ak-oidc-client-type", "confidential").strip().lower()
+        client_type = (
+            annotations.get("ak-oidc-client-type", "confidential").strip().lower()
+        )
         if client_type not in ("public", "confidential"):
             raise ValueError(
                 f"Ingress '{metadata.get('name')}' has invalid 'ak-oidc-client-type': '{client_type}'. Must be 'public' or 'confidential'."
             )
         info["oidc_client_type"] = client_type
+
+        # Optional: Extra redirect URIs (newline or comma separated)
+        extra_redirects = annotations.get("ak-oidc-extra-redirects", "")
+        info["oidc_extra_redirects"] = []
+        if extra_redirects:
+            for uri in re.split(r"[\n,]", str(extra_redirects)):
+                uri = uri.strip()
+                if uri:
+                    info["oidc_extra_redirects"].append(uri)
 
     return info
 
@@ -356,6 +367,7 @@ def generate_terraform_files(app_infos, generated_dir):
                 callback_url=callback_url,
                 ident=ident,
                 client_type=app_info.get("oidc_client_type", "confidential"),
+                extra_redirects=app_info.get("oidc_extra_redirects", []),
             )
         else:
             raise ValueError(f"Unknown auth type {auth_type} for app {app}")
@@ -378,71 +390,6 @@ def generate_terraform_files(app_infos, generated_dir):
             legacy.unlink()
 
     return changed
-
-
-def generate_proxy_provider(app_info):
-    """Generate proxy provider resource for simple/basic auth."""
-    provider = {
-        "name": app_info["app_name"],
-        "external_host": app_info["external_host"],
-        "internal_host": app_info["internal_host"],
-        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
-        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
-        "access_token_validity": "hours=1",
-        "mode": "forward_domain",
-        "cookie_domain": "oneill.net",
-    }
-
-    # Add basic auth settings for basic auth types
-    if app_info["auth_type"] == "basic":
-        provider["basic_auth_enabled"] = True
-        provider["basic_auth_username_attribute"] = "username"
-        provider["basic_auth_password_attribute"] = "password"
-
-    if app_info["skip_path_regex"]:
-        provider["skip_path_regex"] = app_info["skip_path_regex"]
-
-    return provider
-
-
-def generate_oauth2_provider(app_info):
-    """Generate OAuth2 provider resource for OIDC, wiring client_id/secret from locals."""
-    callback_url = f"{app_info['external_host']}{app_info['oidc_callback_path']}"
-    app = app_info["app_name"]
-    ident = tf_ident_from_title(f"{app}-oidc")
-    provider = {
-        "name": app,
-        # Use locals produced by generated per-service 1Password file
-        "client_id": f"${{local.{ident}_client_id}}",
-        "client_secret": f"${{local.{ident}_secret}}",
-        "authorization_flow": "${data.authentik_flow.default_authorization.id}",
-        "invalidation_flow": "${data.authentik_flow.default_invalidation.id}",
-        "property_mappings": [
-            "${data.authentik_property_mapping_provider_scope.openid.id}",
-            "${data.authentik_property_mapping_provider_scope.email.id}",
-            "${data.authentik_property_mapping_provider_scope.profile.id}",
-        ],
-        "access_token_validity": "hours=1",
-        "allowed_redirect_uris": [{"url": callback_url, "matching_mode": "strict"}],
-        "signing_key": "${data.authentik_certificate_key_pair.self_signed.id}",
-    }
-
-    return provider
-
-
-def generate_application(app_info):
-    """Generate application resource."""
-    if app_info["auth_type"] in ("simple", "basic"):
-        provider_type = "proxy"
-    else:
-        provider_type = "oauth2"
-    provider_ref = f"${{authentik_provider_{provider_type}.{app_info['app_name']}.id}}"
-
-    return {
-        "name": app_info["app_name"],
-        "slug": app_info["app_name"],
-        "protocol_provider": provider_ref,
-    }
 
 
 def generate_outpost_file(app_infos, generated_dir):
@@ -888,13 +835,10 @@ def cmd_apply(args: argparse.Namespace) -> int:
     if args.auto_approve:
         cmd.append("-auto-approve")
 
-    # Pass through any additional args
-    has_unknown_args = hasattr(args, "unknown_args") and args.unknown_args
-    if has_unknown_args:
+    # Always target authentik module, then pass through any additional args
+    cmd += ["-target", "module.authentik"]
+    if hasattr(args, "unknown_args") and args.unknown_args:
         cmd.extend(args.unknown_args)
-    else:
-        # Default to constraining to authentik module when no specific targets
-        cmd += ["-target", "module.authentik"]
 
     print("$", " ".join(shlex.quote(c) for c in cmd))
     os.execvp(cmd[0], cmd)
