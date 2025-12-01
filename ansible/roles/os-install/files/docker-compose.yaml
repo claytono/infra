@@ -30,7 +30,7 @@ services:
       - traefik
 
   proxmox-answer:
-    image: slothcroissant/proxmox-auto-installer-server:0.3.2
+    image: slothcroissant/proxmox-auto-installer-server:0.3.2@sha256:0f45d7bfe6e3cc76aa00fc578e40b80b9054e377db18a79122866fe5522bc7ed
     restart: unless-stopped
     volumes:
       - /etc/os-install/proxmox-answers:/app/answers:ro
