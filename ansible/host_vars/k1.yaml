@@ -1,7 +1,7 @@
 ---
 manage_network: true
 interfaces_ether_interfaces:
-  - device: ens3
+  - device: ens18
     bootproto: static
     address: "172.19.74.134"
     netmask: "255.255.255.0"
