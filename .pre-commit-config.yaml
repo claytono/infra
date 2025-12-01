@@ -73,7 +73,7 @@ repos:
     pass_filenames: false
   - id: validate-goldilocks-namespaces
     name: validate goldilocks VPA annotations
-    entry: kyverno apply --policy .kyverno/policies/ --resource kubernetes/
+    entry: kyverno apply .kyverno/policies/ --resource kubernetes/
     language: system
     pass_filenames: false
     files: kubernetes/.*namespace\.yaml$
