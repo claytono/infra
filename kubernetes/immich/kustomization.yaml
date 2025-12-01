@@ -1,0 +1,30 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: immich
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- immich-postgres-cluster.yaml
+- externalsecret.yaml
+- pvc-library.yaml
+- helm/immich/server.yaml
+- helm/immich/machine-learning.yaml
+- helm/valkey/scripts.yaml
+- helm/valkey/service-internal.yaml
+- helm/valkey/services.yaml
+- helm/valkey/statefulset.yaml
+
+patches:
+
+- target:
+    kind: Ingress
+    name: immich-server
+  patch: |-
+    - op: add
+      path: /spec/ingressClassName
+      value: nginx

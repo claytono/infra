@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: immich-library
+
+spec:
+  storageClassName: ''
+  volumeName: immich-library-pv
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Ti

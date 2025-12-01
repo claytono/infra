@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: immich-meta
+version: 0.1.0
+dependencies:
+- name: immich
+  version: 0.10.3
+  repository: https://immich-app.github.io/immich-charts
+- name: valkey
+  version: 2.2.1
+  repository: https://groundhog2k.github.io/helm-charts/

@@ -1,0 +1,156 @@
+---
+# Source: immich/templates/machine-learning.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: immich-machine-learning
+  labels:
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: machine-learning
+    app.kubernetes.io/version: v2.0.0
+  namespace: immich
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "10Gi"
+---
+# Source: immich/templates/machine-learning.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-machine-learning
+  labels:
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: machine-learning
+    app.kubernetes.io/service: immich-machine-learning
+    app.kubernetes.io/version: v2.0.0
+  namespace: immich
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3003
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/name: machine-learning
+---
+# Source: immich/templates/machine-learning.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-machine-learning
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: machine-learning
+    app.kubernetes.io/version: v2.0.0
+  annotations:
+    reloader.stakater.com/auto: "true"
+  namespace: immich
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/name: machine-learning
+      app.kubernetes.io/instance: immich
+  template:
+    metadata:
+      labels: 
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: immich
+        app.kubernetes.io/name: machine-learning
+    spec: 
+      enableServiceLinks: false
+      serviceAccountName: default
+      automountServiceAccountToken: true
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      dnsPolicy: ClusterFirst
+      containers: 
+        - env:
+          - name: DB_DATABASE_NAME
+            value: immich
+          - name: DB_HOSTNAME
+            value: immich-postgres-rw
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: immich-postgres-app
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_USERNAME
+            value: immich
+          - name: HF_XET_CACHE
+            value: /cache/huggingface-xet
+          - name: IMMICH_MACHINE_LEARNING_URL
+            value: http://immich-machine-learning:3003
+          - name: MPLCONFIGDIR
+            value: /cache/matplotlib-config
+          - name: REDIS_HOSTNAME
+            value: immich-valkey
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: valkey-password
+                name: immich-valkey
+          - name: REDIS_PORT
+            value: "6379"
+          - name: TRANSFORMERS_CACHE
+            value: /cache
+          - name: TZ
+            value: America/New_York
+          envFrom:
+          - secretRef:
+              name: immich-secrets
+          image: ghcr.io/immich-app/immich-machine-learning:v2.3.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          name: main
+          ports:
+          - containerPort: 3003
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          volumeMounts:
+          - mountPath: /cache
+            name: cache
+      volumes: 
+        - name: cache
+          persistentVolumeClaim:
+            claimName: immich-machine-learning
