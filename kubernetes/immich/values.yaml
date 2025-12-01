@@ -1,0 +1,90 @@
+---
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          tag: v2.3.1
+        env:
+          TZ: America/New_York
+          DB_DATABASE_NAME: immich
+          DB_HOSTNAME: immich-postgres-rw
+          DB_PORT: '5432'
+          DB_USERNAME: immich
+          DB_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-app
+                key: password
+          REDIS_HOSTNAME: immich-valkey
+          REDIS_PORT: '6379'
+          REDIS_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: immich-valkey
+                key: valkey-password
+        envFrom:
+        - secretRef:
+            name: immich-secrets
+
+immich:
+  persistence:
+    library:
+      existingClaim: immich-library
+
+server:
+  controllers:
+    main:
+      annotations:
+        reloader.stakater.com/auto: 'true'
+      containers:
+        main:
+          image:
+            tag: v2.3.1
+  ingress:
+    main:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        nginx.ingress.kubernetes.io/proxy-body-size: '0'
+        ak-type: oidc
+        ak-oidc-callback: /auth/login
+        ak-path-exclude: /api(/|$)
+        ak-oidc-extra-redirects: |
+          https://immich.k.oneill.net/user-settings
+          app.immich:///oauth-callback
+        gethomepage.dev/enabled: 'true'
+        gethomepage.dev/name: Immich
+        gethomepage.dev/description: Photo & Video Backup
+        gethomepage.dev/group: Media
+        gethomepage.dev/icon: immich.png
+      hosts:
+      - host: immich.k.oneill.net
+        paths:
+        - path: /
+      tls:
+      - hosts:
+        - immich.k.oneill.net
+        secretName: immich-tls
+
+machine-learning:
+  controllers:
+    main:
+      annotations:
+        reloader.stakater.com/auto: 'true'
+      containers:
+        main:
+          image:
+            tag: v2.3.1
+  persistence:
+    cache:
+      enabled: true
+      type: persistentVolumeClaim
+      size: 10Gi
+      accessMode: ReadWriteOnce
+      globalMounts:
+      - path: /cache
+
+valkey:
+  enabled: false
