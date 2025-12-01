@@ -179,12 +179,12 @@ results retrieval automatically.
 Matrix mode tests all possible node pairs in your cluster, including the control
 plane (k1). Useful for comprehensive network validation before/after upgrades.
 
-For a 4-node cluster (k1, k2, k4, k5), matrix mode runs **12 tests**:
+For a 4-node cluster (k1, k2, k3, k4), matrix mode runs **12 tests**:
 
-- k1 → k2, k1 → k4, k1 → k5
-- k2 → k1, k2 → k4, k2 → k5
-- k4 → k1, k4 → k2, k4 → k5
-- k5 → k1, k5 → k2, k5 → k4
+- k1 → k2, k1 → k3, k1 → k4
+- k2 → k1, k2 → k3, k2 → k4
+- k3 → k1, k3 → k2, k3 → k4
+- k4 → k1, k4 → k2, k4 → k3
 
 Results are saved with node pair names in
 `./results/network-matrix-{timestamp}/` and a CSV summary file is generated for

@@ -15,7 +15,7 @@ nut_ups:
   - name: "ups2"
     driver: "usbhid-ups"
     device: auto
-    description: "UPS for luser, k2, k4, k5"
+    description: "UPS for luser, p2, p3, p4"
     extra: |
       serial = "CXXPV7000092"
   - name: "ups3"

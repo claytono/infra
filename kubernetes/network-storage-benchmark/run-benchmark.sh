@@ -28,7 +28,7 @@ Commands:
   cleanup         Clean test volumes, trim iSCSI volumes, and delete namespace
 
 Storage Options:
-  --node NODE          Pin benchmark to specific node (e.g., k2, k4, k5)
+  --node NODE          Pin benchmark to specific node (e.g., k2, k3, k4)
                        If not specified, automatically selects a worker node (excludes k1)
   --storage-type TYPE  Storage type(s) to test (default: all)
                        Options: iscsi, nfs, nfs-slow, all

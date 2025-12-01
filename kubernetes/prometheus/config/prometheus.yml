@@ -27,8 +27,8 @@ scrape_configs:
   - targets:
     - k1.oneill.net:9100
     - k2.oneill.net:9100
+    - k3.oneill.net:9100
     - k4.oneill.net:9100
-    - k5.oneill.net:9100
 
 # scrape szamar via http on port 10445
 - job_name: hwinfo gaming pc
@@ -44,8 +44,8 @@ scrape_configs:
     module: [icmp]
   static_configs:
   - targets:
-    - og-left-door.oneill.net
-    - og-right-door.oneill.net
+    - left-garage-door.oneill.net
+    - right-garage-door.oneill.net
     - veraplus.oneill.net
     - udmp.oneill.net
     - basement-guardian.oneill.net

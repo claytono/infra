@@ -1,8 +1,8 @@
 ---
 substitutions:
-  devicename: k5-power
-  device_id: k5_power
-  human_devicename: K5
+  devicename: p3-power
+  device_id: p3_power
+  human_devicename: P3
   icon: mdi:ship-wheel
   restore_mode: always_on
 
