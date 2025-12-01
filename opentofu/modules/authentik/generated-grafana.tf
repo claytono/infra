@@ -15,8 +15,10 @@ resource "authentik_provider_oauth2" "grafana" {
     data.authentik_property_mapping_provider_scope.profile.id,
   ]
   access_token_validity = "hours=1"
-  allowed_redirect_uris = [{ url = "https://grafana.k.oneill.net/login/generic_oauth", matching_mode = "strict" }]
-  signing_key           = data.authentik_certificate_key_pair.self_signed.id
+  allowed_redirect_uris = [
+    { url = "https://grafana.k.oneill.net/login/generic_oauth", matching_mode = "strict" },
+  ]
+  signing_key = data.authentik_certificate_key_pair.self_signed.id
 }
 
 resource "authentik_application" "grafana" {
