@@ -9,6 +9,31 @@ mv kubectl /usr/local/bin/
 
 echo "Checking Velero backup status..."
 
+# Configure kubectl for in-cluster access using a kubeconfig file
+# This avoids exposing the token in process arguments
+# See: https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/#directly-accessing-the-rest-api
+KUBECONFIG_FILE="/tmp/kubeconfig"
+cat > "$KUBECONFIG_FILE" <<EOF
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    server: https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}
+  name: default
+contexts:
+- context:
+    cluster: default
+    user: default
+  name: default
+current-context: default
+users:
+- name: default
+  user:
+    tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+EOF
+export KUBECONFIG="$KUBECONFIG_FILE"
+
 # Calculate 48 hours ago in epoch seconds
 NOW_EPOCH=$(date +%s)
 CUTOFF_EPOCH=$(( NOW_EPOCH - (48 * 3600) ))
