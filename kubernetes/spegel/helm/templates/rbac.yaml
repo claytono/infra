@@ -8,5 +8,5 @@ metadata:
   labels:
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.4.0"
+    app.kubernetes.io/version: "v0.5.1"
     app.kubernetes.io/managed-by: Helm

@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: spegel
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.4.0"
+    app.kubernetes.io/version: "v0.5.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   revisionHistoryLimit: 10
@@ -33,7 +33,7 @@ spec:
       priorityClassName: system-node-critical
       initContainers:
       - name: configuration
-        image: "ghcr.io/spegel-org/spegel@sha256:a86089ae74c4f9c98ec86c366d196f7a03044c38af09e6582b0661d42a324226"
+        image: "ghcr.io/spegel-org/spegel@sha256:44548375366edbc8ffaa04e9f0087b939de45aaddad4493fb8b7216d3a8ad572"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true
@@ -42,7 +42,6 @@ spec:
           - --log-level=INFO
           - --containerd-registry-config-path=/etc/containerd/certs.d
           - --mirror-targets
-          - http://$(NODE_IP):30020
           - http://$(NODE_IP):30021
           - --resolve-tags=true
           - --prepend-existing=false
@@ -61,7 +60,7 @@ spec:
             mountPath: /etc/containerd/certs.d
       containers:
       - name: registry
-        image: "ghcr.io/spegel-org/spegel@sha256:a86089ae74c4f9c98ec86c366d196f7a03044c38af09e6582b0661d42a324226"
+        image: "ghcr.io/spegel-org/spegel@sha256:44548375366edbc8ffaa04e9f0087b939de45aaddad4493fb8b7216d3a8ad572"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true
@@ -96,7 +95,6 @@ spec:
         ports:
           - name: registry
             containerPort: 5000
-            hostPort: 30020
             protocol: TCP
           - name: router
             containerPort: 5001
