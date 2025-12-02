@@ -9,12 +9,17 @@ mv kubectl /usr/local/bin/
 
 echo "Checking Velero backup status..."
 
+# Configure kubectl for in-cluster access
+KUBECTL="kubectl --server=https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT} \
+  --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+  --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+
 # Calculate 48 hours ago in epoch seconds
 NOW_EPOCH=$(date +%s)
 CUTOFF_EPOCH=$(( NOW_EPOCH - (48 * 3600) ))
 
 # Get all backups sorted by creation time
-BACKUPS_JSON=$(kubectl get backups.velero.io -n velero \
+BACKUPS_JSON=$($KUBECTL get backups.velero.io -n velero \
   --sort-by=.metadata.creationTimestamp \
   --request-timeout=30s \
   -o json)
