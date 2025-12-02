@@ -92,12 +92,19 @@ resticprofile_sftp_servers:
     pool: repos
 
 restic_config_blocks:
+  - restic_global_config
   - restic_default_config
   - restic_prometheus_config
   - restic_pizero_config
   - restic_host_config
+restic_global_config:
+  version: "1"
+  global:
+    restic-stale-lock-age: 6h
+    restic-lock-retry-after: 2m
 restic_default_config:
   default:
+    force-inactive-lock: true
     repository: sftp:restic@luser.fnord.net:/repos/main
     password-file: passphrase.txt
 
