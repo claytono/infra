@@ -1,0 +1,29 @@
+---
+http:
+  routers:
+    proxmox:
+      rule: "Host(`pve.oneill.net`)"
+      entryPoints:
+        - websecure
+      service: proxmox
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    proxmox:
+      loadBalancer:
+        servers:
+{% for host in groups['proxmox'] %}
+          - url: "https://{{ hostvars[host]['ansible_host'] }}:8006"
+{% endfor %}
+        sticky:
+          cookie:
+            name: proxmox_server
+            secure: true
+            httpOnly: true
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "3s"
+          scheme: https
+        passHostHeader: false

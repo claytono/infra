@@ -9,6 +9,10 @@
       icon: mdi-z-wave
 
 - Home Lab:
+  - Proxmox:
+      href: https://pve.oneill.net
+      description: Proxmox Cluster
+      icon: proxmox
   - SpiderDuo KVM:
       href: https://spiderduo.oneill.net
       description: SpiderDuo KVM
