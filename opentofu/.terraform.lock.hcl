@@ -237,16 +237,20 @@ provider "registry.opentofu.org/vultr/vultr" {
 }
 
 provider "registry.terraform.io/mkdev-me/openai" {
-  version     = "1.1.1"
+  version     = "1.1.2"
   constraints = "~> 1.1"
   hashes = [
-    "h1:o6T0Bt/hsMRT3urwMYX2p+rUdE5OrtiiKH+B8bnSB+A=",
-    "h1:wnSuwFinWx5OloHZ27b91VmYajNpEWboMxh1phQG6Sg=",
-    "zh:04b1688746ada1bf61653227d55f08d88452478f6b554dab4462e92746de725b",
-    "zh:107f7798b9556b2048eeffce6543f829c43e57336a127485fa3e8345f8d3fa11",
-    "zh:3d74d1143a58a664b61ef242dc871bc8b905730ab5eff8de8a736423898e5382",
-    "zh:4f70ef117972a695c15607d77954f483f307702766875b9f32a8b6ea6f88a381",
-    "zh:6ee0a9268635914b70ec1cba40b3b3181c51f8365b58f0cdca1177f760d3b79f",
-    "zh:77be78b52b1b3714ff071398f0b5a356dfa3868fbecdf7d7ea1f46f408c95bba",
+    "h1:0xcnCG0Ko0phbndTUn+D3conFah9O5DJDQR+jkzwh7w=",
+    "h1:ITqEexEcMMfYG+hdS4Rklpo8llafhocLBn9wKokhKHQ=",
+    "h1:aTV43BNs7IAn9UVZTtkg5Oq2gEJvHZBo0GnZFkkUXuA=",
+    "h1:myj1oAte/4gHts9nFJ4npKErhAO9SLNDMGCEisCQg5o=",
+    "h1:u/TzjVjsjjCm6zdVCLDqz1rwyaY0KNcc26aGr0dYjIk=",
+    "h1:wl82Mk0sEN3h6x1wwbAmPsjwPOUxuLQo1giKqcJrUbg=",
+    "zh:4ac7f3692e78cca83a82a4cf3af64553b2b5ea86fd3bed11b494d3062f19805b",
+    "zh:8e0ea8baca64fa480e7216858f13160ca0a3dc24be3f4882c43fff22fd49f395",
+    "zh:a01589b5df2f40f81cdd35ee8d9f7fa4125a3aa5e209505fde7a184e4a32afc0",
+    "zh:cbd660efc263e667f9d46483cf9d38c3f75b330448f91892fae099f8e62b8d40",
+    "zh:d98f07fbc857863ead486f3bed84a7e30469b881a02678d3ef9d911b0edf4a96",
+    "zh:dea74d9efebd207b3ffe9cf00abe50eaaf08f7470c0b496b0017f628c193e92e",
   ]
 }
