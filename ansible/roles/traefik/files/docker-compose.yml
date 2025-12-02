@@ -13,6 +13,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Persistent storage for Let's Encrypt certificates
       - /etc/traefik/acme:/acme
+      # Dynamic configuration for external services
+      - /etc/traefik/conf.d:/etc/traefik/conf.d:ro
     command:
       # Logging
       - "--log.level=INFO"
@@ -20,6 +22,9 @@ services:
       # Docker provider configuration
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      # File provider for external services
+      - "--providers.file.directory=/etc/traefik/conf.d"
+      - "--providers.file.watch=true"
       # Entry points (HTTP and HTTPS)
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"

@@ -15,6 +15,23 @@
     group: root
     mode: "0700"
 
+- name: Create traefik dynamic config directory
+  ansible.builtin.file:
+    path: /etc/traefik/conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Proxmox load balancer configuration
+  ansible.builtin.template:
+    src: conf.d/proxmox.yml.j2
+    dest: /etc/traefik/conf.d/proxmox.yml
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart traefik
+
 - name: Deploy traefik environment file
   ansible.builtin.template:
     src: traefik.env.j2

@@ -172,6 +172,14 @@ resource "aws_route53_record" "os_install" {
   records = ["infrapi.oneill.net"]
 }
 
+resource "aws_route53_record" "pve" {
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = "pve.oneill.net"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["infrapi.oneill.net"]
+}
+
 # TXT record for Proxmox auto-installer URL discovery
 # The installer looks up proxmox-auto-installer.{search domain}
 resource "aws_route53_record" "proxmox_auto_installer" {
