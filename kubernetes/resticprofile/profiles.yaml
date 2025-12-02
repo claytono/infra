@@ -1,6 +1,13 @@
 ---
+version: '1'
+
+global:
+  restic-stale-lock-age: 6h
+  restic-lock-retry-after: 2m
+
 # B2 profile for direct backup to Backblaze B2
 b2:
+  force-inactive-lock: true
   repository: rclone:b2c:restic/main
   compression: max
   verbose: true
@@ -61,6 +68,7 @@ b2:
 
 # B2 copy profile (copy from local repo to B2)
 copy-main:
+  force-inactive-lock: true
   compression: max
   repository: /source/backups/restic/repos/main
   verbose: true
