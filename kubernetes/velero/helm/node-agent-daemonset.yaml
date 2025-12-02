@@ -46,7 +46,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: node-agent
-          image: "velero/velero:v1.17.0"
+          image: "velero/velero:v1.17.1"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http-monitoring
