@@ -31,4 +31,4 @@ configMapGenerator:
 
 images:
 - name: neilpang/acme.sh
-  newTag: 3.1.1@sha256:ba4f08004c19374fe05f5e3c454ab1a1e470359a743e51238c689685edf696f8
+  newTag: 3.1.2@sha256:3c6b40e30e2c0c79863ba6ef5545d93350a040371213058099066ccd85b46aad
