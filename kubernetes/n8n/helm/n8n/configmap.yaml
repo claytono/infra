@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: n8n
     app.kubernetes.io/instance: n8n
-    app.kubernetes.io/version: "1.112.0"
+    app.kubernetes.io/version: "1.116.2"
     app.kubernetes.io/managed-by: Helm
 data:
   DB_POSTGRESDB_DATABASE: "n8n"
