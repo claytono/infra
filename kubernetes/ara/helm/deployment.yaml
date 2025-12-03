@@ -22,7 +22,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
       containers:
-      - image: docker.io/recordsansible/ara-api@sha256:080334c1cf9a81eabb1cc1ed1e745cd2ddb184ce92b44d3a16fd5c6871ee4b06
+      - image: docker.io/recordsansible/ara-api:latest
         imagePullPolicy: IfNotPresent
         name: ara
         env:
