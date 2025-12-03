@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
-    app.kubernetes.io/version: "3.5.5"
+    app.kubernetes.io/version: "3.5.7"
     app.kubernetes.io/component: canary
 spec:
   selector:
@@ -36,7 +36,7 @@ spec:
         runAsUser: 10001
       containers:
         - name: loki-canary
-          image: docker.io/grafana/loki-canary:3.5.5
+          image: docker.io/grafana/loki-canary:3.5.7
           imagePullPolicy: IfNotPresent
           args:
             - -addr=loki-gateway.loki.svc.cluster.local.:80
