@@ -51,4 +51,6 @@
 - name: Start traefik
   community.docker.docker_compose_v2:
     project_src: /etc/traefik
+    pull: always
+    recreate: auto
     state: present

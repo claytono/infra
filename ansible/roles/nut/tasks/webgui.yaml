@@ -25,6 +25,8 @@
 - name: Start nut_webgui
   community.docker.docker_compose_v2:
     project_src: /etc/nut/webgui
+    pull: always
+    recreate: auto
     state: present
     wait: true
   become: true
