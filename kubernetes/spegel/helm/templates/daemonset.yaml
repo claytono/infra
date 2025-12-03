@@ -42,6 +42,7 @@ spec:
           - --log-level=INFO
           - --containerd-registry-config-path=/etc/containerd/certs.d
           - --mirror-targets
+          - http://$(NODE_IP):30020
           - http://$(NODE_IP):30021
           - --resolve-tags=true
           - --prepend-existing=false
@@ -95,6 +96,7 @@ spec:
         ports:
           - name: registry
             containerPort: 5000
+            hostPort: 30020
             protocol: TCP
           - name: router
             containerPort: 5001

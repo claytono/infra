@@ -1,4 +1,6 @@
 ---
 service:
   registry:
-    usePreferSameNodeTrafficDistribution: true
+    # Disabled because PreferSameNode requires the PreferSameTrafficDistribution feature gate
+    # which is alpha in k8s 1.33. Re-enable when upgrading to k8s 1.34+ where it's beta by default.
+    usePreferSameNodeTrafficDistribution: false
