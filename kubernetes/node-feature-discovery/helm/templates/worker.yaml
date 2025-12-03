@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.18.1"
+    app.kubernetes.io/version: "v0.18.3"
     app.kubernetes.io/managed-by: Helm
     role: worker
 spec:
@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: node-feature-discovery
         role: worker
       annotations:
-        checksum/config: fc53878bef3fa660f083aa22ab4c074eaa2a2eb11aa2286c2c6d1652fdf86f9e
+        checksum/config: ecc48e8ec36b99c939ee619caf63dfdd7d5b2419ddda6910fc5bac1b7a067766
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       imagePullSecrets: 
@@ -42,7 +42,7 @@ spec:
               - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-        image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.1"
+        image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.3"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:

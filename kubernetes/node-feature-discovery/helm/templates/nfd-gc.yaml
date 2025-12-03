@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.18.1"
+    app.kubernetes.io/version: "v0.18.3"
     app.kubernetes.io/managed-by: Helm
     role: gc
 spec:
@@ -34,7 +34,7 @@ spec:
       hostNetwork: false
       containers:
       - name: gc
-        image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.1"
+        image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.3"
         imagePullPolicy: "IfNotPresent"
         livenessProbe:
           httpGet:
