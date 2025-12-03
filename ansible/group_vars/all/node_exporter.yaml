@@ -1,0 +1,15 @@
+---
+# renovate: datasource=github-releases depName=prometheus/node_exporter
+node_exporter_version: 1.10.2
+node_exporter_host: 0.0.0.0
+node_exporter_port: 9100
+node_exporter_options: --collector.textfile.directory=/var/lib/node_exporter/textfile_collector --log.level=info
+# Map Ansible architecture names to node_exporter release architecture names
+node_exporter_arch: >-
+  {{
+    {
+      'x86_64': 'amd64',
+      'aarch64': 'arm64',
+      'armv7l': 'armv7'
+    }.get(ansible_architecture, ansible_architecture)
+  }}

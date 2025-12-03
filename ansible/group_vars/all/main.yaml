@@ -1,0 +1,3 @@
+---
+# Used by chrony role (tbaczynski.chrony) to conditionally configure UFW firewall rules
+enable_ufw: false
