@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: valkey
     app.kubernetes.io/instance: valkey
-    app.kubernetes.io/version: "8.1.4"
+    app.kubernetes.io/version: "9.0.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   accessModes:

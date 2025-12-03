@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: valkey
     app.kubernetes.io/instance: valkey
-    app.kubernetes.io/version: "8.1.4"
+    app.kubernetes.io/version: "9.0.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -21,7 +21,7 @@ spec:
     metadata:
       annotations:
         checksum/customconfig: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-        checksum/scripts: bae068c0d4c60ee5ce900e92a41eab2242b494c7bafa76e5a7bb0c94ac76fbeb
+        checksum/scripts: d46b8431454681421182bf8ad3ca791030d8da7acdcfe14ee426a87895244287
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: valkey
@@ -44,7 +44,7 @@ spec:
             runAsGroup: 999
             runAsNonRoot: true
             runAsUser: 999
-          image: "docker.io/valkey/valkey:8.1.4"
+          image: "docker.io/valkey/valkey:9.0.0"
           imagePullPolicy: IfNotPresent
           envFrom:
           volumeMounts:
@@ -67,7 +67,7 @@ spec:
             runAsGroup: 999
             runAsNonRoot: true
             runAsUser: 999
-          image: "docker.io/valkey/valkey:8.1.4"
+          image: "docker.io/valkey/valkey:9.0.0"
           imagePullPolicy: IfNotPresent
           ports:
             - name: valkey
