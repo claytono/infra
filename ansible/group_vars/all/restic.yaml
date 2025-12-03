@@ -1,0 +1,102 @@
+---
+resticprofile_sftp_client: true
+resticprofile_sftp_servers:
+  - id: luser
+    fqdn: luser.fnord.net
+    user: restic
+    home: /backups/restic/
+    pool: repos
+
+restic_config_blocks:
+  - restic_global_config
+  - restic_default_config
+  - restic_prometheus_config
+  - restic_pizero_config
+  - restic_host_config
+restic_global_config:
+  version: "1"
+  global:
+    restic-stale-lock-age: 6h
+    restic-lock-retry-after: 2m
+restic_default_config:
+  default:
+    force-inactive-lock: true
+    repository: sftp:restic@luser.fnord.net:/repos/main
+    password-file: passphrase.txt
+
+    backup:
+      no-error-on-warning: true
+      one-file-system: true
+
+      schedule: "*-*-* {{ 23 | random(seed=inventory_hostname) }}:{{ 60 | random(seed=inventory_hostname) }}:00"
+      schedule-permission: system
+      schedule-lock-wait: 23h
+      schedule-priority: background
+
+      source:
+        - /
+
+      exclude:
+      # System caches
+        - /var/cache/*
+        - /var/lib/apt/lists/**
+
+        # User caches
+        - /home/*/.cache/*
+        - /root/.cache/*
+
+        # Temporary files
+        - /tmp/**
+        - /var/tmp/**
+
+        # Kubernetes/Container runtime data
+        - /var/lib/containerd/**
+        - /var/log/containers/**
+        - /var/log/pods/**
+
+      run-before: &run_before |-
+        {% raw %}curl -sf https://healthchecks.io/api/v1/checks/  \
+            -d '{ "api_key": "{{ $healthcheck_management_key }}", "name": "restic-{{ .Hostname }}-{{ .Profile.Name }}", "timeout": 259200, "channels": "*", "unique": ["name"] }' \
+          && curl -sf "https://hc-ping.com/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/start" -d "Profile: $PROFILE_NAME \
+          Command: $PROFILE_COMMAND \
+          "
+        {% endraw %}
+      run-finally: &run_finally |-
+        {% raw %}rc="${ERROR_EXIT_CODE:-0}" \
+          && curl -sf "https://hc-ping.com/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/${rc}" -d "Profile: $PROFILE_NAME \
+          Command: $PROFILE_COMMAND \
+          Message: $ERROR_MESSAGE \
+          Command-line: $ERROR_COMANDLINE \
+          Stderr: $ERROR_STDERR \
+          "
+        {% endraw %}
+restic_prometheus_config:
+  default:
+    prometheus-push: https://pushgateway.k.oneill.net/
+    prometheus-labels:
+      - host: "{% raw %}{{ .Hostname }}{% endraw %}"
+
+restic_secrets:
+  healthcheck_ping_key: !vault |
+    $ANSIBLE_VAULT;1.1;AES256
+    64326639343662363630313631313935356438663937613833343666636231616261663839313065
+    3937616364306537663530363630646663656539616337340a303338643534656133623931613735
+    33373330353639653362386236653238316266666536616638363865623430333961643364386165
+    6631613562346266650a626263313665663334656630376266613531303135326563623462343231
+    32323635383330336132626335356332373039646562373830316663393064663537
+  healthcheck_management_key: !vault |
+    $ANSIBLE_VAULT;1.1;AES256
+    65346330653235656265616638376137323937353462393131386333626636633036623735366233
+    3561373939633461343132636632346136616437663866380a356634353230656230356563633064
+    63393633393162376430326537363565366561383061626631663965343637313034666165346239
+    3433346335656662660a633137343563613165663334343836316164306239323339373765346562
+    35643236396431666630626532646334653331633935313432363165656231343435646636666665
+    6162373932353165646535646632623236653335326636653631
+restic_passphrase: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  31386466306334343030376139306166306531353631313537643062613331656665656539303461
+  6662643635373737613765363035636461633138366666320a633037653664653530306263663265
+  34646366656437323531316133393638326130303138313132623461306563613361656138623237
+  6537336363386639310a346139396534316435623162663839656435383363336637353636666462
+  39363438663138343135373933663834346465633837333262633433313739353434636564623132
+  6637356466643137366133313862373464303037663366323461
