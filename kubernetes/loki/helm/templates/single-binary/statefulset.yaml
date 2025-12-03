@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
-    app.kubernetes.io/version: "3.5.5"
+    app.kubernetes.io/version: "3.5.7"
     app.kubernetes.io/component: single-binary
     app.kubernetes.io/part-of: memberlist
 spec:
@@ -31,7 +31,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 4af4913f10307731fce33da5b7777f0d8b1fd97eec81712f32528526576a4be2
+        checksum/config: b780748eefd06d8e2010c58a6bff0a4541810e713de7261c12bdfc85d17c42e0
+        storage/size: "10Gi"
         prometheus.io/port: "3100"
         prometheus.io/scrape: "true"
         reloader.stakater.com/auto: "true"
@@ -54,7 +55,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: loki
-          image: docker.io/grafana/loki:3.5.5
+          image: docker.io/grafana/loki:3.5.7
           imagePullPolicy: IfNotPresent
           args:
             - -config.file=/etc/loki/config/config.yaml
@@ -76,10 +77,13 @@ spec:
               - ALL
             readOnlyRootFilesystem: true
           readinessProbe:
+            failureThreshold: 3
             httpGet:
               path: /ready
               port: http-metrics
-            initialDelaySeconds: 30
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
             timeoutSeconds: 1
           volumeMounts:
             - name: tmp
