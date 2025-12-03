@@ -66,7 +66,7 @@ restic_default_config:
           && curl -sf "https://hc-ping.com/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/${rc}" -d "Profile: $PROFILE_NAME \
           Command: $PROFILE_COMMAND \
           Message: $ERROR_MESSAGE \
-          Command-line: $ERROR_COMANDLINE \
+          Command-line: $ERROR_COMMANDLINE \
           Stderr: $ERROR_STDERR \
           "
         {% endraw %}
