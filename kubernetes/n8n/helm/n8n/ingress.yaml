@@ -12,6 +12,11 @@ metadata:
     app.kubernetes.io/managed-by: Helm
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/description: Workflow Automation
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Home Lab
+    gethomepage.dev/icon: n8n.png
+    gethomepage.dev/name: n8n
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx

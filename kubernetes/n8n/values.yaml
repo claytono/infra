@@ -14,6 +14,11 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: n8n
+    gethomepage.dev/description: Workflow Automation
+    gethomepage.dev/group: Home Lab
+    gethomepage.dev/icon: n8n.png
   hosts:
   - host: n8n.k.oneill.net
     paths:
