@@ -5,17 +5,8 @@ resticprofile_version: 0.31.0
 resticprofile_arch: amd64
 resticprofile_bin_dir: /usr/local/bin
 resticprofile_tmp_dir: /tmp/resticprofile-ansible
-resticprofile_sftp_server: false
-resticprofile_sftp_client: false
-resticprofile_rclone_client: false
-resticprofile_sftp_servers: []
+resticprofile_enabled: false
 resticprofile_client_user: root
-resticprofile_ssh_key: ~{{ resticprofile_client_user }}/.ssh/id_restic_{{ resticprofile_ssh_key_type }}
-resticprofile_ssh_key_bits: 2048
-resticprofile_ssh_key_type: ed25519
-
-# Whether or not to register the ssh key with the backup server.  Used for testing.
-resticprofile_ssh_register: true
 
 # Whether or not to enable scheduling.  Used for testing.
 resticprofile_enable_scheduling: true

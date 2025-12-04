@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: rest-server
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rest-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rest-server
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8000'
+        prometheus.io/path: '/metrics'
+    spec:
+      containers:
+      - name: rest-server
+        image: restic/rest-server:0.14.0
+        env:
+        - name: OPTIONS
+          value: --path /repos --private-repos --append-only --prometheus --prometheus-no-auth
+        - name: PASSWORD_FILE
+          value: /etc/htpasswd/.htpasswd
+        ports:
+        - name: http
+          containerPort: 8000
+        volumeMounts:
+        - name: repos
+          mountPath: /repos
+        - name: htpasswd
+          mountPath: /etc/htpasswd
+          readOnly: true
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: repos
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/backups/restic/repos
+      - name: htpasswd
+        secret:
+          secretName: restic-rest-server-htpasswd

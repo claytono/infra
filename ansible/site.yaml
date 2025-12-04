@@ -118,7 +118,7 @@
     - role: yannik.relaymail
       when: is_vagrant is undefined or not is_vagrant
     - role: resticprofile
-      tags: restic
+      tags: [restic, resticprofile]
 
 - name: Traefik
   hosts: infrapi

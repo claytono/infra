@@ -33,12 +33,12 @@
   changed_when: false
   when: resticprofile_enable_scheduling
 
-- name: Unschedule existing jobs if upgrading resticprofile
-  ansible.builtin.command: "{{ resticprofile_bin_dir }}/resticprofile unschedule"
+- name: Unschedule existing jobs if config changed or upgrading
+  ansible.builtin.command: "{{ resticprofile_bin_dir }}/resticprofile unschedule --all"
   when:
     - resticprofile_enable_scheduling
-    - resticprofile_install_resticprofile
     - resticprofile_status.stdout is not search('not found$')
+    - resticprofile_install_resticprofile or resticprofile_config_file.changed
   register: resticprofile_unschedule_result
   failed_when: false
 

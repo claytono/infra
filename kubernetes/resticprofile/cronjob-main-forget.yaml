@@ -3,10 +3,10 @@ apiVersion: batch/v1
 kind: CronJob
 
 metadata:
-  name: resticprofile-b2
+  name: resticprofile-main-forget
 
 spec:
-  schedule: 0 18 * * *  # Daily at 18:00 (6 PM)
+  schedule: "0 11 * * *"  # 11:00 daily (6h after main-copy)
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
@@ -15,11 +15,11 @@ spec:
       template:
         metadata:
           labels:
-            resticprofile: b2
+            resticprofile: main-forget
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
-            prometheus.io/port: '5572'
+            prometheus.io/port: '5573'
         spec:
           hostname: rp-kube
           restartPolicy: OnFailure
@@ -30,12 +30,6 @@ spec:
             volumeMounts:
             - mountPath: /tmp
               name: scratch
-          - name: fix-cache-permissions
-            image: alpine
-            command: [sh, -c, chown -R 10007:10007 /cache]
-            volumeMounts:
-            - mountPath: /cache
-              name: cache
           containers:
           - name: resticprofile
             command:
@@ -43,54 +37,35 @@ spec:
             - -c
             - /resticprofile-config/profiles.yaml
             - -n
-            - b2
+            - main
             - --lock-wait
             - 6h
-            - backup
+            - forget
             image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:
                 name: resticprofile
-            - secretRef:
-                name: resticprofile-rclone
             env:
             - name: RUN_ID
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: RCLONE_CONFIG
-              value: /rclone-config/rclone.conf
             - name: RESTIC_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: resticprofile
                   key: RESTIC_PASSWORD
             volumeMounts:
-            - mountPath: /rclone-config
-              name: rclone-config
             - mountPath: /resticprofile-config
               name: resticprofile-config
             - mountPath: /tmp
               name: scratch
             - mountPath: /cache
               name: cache
-            - mountPath: /source/k8s-pv
-              name: k8s-pv
-              readOnly: true
-            - mountPath: /source/backups
+            - mountPath: /source/backups/restic/repos
               name: backups
-              readOnly: true
-            - mountPath: /source/shared
-              name: shared
-              readOnly: true
           volumes:
-          - name: rclone-config
-            configMap:
-              name: rclone-config
-              items:
-              - key: rclone.conf
-                path: rclone.conf
           - name: resticprofile-config
             configMap:
               name: resticprofile-config
@@ -101,16 +76,5 @@ spec:
               claimName: resticprofile-cache
           - nfs:
               server: fs2.oneill.net
-              path: /volume1/k8s-pv
-              readOnly: true
-            name: k8s-pv
-          - nfs:
-              server: fs2.oneill.net
-              path: /volume2/backups
-              readOnly: true
+              path: /volume2/backups/restic/repos
             name: backups
-          - nfs:
-              server: fs2.oneill.net
-              path: /volume2/shared
-              readOnly: true
-            name: shared

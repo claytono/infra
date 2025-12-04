@@ -1,5 +1,4 @@
 ---
-restic_sftp_server: true
 tailscale_args: --advertise-routes=172.19.74.0/23 --advertise-exit-node --accept-dns=false
 ip_forwarding_enabled: true
 
@@ -8,40 +7,6 @@ restic_host_config:
     backup:
       exclude:
         - /var/lib/libvirt/images/*
-    # Configure forget and retention policy just one this server, so it only
-    # runs in one place with plenty of memory and cpu.  Forget config is just so
-    # we can run it manually.
-    forget: &forget_config
-      keep-hourly: 48
-      keep-daily: 14
-      keep-weekly: 12
-      keep-monthly: 24
-      prune: true
-
-    retention:
-      <<: *forget_config
-      after-backup: true
-    check:
-      read-data-subset: "1/10"
-      schedule: "Sun *-*-* 00:00:00"
-      run-before: &run_before |-
-        {% raw %}curl -sf https://healthchecks.io/api/v1/checks/  \
-            -d '{ "api_key": "{{ $healthcheck_management_key }}", "name": "restic-check-{{ .Hostname }}-{{ .Profile.Name }}", "timeout": 259200, "channels": "*", "unique": ["name"] }' \
-          && curl -sf "https://hc-ping.com/{{ $healthcheck_ping_key }}/restic-check-{{ .Hostname }}-{{ .Profile.Name }}/start" -d "Profile: $PROFILE_NAME \
-          Command: $PROFILE_COMMAND \
-          "
-        {% endraw %}
-      run-finally: &run_finally |-
-        {% raw %}curl -sf https://healthchecks.io/api/v1/checks/  \
-            -d '{ "api_key": "{{ $healthcheck_management_key }}", "name": "restic-check-{{ .Hostname }}-{{ .Profile.Name }}", "timeout": 259200, "channels": "*", "unique": ["name"] }' \
-          && rc="${ERROR_EXIT_CODE:-0}" \
-          && curl -sf "https://hc-ping.com/{{ $healthcheck_ping_key }}/restic-check-{{ .Hostname }}-{{ .Profile.Name }}/${rc}" -d "Profile: $PROFILE_NAME \
-          Command: $PROFILE_COMMAND \
-          Message: $ERROR_MESSAGE \
-          Command-line: $ERROR_COMANDLINE \
-          Stderr: $ERROR_STDERR \
-          "
-        {% endraw %}
 
 
 manage_network: true
