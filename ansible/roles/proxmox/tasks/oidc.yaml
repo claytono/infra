@@ -1,0 +1,73 @@
+---
+# Configure Authentik OIDC realm for Proxmox
+# Note: No Ansible module exists for realm management; using pveum CLI
+
+- name: "Check if authentik realm exists"
+  ansible.builtin.command:
+    cmd: pveum realm list --output-format json
+  register: proxmox_realm_list
+  changed_when: false
+  run_once: true
+
+- name: "Parse realm list"
+  ansible.builtin.set_fact:
+    proxmox_authentik_realm_exists: "{{ (proxmox_realm_list.stdout | from_json) | selectattr('realm', 'equalto', 'authentik') | list | length > 0 }}"
+  run_once: true
+
+- name: "Create OIDC realm"
+  ansible.builtin.command:
+    cmd: >
+      pveum realm add authentik
+      --type openid
+      --issuer-url https://auth.k.oneill.net/application/o/proxmox/
+      --client-id {{ proxmox_oidc_client_id }}
+      --client-key {{ proxmox_oidc_client_secret }}
+      --username-claim preferred_username
+      --autocreate 1
+      --groups-claim groups
+      --comment Authentik
+  when: not proxmox_authentik_realm_exists
+  run_once: true
+  no_log: true
+
+- name: "Update OIDC realm"
+  ansible.builtin.command:
+    cmd: >
+      pveum realm modify authentik
+      --issuer-url https://auth.k.oneill.net/application/o/proxmox/
+      --client-id {{ proxmox_oidc_client_id }}
+      --client-key {{ proxmox_oidc_client_secret }}
+      --autocreate 1
+      --comment Authentik
+  when: proxmox_authentik_realm_exists
+  run_once: true
+  no_log: true
+
+- name: "Create homelab-admin group in Proxmox"
+  community.proxmox.proxmox_group:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    groupid: "homelab-admin-authentik"
+    comment: "Homelab admins - synced from OIDC"
+    state: present
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: "Grant Administrator role to homelab-admin group"
+  community.proxmox.proxmox_access_acl:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    state: present
+    path: /
+    type: group
+    ugid: "homelab-admin-authentik"
+    roleid: Administrator
+    propagate: true
+  delegate_to: localhost
+  become: false
+  run_once: true
