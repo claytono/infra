@@ -33,3 +33,6 @@
 
 - name: "Configure Proxmox users and permissions"
   ansible.builtin.import_tasks: users.yaml
+
+- name: "Configure Authentik OIDC realm"
+  ansible.builtin.import_tasks: oidc.yaml
