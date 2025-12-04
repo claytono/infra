@@ -8,6 +8,11 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: zerossl
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: OpenArchiver
+    gethomepage.dev/description: Archive Browser
+    gethomepage.dev/group: Media Tools
+    gethomepage.dev/icon: mdi-archive
 
 spec:
   ingressClassName: nginx
