@@ -1,0 +1,19 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: rest-server-tailscale
+  annotations:
+    tailscale.com/tags: tag:restic
+
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: rest-server
+      port:
+        number: 8000
+  tls:
+  - hosts:
+    - restic

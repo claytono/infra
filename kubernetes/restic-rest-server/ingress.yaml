@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: rest-server
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - restic.k.oneill.net
+    secretName: rest-server-tls
+  rules:
+  - host: restic.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rest-server
+            port:
+              number: 8000

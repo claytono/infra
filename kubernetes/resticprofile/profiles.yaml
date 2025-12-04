@@ -4,6 +4,7 @@ version: '1'
 global:
   restic-stale-lock-age: 6h
   restic-lock-retry-after: 2m
+  cleanup-cache: true
 
 # B2 profile for direct backup to Backblaze B2
 b2:
@@ -37,17 +38,17 @@ b2:
     - /source/shared/downloads
     no-error-on-warning: true
     run-before: &run_before |
-      echo "Pinging start URL: https://hc-ping.com/FW89_Ui4S7Xe4QLa96f98A/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)"
-      wget "https://hc-ping.com/FW89_Ui4S7Xe4QLa96f98A/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
+      echo "Pinging start URL: https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)"
+      wget "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
       Command: $PROFILE_COMMAND
       "
     run-finally: &run_finally |
       rc="${ERROR_EXIT_CODE:-0}";
-      echo "Pinging finish URL: https://hc-ping.com/FW89_Ui4S7Xe4QLa96f98A/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)"
-      wget "https://hc-ping.com/FW89_Ui4S7Xe4QLa96f98A/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
+      echo "Pinging finish URL: https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)"
+      wget "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
       Command: $PROFILE_COMMAND
       Message: $ERROR_MESSAGE
-      Command-line: $ERROR_COMANDLINE
+      Command-line: $ERROR_COMMANDLINE
       Stderr: $ERROR_STDERR
       "
     check-after: true
@@ -67,7 +68,7 @@ b2:
     read-data-subset: 1%
 
 # B2 copy profile (copy from local repo to B2)
-copy-main:
+main-copy:
   force-inactive-lock: true
   compression: max
   repository: /source/backups/restic/repos/main
@@ -91,4 +92,33 @@ copy-main:
   prometheus-labels:
   - host: kubernetes
   - backend: b2
+  prometheus-push: https://pushgateway.k.oneill.net/
+
+# Main repo maintenance profile (forget/check operations)
+main:
+  force-inactive-lock: true
+  repository: /source/backups/restic/repos/main
+  verbose: true
+
+  env:
+    RESTIC_PROGRESS_FPS: '0.1'
+    RESTIC_CACHE_DIR: /cache
+
+  forget:
+    keep-hourly: 48
+    keep-daily: 14
+    keep-weekly: 12
+    keep-monthly: 24
+    prune: true
+    run-before: *run_before
+    run-finally: *run_finally
+
+  check:
+    read-data-subset: 1/10
+    run-before: *run_before
+    run-finally: *run_finally
+
+  prometheus-labels:
+  - host: kubernetes
+  - backend: nfs
   prometheus-push: https://pushgateway.k.oneill.net/

@@ -7,6 +7,7 @@ metadata:
 
 spec:
   schedule: 0 2 * * *  # Daily at 2 AM (after backup completes)
+  timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
   jobTemplate:

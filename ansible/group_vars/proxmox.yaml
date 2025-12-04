@@ -2,7 +2,7 @@
 # Proxmox host configuration
 
 # Disable restic backups by default for Proxmox hosts
-resticprofile_sftp_client: false
+resticprofile_enabled: false
 
 # API token for Proxmox automation (root@pam)
 proxmox_api_token_id: "automation"

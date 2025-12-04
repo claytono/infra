@@ -3,10 +3,10 @@ apiVersion: batch/v1
 kind: CronJob
 
 metadata:
-  name: resticprofile-b2
+  name: resticprofile-main-copy
 
 spec:
-  schedule: 0 18 * * *  # Daily at 18:00 (6 PM)
+  schedule: "18 5 * * *"  # 05:18 daily
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
@@ -15,7 +15,7 @@ spec:
       template:
         metadata:
           labels:
-            resticprofile: b2
+            resticprofile: main-copy
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -30,12 +30,6 @@ spec:
             volumeMounts:
             - mountPath: /tmp
               name: scratch
-          - name: fix-cache-permissions
-            image: alpine
-            command: [sh, -c, chown -R 10007:10007 /cache]
-            volumeMounts:
-            - mountPath: /cache
-              name: cache
           containers:
           - name: resticprofile
             command:
@@ -43,10 +37,10 @@ spec:
             - -c
             - /resticprofile-config/profiles.yaml
             - -n
-            - b2
+            - main-copy
             - --lock-wait
             - 6h
-            - backup
+            - copy
             image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
@@ -61,7 +55,7 @@ spec:
                   fieldPath: metadata.name
             - name: RCLONE_CONFIG
               value: /rclone-config/rclone.conf
-            - name: RESTIC_PASSWORD
+            - name: RESTIC_FROM_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: resticprofile
@@ -75,15 +69,8 @@ spec:
               name: scratch
             - mountPath: /cache
               name: cache
-            - mountPath: /source/k8s-pv
-              name: k8s-pv
-              readOnly: true
-            - mountPath: /source/backups
+            - mountPath: /source/backups/restic/repos
               name: backups
-              readOnly: true
-            - mountPath: /source/shared
-              name: shared
-              readOnly: true
           volumes:
           - name: rclone-config
             configMap:
@@ -101,16 +88,5 @@ spec:
               claimName: resticprofile-cache
           - nfs:
               server: fs2.oneill.net
-              path: /volume1/k8s-pv
-              readOnly: true
-            name: k8s-pv
-          - nfs:
-              server: fs2.oneill.net
-              path: /volume2/backups
-              readOnly: true
+              path: /volume2/backups/restic/repos
             name: backups
-          - nfs:
-              server: fs2.oneill.net
-              path: /volume2/shared
-              readOnly: true
-            name: shared

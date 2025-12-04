@@ -2,6 +2,12 @@
 {% for key, value in restic_secrets.items() %}
 {{ '{{' }} ${{ key }} := "{{ value }}" {{ '}}' }}
 {% endfor %}
+{% if restic_repo_secrets is defined and restic_repo is defined %}
+{% set creds = restic_repo_secrets[restic_repo] %}
+{% for key, value in creds.items() %}
+{{ '{{' }} $repo_{{ key }} := "{{ value | urlencode }}" {{ '}}' }}
+{% endfor %}
+{% endif %}
 
 {% set ns = namespace() %}
 {% set ns.combined_config = {} %}
@@ -11,4 +17,4 @@
   {% set ns.combined_config = ns.combined_config | combine(config, recursive=True) %}
 {% endfor %}
 
-{{ ns.combined_config | to_nice_yaml }}
+{{ ns.combined_config | to_nice_yaml -}}

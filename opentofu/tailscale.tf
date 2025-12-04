@@ -15,6 +15,7 @@ resource "tailscale_acl" "main" {
             "tag:github-actions": [],
             "tag:argocd": ["tag:k8s-operator"],
             "tag:flux": ["autogroup:admin"],
+            "tag:restic": ["tag:k8s-operator"],
         },
 
         // Define access control lists for users, groups, autogroups, tags,
@@ -33,6 +34,14 @@ resource "tailscale_acl" "main" {
                 "src":    ["tag:flux"],
                 "proto":  "tcp",
                 "dst":    ["*:22"],
+            },
+
+            // Allow flux to reach restic rest-server for backups
+            {
+                "action": "accept",
+                "src":    ["tag:flux"],
+                "proto":  "tcp",
+                "dst":    ["tag:restic:443"],
             },
 
             // Allow GitHub Actions to reach ArgoCD only

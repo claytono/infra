@@ -1,11 +1,6 @@
 ---
-resticprofile_sftp_client: true
-resticprofile_sftp_servers:
-  - id: luser
-    fqdn: luser.fnord.net
-    user: restic
-    home: /backups/restic/
-    pool: repos
+restic_repo: main
+resticprofile_enabled: true
 
 restic_config_blocks:
   - restic_global_config
@@ -18,10 +13,11 @@ restic_global_config:
   global:
     restic-stale-lock-age: 6h
     restic-lock-retry-after: 2m
+    cleanup-cache: true
 restic_default_config:
   default:
     force-inactive-lock: true
-    repository: sftp:restic@luser.fnord.net:/repos/main
+    repository: "rest:https://{{ '{{' }} $repo_username {{ '}}' }}:{{ '{{' }} $repo_password {{ '}}' }}@restic.k.oneill.net/main"
     password-file: passphrase.txt
 
     backup:
