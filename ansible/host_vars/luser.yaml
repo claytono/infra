@@ -1,7 +1,4 @@
 ---
-tailscale_args: --advertise-routes=172.19.74.0/23 --advertise-exit-node --accept-dns=false
-ip_forwarding_enabled: true
-
 restic_host_config:
   default:
     backup:
