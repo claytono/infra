@@ -1,0 +1,30 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+
+metadata:
+  name: require-iscsi-backup-label
+
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: require-velero-backup-label
+    match:
+      any:
+      - resources:
+          kinds:
+          - PersistentVolumeClaim
+    preconditions:
+      all:
+      - key: "{{ request.object.spec.storageClassName || '' }}"
+        operator: Equals
+        value: synology-iscsi
+    validate:
+      message: >-
+        PVCs using synology-iscsi storage class must have the label
+        velero.io/backup set to either 'true' or 'false'.
+        This enforces explicit backup policy for iSCSI volumes.
+      pattern:
+        metadata:
+          labels:
+            velero.io/backup: true | false

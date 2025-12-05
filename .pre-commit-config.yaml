@@ -52,12 +52,6 @@ repos:
     files: ^kubernetes/.*\.(ya?ml)$
     pass_filenames: true
     exclude: (helm\.yaml|patch-.*\.yaml)$
-  - id: validate-iscsi-labels
-    name: validate iSCSI PVC labels
-    entry: kubernetes/scripts/validate-iscsi-labels
-    language: system
-    files: ^kubernetes/.*\.(ya?ml)$
-    pass_filenames: true
   - id: ak-tool-generate
     name: generate authentik terraform configs
     entry: kubernetes/scripts/ak-tool generate
@@ -71,12 +65,12 @@ repos:
     language: system
     files: ^(kubernetes/hass/|scripts/hass-check-config)
     pass_filenames: false
-  - id: validate-goldilocks-namespaces
-    name: validate goldilocks VPA annotations
-    entry: kyverno apply .kyverno/policies/ --resource kubernetes/
+  - id: kyverno-validate
+    name: kyverno policy validation
+    entry: kubernetes/scripts/kyverno-wrapper
     language: system
-    pass_filenames: false
-    files: kubernetes/.*namespace\.yaml$
+    pass_filenames: true
+    files: ^kubernetes/.*\.(ya?ml)$
 
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1

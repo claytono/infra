@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Filter YAML files to only those with valid Kubernetes kind field
+# Pass filtered files to kyverno apply
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASEDIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+POLICY_DIR="$BASEDIR/.kyverno/policies"
+
+# Use yq to filter all files at once - much faster than per-file checks
+# select(.kind) filters to documents with a kind field, filename outputs the path
+mapfile -t valid_files < <(yq 'select(.kind) | filename' "$@" 2>/dev/null | sort -u)
+
+if [[ ${#valid_files[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+# Build --resource args
+args=()
+for f in "${valid_files[@]}"; do
+  args+=(--resource "$f")
+done
+
+exec kyverno apply "$POLICY_DIR" "${args[@]}"
