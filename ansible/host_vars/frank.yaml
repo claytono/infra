@@ -1,7 +1,0 @@
----
-tailscale_args: --advertise-exit-node # --accept-dns=false
-ip_forwarding_enabled: true
-restic_prometheus_config: {}
-restic_host_config:
-  default:
-    repository: sftp:restic@luser.fnord.net:/repos/{{ ansible_hostname }}
