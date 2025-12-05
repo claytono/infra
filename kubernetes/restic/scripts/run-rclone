@@ -6,8 +6,8 @@ set -eo pipefail
 
 # Directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+BASEDIR="$(dirname "$SCRIPT_DIR")"
 TEMP_RCLONE_CONFIG="/tmp/rclone.conf"
-TEMPLATE_CONFIG="$SCRIPT_DIR/rclone.conf.template"
 
 source "$SCRIPT_DIR/get-1password-secrets"
 
@@ -18,7 +18,7 @@ echo "Fetching secrets from 1Password"
 export_rclone_env_variables
 
 # Create a temporary rclone config
-cp "$TEMPLATE_CONFIG" "$TEMP_RCLONE_CONFIG"
+cp "$BASEDIR/rclone.conf" "$TEMP_RCLONE_CONFIG"
 
 # Set the config file location
 export RCLONE_CONFIG="$TEMP_RCLONE_CONFIG"

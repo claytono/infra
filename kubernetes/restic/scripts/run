@@ -2,10 +2,11 @@
 
 set -eu -o pipefail
 
-BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$BASEDIR"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASEDIR="$(dirname "$SCRIPT_DIR")"
+cd "$SCRIPT_DIR"
 
-image=$(yq -r .spec.jobTemplate.spec.template.spec.containers[0].image <cronjob-b2.yaml)
+image=$(yq -r .spec.jobTemplate.spec.template.spec.containers[0].image <"$BASEDIR/cronjobs/cronjob-b2.yaml")
 
 mkdir -p .cache
 mkdir -p .tmp
@@ -29,8 +30,8 @@ docker run --rm \
 	-e RCLONE_CONFIG_B2_KEY \
 	-e RCLONE_CONFIG_B2C_PASSWORD \
 	-e RCLONE_CONFIG_B2C_PASSWORD2 \
-	-v "$BASEDIR/.cache:/cache" \
-	-v "$BASEDIR/.tmp:/tmp" \
+	-v "$SCRIPT_DIR/.cache:/cache" \
+	-v "$SCRIPT_DIR/.tmp:/tmp" \
 	-v "$BASEDIR/profiles.yaml:/resticprofile-config/profiles.yaml:ro" \
 	-v "$BASEDIR/rclone.conf:/rclone-config/rclone.conf:ro" \
 	"$image" \

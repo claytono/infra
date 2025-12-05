@@ -94,8 +94,9 @@ main-copy:
   - backend: b2
   prometheus-push: https://pushgateway.k.oneill.net/
 
-# Main repo maintenance profile (forget/check operations)
-main:
+# NFS repo maintenance profile template (forget+check combined job)
+# Healthcheck pings are handled by the cronjob wrapper, not resticprofile hooks
+main: &nfs_maintenance
   force-inactive-lock: true
   repository: /source/backups/restic/repos/main
   verbose: true
@@ -104,21 +105,32 @@ main:
     RESTIC_PROGRESS_FPS: '0.1'
     RESTIC_CACHE_DIR: /cache
 
-  forget:
+  forget: &nfs_forget
     keep-hourly: 48
     keep-daily: 14
     keep-weekly: 12
     keep-monthly: 24
     prune: true
-    run-before: *run_before
-    run-finally: *run_finally
 
   check:
     read-data-subset: 1/10
-    run-before: *run_before
-    run-finally: *run_finally
 
   prometheus-labels:
   - host: kubernetes
   - backend: nfs
   prometheus-push: https://pushgateway.k.oneill.net/
+
+flux:
+  <<: *nfs_maintenance
+  repository: /source/backups/restic/repos/flux
+
+xtal:
+  <<: *nfs_maintenance
+  repository: /source/backups/restic/repos/xtal
+  forget:
+    <<: *nfs_forget
+    keep-hourly: 24
+    keep-daily: 7
+    keep-weekly: 12
+    keep-monthly: 12
+    keep-yearly: 5
