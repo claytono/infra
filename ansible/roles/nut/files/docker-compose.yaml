@@ -5,14 +5,6 @@ services:
     restart: unless-stopped
     env_file:
       - nut_webgui.env
-    environment:
-      UPSD_ADDR: "${HOSTNAME}.oneill.net"
-      UPSD_PORT: "3493"
-      UPSD_USER: "monuser"
-      UPSD_PASS: "secret"
-      POLL_FREQ: "30"
-      POLL_INTERVAL: "2"
-      LOG_LEVEL: "info"
     labels:
       # Enable Traefik for this container (since exposedbydefault=false)
       - "traefik.enable=true"
