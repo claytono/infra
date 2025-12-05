@@ -21,4 +21,4 @@ commonAnnotations:
 
 images:
 - name: ghcr.io/karakeep-app/karakeep
-  newTag: 0.27.1@sha256:abd7d6b11b1b8fa3593d1971f886a74850ba8d6a99291218b150207d5a60378e
+  newTag: 0.29.1@sha256:3b521070cdc26d7385cc288fe0cf7aef17e1fa551a1960cdfd7b8d5d732167a9
