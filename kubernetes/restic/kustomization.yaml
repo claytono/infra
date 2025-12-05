@@ -5,28 +5,27 @@ kind: Kustomization
 namespace: restic
 
 resources:
-- cronjob-main-copy.yaml
-- cronjob-main-forget.yaml
-- cronjob-main-check.yaml
-- cronjob-b2.yaml
-- cronjob-b2-forget.yaml
-- pvc.yaml
-- externalsecret.yaml
+- shared
+- rest-server
+- cronjobs
 
 commonAnnotations:
   argoManaged: 'true'
 
 configMapGenerator:
-
 - files:
   - profiles.yaml
   name: resticprofile-config
   options:
     disableNameSuffixHash: true
-
 - files:
   - rclone.conf
   name: rclone-config
+  options:
+    disableNameSuffixHash: true
+- files:
+  - maintenance-wrapper.sh
+  name: maintenance-wrapper
   options:
     disableNameSuffixHash: true
 
@@ -39,5 +38,5 @@ images:
 labels:
 - includeSelectors: true
   pairs:
-    app.kubernetes.io/name: resticprofile
-    app.kubernetes.io/instance: resticprofile
+    app.kubernetes.io/name: restic
+    app.kubernetes.io/instance: restic

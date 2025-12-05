@@ -1,0 +1,285 @@
+#!/usr/bin/env python3
+"""
+Render and sync script for restic kubernetes resources.
+
+Renders:
+  - Generates maintenance cronjobs from Jinja2 template
+
+Syncs:
+  - Creates/retrieves plaintext passwords from 1Password
+  - Generates bcrypt hashes and stores in 1Password (for K8s ExternalSecrets)
+  - Writes ansible-vault encrypted secrets to group_vars
+
+Prerequisites: op (1Password CLI), htpasswd, ansible-vault, jinja2
+Usage: ./render-and-sync [--cronjobs] [--secrets] [--healthchecks]
+       With no args, runs cronjobs and secrets.
+       --healthchecks requires HEALTHCHECK_API_KEY env var.
+"""
+
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import urllib.request
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader
+
+BASEDIR = Path(__file__).parent.resolve()
+REPO_ROOT = BASEDIR.parent.parent
+VAULT = "infra"
+OP_ITEM = "restic-rest-server"
+ANSIBLE_SECRETS_FILE = REPO_ROOT / "ansible/group_vars/all/restic-repo-secrets.yaml"
+ANSIBLE_VAULT_PASSWORD_FILE = REPO_ROOT / "ansible/ansible-vault-password"
+
+# Repos to manage - adding a repo here:
+# 1. Creates password in 1Password
+# 2. Updates htpasswd for REST server
+# 3. Generates maintenance cronjob (forget + check)
+# 4. Updates Ansible vault secrets
+REPOS = ["main", "flux", "xtal"]
+
+
+def run(cmd: list[str], capture: bool = False, check: bool = True) -> str:
+    """Run a command, optionally capturing output."""
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(result.stdout, file=sys.stderr)
+        print(result.stderr, file=sys.stderr)
+        if check:
+            raise subprocess.CalledProcessError(result.returncode, cmd)
+    return result.stdout.strip() if capture else ""
+
+
+def schedule_from_name(name: str) -> str:
+    """Generate deterministic schedule from repo name.
+
+    Spreads maintenance jobs throughout the week based on hash of name.
+    Runs once weekly on a calculated day/hour.
+    """
+    h = int(hashlib.md5(name.encode()).hexdigest()[:8], 16)
+    day = h % 7  # Day of week 0-6 (Sunday-Saturday)
+    hour = 6 + (h % 12)  # Hours 6-17 (6am-5pm)
+    minute = h % 60
+
+    return f"{minute} {hour} * * {day}"
+
+
+def generate_cronjobs() -> None:
+    """Generate maintenance cronjobs from Jinja2 template."""
+    print("Generating cronjobs...")
+    env = Environment(loader=FileSystemLoader(BASEDIR))
+    template = env.get_template("cronjob-maintenance.yaml.j2")
+    outdir = BASEDIR / "cronjobs"
+
+    for repo in REPOS:
+        schedule = schedule_from_name(repo)
+        content = template.render(
+            profile=repo,
+            schedule=schedule,
+        )
+        outfile = outdir / f"cronjob-{repo}-maintenance.yaml"
+        outfile.write_text(content)
+        print(f"  Generated {outfile.name} (schedule: {schedule})")
+
+
+def ensure_1password_item() -> None:
+    """Create 1Password item if it doesn't exist."""
+    result = subprocess.run(
+        ["op", "--vault", VAULT, "item", "get", OP_ITEM],
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(f"Creating 1Password item: {OP_ITEM}")
+        run(
+            [
+                "op",
+                "--vault",
+                VAULT,
+                "item",
+                "create",
+                "--category",
+                "password",
+                "--title",
+                OP_ITEM,
+            ]
+        )
+
+
+def get_or_create_password(repo: str) -> str:
+    """Get existing password from 1Password or create a new one."""
+    field = f"{repo}-password"
+
+    # Try to get existing password
+    result = subprocess.run(
+        ["op", "--vault", VAULT, "item", "get", OP_ITEM, "--fields", field],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if result.returncode == 0 and result.stdout.strip():
+        return result.stdout.strip()
+
+    # Generate new password (URL-safe, no special chars)
+    print(f"  Generating password for {field}...", file=sys.stderr)
+    password = run(
+        ["openssl", "rand", "-base64", "32"],
+        capture=True,
+    )
+    # Remove non-URL-safe characters and truncate
+    password = password.translate(str.maketrans("", "", "/+="))[:32]
+
+    run(
+        ["op", "--vault", VAULT, "item", "edit", OP_ITEM, f"{field}={password}"],
+    )
+    return password
+
+
+def update_htpasswd_hash(repo: str, password: str) -> None:
+    """Generate bcrypt hash and update in 1Password."""
+    field = f"{repo}-htpasswd"
+
+    # Generate bcrypt hash (htpasswd -nB outputs "user:hash")
+    output = run(["htpasswd", "-nbB", repo, password], capture=True)
+    hash_value = output.split(":", 1)[1]
+
+    run(["op", "--vault", VAULT, "item", "edit", OP_ITEM, f"{field}={hash_value}"])
+    print(f"  Updated {field} in 1Password", file=sys.stderr)
+
+
+def encrypt_password(password: str) -> str:
+    """Encrypt password using ansible-vault."""
+    result = subprocess.run(
+        [
+            "ansible-vault",
+            "encrypt_string",
+            "--vault-password-file",
+            str(ANSIBLE_VAULT_PASSWORD_FILE),
+            "--stdin-name",
+            "tmp",
+        ],
+        input=password,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    # Skip the "tmp: !vault |" line
+    lines = result.stdout.strip().split("\n")
+    return "\n".join(lines[1:])
+
+
+def sync_healthchecks() -> None:
+    """Create/update Healthchecks.io entries for each repo."""
+    print("Syncing healthchecks...")
+
+    api_key = os.environ.get("HEALTHCHECK_API_KEY")
+    if not api_key:
+        print("  HEALTHCHECK_API_KEY not set, skipping", file=sys.stderr)
+        return
+
+    for repo in REPOS:
+        slug = f"kube-restic-{repo}-maintenance"
+        schedule = schedule_from_name(repo)
+
+        data = {
+            "name": slug,
+            "slug": slug,
+            "schedule": schedule,
+            "tz": "America/New_York",
+            "tags": "restic kubernetes",
+            "grace": 86400,
+            "unique": ["slug"],
+        }
+
+        req = urllib.request.Request(
+            "https://healthchecks.io/api/v3/checks/",
+            data=json.dumps(data).encode(),
+            headers={
+                "X-Api-Key": api_key,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(req) as resp:
+                resp.read()  # Ensure request completes
+                print(f"  Created/updated: {slug} (schedule: {schedule})")
+        except urllib.error.HTTPError as e:
+            body = e.read().decode()
+            print(f"  Error for {slug}: {e.code} {e.reason}: {body}", file=sys.stderr)
+
+
+def sync_secrets() -> None:
+    """Sync secrets between 1Password and Ansible vault."""
+    print("Syncing restic-rest-server secrets...")
+
+    ensure_1password_item()
+
+    lines = [
+        "# DO NOT EDIT - managed by kubernetes/restic/render-and-sync",
+        "---",
+        "restic_repo_secrets:",
+    ]
+
+    for repo in REPOS:
+        print(f"  Processing repo: {repo}", file=sys.stderr)
+
+        # Get or create plaintext password
+        password = get_or_create_password(repo)
+
+        # Update bcrypt hash in 1Password (for K8s ExternalSecrets)
+        update_htpasswd_hash(repo, password)
+
+        # Encrypt for Ansible
+        encrypted = encrypt_password(password)
+
+        lines.append(f"  {repo}:")
+        lines.append(f"    username: {repo}")
+        lines.append("    password: !vault |")
+        lines.append(encrypted)
+
+    ANSIBLE_SECRETS_FILE.write_text("\n".join(lines) + "\n")
+
+    print()
+    print("Sync complete!")
+    print(f"Wrote: {ANSIBLE_SECRETS_FILE}")
+    print()
+    print("1Password fields updated:")
+    print("  - *-password: plaintext passwords")
+    print("  - *-htpasswd: bcrypt hashes (for K8s)")
+
+
+def main() -> None:
+    """Main entry point."""
+    args = sys.argv[1:]
+
+    if "-h" in args or "--help" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    # Default to cronjobs+secrets if no args (healthchecks requires explicit flag)
+    run_cronjobs = "--cronjobs" in args or not args
+    run_secrets = "--secrets" in args or not args
+    run_healthchecks = "--healthchecks" in args
+
+    if run_cronjobs:
+        generate_cronjobs()
+
+    if run_secrets:
+        sync_secrets()
+
+    if run_healthchecks:
+        sync_healthchecks()
+
+
+if __name__ == "__main__":
+    main()

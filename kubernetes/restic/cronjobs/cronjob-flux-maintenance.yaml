@@ -3,10 +3,10 @@ apiVersion: batch/v1
 kind: CronJob
 
 metadata:
-  name: resticprofile-b2-forget
+  name: resticprofile-flux-maintenance
 
 spec:
-  schedule: 0 2 * * *  # Daily at 2 AM (after backup completes)
+  schedule: "33 15 * * 2"
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
@@ -15,7 +15,7 @@ spec:
       template:
         metadata:
           labels:
-            resticprofile: b2-forget
+            resticprofile: flux-maintenance
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -26,61 +26,51 @@ spec:
           initContainers:
           - name: generate-uuid
             image: alpine
-            command: [sh, -c, apk add --no-cache util-linux; uuidgen >/tmp/uuid]
+            command: [sh, -c, "apk add --no-cache util-linux && uuidgen >/tmp/uuid"]
             volumeMounts:
             - mountPath: /tmp
               name: scratch
           containers:
           - name: resticprofile
             command:
-            - resticprofile
-            - -c
-            - /resticprofile-config/profiles.yaml
-            - -n
-            - b2
-            - --lock-wait
-            - 6h
-            - forget
+            - /scripts/maintenance-wrapper.sh
+            - flux
             image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:
                 name: resticprofile
-            - secretRef:
-                name: resticprofile-rclone
             env:
-            - name: RUN_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: RCLONE_CONFIG
-              value: /rclone-config/rclone.conf
             - name: RESTIC_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: resticprofile
                   key: RESTIC_PASSWORD
             volumeMounts:
-            - mountPath: /rclone-config
-              name: rclone-config
             - mountPath: /resticprofile-config
               name: resticprofile-config
+            - mountPath: /scripts
+              name: scripts
             - mountPath: /tmp
               name: scratch
             - mountPath: /cache
               name: cache
+            - mountPath: /source/backups/restic/repos
+              name: backups
           volumes:
-          - name: rclone-config
-            configMap:
-              name: rclone-config
-              items:
-              - key: rclone.conf
-                path: rclone.conf
           - name: resticprofile-config
             configMap:
               name: resticprofile-config
+          - name: scripts
+            configMap:
+              name: maintenance-wrapper
+              defaultMode: 0755
           - name: scratch
             emptyDir: {}
           - name: cache
             persistentVolumeClaim:
               claimName: resticprofile-cache
+          - nfs:
+              server: fs2.oneill.net
+              path: /volume2/backups/restic/repos
+            name: backups

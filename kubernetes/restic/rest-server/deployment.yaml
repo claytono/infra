@@ -18,6 +18,7 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8000'
         prometheus.io/path: '/metrics'
+        reloader.stakater.com/auto: 'true'
     spec:
       containers:
       - name: rest-server

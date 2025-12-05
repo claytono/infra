@@ -3,10 +3,10 @@ apiVersion: batch/v1
 kind: CronJob
 
 metadata:
-  name: resticprofile-main-check
+  name: resticprofile-xtal-maintenance
 
 spec:
-  schedule: "0 17 * * 0"  # 17:00 Sundays only
+  schedule: "24 6 * * 1"
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
@@ -15,7 +15,7 @@ spec:
       template:
         metadata:
           labels:
-            resticprofile: main-check
+            resticprofile: xtal-maintenance
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -26,31 +26,21 @@ spec:
           initContainers:
           - name: generate-uuid
             image: alpine
-            command: [sh, -c, apk add --no-cache util-linux; uuidgen >/tmp/uuid]
+            command: [sh, -c, "apk add --no-cache util-linux && uuidgen >/tmp/uuid"]
             volumeMounts:
             - mountPath: /tmp
               name: scratch
           containers:
           - name: resticprofile
             command:
-            - resticprofile
-            - -c
-            - /resticprofile-config/profiles.yaml
-            - -n
-            - main
-            - --lock-wait
-            - 6h
-            - check
+            - /scripts/maintenance-wrapper.sh
+            - xtal
             image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:
                 name: resticprofile
             env:
-            - name: RUN_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: RESTIC_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -59,6 +49,8 @@ spec:
             volumeMounts:
             - mountPath: /resticprofile-config
               name: resticprofile-config
+            - mountPath: /scripts
+              name: scripts
             - mountPath: /tmp
               name: scratch
             - mountPath: /cache
@@ -69,6 +61,10 @@ spec:
           - name: resticprofile-config
             configMap:
               name: resticprofile-config
+          - name: scripts
+            configMap:
+              name: maintenance-wrapper
+              defaultMode: 0755
           - name: scratch
             emptyDir: {}
           - name: cache
