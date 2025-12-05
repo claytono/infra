@@ -15,7 +15,7 @@ resources:
 
 images:
 - name: linuxserver/overseerr
-  newTag: 1.34.0@sha256:f0bb47460bfbcf7c31dad8b62e2546fb336b4b5209a8404a23e77100da0f25f7
+  newTag: 1.34.0@sha256:feddc11664639721d4e220d161ce5eb8fd2483d2e252e3e119570abcce3c7474
 
 labels:
 
