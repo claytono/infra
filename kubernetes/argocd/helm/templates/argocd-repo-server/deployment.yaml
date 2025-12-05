@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: repo-server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.2.0"
+    app.kubernetes.io/version: "v3.2.1"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -28,14 +28,14 @@ spec:
         app.kubernetes.io/component: repo-server
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.2.0"
+        app.kubernetes.io/version: "v3.2.1"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-repo-server
       automountServiceAccountToken: true
       containers:
       - name: repo-server
-        image: quay.io/argoproj/argocd:v3.2.0
+        image: quay.io/argoproj/argocd:v3.2.1
         imagePullPolicy: IfNotPresent
         args:
         - /usr/local/bin/argocd-repo-server
@@ -278,6 +278,18 @@ spec:
                 key: reposerver.revision.cache.lock.timeout
                 name: argocd-cmd-params-cm
                 optional: true
+          - name: ARGOCD_REPO_SERVER_ENABLE_BUILTIN_GIT_CONFIG
+            valueFrom:
+              configMapKeyRef:
+                name: argocd-cmd-params-cm
+                key: reposerver.enable.builtin.git.config
+                optional: true
+          - name: ARGOCD_GRPC_MAX_SIZE_MB
+            valueFrom:
+              configMapKeyRef:
+                key: reposerver.grpc.max.size
+                name: argocd-cmd-params-cm
+                optional: true
           - name: ARGOCD_REPO_SERVER_INCLUDE_HIDDEN_DIRECTORIES
             valueFrom:
               configMapKeyRef:
@@ -349,7 +361,7 @@ spec:
         - -n
         - /usr/local/bin/argocd
         - /var/run/argocd/argocd-cmp-server
-        image: quay.io/argoproj/argocd:v3.2.0
+        image: quay.io/argoproj/argocd:v3.2.1
         imagePullPolicy: IfNotPresent
         name: copyutil
         resources:
