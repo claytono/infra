@@ -1,0 +1,74 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: rsnapshot-monthly
+
+spec:
+  schedule: "30 2 1 * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: rsnapshot
+            image: alpine:3.23@sha256:51183f2cfa6320055da30872f211093f9ff1d3cf06f39a0bdb212314c5dc7375
+            command:
+            - /bin/sh
+            - -c
+            - |
+              apk add --no-cache rsnapshot openssh-client rsync curl
+              mkdir -p /backups/rsnapshot/.ssh
+              if rsnapshot -c /etc/rsnapshot.conf monthly; then
+                curl -fsS -m 10 --retry 5 -o /dev/null "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/rsnapshot-monthly"
+              else
+                curl -fsS -m 10 --retry 5 -o /dev/null "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/rsnapshot-monthly/fail"
+                exit 1
+              fi
+            env:
+            - name: HEALTHCHECK_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rsnapshot-healthcheck
+                  key: HEALTHCHECK_PING_KEY
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: false
+            volumeMounts:
+            - name: rsnapshot-config
+              mountPath: /etc/rsnapshot.conf
+              subPath: rsnapshot.conf
+              readOnly: true
+            - name: ssh-key
+              mountPath: /root/.ssh
+              readOnly: true
+            - name: ssh-config
+              mountPath: /etc/ssh/ssh_config
+              subPath: ssh-config
+              readOnly: true
+            - name: backups
+              mountPath: /backups/rsnapshot
+          volumes:
+          - name: rsnapshot-config
+            configMap:
+              name: rsnapshot-config
+          - name: ssh-key
+            secret:
+              secretName: rsnapshot-ssh-key
+              items:
+              - key: id_ed25519
+                path: id_ed25519
+                mode: 0600
+          - name: ssh-config
+            configMap:
+              name: rsnapshot-config
+          - name: backups
+            nfs:
+              server: fs2.oneill.net
+              path: /volume2/backups/rsnapshot
+          restartPolicy: OnFailure
