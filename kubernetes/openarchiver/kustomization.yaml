@@ -22,7 +22,7 @@ resources:
 images:
 - name: logiclabshq/open-archiver
   newName: docker.io/logiclabshq/open-archiver
-  newTag: v0.3.3@sha256:d68bf0393bd39dad5df9ae6d52cedbcfd48cc989238c467b26bae72729866b35
+  newTag: v0.4.0@sha256:8b580260ae82d9f4656912a8d7dd57fbdaaca7b993c82a42f7f0514d8908597b
 - name: valkey/valkey
   newName: docker.io/valkey/valkey
   newTag: 8.1.3-alpine3.22@sha256:d827e7f7552cdee40cc7482dbae9da020f42bc47669af6f71182a4ef76a22773
