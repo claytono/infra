@@ -31,10 +31,6 @@ spec:
         volumeMounts:
         - mountPath: /config
           name: config
-        - mountPath: /movies
-          name: movies
-        - mountPath: /downloads
-          name: downloads
         - mountPath: /shared
           name: shared
         env:
@@ -48,14 +44,6 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: radarr-config
-      - nfs:
-          server: fs2.oneill.net
-          path: /volume2/shared/video/movies
-        name: movies
-      - nfs:
-          server: fs2.oneill.net
-          path: /volume2/shared/downloads
-        name: downloads
       - nfs:
           server: fs2.oneill.net
           path: /volume2/shared

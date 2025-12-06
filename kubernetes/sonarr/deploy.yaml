@@ -27,10 +27,6 @@ spec:
         volumeMounts:
         - mountPath: /config
           name: config
-        - mountPath: /tv
-          name: tv
-        - mountPath: /downloads
-          name: downloads
         - mountPath: /shared
           name: shared
         env:
@@ -51,14 +47,6 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: sonarr-config
-      - nfs:
-          server: fs2.oneill.net
-          path: /volume2/shared/video/tv
-        name: tv
-      - nfs:
-          server: fs2.oneill.net
-          path: /volume2/shared/downloads
-        name: downloads
       - nfs:
           server: fs2.oneill.net
           path: /volume2/shared
