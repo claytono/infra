@@ -1,0 +1,4 @@
+Host *
+  StrictHostKeyChecking accept-new
+  UserKnownHostsFile /backups/rsnapshot/.ssh/known_hosts
+  IdentityFile /root/.ssh/id_ed25519
