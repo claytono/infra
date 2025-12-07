@@ -35,8 +35,6 @@ spec:
           name: books
         - mountPath: /downloads/qbittorrent
           name: qbittorrent-downloads
-        - mountPath: /cwa-book-ingest
-          name: cwa-ingest
         - mountPath: /booklore-book-ingest
           name: booklore-ingest
         - mountPath: /scripts
@@ -60,10 +58,6 @@ spec:
           server: fs2.oneill.net
           path: /volume2/shared/downloads/qbittorrent
         name: qbittorrent-downloads
-      - nfs:
-          server: fs2.oneill.net
-          path: /volume2/shared/downloads/cwa-ingestion
-        name: cwa-ingest
       - nfs:
           server: fs2.oneill.net
           path: /volume2/shared/downloads/booklore-ingestion
