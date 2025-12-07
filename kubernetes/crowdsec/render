@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASEDIR"
+
+# Source the chart-version helper
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir tmp helm
+
+# Use helm_template helper function
+helm_template crowdsec crowdsec \
+	--values values.yaml \
+	--namespace crowdsec \
+	--output-dir tmp
+
+mv tmp/*/* helm
+rmdir tmp/*
+rmdir tmp
+
+# Remove test templates and lapi-secrets.yaml (secrets now managed by ExternalSecrets)
+rm -rf helm/templates/tests
+rm -f helm/templates/lapi-secrets.yaml
+
+# Remove lapi-secret checksum annotation (secret now managed by ExternalSecrets)
+sed -i '/checksum\/lapi-secret/d' helm/templates/lapi-deployment.yaml

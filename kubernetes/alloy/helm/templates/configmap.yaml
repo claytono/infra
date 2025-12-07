@@ -72,3 +72,16 @@ data:
         url = "http://loki-gateway/loki/api/v1/push"
       }
     }
+    
+    // Generic syslog receiver - any device can send here
+    // UniFi and many devices use RFC3164 (BSD syslog) format
+    // RFC3164 lacks timezone info, so we use receive time (network latency is negligible)
+    loki.source.syslog "syslog" {
+      listener {
+        address       = "0.0.0.0:5514"
+        protocol      = "udp"
+        syslog_format = "rfc3164"
+        labels        = { job = "syslog" }
+      }
+      forward_to = [loki.write.loki.receiver]
+    }

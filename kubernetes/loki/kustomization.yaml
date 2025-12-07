@@ -9,6 +9,8 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
+- ingress.yaml
+- externalsecret-basic-auth.yaml
 - helm/templates/single-binary/statefulset.yaml
 - helm/templates/serviceaccount.yaml
 - helm/templates/single-binary/service.yaml

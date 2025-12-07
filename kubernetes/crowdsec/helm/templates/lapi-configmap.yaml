@@ -1,0 +1,26 @@
+---
+# Source: crowdsec/templates/lapi-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crowdsec-config-local
+data:
+  config.yaml.local: |
+    db_config:
+      type: postgresql
+      user: crowdsec
+      password: ${DB_PASSWORD}
+      db_name: crowdsec
+      host: crowdsec-postgres-rw
+      port: 5432
+      sslmode: require
+    api:
+      server:
+        auto_registration:
+          enabled: true
+          token: "${REGISTRATION_TOKEN}"
+          allowed_ranges:
+            - "127.0.0.1/32"
+            - "192.168.0.0/16"
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"

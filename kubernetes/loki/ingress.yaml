@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: loki
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: loki-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: Loki - Authentication Required
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - loki.k.oneill.net
+    secretName: loki-tls
+  rules:
+  - host: loki.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: loki-gateway
+            port:
+              number: 80

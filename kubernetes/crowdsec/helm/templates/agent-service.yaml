@@ -1,0 +1,19 @@
+---
+# Source: crowdsec/templates/agent-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: crowdsec-agent-service
+  labels:
+    app: crowdsec-agent-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6060
+      targetPort: 6060
+      protocol: TCP
+      name: metrics
+  selector:
+    k8s-app: crowdsec
+    type: agent
+    version: v1

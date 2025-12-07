@@ -1,0 +1,170 @@
+---
+# Source: crowdsec/templates/agent-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crowdsec-agent
+  labels:
+    k8s-app: crowdsec
+    type: agent
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      k8s-app: crowdsec
+      type: agent
+  template:
+    metadata:
+      annotations:
+        checksum/agent-configmap: e0339fc9b855bfc38d5c30bb0074a6219bd027402827dc7275dd914af1c2a934
+        checksum/acquis-configmap: 34bcf16e8c0979f1bc731cd6a0f1f683967533757cd6bfd05f671cb0649877f3
+      labels:
+        k8s-app: crowdsec
+        type: agent
+        version: v1
+    spec:
+      initContainers:
+      - name: wait-for-lapi-and-register
+        image: "crowdsecurity/crowdsec:v1.7.3"
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c', 'until nc "$LAPI_HOST" "$LAPI_PORT" -z; do echo waiting for lapi to start; sleep 5; done; ln -s /staging/etc/crowdsec /etc/crowdsec && cscli lapi register --machine "$USERNAME" -u "$LAPI_URL" --token "$REGISTRATION_TOKEN" && cp /etc/crowdsec/local_api_credentials.yaml /tmp_config/local_api_credentials.yaml']
+        resources:
+          limits:
+            memory: 50Mi
+          requests:
+            cpu: 1m
+            memory: 10Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+        volumeMounts:
+          - name: crowdsec-config
+            mountPath: /tmp_config
+        env:
+          - name: REGISTRATION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: crowdsec-lapi-secrets
+                key: registrationToken
+          - name: USERNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: LAPI_URL
+            value: "http://crowdsec-service.crowdsec:8080"
+          - name: LAPI_HOST
+            value: "crowdsec-service.crowdsec"
+          - name: LAPI_PORT
+            value: "8080"
+      containers:
+      - name: crowdsec-agent
+        image: "crowdsecurity/crowdsec:v1.7.3"
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c', 'cp /tmp_config/local_api_credentials.yaml /staging/etc/crowdsec/local_api_credentials.yaml && ./docker_start.sh']
+        env:
+          - name: DISABLE_LOCAL_API
+            value: "true"
+          - name: DISABLE_ONLINE_API
+            value: "true"
+          - name: CROWDSEC_BYPASS_DB_VOLUME_CHECK
+            value: "true"
+
+
+          # agent - lapi authentication, with TLS or password
+          - name: LOCAL_API_URL
+            value: "http://crowdsec-service.crowdsec:8080"
+          - name: COLLECTIONS
+            value: crowdsecurity/unifi crowdsecurity/linux
+        resources:
+          limits:
+            cpu: 500m
+            memory: 250Mi
+          requests:
+            cpu: 500m
+            memory: 250Mi
+        ports:
+        
+          - name: metrics
+            containerPort: 6060
+            protocol: TCP
+        
+
+        
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /metrics
+            port: metrics
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        
+        
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /metrics
+            port: metrics
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        
+        
+        startupProbe:
+          failureThreshold: 30
+          httpGet:
+            path: /metrics
+            port: metrics
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        
+        
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+
+        volumeMounts:
+          - name: crowdsec-config
+            mountPath: /tmp_config
+          
+          - name: crowdsec-parsers-s00-raw-unifi-loki
+            mountPath: /etc/crowdsec/parsers/s00-raw/unifi-loki.yaml
+            subPath: unifi-loki.yaml
+          
+          
+          - name: acquis-config-volume
+            mountPath: /etc/crowdsec/acquis.yaml
+            subPath: acquis.yaml
+          - name: varlog
+            mountPath: /var/log
+            readOnly: true
+
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: crowdsec-config
+        emptyDir: {}
+      - name: acquis-config-volume
+        configMap:
+          name: acquis-configmap
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: crowdsec-parsers-s00-raw-unifi-loki
+        configMap:
+          name: crowdsec-parsers-s00-raw
+          items:
+          - key: unifi-loki.yaml
+            path: unifi-loki.yaml
+      
+      
+      
+      
+      priorityClassName:
