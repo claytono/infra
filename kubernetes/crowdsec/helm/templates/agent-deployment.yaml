@@ -19,7 +19,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/agent-configmap: e0339fc9b855bfc38d5c30bb0074a6219bd027402827dc7275dd914af1c2a934
+        checksum/agent-configmap: 4e975eb5414dc7eca8dc6ca03453e5767dc45ecefafc8a039e09a5b28c565eeb
         checksum/acquis-configmap: 34bcf16e8c0979f1bc731cd6a0f1f683967533757cd6bfd05f671cb0649877f3
       labels:
         k8s-app: crowdsec
@@ -143,9 +143,6 @@ spec:
           - name: acquis-config-volume
             mountPath: /etc/crowdsec/acquis.yaml
             subPath: acquis.yaml
-          - name: varlog
-            mountPath: /var/log
-            readOnly: true
 
       terminationGracePeriodSeconds: 30
       volumes:
@@ -154,9 +151,6 @@ spec:
       - name: acquis-config-volume
         configMap:
           name: acquis-configmap
-      - name: varlog
-        hostPath:
-          path: /var/log
       - name: crowdsec-parsers-s00-raw-unifi-loki
         configMap:
           name: crowdsec-parsers-s00-raw

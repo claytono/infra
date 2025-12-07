@@ -21,6 +21,5 @@ data:
           token: "${REGISTRATION_TOKEN}"
           allowed_ranges:
             - "127.0.0.1/32"
-            - "192.168.0.0/16"
-            - "10.0.0.0/8"
-            - "172.16.0.0/12"
+            - "10.244.0.0/16"  # Pod network
+            - "10.96.0.0/12"   # Service network
