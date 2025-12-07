@@ -1,0 +1,32 @@
+---
+# Remove resource requests/limits from LAPI deployment
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: crowdsec-lapi
+
+spec:
+  template:
+    spec:
+      containers:
+      - name: crowdsec-lapi
+        resources:
+
+---
+# Remove resource requests/limits from Agent deployment
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: crowdsec-agent
+
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-lapi-and-register
+        resources:
+      containers:
+      - name: crowdsec-agent
+        resources:
