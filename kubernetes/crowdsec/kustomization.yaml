@@ -7,6 +7,9 @@ namespace: crowdsec
 commonAnnotations:
   argoManaged: 'true'
 
+patches:
+- path: patch-remove-resources.yaml
+
 resources:
 - namespace.yaml
 - externalsecret.yaml
