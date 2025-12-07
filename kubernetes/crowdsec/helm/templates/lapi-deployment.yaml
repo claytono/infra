@@ -19,7 +19,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/lapi-configmap: 491ee61ff182a374d55a521788a1820fe2a2d7bf885e41966cd36748f4560ed7
+        checksum/lapi-configmap: c47d7e38cd15972f2aa75868520ef3505471d01525eea856b37d331eb6a3830e
       labels:
         k8s-app: crowdsec
         type: lapi
