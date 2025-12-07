@@ -1,0 +1,32 @@
+---
+# Source: crowdsec/templates/lapi-persistentVolume.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: crowdsec-db-pvc
+  labels:
+    k8s-app: crowdsec
+    type: lapi
+    version: v1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "1Gi"
+---
+# Source: crowdsec/templates/lapi-persistentVolume.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: crowdsec-config-pvc
+  labels:
+    k8s-app: crowdsec
+    type: lapi
+    version: v1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "100Mi"

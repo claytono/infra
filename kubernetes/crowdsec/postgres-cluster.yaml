@@ -1,0 +1,19 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+
+metadata:
+  name: crowdsec-postgres
+
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.7-standard-bookworm@sha256:d3245c74d56dbb575a1869b9d12436bf9da596c5a397de3d9fc8902e8779b13c
+  enablePDB: false
+
+  storage:
+    size: 5Gi
+
+  bootstrap:
+    initdb:
+      database: crowdsec
+      owner: crowdsec

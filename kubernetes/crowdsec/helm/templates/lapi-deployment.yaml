@@ -1,0 +1,154 @@
+---
+# Source: crowdsec/templates/lapi-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crowdsec-lapi
+  labels:
+    k8s-app: crowdsec
+    type: lapi
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: crowdsec
+      type: lapi
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/lapi-configmap: 6be93c31393a2475c1096f610fc55b5363bfdd9d504fd4cfa80fb9ec022f58c3
+      labels:
+        k8s-app: crowdsec
+        type: lapi
+        version: v1
+    spec:
+      containers:
+      - name: crowdsec-lapi
+        image: "crowdsecurity/crowdsec:v1.7.3"
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: LOCAL_API_URL
+            value: http://localhost:8080
+          - name: DISABLE_AGENT
+            value: "true"
+          - name: INSECURE_SKIP_VERIFY
+            value: "false"
+          
+          - name: CS_LAPI_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: crowdsec-lapi-secrets
+                key: csLapiSecret
+          - name: REGISTRATION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: crowdsec-lapi-secrets
+                key: registrationToken
+          - name: CUSTOM_HOSTNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: ENROLL_KEY
+            valueFrom:
+              secretKeyRef:
+                key: enroll_key
+                name: crowdsec
+          - name: ENROLL_INSTANCE_NAME
+            value: homelab-k8s
+          - name: ENROLL_TAGS
+            value: kubernetes homelab
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: crowdsec-postgres-app
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 500m
+            memory: 500Mi
+
+        livenessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          httpGet:
+            path: /health
+            port: lapi
+            scheme: HTTP
+        readinessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          httpGet:
+            path: /health
+            port: lapi
+            scheme: HTTP
+        startupProbe:
+          failureThreshold: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          httpGet:
+            path: /health
+            port: lapi
+            scheme: HTTP
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+
+        ports:
+          - name: lapi
+            containerPort: 8080
+            protocol: TCP
+          - name: metrics
+            containerPort: 6060
+            protocol: TCP
+        
+        command: ['sh', '-c', 'cp -nR /staging/etc/crowdsec/* /etc/crowdsec_data/ && ln -s /etc/crowdsec_data /etc/crowdsec && bash /docker_start.sh']
+        
+        volumeMounts:
+          - name: crowdsec-docker-start-script
+            mountPath: /docker_start.sh
+            subPath: docker_start.sh
+          
+          - name: crowdsec-db
+            mountPath: /var/lib/crowdsec/data
+            subPath: crowdsec
+          - name: crowdsec-config
+            mountPath: /etc/crowdsec_data
+          
+          
+          
+          
+          - name: crowdsec-config-local-volume
+            mountPath: /etc/crowdsec_data/config.yaml.local
+            subPath: config.yaml.local
+          
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: crowdsec-docker-start-script
+        configMap:
+          name: crowdsec-docker-start-script-configmap
+      - name: crowdsec-db
+        persistentVolumeClaim:
+          claimName: crowdsec-db-pvc
+      - name: crowdsec-config
+        persistentVolumeClaim:
+          claimName: crowdsec-config-pvc
+      
+      
+      
+      
+      - name: crowdsec-config-local-volume
+        configMap:
+          name: crowdsec-config-local
+      priorityClassName:

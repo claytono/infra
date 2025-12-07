@@ -47,6 +47,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            -
+              name: TZ
+              value: America/New_York
           ports:
             - containerPort: 12345
               name: http-metrics

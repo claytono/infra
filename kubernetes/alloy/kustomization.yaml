@@ -13,6 +13,7 @@ resources:
 - helm/templates/rbac.yaml
 - helm/templates/service.yaml
 - helm/templates/controllers/daemonset.yaml
+- syslog-service.yaml
 
 labels:
 

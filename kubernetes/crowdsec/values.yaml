@@ -1,0 +1,91 @@
+---
+container_runtime: containerd
+
+config:
+  # Custom parser for UniFi logs from Loki (without syslog header)
+  # Loki strips the timestamp/hostname, leaving just the message body
+  parsers:
+    s00-raw:
+      unifi-loki.yaml: |
+        filter: "evt.Line.Labels.type == 'unifi'"
+        onsuccess: next_stage
+        pattern_syntax:
+          ACTION: (D|R|A)
+          ZONE: (LAN|WAN|LOCAL|VPN|DMZ)
+          UNIFI_FIREWALL_PREFIX: '\[(?:%{ZONE:src_zone}_)?%{ZONE:dst_zone}-%{ACTION:action}-%{INT:rule_id}\]'
+        name: custom/unifi-loki
+        nodes:
+          - grok:
+              pattern: "^%{UNIFI_FIREWALL_PREFIX}%{GREEDYDATA:message}"
+              apply_on: Line.Raw
+        statics:
+          - parsed: program
+            value: kernel
+          - parsed: logsource
+            value: loki
+          - meta: log_type
+            expression: 'evt.Parsed.action not in ["A"] ? "iptables_drop" : "iptables_event"'
+          - meta: action
+            expression: 'evt.Parsed.action == "" ? "" : evt.Parsed.action == "A" ? "accept" : (evt.Parsed.action == "D" ? "drop" : (evt.Parsed.action == "R" ? "reject" : "unknown"))'
+          - meta: datasource_path
+            expression: evt.Line.Src
+          - meta: datasource_type
+            expression: evt.Line.Module
+
+  config.yaml.local: |
+    db_config:
+      type: postgresql
+      user: crowdsec
+      password: ${DB_PASSWORD}
+      db_name: crowdsec
+      host: crowdsec-postgres-rw
+      port: 5432
+      sslmode: require
+    api:
+      server:
+        auto_registration:
+          enabled: true
+          token: "${REGISTRATION_TOKEN}"
+          allowed_ranges:
+            - "127.0.0.1/32"
+            - "192.168.0.0/16"
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"
+
+lapi:
+  replicas: 1
+  env:
+  - name: ENROLL_KEY
+    valueFrom:
+      secretKeyRef:
+        name: crowdsec
+        key: enroll_key
+  - name: ENROLL_INSTANCE_NAME
+    value: homelab-k8s
+  - name: ENROLL_TAGS
+    value: kubernetes homelab
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: crowdsec-postgres-app
+        key: password
+  persistentVolume:
+    data:
+      enabled: true
+    config:
+      enabled: true
+
+agent:
+  # Deploy as Deployment since we're not reading pod logs
+  isDeployment: true
+  replicas: 1
+  # Use Loki as datasource instead of pod logs
+  additionalAcquisition:
+  - source: loki
+    url: http://loki.loki.svc.cluster.local:3100
+    query: '{job="syslog"}'
+    labels:
+      type: unifi
+  env:
+  - name: COLLECTIONS
+    value: crowdsecurity/unifi crowdsecurity/linux

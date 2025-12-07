@@ -1,0 +1,14 @@
+---
+# Source: crowdsec/templates/acquis-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: acquis-configmap
+data:
+  acquis.yaml: |-
+    ---
+    labels:
+      type: unifi
+    query: '{job="syslog"}'
+    source: loki
+    url: http://loki.loki.svc.cluster.local:3100

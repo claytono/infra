@@ -1,0 +1,23 @@
+---
+# Source: crowdsec/templates/lapi-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: crowdsec-service
+  labels:
+    app: crowdsec-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6060
+      targetPort: 6060
+      protocol: TCP
+      name: metrics
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: lapi
+  selector:
+    k8s-app: crowdsec
+    type: lapi
+    version: v1
