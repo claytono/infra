@@ -23,7 +23,7 @@ data:
       - parsed: logsource
         value: loki
       - meta: log_type
-        expression: 'evt.Parsed.action not in ["A"] ? "iptables_drop" : "iptables_event"'
+        expression: 'evt.Parsed.action != "A" ? "iptables_drop" : "iptables_event"'
       - meta: action
         expression: 'evt.Parsed.action == "" ? "" : evt.Parsed.action == "A" ? "accept" : (evt.Parsed.action == "D" ? "drop" : (evt.Parsed.action == "R" ? "reject" : "unknown"))'
       - meta: datasource_path
