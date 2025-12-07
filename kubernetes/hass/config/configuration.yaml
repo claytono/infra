@@ -766,6 +766,46 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
+  - name: Soil Battery WH51 0eb421
+    unique_id: wh51_0eb421_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0eb421]
+
+  - name: Soil Battery WH51 0eb446
+    unique_id: wh51_0eb446_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0eb446]
+
+  - name: Soil Battery WH51 0eadc9 (Other Veggies)
+    unique_id: wh51_0eadc9_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0eadc9]
+
+  - name: Soil Battery WH51 0ed338 (Strawberries)
+    unique_id: wh51_0ed338_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ed338
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0ed338]
+
   - name: Rain Meter WH40 51409
     unique_id: wh40_51409_rain
     state_topic: rtl_433/devices/EcoWitt-WH40/51409
@@ -789,6 +829,16 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
+  - name: Rain Meter Battery WH40 51409
+    unique_id: wh40_51409_battery
+    state_topic: rtl_433/devices/EcoWitt-WH40/51409
+    value_template: '{{ value_json.battery_V | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh40_51409]
+
   - name: Gas Meter Consumption
     unique_id: scmplus_98864084_consumption
     state_topic: rtl_433/devices/SCMplus/98864084
@@ -810,3 +860,59 @@ mqtt:
       name: SCM+ Gas Meter 98864084
       model: SCM+
       via_device: rtl_433
+
+  binary_sensor:
+  - name: Soil Battery Low WH51 0eb421
+    unique_id: wh51_0eb421_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0eb421]
+
+  - name: Soil Battery Low WH51 0eb446
+    unique_id: wh51_0eb446_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0eb446]
+
+  - name: Soil Battery Low WH51 0eadc9 (Other Veggies)
+    unique_id: wh51_0eadc9_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0eadc9]
+
+  - name: Soil Battery Low WH51 0ed338 (Strawberries)
+    unique_id: wh51_0ed338_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ed338
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0ed338]
+
+  - name: Rain Meter Battery Low WH40 51409
+    unique_id: wh40_51409_battery_low
+    state_topic: rtl_433/devices/EcoWitt-WH40/51409
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh40_51409]
