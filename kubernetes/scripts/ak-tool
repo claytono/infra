@@ -332,6 +332,41 @@ def collect_app_infos_from_ingresses(base_dir):
     return sorted_app_infos
 
 
+def cleanup_orphaned_files(app_infos, generated_dir):
+    """Remove generated files for apps that no longer exist. Returns True if any files were removed."""
+    # Build set of expected generated file prefixes
+    expected_apps = {info["app_name"] for info in app_infos}
+    oidc_apps = {
+        info["app_name"] for info in app_infos if info.get("auth_type") == "oidc"
+    }
+
+    removed = False
+    for tf_file in generated_dir.glob("generated-*.tf"):
+        filename = tf_file.name
+
+        # Skip special files
+        if filename == "generated-outpost.tf":
+            continue
+
+        # Handle OIDC 1Password files (generated-<app>-oidc-1p.tf)
+        if filename.endswith("-oidc-1p.tf"):
+            app_name = filename[len("generated-") : -len("-oidc-1p.tf")]
+            if app_name not in oidc_apps:
+                tf_file.unlink()
+                print(f"  ✗ {filename} [REMOVED - orphaned]")
+                removed = True
+            continue
+
+        # Handle app config files (generated-<app>.tf)
+        app_name = filename[len("generated-") : -len(".tf")]
+        if app_name not in expected_apps:
+            tf_file.unlink()
+            print(f"  ✗ {filename} [REMOVED - orphaned]")
+            removed = True
+
+    return removed
+
+
 def generate_terraform_files(app_infos, generated_dir):
     """Generate .tf files for all applications using Jinja2. Returns True if any files changed."""
     env = Environment(
@@ -574,6 +609,9 @@ def cmd_generate(_: argparse.Namespace) -> int:
             generated_dir = OPENTOFU_DIR / "modules" / "authentik"
             generated_dir.mkdir(parents=True, exist_ok=True)
 
+            # Clean up orphaned files first
+            cleanup_changed = cleanup_orphaned_files(app_infos, generated_dir)
+
             files_changed = generate_terraform_files(app_infos, generated_dir)
             outpost_changed = generate_outpost_file(app_infos, generated_dir)
 
@@ -581,7 +619,9 @@ def cmd_generate(_: argparse.Namespace) -> int:
             oidc_titles = collect_oidc_titles_from_ingresses(app_infos)
             oidc_changed = generate_oidc_1p_file_from_titles(oidc_titles)
 
-            any_changed = files_changed or outpost_changed or oidc_changed
+            any_changed = (
+                cleanup_changed or files_changed or outpost_changed or oidc_changed
+            )
             print(f"\nGenerated Terraform files in {generated_dir}")
 
             if any_changed:
