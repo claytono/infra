@@ -1,0 +1,56 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: getmail
+
+spec:
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: getmail
+            image: debian:trixie-slim
+            command:
+            - /bin/sh
+            - -c
+            - |
+              apt-get update && apt-get install -y --no-install-recommends getmail6 procmail ca-certificates
+              useradd -u 10001 -m getmail
+              mkdir -p /home/getmail/.config/getmail
+              ln -sf /config/procmailrc /home/getmail/.procmailrc
+              cp /config/getmailrc /home/getmail/.config/getmail/getmailrc
+              chown -R getmail:getmail /home/getmail /mail
+              su -s /bin/sh getmail -c '/usr/bin/getmail'
+            env:
+            - name: HOME
+              value: /home/getmail
+            volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: credentials
+              mountPath: /secrets
+              readOnly: true
+            - name: mail
+              mountPath: /mail
+            - name: home
+              mountPath: /home/getmail
+          volumes:
+          - name: config
+            configMap:
+              name: getmail-config
+          - name: credentials
+            secret:
+              secretName: getmail-credentials
+          - name: mail
+            nfs:
+              server: fs2.oneill.net
+              path: /volume2/backups/mail
+          - name: home
+            emptyDir: {}
+          restartPolicy: OnFailure
