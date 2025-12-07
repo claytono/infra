@@ -22,4 +22,4 @@ data:
           allowed_ranges:
             - "127.0.0.1/32"
             - "10.244.0.0/16"  # Pod network
-            - "10.96.0.0/12"   # Service network
+            - "10.96.0.0/12"  # Service network
