@@ -16,7 +16,7 @@ resources:
 images:
 - name: qbittorrent
   newName: ghcr.io/linuxserver/qbittorrent
-  newTag: 5.1.4@sha256:f0465dbb2aa14397fd205a0240ee562eb062354c036ccc444084fe46c6c75091
+  newTag: 5.1.4@sha256:043498de39c3dd63eec94360c5ad966a51271d1581070f42cb73ab0cf4776f29
 
 labels:
 
