@@ -35,15 +35,21 @@ if [[ $# -eq 0 ]]; then
     echo "Waiting for systemd to be ready..."
 
     # Poll for systemd readiness (wait up to 60 seconds)
+    # Note: systemctl is-system-running exits non-zero for "degraded" status,
+    # so we capture stdout separately and ignore the exit code
     SYSTEMD_READY=false
     for ((i=1; i<=60; i++)); do
-        STATUS=$(docker exec "$CONTAINER_ID" systemctl is-system-running 2>&1 || echo "error")
+        STATUS=$(docker exec "$CONTAINER_ID" systemctl is-system-running 2>/dev/null) || true
         # Print status every 10 seconds for debugging
         if (( i % 10 == 0 )); then
             echo "[$i] systemd status: $STATUS"
         fi
         if [[ "$STATUS" == "running" || "$STATUS" == "degraded" ]]; then
             echo "Systemd is ready: $STATUS (after ${i}s)"
+            if [[ "$STATUS" == "degraded" ]]; then
+                echo "Failed units:"
+                docker exec "$CONTAINER_ID" systemctl --failed --no-pager || true
+            fi
             SYSTEMD_READY=true
             break
         fi
