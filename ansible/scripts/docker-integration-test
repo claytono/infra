@@ -37,16 +37,22 @@ if [[ $# -eq 0 ]]; then
     # Poll for systemd readiness (wait up to 60 seconds)
     SYSTEMD_READY=false
     for ((i=1; i<=60; i++)); do
-        STATUS=$(docker exec "$CONTAINER_ID" systemctl is-system-running 2>/dev/null || echo "starting")
+        STATUS=$(docker exec "$CONTAINER_ID" systemctl is-system-running 2>&1 || echo "error")
+        # Print status every 10 seconds for debugging
+        if (( i % 10 == 0 )); then
+            echo "[$i] systemd status: $STATUS"
+        fi
         if [[ "$STATUS" == "running" || "$STATUS" == "degraded" ]]; then
-            echo "Systemd is ready: $STATUS"
+            echo "Systemd is ready: $STATUS (after ${i}s)"
             SYSTEMD_READY=true
             break
         fi
         sleep 1
     done
     if [[ "$SYSTEMD_READY" != "true" ]]; then
-        echo "Systemd did not become ready in time"
+        echo "Systemd did not become ready in time (last status: $STATUS)"
+        echo "Container logs:"
+        docker logs "$CONTAINER_ID" 2>&1 | tail -100
         docker stop "$CONTAINER_ID" > /dev/null
         docker rm "$CONTAINER_ID" > /dev/null
         exit 1
