@@ -225,6 +225,24 @@
       ],
       "pinDigests": false,
       "description": "Disable digest pinning for ESPHome Docker images managed by custom regex"
+    },
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchFileNames": [
+        "Dockerfile.ansible"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "minimumReleaseAge": "0 days",
+      "automerge": true,
+      "automergeType": "pr",
+      "addLabels": [
+        "automerge"
+      ],
+      "description": "Auto-merge digest updates for CI base image"
     }
   ],
   "gitIgnoredAuthors": [

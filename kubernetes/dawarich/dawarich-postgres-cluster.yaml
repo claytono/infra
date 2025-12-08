@@ -7,7 +7,7 @@ metadata:
 
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgis:17.7-3.6.1-standard-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgis:17.7-3.6.1-standard-trixie@sha256:168efc33d74d2aacc3e6a4793e6a3e812d6d4c193ec292274d655eed242d8755
   enablePDB: false
 
   storage:
