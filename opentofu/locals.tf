@@ -94,5 +94,11 @@ locals {
       hostname = "infrapi.oneill.net"
       note     = "Infrastructure services (NUT)"
     }
+    infra1 = {
+      mac      = "c0:3f:d5:6a:49:30"
+      ip       = "172.19.74.31"
+      hostname = "infra1.oneill.net"
+      note     = "Infrastructure services (replacement for infrapi)"
+    }
   }
 }
