@@ -1,0 +1,43 @@
+---
+fullnameOverride: smtp
+
+service:
+  type: LoadBalancer
+  port: 587
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: smtp.k.oneill.net
+    metallb.io/allow-shared-ip: plexmediaserver
+  spec:
+    loadBalancerIP: 172.19.74.21
+
+persistence:
+  enabled: true
+  size: 1Gi
+
+# Secrets injected via environment from ExternalSecret
+existingSecret: smtp-relay
+
+# TLS - enable chart's TLS support (mounts, init script)
+# The actual cert comes from cert-manager Certificate that creates smtp-certs secret
+certs:
+  create: true
+
+config:
+  general:
+    # Domains allowed to send through this relay
+    ALLOWED_SENDER_DOMAINS: oneill.net k.oneill.net fnord.net
+
+    # Gmail relay configuration
+    RELAYHOST: "[smtp.gmail.com]:587"
+    RELAYHOST_USERNAME: clayton.oneill@gmail.com
+    # RELAYHOST_PASSWORD: from existingSecret
+
+    # Inbound SASL authentication for clients
+    # SMTPD_SASL_USERS: from existingSecret (format: user@domain:password)
+
+  postfix:
+    myhostname: smtp.k.oneill.net
+    # Networks allowed to connect (still requires SASL auth to relay)
+    mynetworks: "127.0.0.0/8 10.244.0.0/16 172.19.74.0/24 172.20.4.0/20"
+    # TLS for outbound connections to Gmail
+    smtp_tls_security_level: encrypt

@@ -144,7 +144,10 @@ def build_app_info_from_ingress(ingress, file_path):
     ingress_name = metadata.get("name")
     if not ingress_name:
         raise ValueError("Ingress missing required 'name' field in metadata")
-    namespace = metadata.get("namespace", "default")
+
+    # Get namespace: prefer ak-namespace annotation, then metadata.namespace, then default
+    annotations = metadata.get("annotations", {}) or {}
+    namespace = annotations.get("ak-namespace") or metadata.get("namespace") or "default"
 
     # Get external host from first rule
     rules = spec.get("rules", [])
@@ -190,7 +193,6 @@ def build_app_info_from_ingress(ingress, file_path):
     internal_host = f"http://{k8s_service_name}.{namespace}.svc.cluster.local:{port}"
 
     # Optional path exclusions from annotation "ak-path-exclude"
-    annotations = metadata.get("annotations", {})
     raw_excludes = annotations.get("ak-path-exclude", "")
 
     exclude_patterns = []

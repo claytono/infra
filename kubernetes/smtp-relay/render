@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir tmp helm
+
+helm_template smtp mail \
+	--namespace smtp-relay \
+	--values values.yaml \
+	--output-dir tmp
+
+# Move templates directly to helm/
+mv tmp/mail/templates/* helm/
+
+# Remove test manifests
+rm -rf helm/tests
+
+# Remove helm-generated self-signed cert (we use cert-manager instead)
+rm -f helm/secret-cert.yaml
+
+# Remove deploy-date and checksum annotations (Reloader handles config changes)
+sed -i.bak '/date\/deploy-date:/d' helm/statefulset.yaml
+sed -i.bak '/checksum\/configmap:/d' helm/statefulset.yaml
+sed -i.bak '/# https:\/\/keel.sh/d' helm/statefulset.yaml
+sed -i.bak '/# Current consensus on a best way/d' helm/statefulset.yaml
+sed -i.bak '/# Reload for Statefulset when configmap/d' helm/statefulset.yaml
+rm -f helm/*.bak
+
+# Clean up
+rm -rf tmp

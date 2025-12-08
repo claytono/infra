@@ -116,3 +116,31 @@ data "onepassword_item" "proxmox_opentofu" {
 locals {
   proxmox_api_token = "${data.onepassword_item.proxmox_opentofu.username}=${data.onepassword_item.proxmox_opentofu.credential}"
 }
+
+# Healthchecks API keys from 1Password (cloud and self-hosted instances)
+data "onepassword_item" "healthchecks_cloud" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "healthchecks-io"
+}
+
+data "onepassword_item" "healthchecks_selfhosted" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "healthchecks"
+}
+
+locals {
+  healthchecks_cloud_fields = {
+    for f in flatten([
+      for sec in data.onepassword_item.healthchecks_cloud.section : sec.field
+    ]) : f.label => f.value
+  }
+  healthchecks_selfhosted_fields = {
+    for f in flatten([
+      for sec in data.onepassword_item.healthchecks_selfhosted.section : sec.field
+    ]) : f.label => f.value
+  }
+
+  healthchecks_cloud_api_key      = local.healthchecks_cloud_fields["API_KEY"]
+  healthchecks_selfhosted_api_key = local.healthchecks_selfhosted_fields["api-key"]
+  healthchecks_canary_api_key     = local.healthchecks_selfhosted_fields["canary-api-key"]
+}

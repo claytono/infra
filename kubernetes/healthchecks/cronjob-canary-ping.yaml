@@ -1,0 +1,35 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: canary-ping
+spec:
+  # Run hourly - canary has 50min timeout, so it goes DOWN ~10min before next ping
+  # Each DOWN transition sends email to cloud healthchecks.io, verifying full stack
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 60
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: ping
+            image: curlimages/curl:8.11.1
+            env:
+            - name: CANARY_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: CANARY_PING_KEY
+            args:
+            - -fv
+            - -m
+            - "10"
+            - --retry
+            - "2"
+            - https://hc.k.oneill.net/ping/$(CANARY_PING_KEY)/heartbeat-canary
