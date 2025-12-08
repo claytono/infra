@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+name: smtp-relay
+version: 1.0.0
+dependencies:
+- name: mail
+  version: 4.4.0
+  repository: https://bokysan.github.io/docker-postfix/

@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+
+metadata:
+  name: smtp-certs
+
+spec:
+  # Must match the secret name expected by the helm chart (fullnameOverride + "-certs")
+  secretName: smtp-certs
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+  - smtp.k.oneill.net

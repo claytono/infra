@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASEDIR"
+
+rm -rf helm tmp
+mkdir -p tmp helm/healthchecks
+
+# Build dependencies and render
+helm dependency build .
+helm template healthchecks . --namespace healthchecks --values values.yaml --output-dir tmp
+
+# Move templates to helm
+mv tmp/healthchecks/charts/healthchecks/templates/* helm/healthchecks/
+
+# Clean up
+rm -rf tmp
+rm -rf helm/*/tests
+
+echo "Rendered Healthchecks manifests into helm/healthchecks/"

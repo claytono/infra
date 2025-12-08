@@ -1,0 +1,31 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: smtp-relay
+
+resources:
+- namespace.yaml
+- certificate.yaml
+- externalsecret.yaml
+- helm/serviceaccount.yaml
+- helm/configmap.yaml
+- helm/service.yaml
+- helm/statefulset.yaml
+
+patches:
+- patch: |-
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: smtp
+      annotations:
+        reloader.stakater.com/auto: "true"
+  target:
+    kind: StatefulSet
+    name: smtp
+
+labels:
+- pairs:
+    argoManaged: 'true'
+  includeSelectors: false

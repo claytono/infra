@@ -13,6 +13,9 @@ resource "authentik_provider_proxy" "alertmanager" {
   access_token_validity = "hours=1"
 
 
+  skip_path_regex = <<-EOT
+^https://alertmanager.k.oneill.net/api/.*
+  EOT
 }
 
 resource "authentik_application" "alertmanager" {

@@ -1,0 +1,6 @@
+dependencies:
+- name: healthchecks
+  repository: oci://ghcr.io/gabe565/charts
+  version: 0.17.0
+digest: sha256:e28a2cf7b76bb69b85436f6394026173af797ca435087ad4bd69938351f01a00
+generated: "2025-12-08T20:23:24.533813031Z"

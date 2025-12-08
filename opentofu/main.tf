@@ -50,6 +50,10 @@ terraform {
       source  = "bpg/proxmox"
       version = "~> 0.88"
     }
+    healthchecksio = {
+      source  = "kristofferahl/healthchecksio"
+      version = "~> 2.0"
+    }
   }
 
   backend "s3" {
@@ -127,4 +131,22 @@ provider "authentik" {
 module "authentik" {
   source                 = "./modules/authentik"
   onepassword_vault_uuid = data.onepassword_vault.infra.uuid
+}
+
+# Healthchecks providers - cloud (hosted) and self-hosted instances
+provider "healthchecksio" {
+  alias   = "cloud"
+  api_key = local.healthchecks_cloud_api_key
+}
+
+provider "healthchecksio" {
+  alias   = "selfhosted"
+  api_key = local.healthchecks_selfhosted_api_key
+  api_url = "https://hc.k.oneill.net/api/v1"
+}
+
+provider "healthchecksio" {
+  alias   = "canary"
+  api_key = local.healthchecks_canary_api_key
+  api_url = "https://hc.k.oneill.net/api/v1"
 }

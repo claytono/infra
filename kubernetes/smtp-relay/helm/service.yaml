@@ -1,0 +1,56 @@
+---
+# Source: mail/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: "smtp"
+  labels:
+    app.kubernetes.io/name: mail
+    app.kubernetes.io/instance: smtp
+    app.kubernetes.io/version: "4.4.0"
+    app.kubernetes.io/managed-by: Helm
+    type: standard
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: smtp.k.oneill.net
+    metallb.io/allow-shared-ip: plexmediaserver
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 172.19.74.21
+  ports:
+    - port: 587
+      targetPort: smtp
+      protocol: TCP
+      name: smtp
+      
+      
+  selector:
+    app.kubernetes.io/name: mail
+    app.kubernetes.io/instance: smtp
+---
+# Source: mail/templates/service.yaml
+# https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
+# StatefulSets now require a headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: "smtp-headless"
+  namespace: "smtp-relay"
+  labels:
+    app.kubernetes.io/name: mail
+    app.kubernetes.io/instance: smtp
+    app.kubernetes.io/version: "4.4.0"
+    app.kubernetes.io/managed-by: Helm
+    type: headless
+  annotations:
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 587
+      targetPort: smtp
+      protocol: TCP
+      name: smtp
+      
+  selector:
+    app.kubernetes.io/name: mail
+    app.kubernetes.io/instance: smtp

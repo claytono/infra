@@ -1,10 +1,11 @@
 ---
 global:
-    # The smarthost and SMTP sender used for mail notifications.
-  smtp_smarthost: smtp.gmail.com:587
-  smtp_from: clayton@oneill.net
-  smtp_auth_username: clayton.oneill@gmail.com
+  # SMTP relay for mail notifications
+  smtp_smarthost: smtp.k.oneill.net:587
+  smtp_from: alertmanager@oneill.net
+  smtp_auth_username: '{{ .Env.SMTP_USERNAME }}'
   smtp_auth_password: '{{ .Env.SMTP_PASSWORD }}'
+  smtp_require_tls: true
 
 # # The directory from which notification templates are read.
 templates:
