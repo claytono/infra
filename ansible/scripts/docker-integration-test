@@ -27,7 +27,7 @@ if [[ $# -eq 0 ]]; then
       --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
       --cgroupns=host \
       --hostname ansible-integration-test \
-      -v "$(pwd)/ansible/ansible-vault-password:/run/secrets/ansible-vault-password:ro" \
+      -v "$(pwd)/ansible/ansible-vault-password:/var/lib/ansible-vault-password:ro" \
       --entrypoint /lib/systemd/systemd \
       ansible-integration-test)
 
@@ -65,8 +65,8 @@ if [[ $# -eq 0 ]]; then
     fi
 
     # Copy vault password to workspace and execute the playbook inside the running container
-    # Note: Mount to /run/secrets/ instead of /tmp because systemd mounts tmpfs over /tmp
-    docker exec "$CONTAINER_ID" cp /run/secrets/ansible-vault-password /workspace/ansible/ansible-vault-password
+    # Note: Mount to /var/lib/ because systemd mounts tmpfs over /tmp and /run
+    docker exec "$CONTAINER_ID" cp /var/lib/ansible-vault-password /workspace/ansible/ansible-vault-password
     if docker exec "$CONTAINER_ID" bash -c "cd /workspace && nix develop --command bash -c 'cd ansible && ansible-playbook -i inventory/test_local site.yaml'"; then
         EXIT_CODE=0
     else
