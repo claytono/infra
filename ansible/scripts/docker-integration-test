@@ -64,6 +64,12 @@ if [[ $# -eq 0 ]]; then
         exit 1
     fi
 
+    # Debug: check what's in /tmp and verify mount
+    echo "Contents of /tmp in container:"
+    docker exec "$CONTAINER_ID" ls -la /tmp || true
+    echo "Mount points:"
+    docker exec "$CONTAINER_ID" mount | grep tmp || true
+
     # Copy vault password to workspace and execute the playbook inside the running container
     docker exec "$CONTAINER_ID" cp /tmp/ansible-vault-password /workspace/ansible/ansible-vault-password
     if docker exec "$CONTAINER_ID" bash -c "cd /workspace && nix develop --command bash -c 'cd ansible && ansible-playbook -i inventory/test_local site.yaml'"; then
