@@ -10,6 +10,7 @@ p3 ansible_host=p3.oneill.net domain=oneill.net
 #gasherbrum ansible_host=gasherbrum.oneill.net domain=oneill.net
 #gasherbrum-display ansible_host=gasherbrum-display.oneill.net domain=oneill.net
 zwavejs ansible_host=zwavejs.oneill.net domain=oneill.net
+infra1 ansible_host=infra1.oneill.net domain=oneill.net
 infrapi ansible_host=infrapi.oneill.net domain=oneill.net
 p2 ansible_host=p2.oneill.net domain=oneill.net
 p4 ansible_host=p4.oneill.net domain=oneill.net
