@@ -6,6 +6,8 @@ metadata:
   name: qbittorrent
   labels:
     app: qbittorrent
+  annotations:
+    goldilocks.fairwinds.com/vpa-resource-policy: '{"containerPolicies":[{"containerName":"*","controlledValues":"RequestsOnly","maxAllowed":{"memory":"2Gi"}}]}'
 
 spec:
   strategy:
