@@ -3,7 +3,7 @@
 Render and sync script for restic kubernetes resources.
 
 Renders:
-  - Generates maintenance cronjobs from Jinja2 template
+  - Generates forget and check cronjobs from Jinja2 template
 
 Syncs:
   - Creates/retrieves plaintext passwords from 1Password
@@ -36,9 +36,12 @@ ANSIBLE_VAULT_PASSWORD_FILE = REPO_ROOT / "ansible/ansible-vault-password"
 # Repos to manage - adding a repo here:
 # 1. Creates password in 1Password
 # 2. Updates htpasswd for REST server
-# 3. Generates maintenance cronjob (forget + check)
+# 3. Generates forget and check cronjobs
 # 4. Updates Ansible vault secrets
 REPOS = ["main", "flux", "xtal"]
+
+# Commands to generate cronjobs for (each gets its own job and healthcheck)
+COMMANDS = ["forget", "check"]
 
 
 def run(cmd: list[str], capture: bool = False, check: bool = True) -> str:
@@ -57,36 +60,40 @@ def run(cmd: list[str], capture: bool = False, check: bool = True) -> str:
     return result.stdout.strip() if capture else ""
 
 
-def schedule_from_name(name: str) -> str:
-    """Generate deterministic schedule from repo name.
+def schedule_from_name(name: str, offset_hours: int = 0) -> str:
+    """Generate deterministic schedule from name.
 
-    Spreads maintenance jobs throughout the week based on hash of name.
+    Spreads jobs throughout the week based on hash of name.
     Runs once weekly on a calculated day/hour.
+    offset_hours can be used to stagger related jobs (e.g., check after forget).
     """
     h = int(hashlib.md5(name.encode()).hexdigest()[:8], 16)
     day = h % 7  # Day of week 0-6 (Sunday-Saturday)
-    hour = 6 + (h % 12)  # Hours 6-17 (6am-5pm)
+    hour = (6 + (h % 12) + offset_hours) % 24  # Base hours 6-17, offset wraps to 0-23
     minute = h % 60
 
     return f"{minute} {hour} * * {day}"
 
 
 def generate_cronjobs() -> None:
-    """Generate maintenance cronjobs from Jinja2 template."""
+    """Generate forget and check cronjobs from Jinja2 template."""
     print("Generating cronjobs...")
     env = Environment(loader=FileSystemLoader(BASEDIR))
-    template = env.get_template("cronjob-maintenance.yaml.j2")
+    template = env.get_template("cronjob-nfs.yaml.j2")
     outdir = BASEDIR / "cronjobs"
 
     for repo in REPOS:
-        schedule = schedule_from_name(repo)
-        content = template.render(
-            profile=repo,
-            schedule=schedule,
-        )
-        outfile = outdir / f"cronjob-{repo}-maintenance.yaml"
-        outfile.write_text(content)
-        print(f"  Generated {outfile.name} (schedule: {schedule})")
+        for i, command in enumerate(COMMANDS):
+            # Offset check by 2 hours after forget
+            schedule = schedule_from_name(repo, offset_hours=i * 2)
+            content = template.render(
+                profile=repo,
+                command=command,
+                schedule=schedule,
+            )
+            outfile = outdir / f"cronjob-{repo}-{command}.yaml"
+            outfile.write_text(content)
+            print(f"  Generated {outfile.name} (schedule: {schedule})")
 
 
 def ensure_1password_item() -> None:
@@ -177,7 +184,7 @@ def encrypt_password(password: str) -> str:
 
 
 def sync_healthchecks() -> None:
-    """Create/update Healthchecks.io entries for each repo."""
+    """Create/update healthchecks entries for each repo and command."""
     print("Syncing healthchecks...")
 
     api_key = os.environ.get("HEALTHCHECK_API_KEY")
@@ -186,36 +193,37 @@ def sync_healthchecks() -> None:
         return
 
     for repo in REPOS:
-        slug = f"kube-restic-{repo}-maintenance"
-        schedule = schedule_from_name(repo)
+        for i, command in enumerate(COMMANDS):
+            slug = f"kube-restic-{repo}-{command}"
+            schedule = schedule_from_name(repo, offset_hours=i * 2)
 
-        data = {
-            "name": slug,
-            "slug": slug,
-            "schedule": schedule,
-            "tz": "America/New_York",
-            "tags": "restic kubernetes",
-            "grace": 86400,
-            "unique": ["slug"],
-        }
+            data = {
+                "name": slug,
+                "slug": slug,
+                "schedule": schedule,
+                "tz": "America/New_York",
+                "tags": "backup kubernetes restic",
+                "grace": 86400,
+                "unique": ["slug"],
+            }
 
-        req = urllib.request.Request(
-            "https://healthchecks.io/api/v3/checks/",
-            data=json.dumps(data).encode(),
-            headers={
-                "X-Api-Key": api_key,
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
+            req = urllib.request.Request(
+                "https://hc.k.oneill.net/api/v3/checks/",
+                data=json.dumps(data).encode(),
+                headers={
+                    "X-Api-Key": api_key,
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
 
-        try:
-            with urllib.request.urlopen(req) as resp:
-                resp.read()  # Ensure request completes
-                print(f"  Created/updated: {slug} (schedule: {schedule})")
-        except urllib.error.HTTPError as e:
-            body = e.read().decode()
-            print(f"  Error for {slug}: {e.code} {e.reason}: {body}", file=sys.stderr)
+            try:
+                with urllib.request.urlopen(req) as resp:
+                    resp.read()  # Ensure request completes
+                    print(f"  Created/updated: {slug} (schedule: {schedule})")
+            except urllib.error.HTTPError as e:
+                body = e.read().decode()
+                print(f"  Error for {slug}: {e.code} {e.reason}: {body}", file=sys.stderr)
 
 
 def sync_secrets() -> None:

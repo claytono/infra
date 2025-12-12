@@ -50,7 +50,7 @@ BACKUP_COUNT=$(echo "$BACKUPS_JSON" | jq -r '.items | length')
 
 if [ "$BACKUP_COUNT" -eq 0 ]; then
   echo "ERROR: No backups found"
-  wget -q -O- "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/velero-daily-backup/fail" \
+  wget -q -O- "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/velero-daily-backup/fail" \
     --post-data "No backups found"
   exit 1
 fi
@@ -87,12 +87,12 @@ done
 # Check if we found a successful backup
 if [ -z "$FOUND_BACKUP" ]; then
   echo "ERROR: No completed backup found in past 48 hours"
-  wget -q -O- "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/velero-daily-backup/fail" \
+  wget -q -O- "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/velero-daily-backup/fail" \
     --post-data "No completed backup found in past 48 hours"
   exit 1
 fi
 
 # Success!
 echo "SUCCESS: Backup $FOUND_BACKUP completed successfully (${FOUND_AGE}h ago)"
-wget -q -O- "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/velero-daily-backup" \
+wget -q -O- "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/velero-daily-backup" \
   --post-data "Backup: $FOUND_BACKUP completed successfully (${FOUND_AGE}h ago)"

@@ -30,28 +30,27 @@ b2:
     exclude:
     - /source/backups/arq
     - /source/backups/restic
-    - /source/k8s-pv/default-resticprofile-cache*
-    - /source/k8s-pv/default-prometheus-data/
+    - /source/k8s-pv/*-resticprofile-cache*
+    - /source/k8s-pv/*-prometheus-data/
     - /source/shared/video/tv
     - /source/shared/video/channels
     - /source/shared/video/movies
     - /source/shared/downloads
     no-error-on-warning: true
     run-before: &run_before |
-      echo "Pinging start URL: https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)"
-      wget "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
+      echo "Pinging start URL: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)"
+      wget "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
       Command: $PROFILE_COMMAND
       "
     run-finally: &run_finally |
       rc="${ERROR_EXIT_CODE:-0}";
-      echo "Pinging finish URL: https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)"
-      wget "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
+      echo "Pinging finish URL: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)"
+      wget "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
       Command: $PROFILE_COMMAND
       Message: $ERROR_MESSAGE
       Command-line: $ERROR_COMMANDLINE
       Stderr: $ERROR_STDERR
       "
-    check-after: true
   forget:
     keep-hourly: 24
     keep-daily: 14
@@ -66,6 +65,12 @@ b2:
   prometheus-push: https://pushgateway.k.oneill.net/
   check:
     read-data-subset: 1%
+    run-before: *run_before
+    run-finally: *run_finally
+  rewrite:
+    exclude:
+    - /source/k8s-pv/*-resticprofile-cache*
+    forget: true
 
 # B2 copy profile (copy from local repo to B2)
 main-copy:
@@ -94,8 +99,8 @@ main-copy:
   - backend: b2
   prometheus-push: https://pushgateway.k.oneill.net/
 
-# NFS repo maintenance profile template (forget+check combined job)
-# Healthcheck pings are handled by the cronjob wrapper, not resticprofile hooks
+# NFS repo maintenance profiles
+# Each command (forget, check) runs as separate job with its own healthcheck
 main: &nfs_maintenance
   force-inactive-lock: true
   repository: /source/backups/restic/repos/main
@@ -111,9 +116,13 @@ main: &nfs_maintenance
     keep-weekly: 12
     keep-monthly: 24
     prune: true
+    run-before: *run_before
+    run-finally: *run_finally
 
   check:
     read-data-subset: 1/10
+    run-before: *run_before
+    run-finally: *run_finally
 
   prometheus-labels:
   - host: kubernetes

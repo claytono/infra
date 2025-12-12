@@ -1,0 +1,76 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: resticprofile-flux-check
+
+spec:
+  schedule: "33 17 * * 2"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            resticprofile: flux-check
+          annotations:
+            prometheus.io/scrape: 'true'
+            prometheus.io/path: /metrics
+            prometheus.io/port: '5573'
+        spec:
+          hostname: rp-kube
+          restartPolicy: OnFailure
+          initContainers:
+          - name: generate-uuid
+            image: alpine
+            command: [sh, -c, "apk add --no-cache util-linux && uuidgen >/tmp/uuid"]
+            volumeMounts:
+            - mountPath: /tmp
+              name: scratch
+          containers:
+          - name: resticprofile
+            command:
+            - resticprofile
+            - -c
+            - /resticprofile-config/profiles.yaml
+            - -n
+            - flux
+            - --lock-wait
+            - 6h
+            - check
+            image: creativeprojects/resticprofile
+            imagePullPolicy: IfNotPresent
+            envFrom:
+            - secretRef:
+                name: resticprofile
+            env:
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: resticprofile
+                  key: RESTIC_PASSWORD
+            volumeMounts:
+            - mountPath: /resticprofile-config
+              name: resticprofile-config
+            - mountPath: /tmp
+              name: scratch
+            - mountPath: /cache
+              name: cache
+            - mountPath: /source/backups/restic/repos
+              name: backups
+          volumes:
+          - name: resticprofile-config
+            configMap:
+              name: resticprofile-config
+          - name: scratch
+            emptyDir: {}
+          - name: cache
+            persistentVolumeClaim:
+              claimName: resticprofile-cache
+          - nfs:
+              server: fs2.oneill.net
+              path: /volume2/backups/restic/repos
+            name: backups

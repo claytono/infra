@@ -22,9 +22,9 @@ spec:
               apk add --no-cache rsnapshot openssh-client rsync curl
               mkdir -p /backups/rsnapshot/.ssh
               if rsnapshot -V -c /etc/rsnapshot.conf daily; then
-                curl -fsS -m 10 --retry 5 -o /dev/null "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/rsnapshot-daily"
+                curl -fsS -m 10 --retry 5 -o /dev/null "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/rsnapshot-daily"
               else
-                curl -fsS -m 10 --retry 5 -o /dev/null "https://hc-ping.com/${HEALTHCHECK_PING_KEY}/rsnapshot-daily/fail"
+                curl -fsS -m 10 --retry 5 -o /dev/null "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/rsnapshot-daily/fail"
                 exit 1
               fi
             env:

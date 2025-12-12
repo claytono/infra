@@ -23,11 +23,6 @@ configMapGenerator:
   name: rclone-config
   options:
     disableNameSuffixHash: true
-- files:
-  - maintenance-wrapper.sh
-  name: maintenance-wrapper
-  options:
-    disableNameSuffixHash: true
 
 images:
 - name: alpine
