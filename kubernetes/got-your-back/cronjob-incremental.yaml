@@ -18,11 +18,13 @@ spec:
             command: [/usr/local/bin/run, --fast-incremental]
             imagePullPolicy: Always
             env:
-            - name: PING_URL
+            - name: HEALTHCHECK_PING_KEY
               valueFrom:
                 secretKeyRef:
-                  name: got-your-back
-                  key: incremental_ping_url
+                  name: healthchecks
+                  key: HEALTHCHECK_PING_KEY
+            - name: CHECK_NAME
+              value: got-your-back-incremental
             volumeMounts:
             - name: config
               mountPath: /config

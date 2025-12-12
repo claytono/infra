@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: CronJob
 
 metadata:
-  name: resticprofile-main-maintenance
+  name: resticprofile-main-forget
 
 spec:
   schedule: "55 13 * * 1"
@@ -15,7 +15,7 @@ spec:
       template:
         metadata:
           labels:
-            resticprofile: main-maintenance
+            resticprofile: main-forget
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -33,8 +33,14 @@ spec:
           containers:
           - name: resticprofile
             command:
-            - /scripts/maintenance-wrapper.sh
+            - resticprofile
+            - -c
+            - /resticprofile-config/profiles.yaml
+            - -n
             - main
+            - --lock-wait
+            - 6h
+            - forget
             image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
@@ -49,8 +55,6 @@ spec:
             volumeMounts:
             - mountPath: /resticprofile-config
               name: resticprofile-config
-            - mountPath: /scripts
-              name: scripts
             - mountPath: /tmp
               name: scratch
             - mountPath: /cache
@@ -61,10 +65,6 @@ spec:
           - name: resticprofile-config
             configMap:
               name: resticprofile-config
-          - name: scripts
-            configMap:
-              name: maintenance-wrapper
-              defaultMode: 0755
           - name: scratch
             emptyDir: {}
           - name: cache

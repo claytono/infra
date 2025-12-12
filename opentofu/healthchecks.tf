@@ -41,3 +41,144 @@ resource "healthchecksio_check" "heartbeat_canary" {
   channels = [data.healthchecksio_channel.canary_email.id]
 }
 
+# =============================================================================
+# Self-hosted checks (main project)
+# =============================================================================
+
+# Look up email channel on self-hosted main project
+data "healthchecksio_channel" "selfhosted_email" {
+  provider = healthchecksio.selfhosted
+  kind     = "email"
+}
+
+# Got Your Back - full weekly Gmail backup
+resource "healthchecksio_check" "gyb_full" {
+  provider = healthchecksio.selfhosted
+
+  name     = "got-your-back-full"
+  desc     = "Weekly full Gmail backup via Got Your Back"
+  tags     = ["backup", "kubernetes", "gyb"]
+  timeout  = 604800  # 7 days
+  grace    = 1814400 # 21 days
+  schedule = "18 9 * * 0"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# Got Your Back - incremental backup every 4 hours
+resource "healthchecksio_check" "gyb_incremental" {
+  provider = healthchecksio.selfhosted
+
+  name     = "got-your-back-incremental"
+  desc     = "Incremental Gmail backup via Got Your Back"
+  tags     = ["backup", "kubernetes", "gyb"]
+  timeout  = 14400  # 4 hours
+  grace    = 172800 # 2 days
+  schedule = "13 */4 * * *"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# rsnapshot daily backup
+resource "healthchecksio_check" "rsnapshot_daily" {
+  provider = healthchecksio.selfhosted
+
+  name     = "rsnapshot-daily"
+  desc     = "Daily rsnapshot backup"
+  tags     = ["backup", "kubernetes", "rsnapshot"]
+  timeout  = 86400  # 1 day
+  grace    = 172800 # 2 days
+  schedule = "30 3 * * *"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# rsnapshot weekly backup
+resource "healthchecksio_check" "rsnapshot_weekly" {
+  provider = healthchecksio.selfhosted
+
+  name     = "rsnapshot-weekly"
+  desc     = "Weekly rsnapshot backup"
+  tags     = ["backup", "kubernetes", "rsnapshot"]
+  timeout  = 86400  # 1 day
+  grace    = 172800 # 2 days
+  schedule = "0 3 * * 0"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# rsnapshot monthly backup
+resource "healthchecksio_check" "rsnapshot_monthly" {
+  provider = healthchecksio.selfhosted
+
+  name     = "rsnapshot-monthly"
+  desc     = "Monthly rsnapshot backup"
+  tags     = ["backup", "kubernetes", "rsnapshot"]
+  timeout  = 86400  # 1 day
+  grace    = 172800 # 2 days
+  schedule = "30 2 1 * *"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# Velero daily backup validation
+resource "healthchecksio_check" "velero_daily" {
+  provider = healthchecksio.selfhosted
+
+  name     = "velero-daily-backup"
+  desc     = "Daily Velero backup validation"
+  tags     = ["backup", "kubernetes", "velero"]
+  timeout  = 86400 # 1 day
+  grace    = 86400 # 1 day
+  schedule = "0 8 * * *"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# =============================================================================
+# kube-restic checks (B2 and main-copy)
+# =============================================================================
+
+# kube-restic B2 backup - expects ping every 24 hours
+resource "healthchecksio_check" "kube_restic_b2_backup" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-b2-backup"
+  desc     = "Daily B2 restic backup from Kubernetes"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400 # 1 day
+  grace    = 86400 # 1 day
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic B2 forget - expects ping every 24 hours
+resource "healthchecksio_check" "kube_restic_b2_forget" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-b2-forget"
+  desc     = "Daily B2 restic forget/prune from Kubernetes"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400 # 1 day
+  grace    = 86400 # 1 day
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic main-copy - copies main backup to B2
+resource "healthchecksio_check" "kube_restic_main_copy" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-main-copy-copy"
+  desc     = "Daily copy of main restic backup to B2"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400 # 1 day
+  grace    = 3600  # 1 hour (matches SaaS config)
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic B2 check - weekly integrity check
+resource "healthchecksio_check" "kube_restic_b2_check" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-b2-check"
+  desc     = "Weekly B2 restic integrity check from Kubernetes"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 604800 # 7 days
+  grace    = 86400  # 1 day
+  schedule = "0 4 * * 0"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+

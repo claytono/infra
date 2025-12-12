@@ -3,10 +3,10 @@ apiVersion: batch/v1
 kind: CronJob
 
 metadata:
-  name: resticprofile-flux-maintenance
+  name: resticprofile-b2-check
 
 spec:
-  schedule: "33 15 * * 2"
+  schedule: 0 4 * * 0  # Weekly on Sundays at 4 AM
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
@@ -15,7 +15,7 @@ spec:
       template:
         metadata:
           labels:
-            resticprofile: flux-maintenance
+            resticprofile: b2-check
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -33,44 +33,54 @@ spec:
           containers:
           - name: resticprofile
             command:
-            - /scripts/maintenance-wrapper.sh
-            - flux
+            - resticprofile
+            - -c
+            - /resticprofile-config/profiles.yaml
+            - -n
+            - b2
+            - --lock-wait
+            - 6h
+            - check
             image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:
                 name: resticprofile
+            - secretRef:
+                name: resticprofile-rclone
             env:
+            - name: RUN_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: RCLONE_CONFIG
+              value: /rclone-config/rclone.conf
             - name: RESTIC_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: resticprofile
                   key: RESTIC_PASSWORD
             volumeMounts:
+            - mountPath: /rclone-config
+              name: rclone-config
             - mountPath: /resticprofile-config
               name: resticprofile-config
-            - mountPath: /scripts
-              name: scripts
             - mountPath: /tmp
               name: scratch
             - mountPath: /cache
               name: cache
-            - mountPath: /source/backups/restic/repos
-              name: backups
           volumes:
+          - name: rclone-config
+            configMap:
+              name: rclone-config
+              items:
+              - key: rclone.conf
+                path: rclone.conf
           - name: resticprofile-config
             configMap:
               name: resticprofile-config
-          - name: scripts
-            configMap:
-              name: maintenance-wrapper
-              defaultMode: 0755
           - name: scratch
             emptyDir: {}
           - name: cache
             persistentVolumeClaim:
               claimName: resticprofile-cache
-          - nfs:
-              server: fs2.oneill.net
-              path: /volume2/backups/restic/repos
-            name: backups
