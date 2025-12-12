@@ -106,8 +106,12 @@ def normalize_blank_lines(doc: str) -> str:
             last_key = curr_key
             continue
 
-        # Default path: emit current line and continue
-        out.append(line)
+        # Default path: emit any collected comments and current line
+        if start < i:
+            # We collected comments but next line isn't a top-level key
+            # (e.g., comments before list items like "- target:")
+            out.extend(lines[start:i])
+        out.append(lines[i])
         i += 1
 
     return "".join(out)
