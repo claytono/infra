@@ -12,7 +12,7 @@ roles:
     src: https://github.com/Yannik/ansible-role-relaymail.git
     version: v2.3.0
   - name: geerlingguy.node_exporter
-    version: "2.1.2"
+    version: "2.2.0"
   - src: michaelrigart.interfaces
     version: "v1.15.6"
   - src: https://github.com/layereight/ansible-wifi
