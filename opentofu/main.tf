@@ -48,7 +48,7 @@ terraform {
     }
     proxmox = {
       source  = "bpg/proxmox"
-      version = "~> 0.88"
+      version = "~> 0.89"
     }
     healthchecksio = {
       source  = "kristofferahl/healthchecksio"
