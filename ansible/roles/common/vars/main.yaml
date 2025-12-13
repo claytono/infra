@@ -17,5 +17,6 @@ common_packages_to_install:
   - psmisc
   - sudo
   - tmux
+  - unzip
   - vim
   - openssh-client

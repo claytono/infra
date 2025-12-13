@@ -1,7 +1,7 @@
 #!ipxe
 
 set menu-timeout 30000
-set pxe-server http://infrapi.oneill.net:8081
+set pxe-server http://infra1.oneill.net:8081
 
 menu PXE Boot Menu
 item --gap -- -------- Default --------

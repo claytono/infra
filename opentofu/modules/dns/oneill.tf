@@ -155,13 +155,13 @@ resource "aws_route53_record" "infrastructure_hosts" {
   records = [each.value.ip]
 }
 
-# Service CNAMEs for infrapi services
+# Service CNAMEs for infra1 services
 resource "aws_route53_record" "nut" {
   zone_id = aws_route53_zone.oneill_net.zone_id
   name    = "nut.oneill.net"
   type    = "CNAME"
   ttl     = 300
-  records = ["infrapi.oneill.net"]
+  records = ["infra1.oneill.net"]
 }
 
 resource "aws_route53_record" "os_install" {
@@ -169,7 +169,7 @@ resource "aws_route53_record" "os_install" {
   name    = "os-install.oneill.net"
   type    = "CNAME"
   ttl     = 300
-  records = ["infrapi.oneill.net"]
+  records = ["infra1.oneill.net"]
 }
 
 resource "aws_route53_record" "pve" {
@@ -177,7 +177,7 @@ resource "aws_route53_record" "pve" {
   name    = "pve.oneill.net"
   type    = "CNAME"
   ttl     = 300
-  records = ["infrapi.oneill.net"]
+  records = ["infra1.oneill.net"]
 }
 
 # TXT record for Proxmox auto-installer URL discovery

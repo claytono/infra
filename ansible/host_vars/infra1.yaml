@@ -1,4 +1,8 @@
 ---
+# Tailscale exit node
+tailscale_args: --advertise-routes=172.19.74.0/23,172.20.4.0/22 --advertise-exit-node --accept-dns=false
+ip_forwarding_enabled: true
+
 # Static network configuration
 manage_network: true
 interfaces_ether_interfaces:
@@ -9,3 +13,20 @@ interfaces_ether_interfaces:
     gateway: 172.19.74.1
     dnsnameservers: 172.19.74.1
     dnssearch: oneill.net
+
+# NUT server - monitors UPS devices but does NOT shut itself down
+nut_upsmon_extra: |
+  SHUTDOWNCMD "/bin/true"
+  HOSTSYNC 60
+  FINALDELAY 120
+  RUN_AS_USER root
+  NOTIFYCMD /usr/sbin/upssched
+  NOTIFYFLAG ONBATT WALL+EXEC
+  NOTIFYFLAG ONLINE WALL+EXEC
+  NOTIFYFLAG LOWBATT WALL+EXEC
+  NOTIFYFLAG FSD WALL+EXEC
+  NOTIFYFLAG COMMBAD WALL+EXEC
+  NOTIFYFLAG COMMOK WALL+EXEC
+  NOTIFYFLAG REPLBATT WALL+EXEC
+  NOTIFYFLAG NOCOMM WALL+EXEC
+  NOTIFYFLAG SHUTDOWN WALL+EXEC
