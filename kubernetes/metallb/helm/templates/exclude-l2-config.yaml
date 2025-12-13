@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 data:
   excludel2.yaml: |
@@ -26,3 +26,4 @@ data:
     - ^kube-ipvs.*
     - ^cni.*
     - ^nodelocaldns.*
+    - ^lxc.*
