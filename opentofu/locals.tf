@@ -88,11 +88,11 @@ locals {
       hostname = "fs2.oneill.net"
       note     = "Synology NAS"
     }
-    infrapi = {
-      mac      = "d8:3a:dd:1c:15:2f"
-      ip       = "172.19.74.224"
-      hostname = "infrapi.oneill.net"
-      note     = "Infrastructure services (NUT)"
+    infra1 = {
+      mac      = "c0:3f:d5:6a:49:30"
+      ip       = "172.19.74.31"
+      hostname = "infra1.oneill.net"
+      note     = "Infrastructure services"
     }
   }
 }

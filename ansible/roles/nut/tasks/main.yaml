@@ -1,15 +1,4 @@
 ---
-- name: Install NUT email notification script (if email is set)
-  ansible.builtin.template:
-    src: notify-email.sh.j2
-    dest: /etc/nut/notify-email.sh
-    owner: root
-    group: nut
-    mode: "0750"
-  become: true
-  when: nut_notify_email is defined and nut_notify_email | length > 0
-  tags: nut
-
 - name: Set NOTIFYCMD and NOTIFYFLAGs for upssched (if email is set)
   ansible.builtin.set_fact:
     nut_upsmon_notifycmd: /usr/sbin/upssched
@@ -27,6 +16,31 @@
 - name: Include ntd.nut role for core NUT setup
   ansible.builtin.include_role:
     name: ntd.nut
+  tags: nut
+
+- name: Reload udev rules for NUT USB devices
+  ansible.builtin.command:
+    cmd: udevadm control --reload-rules
+  changed_when: false
+  when: nut_ups | length > 0
+  tags: nut
+
+- name: Trigger udev for USB UPS devices
+  ansible.builtin.command:
+    cmd: udevadm trigger --subsystem-match=usb
+  changed_when: false
+  when: nut_ups | length > 0
+  tags: nut
+
+- name: Install NUT email notification script (if email is set)
+  ansible.builtin.template:
+    src: notify-email.sh.j2
+    dest: /etc/nut/notify-email.sh
+    owner: root
+    group: nut
+    mode: "0750"
+  become: true
+  when: nut_notify_email is defined and nut_notify_email | length > 0
   tags: nut
 
 - name: Install upssched.conf

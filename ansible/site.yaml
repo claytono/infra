@@ -121,7 +121,7 @@
       tags: [restic, resticprofile]
 
 - name: Traefik
-  hosts: infrapi
+  hosts: infra1
   roles:
     - role: traefik
       tags: traefik
@@ -133,7 +133,7 @@
       tags: nut
 
 - name: OS install server
-  hosts: infrapi
+  hosts: infra1
   roles:
     - role: os-install
       tags: os-install
