@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Wait for previous deployments
-      uses: softprops/turnstyle@2e4451ef94c5969eee533c487092052d4d1a53af  # v3.2.1
+      uses: softprops/turnstyle@15f9da4059166900981058ba251e0b652511c68f  # v3.2.2
 
     - name: Checkout code
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
