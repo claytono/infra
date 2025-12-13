@@ -1,7 +1,7 @@
 ---
 services:
   nut_webgui:
-    image: ghcr.io/superioone/nut_webgui:0.7.0@sha256:9de0af2305c94033931acaa629965673e54884633fae7aed05434c72a3d0b06a
+    image: ghcr.io/superioone/nut_webgui:0.7.1@sha256:244eec023bc3b47771819638f743d2030e838b96f6f9b6a51f1ff17a8e71e353
     restart: unless-stopped
     env_file:
       - nut_webgui.env
