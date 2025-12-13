@@ -5,7 +5,7 @@ roles:
   - name: githubixx.containerd
     version: "0.16.0+2.1.4"
   - name: githubixx.runc
-    version: "0.7.1+1.3.2"
+    version: "0.8.0+1.4.0"
   - src: anxs.generic-users
     version: v1.2.0
   - name: yannik.relaymail
