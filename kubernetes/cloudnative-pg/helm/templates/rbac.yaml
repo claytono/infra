@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: cloudnative-pg/templates/rbac.yaml
@@ -19,7 +19,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -258,7 +258,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -288,7 +288,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -320,7 +320,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
