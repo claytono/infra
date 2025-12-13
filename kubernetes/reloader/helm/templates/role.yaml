@@ -11,10 +11,10 @@ metadata:
     release: "reloader"
     app.kubernetes.io/name: reloader
     app.kubernetes.io/instance: "reloader"
-    chart: "reloader-2.2.5"
+    chart: "reloader-2.2.6"
     heritage: "Helm"
     app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/version: "v1.4.10"
+    app.kubernetes.io/version: "v1.4.11"
   name: reloader-metadata-role
   namespace: default
 rules:
