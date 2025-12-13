@@ -38,9 +38,9 @@ rules:
   - deployments
   verbs: ["list", "watch"]
 
-- apiGroups: [""]
+- apiGroups: ["discovery.k8s.io"]
   resources:
-  - endpoints
+  - endpointslices
   verbs: ["list", "watch"]
 
 - apiGroups: ["autoscaling"]
