@@ -4,5 +4,5 @@ name: dawarich-meta
 version: 0.1.0
 dependencies:
 - name: valkey
-  version: 2.2.2
+  version: 2.2.3
   repository: https://groundhog2k.github.io/helm-charts/

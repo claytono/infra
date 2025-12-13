@@ -21,7 +21,7 @@ spec:
     metadata:
       annotations:
         checksum/customconfig: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-        checksum/scripts: 9195ab5b85ec26b718a3174b5a36234dca1896506b53686f4bf1165fbf652fd1
+        checksum/scripts: 08d06843f6d9c46864b2d402780951a726ecae99a326c60a5f6e7dd54b17a4b8
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: valkey

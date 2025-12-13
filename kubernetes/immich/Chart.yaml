@@ -7,5 +7,5 @@ dependencies:
   version: 0.10.3
   repository: https://immich-app.github.io/immich-charts
 - name: valkey
-  version: 2.2.2
+  version: 2.2.3
   repository: https://groundhog2k.github.io/helm-charts/
