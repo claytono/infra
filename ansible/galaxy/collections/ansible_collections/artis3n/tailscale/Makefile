@@ -3,7 +3,6 @@
 # Install uv via your preferred method: https://docs.astral.sh/uv/getting-started/installation/
 .PHONY: install
 install:
-	uv python install --python-preference managed
 	uv sync
 	uv run pre-commit install --install-hooks
 	uv run ansible-galaxy install -r requirements.yml
@@ -24,8 +23,7 @@ lint:
 	uv run ansible-lint --profile=production
 
 .PHONY: test
-test:
-	cd roles/machine && make test-default
+test: testd
 	cd roles/machine && make test-absent
 
 .PHONY: testd

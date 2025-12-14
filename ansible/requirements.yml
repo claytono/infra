@@ -28,6 +28,6 @@ roles:
 
 collections:
   - name: artis3n.tailscale
-    version: "1.0.1"
+    version: "1.1.0"
   - name: community.proxmox
     version: "1.4.0"

@@ -2,7 +2,7 @@
  "collection_info": {
   "namespace": "artis3n",
   "name": "tailscale",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "authors": [
    "Ari Kalfus <dev@artis3nal.com>"
   ],
@@ -28,7 +28,7 @@
   "name": "FILES.json",
   "ftype": "file",
   "chksum_type": "sha256",
-  "chksum_sha256": "215c3ebb01d51959a0fa729cc1e3719d1ecf9f82bd8b903f62997537dd00826f",
+  "chksum_sha256": "2fa1d96b97aa53bb87df42d50b413ec228d226f7ad4e95992ae8a657d5d8f58b",
   "format": 1
  },
  "format": 1
