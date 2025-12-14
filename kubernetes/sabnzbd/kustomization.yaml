@@ -18,7 +18,7 @@ resources:
 
 images:
 - name: linuxserver/sabnzbd
-  newTag: 4.5.4@sha256:3e3678945b3a977ad5da67c29e9516b186a0fcadca22fab44267ddf5c0d1d33b
+  newTag: 4.5.5@sha256:1c7be873e575c2ff8f699a5fafc79b34630baeeafcb46ad8a5ac75cef38057a5
 
 labels:
 
