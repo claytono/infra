@@ -28,7 +28,7 @@ terraform {
     }
     authentik = {
       source  = "goauthentik/authentik"
-      version = "~> 2025.8.0"
+      version = "~> 2025.10.0"
     }
     openai = {
       source  = "registry.terraform.io/mkdev-me/openai"
