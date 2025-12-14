@@ -46,6 +46,7 @@ docker_obsolete_packages:
 
 - [`RedHat.yaml`](./vars/RedHat.yml)
 - [`Debian.yaml`](./vars/Debian.yml)
+- [`Suse.yaml`](./vars/Suse.yml)
 
 A list of packages to be uninstalled prior to running this role. See [Docker's installation instructions](https://docs.docker.com/engine/install/debian/#uninstall-old-versions) for an up-to-date list of old packages that should be removed.
 
@@ -53,6 +54,7 @@ A list of packages to be uninstalled prior to running this role. See [Docker's i
 docker_service_manage: true
 docker_service_state: started
 docker_service_enabled: true
+docker_service_start_command: ""
 docker_restart_handler_state: restarted
 ```
 

@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: [""]
@@ -32,11 +32,17 @@ rules:
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
   resourceNames: ["bfdprofiles.metallb.io","bgpadvertisements.metallb.io",
-    "bgppeers.metallb.io","ipaddresspools.metallb.io","l2advertisements.metallb.io","communities.metallb.io"]
+    "bgppeers.metallb.io","ipaddresspools.metallb.io","l2advertisements.metallb.io","communities.metallb.io","configurationstates.metallb.io"]
   verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
   verbs: ["list", "watch"]
+- apiGroups: ["metallb.io"]
+  resources: ["configurationstates"]
+  verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+- apiGroups: ["metallb.io"]
+  resources: ["configurationstates/status"]
+  verbs: ["get", "patch", "update"]
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -46,7 +52,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: [""]
@@ -59,7 +65,7 @@ rules:
   resources: ["events"]
   verbs: ["create", "patch"]
 - apiGroups: ["metallb.io"]
-  resources: ["servicel2statuses","servicel2statuses/status"]
+  resources: ["servicel2statuses","servicel2statuses/status","configurationstates","configurationstates/status"]
   verbs: ["*"]
 ---
 # Source: metallb/templates/rbac.yaml
@@ -70,7 +76,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 subjects:
 - kind: ServiceAccount
@@ -89,7 +95,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 subjects:
 - kind: ServiceAccount
@@ -109,7 +115,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: [""]
@@ -152,7 +158,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: [""]
@@ -200,7 +206,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -219,7 +225,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io

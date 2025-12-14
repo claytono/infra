@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.2"
+    app.kubernetes.io/version: "v0.15.3"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: controller
 spec:
@@ -37,10 +37,11 @@ spec:
         runAsUser: 65534
       containers:
       - name: controller
-        image: quay.io/metallb/controller:v0.15.2
+        image: quay.io/metallb/controller:v0.15.3
         args:
         - --port=7472
         - --log-level=info
+        - --webhook-mode=enabled
         - --tls-min-version=VersionTLS12
         env:
         - name: METALLB_ML_SECRET_NAME
