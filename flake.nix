@@ -98,6 +98,22 @@
               yamlfix
               yq-go
             ];
+
+            shellHook = ''
+              # Run pre-commit gc weekly
+              _gc_marker=~/.cache/pre-commit-gc-last-run
+              if [ ! -f "$_gc_marker" ] || [ -n "$(find "$_gc_marker" -mtime +7 2>/dev/null)" ]; then
+                echo "Running pre-commit gc..."
+                pre-commit gc && touch "$_gc_marker"
+              fi
+
+              # Run nix garbage collection weekly
+              _nix_gc_marker=~/.cache/nix-gc-last-run
+              if [ ! -f "$_nix_gc_marker" ] || [ -n "$(find "$_nix_gc_marker" -mtime +7 2>/dev/null)" ]; then
+                echo "Running nix-collect-garbage..."
+                nix-collect-garbage -d && rm -rf ~/.cache/nix/eval-cache-v[0-5] && touch "$_nix_gc_marker"
+              fi
+            '';
           };
         });
     };
