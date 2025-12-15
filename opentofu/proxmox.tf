@@ -20,7 +20,6 @@ resource "proxmox_virtual_environment_vm" "k1" {
     cores   = 2
     sockets = 1
     type    = "x86-64-v3"
-    units   = 100 # cgroup v2 default
   }
 
   memory {
@@ -71,7 +70,6 @@ resource "proxmox_virtual_environment_vm" "k2" {
     cores   = 4
     sockets = 1
     type    = "x86-64-v3"
-    units   = 100
   }
 
   memory {
@@ -122,7 +120,6 @@ resource "proxmox_virtual_environment_vm" "k3" {
     cores   = 4
     sockets = 1
     type    = "x86-64-v3"
-    units   = 100
   }
 
   memory {
@@ -173,7 +170,6 @@ resource "proxmox_virtual_environment_vm" "k4" {
     cores   = 4
     sockets = 1
     type    = "x86-64-v3"
-    units   = 100
   }
 
   memory {
