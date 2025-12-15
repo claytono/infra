@@ -1,7 +1,7 @@
 ---
 # restic_passphrase: <set password in config>
 
-resticprofile_version: 0.31.0
+resticprofile_version: 0.32.0
 resticprofile_arch: amd64
 resticprofile_bin_dir: /usr/local/bin
 resticprofile_tmp_dir: /tmp/resticprofile-ansible
