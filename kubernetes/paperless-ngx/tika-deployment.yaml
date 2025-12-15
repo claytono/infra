@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: paperless-tika
+  labels:
+    app.kubernetes.io/name: tika
+    app.kubernetes.io/instance: paperless-tika
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tika
+      app.kubernetes.io/instance: paperless-tika
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tika
+        app.kubernetes.io/instance: paperless-tika
+    spec:
+      containers:
+      - name: tika
+        image: apache/tika:3.2.3.0
+        ports:
+        - containerPort: 9998
+          name: http
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: paperless-tika
+  labels:
+    app.kubernetes.io/name: tika
+    app.kubernetes.io/instance: paperless-tika
+
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9998
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: tika
+    app.kubernetes.io/instance: paperless-tika

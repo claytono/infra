@@ -21,7 +21,6 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.prowlarr.id,
     authentik_provider_proxy.qbit-manage.id,
     authentik_provider_proxy.radarr.id,
-    authentik_provider_proxy.sabnzbd.id,
     authentik_provider_proxy.smokeping.id,
     authentik_provider_proxy.sonarr.id,
     authentik_provider_proxy.tautulli.id,

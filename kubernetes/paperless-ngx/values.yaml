@@ -1,0 +1,111 @@
+---
+# Pod annotations for reloader
+controllers:
+  main:
+    annotations:
+      reloader.stakater.com/auto: 'true'
+
+# Environment variables
+env:
+  TZ: America/New_York
+  # User/group mapping to match NAS permissions (same as sonarr/radarr)
+  USERMAP_UID: '10001'
+  USERMAP_GID: '10001'
+  PAPERLESS_URL: https://paperless.k.oneill.net
+  # Trust X-Forwarded-Proto header from reverse proxy for HTTPS detection
+  PAPERLESS_USE_X_FORWARD_HOST: 'true'
+  PAPERLESS_USE_X_FORWARD_PORT: 'true'
+  PAPERLESS_PROXY_SSL_HEADER: '["HTTP_X_FORWARDED_PROTO", "https"]'
+  PAPERLESS_OCR_LANGUAGE: eng
+  PAPERLESS_FILENAME_FORMAT: '{{`{{ document_type }}/{{ correspondent }}/{{ created_year
+    }}-{{ title }}`}}'
+  PAPERLESS_TIME_ZONE: America/New_York
+  # Database connection
+  PAPERLESS_DBENGINE: postgresql
+  PAPERLESS_DBHOST: paperless-postgres-rw
+  PAPERLESS_DBPORT: '5432'
+  PAPERLESS_DBNAME: paperless
+  PAPERLESS_DBUSER: paperless
+  PAPERLESS_DBPASS:
+    valueFrom:
+      secretKeyRef:
+        name: paperless-postgres-app
+        key: password
+  # Redis connection
+  PAPERLESS_REDIS:
+    valueFrom:
+      secretKeyRef:
+        name: paperless-redis-url
+        key: REDIS_URL
+  # Secret key from external secret
+  PAPERLESS_SECRET_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: paperless-secrets
+        key: PAPERLESS_SECRET_KEY
+  # OIDC/Authentik authentication (no bootstrap admin - OIDC user promoted manually)
+  PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+  PAPERLESS_SOCIALACCOUNT_PROVIDERS:
+    valueFrom:
+      secretKeyRef:
+        name: paperless-oidc
+        key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+  PAPERLESS_SOCIAL_AUTO_SIGNUP: 'true'
+  PAPERLESS_REDIRECT_LOGIN_TO_SSO: 'true'
+  PAPERLESS_LOGOUT_REDIRECT_URL: https://auth.k.oneill.net/application/o/paperless-ngx/end-session/
+  # Sync groups from Authentik on login
+  PAPERLESS_SOCIALACCOUNT_SYNC_GROUPS: 'true'
+  # Tika/Gotenberg for Office document support
+  PAPERLESS_TIKA_ENABLED: '1'
+  PAPERLESS_TIKA_ENDPOINT: http://paperless-tika:9998
+  PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://paperless-gotenberg:3000
+  # NFS doesn't support inotify, so poll for new files
+  PAPERLESS_CONSUMER_POLLING: '5'
+
+ingress:
+  main:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      nginx.ingress.kubernetes.io/proxy-body-size: 100m
+      ak-type: oidc
+      ak-oidc-callback: /accounts/oidc/authentik/login/callback/
+      gethomepage.dev/enabled: 'true'
+      gethomepage.dev/name: Paperless-ngx
+      gethomepage.dev/description: Document Management
+      gethomepage.dev/group: Productivity
+      gethomepage.dev/icon: paperless-ngx.png
+    hosts:
+    - host: paperless.k.oneill.net
+      paths:
+      - path: /
+    tls:
+    - hosts:
+      - paperless.k.oneill.net
+      secretName: paperless-tls
+
+persistence:
+  data:
+    enabled: true
+    existingClaim: paperless-data
+  media:
+    enabled: true
+    type: nfs
+    server: fs2.oneill.net
+    path: /volume2/shared/documents/paperless
+  consume:
+    enabled: true
+    type: nfs
+    server: fs2.oneill.net
+    path: /volume2/shared/documents/import
+  export:
+    enabled: true
+    existingClaim: paperless-export
+
+# Disable built-in database and redis - we use external
+postgresql:
+  enabled: false
+
+redis:
+  enabled: false
