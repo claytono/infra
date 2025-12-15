@@ -27,7 +27,7 @@ images:
 - name: docker.io/recordsansible/ara-api
   # Pinned to 080334c to avoid broken migration 0018 in 8774f1c
   # See: https://codeberg.org/ansible-community/ara/issues/628
-  newTag: latest@sha256:080334c1cf9a81eabb1cc1ed1e745cd2ddb184ce92b44d3a16fd5c6871ee4b06
+  newTag: latest@sha256:8774f1c567a57df1b7a5bf6a9627a42e99d90a5f9eae384e9641af67856832bf
 
 commonAnnotations:
   argoManaged: 'true'
