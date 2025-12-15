@@ -11,7 +11,7 @@ services:
       - /etc/os-install/assets:/tftpboot:ro
 
   nginx:
-    image: nginx:1.29-alpine@sha256:289decab414250121a93c3f1b8316b9c69906de3a4993757c424cb964169ad42
+    image: nginx:1.29-alpine@sha256:052b75ab72f690f33debaa51c7e08d9b969a0447a133eb2b99cc905d9188cb2b
     restart: unless-stopped
     ports:
       # Keep 8081 for iPXE boot (can't use HTTPS)
