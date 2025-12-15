@@ -1,0 +1,216 @@
+---
+# Source: paperless-ngx/templates/common.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperless-ngx
+  labels:
+    app.kubernetes.io/service: paperless-ngx
+    app.kubernetes.io/instance: paperless-ngx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: paperless-ngx
+    app.kubernetes.io/version: 2.14.7
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/instance: paperless-ngx
+    app.kubernetes.io/name: paperless-ngx
+---
+# Source: paperless-ngx/templates/common.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-ngx
+  labels:
+    app.kubernetes.io/instance: paperless-ngx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: paperless-ngx
+    app.kubernetes.io/version: 2.14.7
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: paperless-ngx
+      app.kubernetes.io/instance: paperless-ngx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: paperless-ngx
+        app.kubernetes.io/instance: paperless-ngx
+    spec:
+      
+      serviceAccountName: default
+      automountServiceAccountToken: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: true
+      containers:
+        - name: paperless-ngx
+          image: ghcr.io/paperless-ngx/paperless-ngx:2.14.7
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PAPERLESS_APPS
+              value: allauth.socialaccount.providers.openid_connect
+            - name: PAPERLESS_CONSUMER_POLLING
+              value: "5"
+            - name: PAPERLESS_DBENGINE
+              value: postgresql
+            - name: PAPERLESS_DBHOST
+              value: paperless-postgres-rw
+            - name: PAPERLESS_DBNAME
+              value: paperless
+            - name: PAPERLESS_DBPASS
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: paperless-postgres-app
+            - name: PAPERLESS_DBPORT
+              value: "5432"
+            - name: PAPERLESS_DBUSER
+              value: paperless
+            - name: PAPERLESS_FILENAME_FORMAT
+              value: '{{ document_type }}/{{ correspondent }}/{{ created_year }}-{{ title }}'
+            - name: PAPERLESS_LOGOUT_REDIRECT_URL
+              value: https://auth.k.oneill.net/application/o/paperless-ngx/end-session/
+            - name: PAPERLESS_OCR_LANGUAGE
+              value: eng
+            - name: PAPERLESS_PORT
+              value: "8000"
+            - name: PAPERLESS_PROXY_SSL_HEADER
+              value: '["HTTP_X_FORWARDED_PROTO", "https"]'
+            - name: PAPERLESS_REDIRECT_LOGIN_TO_SSO
+              value: "true"
+            - name: PAPERLESS_REDIS
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_URL
+                  name: paperless-redis-url
+            - name: PAPERLESS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: PAPERLESS_SECRET_KEY
+                  name: paperless-secrets
+            - name: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+              valueFrom:
+                secretKeyRef:
+                  key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+                  name: paperless-oidc
+            - name: PAPERLESS_SOCIALACCOUNT_SYNC_GROUPS
+              value: "true"
+            - name: PAPERLESS_SOCIAL_AUTO_SIGNUP
+              value: "true"
+            - name: PAPERLESS_TIKA_ENABLED
+              value: "1"
+            - name: PAPERLESS_TIKA_ENDPOINT
+              value: http://paperless-tika:9998
+            - name: PAPERLESS_TIKA_GOTENBERG_ENDPOINT
+              value: http://paperless-gotenberg:3000
+            - name: PAPERLESS_TIME_ZONE
+              value: America/New_York
+            - name: PAPERLESS_URL
+              value: https://paperless.k.oneill.net
+            - name: PAPERLESS_USE_X_FORWARD_HOST
+              value: "true"
+            - name: PAPERLESS_USE_X_FORWARD_PORT
+              value: "true"
+            - name: TZ
+              value: America/New_York
+            - name: USERMAP_GID
+              value: "10001"
+            - name: USERMAP_UID
+              value: "10001"
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          volumeMounts:
+            - name: consume
+              mountPath: /usr/src/paperless/consume
+            - name: data
+              mountPath: /usr/src/paperless/data
+            - name: export
+              mountPath: /usr/src/paperless/export
+            - name: media
+              mountPath: /usr/src/paperless/media
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            tcpSocket:
+              port: 8000
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            tcpSocket:
+              port: 8000
+            timeoutSeconds: 1
+          startupProbe:
+            failureThreshold: 30
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            tcpSocket:
+              port: 8000
+            timeoutSeconds: 1
+      volumes:
+        - name: consume
+          nfs:
+            server: fs2.oneill.net
+            path: /volume2/shared/documents/import
+        - name: data
+          persistentVolumeClaim:
+            claimName: paperless-data
+        - name: export
+          persistentVolumeClaim:
+            claimName: paperless-export
+        - name: media
+          nfs:
+            server: fs2.oneill.net
+            path: /volume2/shared/documents/paperless
+---
+# Source: paperless-ngx/templates/common.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paperless-ngx
+  labels:
+    app.kubernetes.io/instance: paperless-ngx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: paperless-ngx
+    app.kubernetes.io/version: 2.14.7
+  annotations:
+    ak-oidc-callback: /accounts/oidc/authentik/login/callback/
+    ak-type: oidc
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/description: Document Management
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Productivity
+    gethomepage.dev/icon: paperless-ngx.png
+    gethomepage.dev/name: Paperless-ngx
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - "paperless.k.oneill.net"
+      secretName: "paperless-tls"
+  rules:
+    - host: "paperless.k.oneill.net"
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: paperless-ngx
+                port:
+                  number: 8000

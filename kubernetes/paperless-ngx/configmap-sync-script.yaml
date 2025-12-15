@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: paperless-sync-script
+
+data:
+  sync.sh: |-
+    #!/bin/sh
+    set -e
+
+    WATCH_DIR="/data/documents/archive"
+    REMOTE="gdrive:Paperless"
+    DEBOUNCE=30
+    RCLONE_CONFIG="/config/rclone/rclone.conf"
+
+    # Install inotify-tools
+    apk add --no-cache inotify-tools
+
+    echo "Starting gdrive-sync..."
+    echo "Watch directory: $WATCH_DIR"
+    echo "Remote: $REMOTE"
+
+    # Wait for the watch directory to exist
+    while [ ! -d "$WATCH_DIR" ]; do
+      echo "Waiting for $WATCH_DIR to exist..."
+      sleep 10
+    done
+
+    # Initial sync on startup
+    echo "Performing initial sync..."
+    rclone sync "$WATCH_DIR" "$REMOTE" --config "$RCLONE_CONFIG" -v
+
+    echo "Initial sync complete. Watching for changes..."
+
+    # Watch for changes and sync
+    inotifywait -m -r -e modify,create,delete,move "$WATCH_DIR" |
+    while read -r directory event filename; do
+        echo "Change detected: $event $directory$filename"
+        sleep $DEBOUNCE
+        # Clear queued events during debounce
+        while read -t 1 -r; do :; done
+        echo "Syncing changes..."
+        rclone sync "$WATCH_DIR" "$REMOTE" --config "$RCLONE_CONFIG" -v
+        echo "Sync complete."
+    done

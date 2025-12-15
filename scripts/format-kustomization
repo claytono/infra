@@ -111,8 +111,9 @@ def normalize_blank_lines(doc: str) -> str:
             # We collected comments but next line isn't a top-level key
             # (e.g., comments before list items like "- target:")
             out.extend(lines[start:i])
-        out.append(lines[i])
-        i += 1
+        if i < len(lines):
+            out.append(lines[i])
+            i += 1
 
     return "".join(out)
 

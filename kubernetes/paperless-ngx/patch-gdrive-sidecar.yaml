@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: paperless-ngx
+
+spec:
+  template:
+    spec:
+      containers:
+      - name: gdrive-sync
+        image: rclone/rclone:latest
+        command: [/bin/sh, /scripts/sync.sh]
+        envFrom:
+        - secretRef:
+            name: paperless-rclone
+        volumeMounts:
+        - name: media
+          mountPath: /data
+          readOnly: true
+        - name: rclone-config
+          mountPath: /config/rclone
+        - name: sync-script
+          mountPath: /scripts
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 50m
+          limits:
+            memory: 256Mi
+      volumes:
+      - name: rclone-config
+        configMap:
+          name: paperless-rclone-config
+      - name: sync-script
+        configMap:
+          name: paperless-sync-script
+          defaultMode: 0755

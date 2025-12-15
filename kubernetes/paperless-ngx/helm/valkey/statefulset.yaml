@@ -1,0 +1,127 @@
+---
+# Source: valkey/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-valkey
+  labels:
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: paperless-valkey
+    app.kubernetes.io/version: "9.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: valkey
+      app.kubernetes.io/instance: paperless-valkey
+  template:
+    metadata:
+      annotations:
+        checksum/customconfig: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/scripts: 6a9e672a6b21292ba9119ba330fb90ffbb7490f6d0956b56386cea2f7cf2367a
+        reloader.stakater.com/auto: "true"
+      labels:
+        app.kubernetes.io/name: valkey
+        app.kubernetes.io/instance: paperless-valkey
+    spec:
+      serviceAccountName: default
+      securityContext:
+        fsGroup: 999
+        supplementalGroups:
+        - 999
+      initContainers:
+        - name: valkey-init
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 999
+            runAsNonRoot: true
+            runAsUser: 999
+          image: "docker.io/valkey/valkey:9.0.0"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+            - name: scripts
+              mountPath: /scripts
+            - mountPath: /extravalkeyconfigs
+              name: extravalkeyconfigs-volume
+          command: [ "/scripts/init.sh" ]
+      containers:
+        - name: valkey-server
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 999
+            runAsNonRoot: true
+            runAsUser: 999
+          image: "docker.io/valkey/valkey:9.0.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: valkey
+              containerPort: 6379
+              protocol: TCP
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+            successThreshold: 1
+            periodSeconds: 10              
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+          command:
+            - valkey-server
+          args:
+            - /data/conf/valkey.conf
+          envFrom:
+          volumeMounts:
+            - name: valkey-data
+              mountPath: /data
+      volumes:
+        - name: scripts
+          configMap:
+            name: paperless-valkey-scripts
+            defaultMode: 0555
+        - name: extravalkeyconfigs-volume
+          secret:
+            secretName: paperless-valkey-config
+        - name: valkey-data
+          persistentVolumeClaim:
+            claimName: paperless-valkey
