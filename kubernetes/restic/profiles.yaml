@@ -38,6 +38,7 @@ b2:
     - /source/shared/downloads
     no-error-on-warning: true
     run-before: &run_before |
+      [ -f /tmp/uuid ] || cat /proc/sys/kernel/random/uuid > /tmp/uuid
       echo "Pinging start URL: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)"
       wget "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
       Command: $PROFILE_COMMAND
@@ -76,7 +77,6 @@ b2:
 main-copy:
   force-inactive-lock: true
   compression: max
-  repository: /source/backups/restic/repos/main
   verbose: true
   pack-size: 64
 
@@ -91,6 +91,7 @@ main-copy:
     RESTIC_CACHE_DIR: /cache
 
   copy:
+    from-repository: /source/backups/restic/repos/main
     repository: rclone:b2c:restic/main
     run-before: *run_before
     run-finally: *run_finally
