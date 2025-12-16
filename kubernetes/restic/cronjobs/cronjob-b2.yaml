@@ -24,12 +24,6 @@ spec:
           hostname: rp-kube
           restartPolicy: OnFailure
           initContainers:
-          - name: generate-uuid
-            image: alpine
-            command: [sh, -c, "apk add --no-cache util-linux && uuidgen >/tmp/uuid"]
-            volumeMounts:
-            - mountPath: /tmp
-              name: scratch
           - name: fix-cache-permissions
             image: alpine
             command: [sh, -c, chown -R 10007:10007 /cache]
@@ -55,10 +49,6 @@ spec:
             - secretRef:
                 name: resticprofile-rclone
             env:
-            - name: RUN_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: RCLONE_CONFIG
               value: /rclone-config/rclone.conf
             - name: RESTIC_PASSWORD
