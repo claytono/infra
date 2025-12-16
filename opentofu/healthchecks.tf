@@ -164,8 +164,20 @@ resource "healthchecksio_check" "kube_restic_main_copy" {
   name     = "kube-restic-main-copy-copy"
   desc     = "Daily copy of main restic backup to B2"
   tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 86400 # 1 day
-  grace    = 3600  # 1 hour (matches SaaS config)
+  timeout  = 86400  # 1 day
+  grace    = 108000 # 30 hours - allow one failure + next day to complete
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic xtal-copy - copies xtal backup to B2
+resource "healthchecksio_check" "kube_restic_xtal_copy" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-xtal-copy-copy"
+  desc     = "Daily copy of xtal restic backup to B2"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400  # 1 day
+  grace    = 108000 # 30 hours - allow one failure + next day to complete
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 

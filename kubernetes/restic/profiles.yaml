@@ -100,6 +100,33 @@ main-copy:
   - backend: b2
   prometheus-push: https://pushgateway.k.oneill.net/
 
+# B2 copy profile (copy from local xtal repo to B2)
+xtal-copy:
+  force-inactive-lock: true
+  compression: max
+  verbose: true
+  pack-size: 64
+
+  env:
+    RCLONE_BWLIMIT: 25M
+    RCLONE_CONFIG: /rclone-config/rclone.conf
+    RCLONE_RC: true
+    RCLONE_RC_ADDR: 0.0.0.0:5572
+    RCLONE_RC_ENABLE_METRICS: true
+    RCLONE_FAST_LIST: true
+    RESTIC_PROGRESS_FPS: '0.1'
+    RESTIC_CACHE_DIR: /cache
+
+  copy:
+    from-repository: /source/backups/restic/repos/xtal
+    repository: rclone:b2c:restic/xtal
+    run-before: *run_before
+    run-finally: *run_finally
+  prometheus-labels:
+  - host: kubernetes
+  - backend: b2
+  prometheus-push: https://pushgateway.k.oneill.net/
+
 # NFS repo maintenance profiles
 # Each command (forget, check) runs as separate job with its own healthcheck
 main: &nfs_maintenance
