@@ -18,4 +18,4 @@ Only re-fetch if data has changed (e.g., new devices added).
 - Entity names: `grep 'entity="sensor\.'`
 - Binary sensors: `grep 'entity="binary_sensor\.'`
 - Sensor values: `grep 'hass_sensor_temperature_celsius'`
-- By friendly name: `grep -i 'friendly_name=".*keyword'`
+- By friendly name: `grep -i 'friendly_name=".*keyword"'`
