@@ -1,0 +1,11 @@
+---
+substitutions:
+  devicename: infra1-power
+  device_id: infra1_power
+  human_devicename: Infra1
+  icon: mdi:checkbox-blank-outline
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  sonoff_s31: !include common/device-classes/sonoff_s31.yaml
