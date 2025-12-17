@@ -12,7 +12,6 @@
 #   device_id: left_garage_door
 #   human_devicename: Left Garage Door
 #   icon: mdi:garage
-#   door_threshold: "75"  # cm - door open when distance <= this
 #
 # GPIO Pin Mapping (from OpenGarage firmware defines.h):
 #   GPIO 15 - Relay (door trigger)
@@ -36,7 +35,7 @@ logger:
   logs:
     ultrasonic.sensor: INFO  # Suppress per-reading debug messages
 
-# Ultrasonic distance sensor for door state detection
+# Ultrasonic distance sensor (kept for debugging/monitoring)
 # Settings based on OpenGarage stock firmware defaults:
 #   - Read interval (DRI): 500ms
 #   - Timeout: Cap at 450cm
@@ -63,21 +62,13 @@ sensor:
       - round: 1  # Round to nearest 0.1cm
       - delta: 1  # Only report changes >= 1cm
 
-# Garage door cover entity
-cover:
+# Door trigger button - exposed to Home Assistant for template cover control
+button:
   - platform: template
-    name: "${human_devicename}"
-    id: ${device_id}_cover
-    device_class: garage
-    icon: ${icon}
-    lambda: |-
-      if (id(${device_id}_distance).state <= ${door_threshold}) {
-        return COVER_OPEN;
-      }
-      return COVER_CLOSED;
-    open_action:
-      - script.execute: ${device_id}_trigger_door
-    close_action:
+    name: "${human_devicename} Trigger"
+    id: ${device_id}_trigger_button
+    icon: mdi:garage
+    on_press:
       - script.execute: ${device_id}_trigger_door
 
 # Relay for door trigger (internal - controlled via script)
@@ -146,16 +137,13 @@ binary_sensor:
     on_press:
       - script.execute: ${device_id}_trigger_door
 
-  # Door state sensor for chime triggers
+  # Door state from ultrasonic sensor (informational only, not authoritative)
   - platform: template
+    name: "${human_devicename} Door State"
     id: ${device_id}_door_state
-    internal: true
+    device_class: garage_door
     lambda: |-
-      return id(${device_id}_cover).position == COVER_OPEN;
-    on_press:
-      - rtttl.play: 'open:d=16,o=4,b=160:c,g'
-    on_release:
-      - rtttl.play: 'close:d=16,o=4,b=160:g,c'
+      return id(${device_id}_distance).state <= 75;
 
 # Status LED
 status_led:
