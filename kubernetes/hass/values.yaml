@@ -37,6 +37,7 @@ env:
       key: uri
 
 # Init containers to sync config files into PVC
+# Decodes __ back to / in filenames to restore directory structure
 initContainers:
 - name: config-setup
   image: alpine:3.23@sha256:51183f2cfa6320055da30872f211093f9ff1d3cf06f39a0bdb212314c5dc7375
@@ -44,8 +45,12 @@ initContainers:
   - sh
   - -c
   - |
-    apk add --no-cache rsync
-    rsync -av --copy-links /config-map/ /config/
+    for f in /config-map/*; do
+      dest="/config/$(basename "$f" | sed 's|__|/|g')"
+      echo "Copying $f -> $dest"
+      mkdir -p "$(dirname "$dest")"
+      cp -L "$f" "$dest"
+    done
   volumeMounts:
   - name: config-map
     mountPath: /config-map

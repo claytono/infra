@@ -1,0 +1,98 @@
+---
+# Temperature monitoring using 20-minute rolling minimum
+# Alerts only fire if minimum temp over 20 minutes exceeds threshold
+# This filters out brief door-open spikes
+
+sensor:
+- platform: statistics
+  name: Garage Freezer Temperature Min 20m
+  entity_id: sensor.garage_freezer_temperature
+  state_characteristic: value_min
+  max_age:
+    minutes: 20
+
+- platform: statistics
+  name: Refrigerator Temperature Min 20m
+  entity_id: sensor.refrigerator_temperature
+  state_characteristic: value_min
+  max_age:
+    minutes: 20
+
+- platform: statistics
+  name: Refrigerator Freezer Temperature Min 20m
+  entity_id: sensor.refrigerator_freezer_temperature
+  state_characteristic: value_min
+  max_age:
+    minutes: 20
+
+- platform: statistics
+  name: Refrigerator Lower Drawer Temperature Min 20m
+  entity_id: sensor.refrigerator_lower_drawer_temperature
+  state_characteristic: value_min
+  max_age:
+    minutes: 20
+
+binary_sensor:
+- platform: template
+  sensors:
+    garage_freezer_too_warm:
+      friendly_name: Garage Freezer Too Warm
+      device_class: problem
+      value_template: >
+        {% set temp = states("sensor.garage_freezer_temperature_min_20m") %}
+        {{ temp not in ['unknown', 'unavailable'] and temp | float > 10 }}
+
+    refrigerator_too_warm:
+      friendly_name: Refrigerator Too Warm
+      device_class: problem
+      value_template: >
+        {% set temp = states("sensor.refrigerator_temperature_min_20m") %}
+        {{ temp not in ['unknown', 'unavailable'] and temp | float > 40 }}
+
+    refrigerator_freezer_too_warm:
+      friendly_name: Refrigerator Freezer Too Warm
+      device_class: problem
+      value_template: >
+        {% set temp = states("sensor.refrigerator_freezer_temperature_min_20m") %}
+        {{ temp not in ['unknown', 'unavailable'] and temp | float > 15 }}
+
+    refrigerator_lower_drawer_too_warm:
+      friendly_name: Refrigerator Lower Drawer Too Warm
+      device_class: problem
+      value_template: >
+        {% set temp = states("sensor.refrigerator_lower_drawer_temperature_min_20m")
+        %}
+        {{ temp not in ['unknown', 'unavailable'] and temp | float > 40 }}
+
+alert:
+  garage_freezer_too_warm:
+    name: Temperature in the garage freezer is too warm!
+    entity_id: binary_sensor.garage_freezer_too_warm
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+
+  refrigerator_too_warm:
+    name: Temperature in the refrigerator is too warm!
+    entity_id: binary_sensor.refrigerator_too_warm
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+
+  refrigerator_freezer_too_warm:
+    name: Temperature in the refrigerator freezer is too warm!
+    entity_id: binary_sensor.refrigerator_freezer_too_warm
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+
+  refrigerator_lower_drawer_too_warm:
+    name: Temperature in the refrigerator lower drawer is too warm!
+    entity_id: binary_sensor.refrigerator_lower_drawer_too_warm
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me

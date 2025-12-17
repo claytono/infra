@@ -531,27 +531,6 @@ sensor:
 binary_sensor:
 - platform: template
   sensors:
-    garage_freezer_too_warm:
-      friendly_name: Garage Freezer Too Warm
-      device_class: problem
-      delay_on: 00:20:00
-      value_template: >
-        {{ states("sensor.garage_freezer_temperature") | float(999.0) == 999.0
-           or states("sensor.garage_freezer_temperature") | float > 10 }}
-    refrigerator_too_warm:
-      friendly_name: Refrigerator Too Warm
-      device_class: problem
-      delay_on: 00:20:00
-      value_template: >
-        {{ states("sensor.refrigerator_temperature") | float(999.0) == 999.0
-           or states("sensor.refrigerator_temperature") | float > 50 }}
-    refrigerator_freezer_too_warm:
-      friendly_name: Refrigerator Freezer Too Warm
-      device_class: problem
-      delay_on: 00:20:00
-      value_template: >
-        {{ states("sensor.refrigerator_freezer_temperature") | float(999.0) == 999.0
-           or states("sensor.refrigerator_freezer_temperature") | float > 15 }}
     freezer_door_open_delayed:
       friendly_name: Freezer Door Open Too Long
       delay_on: 00:05:00
@@ -609,23 +588,9 @@ alert:
     repeat: 10
     notifiers:
     - call_me
-  garage_freezer_too_warm:
-    name: Temperature in the garage freezer is too warm!
-    entity_id: binary_sensor.garage_freezer_too_warm
-    state: 'on'
-    repeat: 10
-    notifiers:
-    - call_me
-  refrigerator_too_warm:
-    name: Temperature in the refrigerator is too warm!
-    entity_id: binary_sensor.refrigerator_too_warm
-    state: 'on'
-    repeat: 10
-    notifiers:
-    - call_me
-  refrigerator_freezer_too_warm:
-    name: Temperature in the refrigerator freezer is too warm!
-    entity_id: binary_sensor.refrigerator_freezer_too_warm
+  office_sink_water:
+    name: Water is detected at the office sink!
+    entity_id: binary_sensor.office_sink_leak_sensor_moisture
     state: 'on'
     repeat: 10
     notifiers:

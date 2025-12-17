@@ -21,3 +21,26 @@ rm -rf helm/tests
 
 # Clean up
 rm -rf tmp
+
+# Generate config/kustomization.yaml from config files
+# Encodes subdirectory paths as __ (e.g., packages/foo.yaml -> packages__foo.yaml)
+cat > config/kustomization.yaml << 'EOF'
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+configMapGenerator:
+- name: hass-config
+  options:
+    disableNameSuffixHash: true
+  files:
+EOF
+
+# Find all yaml files in config/, encode paths with __
+find config -type f -name '*.yaml' ! -name 'kustomization.yaml' | sort | while read -r f; do
+  # Strip config/ prefix for the path
+  relpath="${f#config/}"
+  # Encode / as __ for ConfigMap key
+  key="${relpath//\//__}"
+  echo "  - ${key}=${relpath}"
+done >> config/kustomization.yaml
