@@ -2,14 +2,14 @@
 
 ## Overview
 
-This is a homelab infrastructure monorepo.  Solutions should be appropriate for
-that sort of environment.   We do not manually hack things together, but instead
+This is a homelab infrastructure monorepo. Solutions should be appropriate for
+that sort of environment. We do not manually hack things together, but instead
 we focus on automation, repeatability, and infrastructure as code.
 
 ## Repository Structure
 
-
 - **`ansible/`** - System configuration and provisioning
+- **`esphome/`** - ESPHome device configurations for IoT sensors
 - **`kubernetes/`** - Kubernetes application manifests using GitOps
 - **`opentofu/`** - Cloud infrastructure (DNS, etc.)
 - **`scripts/`** - Automation and tooling
@@ -75,23 +75,7 @@ mv tmp/*/* helm && rmdir tmp/*
 **Never run `helm install` or `helm upgrade` directly** - all deployments use
 pre-rendered manifests.
 
-## External Secrets Integration
-
-Applications use External Secrets Operator with:
-
-- `ClusterSecretStore` named `production` for secret retrieval
-- External secrets defined in `externalsecret.yaml` files
-- Secrets referenced by name in application manifests
-
 ## Common Commands
-
-### Linting and Validation
-
-```bash
-./scripts/lint                    # Run pre-commit hooks on changed files
-./scripts/lint --all-files        # Run all hooks on all files
-./scripts/lint shellcheck         # Run specific hook
-```
 
 ### Kubernetes Deployment
 
@@ -126,6 +110,13 @@ GitHub Actions automatically:
 - Commits rendered manifests back to pull requests
 - Validates manifests haven't diverged on main branch
 - Uses Nix development environment for consistent tooling
+
+## Additional Agent Documentation
+
+Detailed documentation for specific topics is in `.agents.d/`:
+
+- `external-secrets.md` - External Secrets Operator integration
+- `hass-metrics.md` - Home Assistant entity discovery via Prometheus metrics
 
 ## Authentik
 
