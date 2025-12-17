@@ -154,6 +154,36 @@ climate:
   max_temp: 130
   hot_tolerance: 0
 
+# Garage door covers using Aqara tilt sensors for state, ESPHome buttons for control
+cover:
+- platform: template
+  covers:
+    left_garage_door:
+      device_class: garage
+      friendly_name: Left Garage Door
+      unique_id: left_garage_door_template_cover
+      value_template: "{{ is_state('binary_sensor.left_garage_door_closed', 'off') }}"
+      open_cover:
+        service: button.press
+        target:
+          entity_id: button.opengarage_left_door_opengarage_left_door_trigger
+      close_cover:
+        service: button.press
+        target:
+          entity_id: button.opengarage_left_door_opengarage_left_door_trigger
+    right_garage_door:
+      device_class: garage
+      friendly_name: Right Garage Door
+      unique_id: right_garage_door_template_cover
+      value_template: "{{ is_state('binary_sensor.right_garage_door_closed', 'off') }}"
+      open_cover:
+        service: button.press
+        target:
+          entity_id: button.opengarage_right_door_opengarage_right_door_trigger
+      close_cover:
+        service: button.press
+        target:
+          entity_id: button.opengarage_right_door_opengarage_right_door_trigger
 generic_hygrostat:
 - name: Main Floor
   humidifier: switch.main_floor_humidifiers
@@ -300,6 +330,22 @@ switch:
           hvac_mode: 'off'
 
 template:
+
+# Garage door state from Aqara vibration sensor tilt angle
+# Closed: angle_y ~ -78 to -80 (vertical panel)
+# Open: angle_y ~ -2 to -6 (horizontal panel overhead)
+# Threshold: closed if angle_y between -90 and -65
+- binary_sensor:
+  - name: Left Garage Door Closed
+    unique_id: left_garage_door_closed
+    device_class: garage_door
+    state: >
+      {{ -90 < states('sensor.left_garage_door_vibration_angle_y') | float(-999) < -65 }}
+  - name: Right Garage Door Closed
+    unique_id: right_garage_door_closed
+    device_class: garage_door
+    state: >
+      {{ -90 < states('sensor.right_garage_door_vibration_angle_y') | float(-999) < -65 }}
 
 - sensor:
   - name: Dead ZWave Devices

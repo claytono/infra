@@ -1,10 +1,9 @@
 ---
 substitutions:
-  devicename: right-garage-door
-  device_id: right_garage_door
-  human_devicename: Right Garage Door
+  devicename: opengarage-right-door
+  device_id: opengarage_right_door
+  human_devicename: OpenGarage Right Door
   icon: mdi:garage
-  door_threshold: "75"
 
 packages:
   wifi: !include common/wifi.yaml
