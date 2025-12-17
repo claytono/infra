@@ -4,8 +4,10 @@ substitutions:
   device_id: s31_blank_3
   human_devicename: S31 Blank 3
   icon: mdi:checkbox-blank-outline
+  restore_mode: always_on
 
 packages:
   wifi: !include common/wifi.yaml
+  web: !include common/web.yaml
   base: !include common/base.yaml
   sonoff_s31: !include common/device-classes/sonoff_s31.yaml
