@@ -127,6 +127,44 @@ xtal-copy:
   - backend: b2
   prometheus-push: https://pushgateway.k.oneill.net/
 
+# xtal B2 profile for forget/check operations on B2 xtal repo
+xtal-b2:
+  force-inactive-lock: true
+  repository: rclone:b2c:restic/xtal
+  compression: max
+  verbose: true
+  pack-size: 64
+
+  env:
+    RCLONE_BWLIMIT: 25M
+    RCLONE_CONFIG: /rclone-config/rclone.conf
+    RCLONE_RC: true
+    RCLONE_RC_ADDR: 0.0.0.0:5572
+    RCLONE_RC_ENABLE_METRICS: true
+    RCLONE_FAST_LIST: true
+    RESTIC_PROGRESS_FPS: '0.1'
+    RESTIC_CACHE_DIR: /cache
+
+  forget:
+    keep-hourly: 24
+    keep-daily: 7
+    keep-weekly: 12
+    keep-monthly: 12
+    keep-yearly: 5
+    prune: true
+    run-before: *run_before
+    run-finally: *run_finally
+
+  check:
+    read-data-subset: 1%
+    run-before: *run_before
+    run-finally: *run_finally
+
+  prometheus-labels:
+  - host: kubernetes
+  - backend: b2
+  prometheus-push: https://pushgateway.k.oneill.net/
+
 # NFS repo maintenance profiles
 # Each command (forget, check) runs as separate job with its own healthcheck
 main: &nfs_maintenance
