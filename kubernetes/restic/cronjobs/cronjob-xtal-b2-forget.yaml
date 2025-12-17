@@ -1,0 +1,75 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: resticprofile-xtal-b2-forget
+
+spec:
+  schedule: 30 2 * * *  # Daily at 2:30 AM (after xtal-copy completes)
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            resticprofile: xtal-b2-forget
+          annotations:
+            prometheus.io/scrape: 'true'
+            prometheus.io/path: /metrics
+            prometheus.io/port: '5573'
+        spec:
+          hostname: rp-kube
+          restartPolicy: OnFailure
+          containers:
+          - name: resticprofile
+            command:
+            - resticprofile
+            - -c
+            - /resticprofile-config/profiles.yaml
+            - -n
+            - xtal-b2
+            - --lock-wait
+            - 6h
+            - forget
+            image: creativeprojects/resticprofile
+            imagePullPolicy: IfNotPresent
+            envFrom:
+            - secretRef:
+                name: resticprofile
+            - secretRef:
+                name: resticprofile-rclone
+            env:
+            - name: RCLONE_CONFIG
+              value: /rclone-config/rclone.conf
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: resticprofile
+                  key: RESTIC_PASSWORD
+            volumeMounts:
+            - mountPath: /rclone-config
+              name: rclone-config
+            - mountPath: /resticprofile-config
+              name: resticprofile-config
+            - mountPath: /tmp
+              name: scratch
+            - mountPath: /cache
+              name: cache
+          volumes:
+          - name: rclone-config
+            configMap:
+              name: rclone-config
+              items:
+              - key: rclone.conf
+                path: rclone.conf
+          - name: resticprofile-config
+            configMap:
+              name: resticprofile-config
+          - name: scratch
+            emptyDir: {}
+          - name: cache
+            persistentVolumeClaim:
+              claimName: resticprofile-cache

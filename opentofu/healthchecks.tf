@@ -194,3 +194,28 @@ resource "healthchecksio_check" "kube_restic_b2_check" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
+# kube-restic xtal-b2-forget - daily forget/prune on xtal B2 repo
+resource "healthchecksio_check" "kube_restic_xtal_b2_forget" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-xtal-b2-forget"
+  desc     = "Daily forget/prune on xtal B2 repo"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400  # 1 day
+  grace    = 108000 # 30 hours - allow one failure + next day to complete
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic xtal-b2-check - weekly integrity check on xtal B2 repo
+resource "healthchecksio_check" "kube_restic_xtal_b2_check" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-xtal-b2-check"
+  desc     = "Weekly integrity check on xtal B2 repo"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 604800 # 7 days
+  grace    = 86400  # 1 day
+  schedule = "30 4 * * 0"
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
