@@ -6,6 +6,24 @@ This is a homelab infrastructure monorepo. Solutions should be appropriate for
 that sort of environment. We do not manually hack things together, but instead
 we focus on automation, repeatability, and infrastructure as code.
 
+## Development Workflow
+
+Development happens locally with direct application to the homelab infrastructure.
+When making changes:
+
+1. **Kubernetes changes**: Apply directly with `kubectl apply -k <directory>` to
+   test during development. ArgoCD manages deployments from main branch, but we
+   apply locally first to verify changes work before committing.
+2. **OpenTofu changes**: Run `tofu apply` in the `opentofu/` directory to apply
+   infrastructure changes (DNS, healthchecks, etc.)
+3. **Ansible changes**: Run `ansible-playbook site.yaml` from `ansible/` directory
+   (or use `--limit` to target specific hosts)
+4. **Test changes**: Verify the changes work before committing. For cronjobs, you
+   can trigger a manual run with `kubectl create job --from=cronjob/<name> <test-name>`
+
+Always apply changes and verify they work - do not stop after writing code to ask
+for permission to deploy.
+
 ## Repository Structure
 
 - **`ansible/`** - System configuration and provisioning
