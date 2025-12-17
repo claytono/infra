@@ -12,16 +12,7 @@ resources:
 - helm/service.yaml
 - helm/statefulset.yaml
 - helm/ingress.yaml
-
-configMapGenerator:
-- name: hass-config
-  options:
-    disableNameSuffixHash: true
-  files:
-  - config/configuration.yaml
-  - config/automations-manual.yaml
-  - config/input_boolean.yaml
-  - config/input_select.yaml
+- config
 
 labels:
 

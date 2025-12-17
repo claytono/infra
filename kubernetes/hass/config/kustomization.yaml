@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+configMapGenerator:
+- name: hass-config
+  options:
+    disableNameSuffixHash: true
+  files:
+  - automations-manual.yaml=automations-manual.yaml
+  - configuration.yaml=configuration.yaml
+  - input_boolean.yaml=input_boolean.yaml
+  - input_select.yaml=input_select.yaml
+  - packages__temperature_alerts.yaml=packages/temperature_alerts.yaml
