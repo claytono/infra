@@ -8,6 +8,8 @@ metadata:
 
 spec:
   goTemplate: true
+  syncPolicy:
+    preserveResourcesOnDeletion: true
   generators:
   - git:
       repoURL: https://github.com/claytono/infra.git
@@ -24,8 +26,6 @@ spec:
       name: '{{ regexReplaceAll "^[0-9]+-" (index .path.segments 1) "" }}'
       labels:
         app.kubernetes.io/managed-by: applicationset
-      finalizers:
-      - finalizers.argocd.argoproj.io/resources
     spec:
       project: default
       source:
