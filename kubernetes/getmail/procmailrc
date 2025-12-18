@@ -1,9 +1,0 @@
-PATH=/usr/local/bin:/usr/bin:/bin
-MAILDIR=/mail
-LOGFILE=/mail/procmail.log
-LOCKFILE=/mail/.lockmail
-
-YEARMONTH=`date +%Y-%m`
-
-:0 Wi
-/mail/INBOX-$YEARMONTH
