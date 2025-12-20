@@ -36,6 +36,9 @@
       - memtest64.bin
   when: not os_install_memtest_stat.stat.exists
 
+- name: Include Grml rescue tasks
+  ansible.builtin.include_tasks: grml.yaml
+
 - name: Deploy boot.ipxe script
   ansible.builtin.copy:
     src: boot.ipxe

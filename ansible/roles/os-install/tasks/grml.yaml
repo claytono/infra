@@ -1,0 +1,118 @@
+---
+# Grml Rescue - Debian-based live system for PXE boot
+# Provides SSH access with pre-configured authorized_keys
+#
+# Uses full ISO to get squashfs for HTTP fetch boot mode.
+# The netboot tarball only supports NFS root (no squashfs).
+# HTTP fetch is documented at: https://github.com/grml/grml/wiki/terminalserver
+
+- name: Check if Grml version exists
+  ansible.builtin.stat:
+    path: "/etc/os-install/assets/grml/.version-{{ grml_version }}"
+  register: os_install_grml_stat
+
+- name: Download Grml ISO
+  ansible.builtin.get_url:
+    url: "https://download.grml.org/grml-full-{{ grml_version }}-amd64.iso"
+    dest: /tmp/grml.iso
+    mode: "0644"
+  when: not os_install_grml_stat.stat.exists
+
+- name: Extract Grml from ISO
+  when: not os_install_grml_stat.stat.exists
+  block:
+    - name: Create Grml mount point
+      ansible.builtin.file:
+        path: /mnt/grml-iso
+        state: directory
+        mode: "0755"
+
+    - name: Mount Grml ISO
+      ansible.posix.mount:
+        path: /mnt/grml-iso
+        src: /tmp/grml.iso
+        fstype: iso9660
+        opts: loop,ro
+        state: mounted
+
+    - name: Create Grml directory
+      ansible.builtin.file:
+        path: /etc/os-install/assets/grml
+        state: directory
+        mode: "0755"
+
+    - name: Copy boot files from ISO
+      ansible.builtin.copy:
+        src: /mnt/grml-iso/boot/
+        dest: /etc/os-install/assets/grml/boot/
+        remote_src: true
+        mode: preserve
+
+    - name: Copy live files from ISO
+      ansible.builtin.copy:
+        src: /mnt/grml-iso/live/
+        dest: /etc/os-install/assets/grml/live/
+        remote_src: true
+        mode: preserve
+
+    - name: Create Grml version marker
+      ansible.builtin.copy:
+        content: "{{ grml_version }}\n"
+        dest: "/etc/os-install/assets/grml/.version-{{ grml_version }}"
+        mode: "0644"
+
+  always:
+    - name: Unmount Grml ISO
+      ansible.posix.mount:
+        path: /mnt/grml-iso
+        state: unmounted
+      failed_when: false
+
+    - name: Remove mount point
+      ansible.builtin.file:
+        path: /mnt/grml-iso
+        state: absent
+      failed_when: false
+
+    - name: Remove Grml ISO after extraction
+      ansible.builtin.file:
+        path: /tmp/grml.iso
+        state: absent
+      failed_when: false
+
+- name: Create temporary config directory
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: grml-config-
+  register: os_install_grml_tempdir
+
+- name: Create Grml config directory structure
+  ansible.builtin.file:
+    path: "{{ os_install_grml_tempdir.path }}/root/.ssh"
+    state: directory
+    mode: "0700"
+
+- name: Create Grml SSH authorized_keys
+  ansible.builtin.copy:
+    content: "{{ ssh_keys | join('\n') }}\n"
+    dest: "{{ os_install_grml_tempdir.path }}/root/.ssh/authorized_keys"
+    mode: "0600"
+  register: os_install_grml_authorized_keys
+
+- name: Check if Grml config.tbz exists
+  ansible.builtin.stat:
+    path: /etc/os-install/assets/grml/config.tbz
+  register: os_install_grml_config_stat
+
+- name: Create Grml config.tbz # noqa: command-instead-of-module
+  # Using tar directly because archive module can't set working directory (-C)
+  # which is needed for correct relative paths in the tarball
+  ansible.builtin.command:
+    cmd: "tar -cjf /etc/os-install/assets/grml/config.tbz -C {{ os_install_grml_tempdir.path }} ."
+  when: os_install_grml_authorized_keys.changed or not os_install_grml_config_stat.stat.exists
+  changed_when: true
+
+- name: Remove temporary config directory
+  ansible.builtin.file:
+    path: "{{ os_install_grml_tempdir.path }}"
+    state: absent
