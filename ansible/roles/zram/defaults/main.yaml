@@ -1,0 +1,4 @@
+---
+zram_size: "ram / 2"
+zram_algorithm: "lz4"
+zram_page_cluster: 0

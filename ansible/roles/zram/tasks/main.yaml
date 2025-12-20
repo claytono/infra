@@ -1,0 +1,24 @@
+---
+# systemd-zram-generator is only available in Debian 12+
+- name: Configure zram swap
+  when: ansible_distribution_major_version | int >= 12
+  block:
+    - name: Install systemd-zram-generator
+      ansible.builtin.apt:
+        name: systemd-zram-generator
+        state: present
+
+    - name: Configure zram-generator
+      ansible.builtin.template:
+        src: zram-generator.conf.j2
+        dest: /etc/systemd/zram-generator.conf
+        mode: "0644"
+      notify: Restart systemd-zram-setup
+
+    - name: Configure page-cluster for zram
+      ansible.posix.sysctl:
+        name: vm.page-cluster
+        value: "{{ zram_page_cluster }}"
+        state: present
+        sysctl_file: /etc/sysctl.d/99-zram.conf
+        reload: true

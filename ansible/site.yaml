@@ -111,6 +111,12 @@
     - role: boutetnico.fail2ban
       tags: fail2ban
 
+- name: ZRAM swap
+  hosts: all
+  roles:
+    - role: zram
+      tags: zram
+
 - name: Chrony, relaymail, and resticprofile
   hosts: all
   roles:

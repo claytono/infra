@@ -46,22 +46,6 @@
     sysctl_file: /etc/sysctl.d/99-kubernetes.conf
     reload: true
 
-- name: "Check if swap is enabled"
-  ansible.builtin.command: "swapon --show"
-  register: kubeadm_swap_status
-  changed_when: false
-  failed_when: false
-
-- name: "Turn off swap"
-  ansible.builtin.command: "swapoff -a"
-  when: kubeadm_swap_status.stdout != ""
-
-- name: "Disable swap in fstab"
-  ansible.builtin.replace:
-    path: /etc/fstab
-    regexp: "^([^#].*?\\sswap\\s+sw\\s+.*)$"
-    replace: "# \\1"
-
 - name: "Install apt-transport-https"
   ansible.builtin.apt:
     name: apt-transport-https

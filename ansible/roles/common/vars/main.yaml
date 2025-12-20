@@ -18,5 +18,6 @@ common_packages_to_install:
   - sudo
   - tmux
   - unzip
+  - util-linux
   - vim
   - openssh-client
