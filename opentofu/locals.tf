@@ -81,6 +81,12 @@ locals {
       hostname = "k4.oneill.net"
       note     = "Kubernetes worker node (VM)"
     }
+    luser = {
+      mac      = "52:54:72:19:74:61"
+      ip       = "172.19.74.161"
+      hostname = "luser.oneill.net"
+      note     = "General purpose VM"
+    }
     # Other infrastructure
     fs2 = {
       mac      = "b4:96:91:4e:1b:ac"
