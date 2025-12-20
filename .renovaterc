@@ -90,6 +90,18 @@
         "VERSION=\"(?<currentValue>[^\"]+)\"\\s*\\nGIT_URL=\"https://github.com/(?<depName>[^/]+/[^/]+)\\.git\""
       ],
       "datasourceTemplate": "github-tags"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "ansible/roles/os-install/vars/main.yaml"
+      ],
+      "matchStrings": [
+        "grml_version:\\s*\"(?<currentValue>\\d{4}\\.\\d{2})\""
+      ],
+      "depNameTemplate": "grml/grml",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{2})$"
     }
   ],
   "packageRules": [

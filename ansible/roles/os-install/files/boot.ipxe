@@ -1,7 +1,10 @@
 #!ipxe
 
 set menu-timeout 30000
-set pxe-server http://infra1.oneill.net:8081
+# HTTPS for Linux fetches (preseed, squashfs, config)
+set server-url https://os-install.oneill.net
+# HTTP for iPXE fetches (kernel, initrd) - bypasses Traefik which redirects to HTTPS
+set insecure-server-url http://infra1.oneill.net:8081
 
 menu PXE Boot Menu
 item --gap -- -------- Default --------
@@ -14,6 +17,7 @@ item bookworm-preseed  Debian Bookworm - Preseed
 item bookworm-expert   Debian Bookworm - Expert
 item --gap -- -------- Tools --------
 item memtest           Memtest86+
+item grml              Grml Rescue
 item shell             iPXE Shell
 choose --timeout ${menu-timeout} --default localdisk target && goto ${target}
 
@@ -22,7 +26,7 @@ exit
 
 :trixie-preseed
 set base http://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64
-kernel ${base}/linux auto=true priority=critical preseed/url=${pxe-server}/preseed.trixie.cfg interface=auto
+kernel ${base}/linux auto=true priority=critical preseed/url=${server-url}/preseed.trixie.cfg interface=auto
 initrd ${base}/initrd.gz
 boot
 
@@ -34,7 +38,7 @@ boot
 
 :bookworm-preseed
 set base http://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/debian-installer/amd64
-kernel ${base}/linux auto=true priority=critical preseed/url=${pxe-server}/preseed.bookworm.cfg interface=auto
+kernel ${base}/linux auto=true priority=critical preseed/url=${server-url}/preseed.bookworm.cfg interface=auto
 initrd ${base}/initrd.gz
 boot
 
@@ -45,7 +49,12 @@ initrd ${base}/initrd.gz
 boot
 
 :memtest
-kernel ${pxe-server}/memtest64.bin
+kernel ${insecure-server-url}/memtest64.bin
+boot
+
+:grml
+kernel ${insecure-server-url}/grml/boot/grmlfullamd64/vmlinuz boot=live fetch=${server-url}/grml/live/grml-full-amd64/grml-full-amd64.squashfs netconfig=${server-url}/grml/config.tbz ssh=grml
+initrd ${insecure-server-url}/grml/boot/grmlfullamd64/initrd.img
 boot
 
 :shell
