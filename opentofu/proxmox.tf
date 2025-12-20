@@ -23,7 +23,8 @@ resource "proxmox_virtual_environment_vm" "k1" {
   }
 
   memory {
-    dedicated = 4096
+    dedicated = 8192
+    floating  = 4096
   }
 
   agent {
@@ -73,7 +74,8 @@ resource "proxmox_virtual_environment_vm" "k2" {
   }
 
   memory {
-    dedicated = 20480
+    dedicated = 24576
+    floating  = 12288
   }
 
   agent {
@@ -123,7 +125,8 @@ resource "proxmox_virtual_environment_vm" "k3" {
   }
 
   memory {
-    dedicated = 20480
+    dedicated = 24576
+    floating  = 12288
   }
 
   agent {
@@ -173,7 +176,8 @@ resource "proxmox_virtual_environment_vm" "k4" {
   }
 
   memory {
-    dedicated = 20480
+    dedicated = 24576
+    floating  = 12288
   }
 
   agent {
