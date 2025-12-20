@@ -7,3 +7,4 @@ resticprofile_enable_scheduling: false
 setup_upgrade_update_grub: false
 hostname_manage_etc_hosts: false
 sshd_config_validation: false
+qemu_guest_agent_enabled: false

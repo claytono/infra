@@ -5,23 +5,12 @@ restic_host_config:
       exclude:
         - /var/lib/libvirt/images/*
 
-
 manage_network: true
 interfaces_ether_interfaces:
-  - device: enp3s0f0
-    bootproto: manual
-interfaces_bridge_interfaces:
-  - device: br0
-    type: bridge
+  - device: ens18
     bootproto: static
     address: "172.19.74.161"
     netmask: "255.255.255.0"
     gateway: 172.19.74.1
-    mtu: 1500
-    hwaddr: "06:bc:96:51:3a:a1"
-    stp: "off"
-    ports: [enp3s0f0]
-    maxwait: 5
-    fd: 0
     dnsnameservers: 172.19.74.1
     dnssearch: oneill.net

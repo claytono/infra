@@ -207,3 +207,54 @@ resource "proxmox_virtual_environment_vm" "k4" {
     ignore_changes = [node_name, started]
   }
 }
+
+resource "proxmox_virtual_environment_vm" "luser" {
+  name      = "luser"
+  node_name = "p9"
+  vm_id     = 161
+
+  started = true
+  on_boot = true
+
+  cpu {
+    cores   = 4
+    sockets = 1
+    type    = "x86-64-v3"
+  }
+
+  memory {
+    dedicated = 16384
+    floating  = 8192
+  }
+
+  agent {
+    enabled = true
+    trim    = true
+  }
+
+  scsi_hardware = "virtio-scsi-single"
+
+  disk {
+    interface    = "scsi0"
+    datastore_id = "local-zfs"
+    size         = 128
+    file_format  = "raw"
+    iothread     = true
+    discard      = "on"
+  }
+
+  network_device {
+    bridge      = "vmbr0"
+    mac_address = "52:54:72:19:74:61"
+    model       = "virtio"
+    queues      = 4
+  }
+
+  operating_system {
+    type = "l26"
+  }
+
+  lifecycle {
+    ignore_changes = [node_name, started]
+  }
+}

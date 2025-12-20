@@ -32,7 +32,18 @@
   ansible.builtin.apt:
     name: qemu-guest-agent
     state: present
-  when: ansible_virtualization_role == 'guest'
+  when:
+    - ansible_virtualization_role == 'guest'
+    - qemu_guest_agent_enabled | default(true) | bool
+
+- name: "Ensure qemu-guest-agent is enabled and started"
+  ansible.builtin.service:
+    name: qemu-guest-agent
+    state: started
+    enabled: true
+  when:
+    - ansible_virtualization_role == 'guest'
+    - qemu_guest_agent_enabled | default(true) | bool
 
 - name: "Install smartmontools on non-VM amd64 hosts"
   ansible.builtin.apt:
