@@ -33,7 +33,7 @@
         src: /tmp/grml.iso
         fstype: iso9660
         opts: loop,ro
-        state: mounted
+        state: ephemeral # Don't add to fstab
 
     - name: Create Grml directory
       ansible.builtin.file:
