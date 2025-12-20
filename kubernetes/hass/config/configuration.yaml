@@ -341,11 +341,15 @@ template:
     device_class: garage_door
     state: >
       {{ -90 < states('sensor.left_garage_door_vibration_angle_y') | float(-999) < -65 }}
+    availability: >
+      {{ states('sensor.left_garage_door_vibration_angle_y') | is_number }}
   - name: Right Garage Door Closed
     unique_id: right_garage_door_closed
     device_class: garage_door
     state: >
       {{ -90 < states('sensor.right_garage_door_vibration_angle_y') | float(-999) < -65 }}
+    availability: >
+      {{ states('sensor.right_garage_door_vibration_angle_y') | is_number }}
 
 - sensor:
   - name: Dead ZWave Devices
