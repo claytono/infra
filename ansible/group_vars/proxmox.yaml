@@ -56,3 +56,6 @@ proxmox_nfs_storage:
 # OIDC credentials from 1Password (for Authentik integration)
 proxmox_oidc_client_id: "{{ lookup('community.general.onepassword', 'proxmox-oidc', field='client-id', vault='infra') }}"
 proxmox_oidc_client_secret: "{{ lookup('community.general.onepassword', 'proxmox-oidc', field='client-secret', vault='infra') }}"
+
+# ZRAM swap configuration (smaller for Proxmox to leave room for ZFS ARC)
+zram_size: "ram / 4"
