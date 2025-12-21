@@ -13,6 +13,12 @@
 locals {
   infrastructure_hosts = {
     # Proxmox VE hosts
+    p1 = {
+      mac      = "90:e2:ba:d8:2a:8c"
+      ip       = "172.19.74.41"
+      hostname = "p1.oneill.net"
+      note     = "Proxmox VE host"
+    }
     p2 = {
       mac      = "b4:96:91:4b:34:58"
       ip       = "172.19.74.42"
