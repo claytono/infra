@@ -144,6 +144,12 @@
     - role: os-install
       tags: os-install
 
+- name: Docker
+  hosts: docker
+  roles:
+    - role: geerlingguy.docker
+      tags: docker
+
 - name: Tailscale sysctl config
   hosts: all,!tailscale_disabled
   pre_tasks:

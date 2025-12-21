@@ -61,3 +61,6 @@ p9
 
 [nut_server]
 infra1
+
+[docker]
+luser
