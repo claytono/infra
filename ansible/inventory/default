@@ -34,7 +34,6 @@ k4
 infra1
 
 [nut_client]
-luser
 p2
 p3
 k4
@@ -62,3 +61,6 @@ p9
 
 [nut_server]
 infra1
+
+[docker]
+luser
