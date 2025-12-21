@@ -94,8 +94,6 @@ homekit:
     - sensor.netatmo_outdoor_humidity
     - sensor.netatmo_outdoor_temperature
     - switch.smoker_158
-    - binary_sensor.family_room_humidifier_empty
-    - binary_sensor.dining_room_humidifier_empty
     #    - climate.bed_jet_climate
     - scene.get_ready_for_bed
     - scene.good_night
@@ -185,10 +183,10 @@ cover:
         target:
           entity_id: button.opengarage_right_door_opengarage_right_door_trigger
 generic_hygrostat:
-- name: Main Floor
-  humidifier: switch.main_floor_humidifiers
-  target_sensor: sensor.living_room_humidity
-  target_humidity: 40
+- name: Basement
+  humidifier: switch.basement_humidifiers
+  target_sensor: sensor.basement_average_humidity
+  target_humidity: 35
 
 light:
 - platform: switch
@@ -284,19 +282,19 @@ switch:
         data:
           entity_id: remote.harmony_hub
 
-    main_floor_humidifiers:
-      friendly_name: Main Floor Humidifiers
-      value_template: "{{ is_state('switch.dining_room_humidifier', 'on') }}"
+    basement_humidifiers:
+      friendly_name: Basement Humidifiers
+      value_template: "{{ is_state('switch.rec_room_humidifier', 'on') or is_state('switch.basement_hallway_humidifier', 'on') }}"
       turn_on:
       - service: switch.turn_on
-        entity_id: switch.dining_room_humidifier
+        entity_id: switch.rec_room_humidifier
       - service: switch.turn_on
-        entity_id: switch.family_room_humidifier_relay
+        entity_id: switch.basement_hallway_humidifier
       turn_off:
       - service: switch.turn_off
-        entity_id: switch.dining_room_humidifier
+        entity_id: switch.rec_room_humidifier
       - service: switch.turn_off
-        entity_id: switch.family_room_humidifier_relay
+        entity_id: switch.basement_hallway_humidifier
 
     foot_warmer_thermostat:
       friendly_name: Foot Warmer Thermostat
@@ -352,6 +350,25 @@ template:
       {{ states('sensor.right_garage_door_vibration_angle_y') | is_number }}
 
 - sensor:
+  - name: Basement Average Humidity
+    unique_id: basement_average_humidity
+    unit_of_measurement: '%'
+    device_class: humidity
+    state: >
+      {% set sensors = [
+        states('sensor.rec_room_temperature_humidity_humidity') | float(none),
+        states('sensor.basement_hallway_temperature_humidity_humidity') | float(none),
+        states('sensor.guest_bedroom_temperature_humidity_humidity') | float(none)
+      ] | reject('none') | list %}
+      {{ (sensors | sum / sensors | count) | round(1) if sensors else none }}
+    availability: >
+      {% set sensors = [
+        states('sensor.rec_room_temperature_humidity_humidity'),
+        states('sensor.basement_hallway_temperature_humidity_humidity'),
+        states('sensor.guest_bedroom_temperature_humidity_humidity')
+      ] %}
+      {{ sensors | select('is_number') | list | count > 0 }}
+
   - name: Dead ZWave Devices
     unique_id: dead_zwave_devices
     unit_of_measurement: entities
@@ -585,30 +602,6 @@ binary_sensor:
       friendly_name: Freezer Door Open Too Long
       delay_on: 00:05:00
       value_template: "{{ is_state('binary_sensor.freezer_door_closed', 'on') }}"
-    main_floor_humidity_low:
-      value_template: >
-        {{ state_attr('sensor.main_floor_humidifier', 'humidity') | float(999.0) >
-             states('sensor.living_room_humidity') | float(0.0)
-        }}
-    family_room_humidifier_empty:
-      friendly_name: Family Room Humidifier Empty
-      device_class: problem
-      value_template: >
-        {{ states("main_floor_humidity_low")
-             and states("switch.family_room_humidifier_relay")
-             and states("sensor.family_room_humidifier_power") |float(0.0) < 1.0
-        }}
-
-    dining_room_humidifier_empty:
-      friendly_name: Dining Room Humidifier Empty
-      device_class: problem
-      value_template: >
-        {{ states("main_floor_humidity_low")
-             and states("switch.dining_room_humidifier")
-             and states("sensor.dining_room_humidifier_electric_consumption_w") |float(0.0)
-        < 1.0
-        }}
-
 alert:
   basement_sump_water:
     name: Water is detected in the basement near the sump!
