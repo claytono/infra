@@ -23,7 +23,7 @@ enabled = true
 
 [disk-setup]
 filesystem = "zfs"
-zfs.raid = "raid0"
+zfs.raid = "{{ hostvars[host]['proxmox_zfs_raid'] | default('raid0') }}"
 
 [disk-setup.filter]
 ID_BUS = "ata"
