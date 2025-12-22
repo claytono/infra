@@ -187,6 +187,10 @@ generic_hygrostat:
   humidifier: switch.basement_humidifiers
   target_sensor: sensor.basement_average_humidity
   target_humidity: 35
+  dry_tolerance: 0
+  wet_tolerance: 0
+  min_cycle_duration:
+    minutes: 20
 
 light:
 - platform: switch
