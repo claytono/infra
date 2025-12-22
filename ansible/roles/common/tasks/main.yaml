@@ -25,7 +25,7 @@
     name: firmware-misc-nonfree
     state: present
   when:
-    - ansible_distribution == 'Debian'
+    - ansible_facts['distribution'] == 'Debian'
     - not common_proxmox_check.stat.exists
 
 - name: "Install qemu-guest-agent on VMs"
@@ -33,7 +33,7 @@
     name: qemu-guest-agent
     state: present
   when:
-    - ansible_virtualization_role == 'guest'
+    - ansible_facts['virtualization_role'] == 'guest'
     - qemu_guest_agent_enabled | default(true) | bool
 
 - name: "Ensure qemu-guest-agent is enabled and started"
@@ -42,7 +42,7 @@
     state: started
     enabled: true
   when:
-    - ansible_virtualization_role == 'guest'
+    - ansible_facts['virtualization_role'] == 'guest'
     - qemu_guest_agent_enabled | default(true) | bool
 
 - name: "Install smartmontools on non-VM amd64 hosts"
@@ -50,8 +50,8 @@
     name: smartmontools
     state: present
   when:
-    - ansible_architecture == 'x86_64'
-    - ansible_virtualization_role != 'guest'
+    - ansible_facts['architecture'] == 'x86_64'
+    - ansible_facts['virtualization_role'] != 'guest'
 
 - name: "Configure smartd for disk monitoring"
   ansible.builtin.template:
@@ -61,8 +61,8 @@
     owner: root
     group: root
   when:
-    - ansible_architecture == 'x86_64'
-    - ansible_virtualization_role != 'guest'
+    - ansible_facts['architecture'] == 'x86_64'
+    - ansible_facts['virtualization_role'] != 'guest'
   notify: Restart smartd
 
 - name: "Ensure smartd service is enabled and started"
@@ -71,8 +71,8 @@
     state: started
     enabled: true
   when:
-    - ansible_architecture == 'x86_64'
-    - ansible_virtualization_role != 'guest'
+    - ansible_facts['architecture'] == 'x86_64'
+    - ansible_facts['virtualization_role'] != 'guest'
 
 - name: "Turn on passwordless sudo for sudo group"
   ansible.builtin.lineinfile:
@@ -113,8 +113,8 @@
     sysctl_file: /etc/sysctl.d/99-common.conf
     reload: true
   when:
-    - ansible_architecture in ['x86_64', 'i386']
-    - ansible_virtualization_role != 'guest'
+    - ansible_facts['architecture'] in ['x86_64', 'i386']
+    - ansible_facts['virtualization_role'] != 'guest'
 
 - name: "Enable fstrim timer for SSD TRIM support"
   ansible.builtin.systemd:

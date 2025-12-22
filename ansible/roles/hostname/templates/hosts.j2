@@ -1,6 +1,6 @@
 127.0.0.1   localhost
 {% if hostname_hosts_ip == "real" %}
-{{ ansible_default_ipv4.address }}   {{ hostname_fqdn }} {{ hostname_short }}
+{{ ansible_facts['default_ipv4']['address'] }}   {{ hostname_fqdn }} {{ hostname_short }}
 {% else %}
 {{ hostname_hosts_ip }}   {{ hostname_fqdn }} {{ hostname_short }}
 {% endif %}

@@ -1,7 +1,7 @@
 ---
 # systemd-zram-generator is only available in Debian 12+
 - name: Configure zram swap
-  when: ansible_distribution_major_version | int >= 12
+  when: ansible_facts['distribution_major_version'] | int >= 12
   block:
     - name: Install systemd-zram-generator
       ansible.builtin.apt:
