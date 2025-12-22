@@ -13,7 +13,7 @@ repos:
   - id: check-merge-conflict
 
 - repo: https://github.com/lyz-code/yamlfix
-  rev: 1.19.0
+  rev: 1.19.1
   hooks:
   - id: yamlfix
     args: [-c, .yamlfix.toml]
