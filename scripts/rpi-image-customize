@@ -17,11 +17,13 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 POST_INSTALL="$REPO_ROOT/ansible/roles/os-install/files/post-install.sh"
 
 # Image configuration
-RELEASE="trixie"
-IMAGE_DATE="2025-12-04"
+# renovate: datasource=github-tags depName=RPi-Distro/pi-gen
+IMAGE_TAG="2025-12-04-raspios-trixie-arm64"
+IFS='-' read -r YEAR MONTH DAY _ RELEASE _ <<<"$IMAGE_TAG"
+IMAGE_DATE="${YEAR}-${MONTH}-${DAY}"
 IMAGE_BASE_URL="https://downloads.raspberrypi.com/raspios_lite_arm64/images"
 IMAGE_DIR="/tmp/rpi-images"
-IMAGE_FILENAME="${IMAGE_DATE}-raspios-${RELEASE}-arm64-lite.img"
+IMAGE_FILENAME="${IMAGE_TAG}-lite.img"
 IMAGE_XZ_FILENAME="${IMAGE_FILENAME}.xz"
 IMAGE_URL="${IMAGE_BASE_URL}/raspios_lite_arm64-${IMAGE_DATE}/${IMAGE_XZ_FILENAME}"
 IMAGE_XZ="$IMAGE_DIR/$IMAGE_XZ_FILENAME"
