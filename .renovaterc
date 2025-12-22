@@ -102,6 +102,19 @@
       "depNameTemplate": "grml/grml",
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{2})$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "scripts/rpi-image-customize"
+      ],
+      "matchStrings": [
+        "RELEASE=\"(?<release>[^\"\\n]+)\"\\s*\\nIMAGE_DATE=\"(?<currentValue>\\d{4}-\\d{2}-\\d{2})\""
+      ],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "RPi-Distro/pi-gen",
+      "versioningTemplate": "regex:^(?<major>\\d{4})-(?<minor>\\d{2})-(?<patch>\\d{2})$",
+      "extractVersion": "^(?<version>\\d{4}-\\d{2}-\\d{2})-raspios-(?<release>[^-]+)-arm64$"
     }
   ],
   "packageRules": [

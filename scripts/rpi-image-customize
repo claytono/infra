@@ -1,0 +1,404 @@
+#!/bin/bash
+# Customize a Raspberry Pi OS image for homelab use
+# Downloads image if needed, mounts it, configures cloud-init for first boot
+#
+# Usage:
+#   ./scripts/rpi-image-customize --hostname <name> [--wifi] [--use-test-data] [--output PATH]
+#
+# Examples:
+#   ./scripts/rpi-image-customize --hostname zwavejs
+#   ./scripts/rpi-image-customize --hostname garage-sensor --wifi
+#   ./scripts/rpi-image-customize --hostname test-rpi --use-test-data --output /tmp/test.img
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+POST_INSTALL="$REPO_ROOT/ansible/roles/os-install/files/post-install.sh"
+
+# Image configuration
+RELEASE="trixie"
+IMAGE_DATE="2025-12-04"
+IMAGE_BASE_URL="https://downloads.raspberrypi.com/raspios_lite_arm64/images"
+IMAGE_DIR="/tmp/rpi-images"
+IMAGE_FILENAME="${IMAGE_DATE}-raspios-${RELEASE}-arm64-lite.img"
+IMAGE_XZ_FILENAME="${IMAGE_FILENAME}.xz"
+IMAGE_URL="${IMAGE_BASE_URL}/raspios_lite_arm64-${IMAGE_DATE}/${IMAGE_XZ_FILENAME}"
+IMAGE_XZ="$IMAGE_DIR/$IMAGE_XZ_FILENAME"
+IMAGE="$IMAGE_DIR/$IMAGE_FILENAME"
+
+# 1Password paths
+OP_WIFI_SSID="op://infra/wifi/network name"
+OP_WIFI_PSK="op://infra/wifi/wireless network password"
+
+# Test mode password hash (openssl passwd -6 -salt testsalt testpassword)
+TEST_ROOT_PW_HASH='$6$testsalt$mGsoypwuoRHmmi31D2IfpZdmzbF5mX0yMhb/xSVguNcCI2EkoGrxfImuLJzvurLwR3UIRGHEBAUgqW6nuriIY0'
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") --hostname <name> [--wifi] [--serial] [--use-test-data] [--output PATH]
+
+Arguments:
+    --hostname NAME   Hostname for the Pi (required)
+    --wifi            Configure for WiFi (pulls credentials from 1Password)
+    --serial          Enable serial console on GPIO 14/15 (disables Bluetooth)
+    --use-test-data   Use test credentials (no 1Password required, ethernet only)
+    --output PATH     Write customized image to PATH instead of modifying in place
+
+The script automatically downloads Raspberry Pi OS Lite ($RELEASE) if not cached.
+
+Examples:
+    $(basename "$0") --hostname zwavejs
+    $(basename "$0") --hostname garage-sensor --wifi
+    $(basename "$0") --hostname garage-sensor --wifi --serial
+    $(basename "$0") --hostname test-rpi --use-test-data --output /tmp/test.img
+EOF
+    exit 1
+}
+
+cleanup() {
+    if [[ -n "${MOUNT_POINT:-}" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            if [[ -n "${ATTACHED_DISK:-}" ]]; then
+                echo "Detaching $ATTACHED_DISK..."
+                hdiutil detach "$ATTACHED_DISK" -force 2>/dev/null || true
+            fi
+        else
+            if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
+                echo "Unmounting $MOUNT_POINT..."
+                sudo umount "$MOUNT_POINT" 2>/dev/null || true
+            fi
+            if [[ -n "${LOOP_DEV:-}" ]]; then
+                sudo losetup -d "$LOOP_DEV" 2>/dev/null || true
+            fi
+        fi
+        rmdir "$MOUNT_POINT" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT
+
+# Helper to write files - uses sudo on Linux where mount requires root
+write_boot_file() {
+    local dest="$1"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        cat > "$dest"
+    else
+        sudo tee "$dest" > /dev/null
+    fi
+}
+
+# Helper to copy files to boot partition
+copy_boot_file() {
+    local src="$1"
+    local dest="$2"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        cp "$src" "$dest"
+        chmod +x "$dest"
+    else
+        sudo cp "$src" "$dest"
+        sudo chmod +x "$dest"
+    fi
+}
+
+# Helper to append to files on boot partition
+append_boot_file() {
+    local dest="$1"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        cat >> "$dest"
+    else
+        sudo tee -a "$dest" > /dev/null
+    fi
+}
+
+unmount_existing() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        for disk in $(hdiutil info 2>/dev/null | grep -B20 "bootfs\|raspios" | grep "/dev/disk" | awk '{print $1}' | sort -u); do
+            echo "Found existing mount from Pi image: $disk, detaching..."
+            hdiutil detach "$disk" -force 2>/dev/null || true
+        done
+    else
+        for loop in $(losetup -j "$IMAGE" 2>/dev/null | cut -d: -f1); do
+            echo "Found existing loop device: $loop, cleaning up..."
+            sudo umount "${loop}p1" 2>/dev/null || true
+            sudo losetup -d "$loop" 2>/dev/null || true
+        done
+    fi
+}
+
+download_image() {
+    mkdir -p "$IMAGE_DIR"
+
+    if [[ -f "$IMAGE" ]]; then
+        echo "Using cached image: $IMAGE"
+        return
+    fi
+
+    if [[ -f "$IMAGE_XZ" ]]; then
+        echo "Decompressing cached $IMAGE_XZ..."
+    else
+        echo "Downloading Raspberry Pi OS Lite ($RELEASE)..."
+        curl -L -o "$IMAGE_XZ" "$IMAGE_URL"
+    fi
+
+    echo "Decompressing image..."
+    xz -dk "$IMAGE_XZ"
+    echo "Image ready: $IMAGE"
+}
+
+mount_boot_partition() {
+    MOUNT_POINT=$(mktemp -d)
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "Attaching image..."
+        ATTACH_OUTPUT=$(hdiutil attach "$IMAGE" -nomount 2>&1)
+        ATTACHED_DISK=$(echo "$ATTACH_OUTPUT" | grep -E "^/dev/disk[0-9]+" | head -1 | awk '{print $1}')
+
+        if [[ -z "$ATTACHED_DISK" ]]; then
+            echo "Error: Could not attach image" >&2
+            echo "$ATTACH_OUTPUT" >&2
+            exit 1
+        fi
+
+        BOOT_PART="${ATTACHED_DISK}s1"
+        echo "Mounting boot partition $BOOT_PART..."
+        mount -t msdos "$BOOT_PART" "$MOUNT_POINT"
+    else
+        LOOP_DEV=$(sudo losetup --find --show --partscan "$IMAGE")
+        BOOT_PART="${LOOP_DEV}p1"
+
+        # Wait for partition device to appear (udev may take a moment)
+        for i in {1..10}; do
+            [[ -b "$BOOT_PART" ]] && break
+            sleep 0.5
+        done
+
+        if [[ ! -b "$BOOT_PART" ]]; then
+            echo "Error: Boot partition not found at $BOOT_PART" >&2
+            exit 1
+        fi
+
+        sudo mount "$BOOT_PART" "$MOUNT_POINT"
+    fi
+
+    echo "Boot partition mounted at $MOUNT_POINT"
+}
+
+# Parse arguments
+HOSTNAME=""
+NETWORK="ethernet"
+SERIAL="false"
+TEST_MODE="false"
+OUTPUT_PATH=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --hostname)
+            HOSTNAME="$2"
+            shift 2
+            ;;
+        --wifi)
+            NETWORK="wifi"
+            shift
+            ;;
+        --serial)
+            SERIAL="true"
+            shift
+            ;;
+        --use-test-data)
+            TEST_MODE="true"
+            shift
+            ;;
+        --output)
+            OUTPUT_PATH="$2"
+            shift 2
+            ;;
+        --help|-h)
+            usage
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage
+            ;;
+    esac
+done
+
+# Test mode forces ethernet (no WiFi credentials available)
+if [[ "$TEST_MODE" == "true" ]] && [[ "$NETWORK" == "wifi" ]]; then
+    echo "Warning: --use-test-data forces ethernet-only (ignoring --wifi)" >&2
+    NETWORK="ethernet"
+fi
+
+if [[ -z "$HOSTNAME" ]]; then
+    echo "Error: --hostname required" >&2
+    usage
+fi
+
+if [[ ! -f "$POST_INSTALL" ]]; then
+    echo "Error: post-install.sh not found at $POST_INSTALL" >&2
+    exit 1
+fi
+
+echo "=== Raspberry Pi Image Customization ==="
+echo "Hostname: $HOSTNAME"
+echo "Network: $NETWORK"
+if [[ "$TEST_MODE" == "true" ]]; then
+    echo "Mode: TEST (mocked credentials)"
+fi
+echo ""
+
+unmount_existing
+download_image
+
+# If output path specified, copy image there first
+if [[ -n "$OUTPUT_PATH" ]]; then
+    echo "Copying image to $OUTPUT_PATH..."
+    cp "$IMAGE" "$OUTPUT_PATH"
+    IMAGE="$OUTPUT_PATH"
+fi
+
+mount_boot_partition
+
+# Create cloud-init user-data (format matches rpi-imager)
+if [[ "$TEST_MODE" == "true" ]]; then
+    ROOT_PW_HASH="$TEST_ROOT_PW_HASH"
+    # Find SSH public key for test mode
+    SSH_PUBKEY=""
+    for key in ~/.ssh/id_ed25519.pub ~/.ssh/id_rsa.pub; do
+        if [[ -f "$key" ]]; then
+            SSH_PUBKEY=$(cat "$key")
+            break
+        fi
+    done
+    if [[ -z "$SSH_PUBKEY" ]]; then
+        echo "Error: No SSH public key found in ~/.ssh/ (required for --use-test-data)" >&2
+        exit 1
+    fi
+else
+    ROOT_PW_HASH=$(op read "op://infra/ansible-root-password/hashed-sha512")
+    SSH_PUBKEY=$(op read "op://infra/ansible-ssh-key/public key")
+fi
+SSH_PUBKEY_ESCAPED=${SSH_PUBKEY//\'/\'\"\'\"\'}
+
+EXTRA_RUNCMD=""
+if [[ "$TEST_MODE" == "true" ]]; then
+    # Ensure test key remains after post-install overwrites authorized_keys
+    EXTRA_RUNCMD=$(cat <<EOF
+  - /bin/sh -c "mkdir -p /root/.ssh && echo '${SSH_PUBKEY_ESCAPED}' >> /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys"
+  - /bin/sh -c "mkdir -p /home/ansible/.ssh && echo '${SSH_PUBKEY_ESCAPED}' >> /home/ansible/.ssh/authorized_keys && chown -R ansible:ansible /home/ansible/.ssh && chmod 700 /home/ansible/.ssh && chmod 600 /home/ansible/.ssh/authorized_keys"
+EOF
+)
+fi
+
+write_boot_file "$MOUNT_POINT/user-data" <<EOF
+#cloud-config
+manage_resolv_conf: false
+
+hostname: $HOSTNAME
+manage_etc_hosts: true
+
+apt:
+  preserve_sources_list: true
+
+users:
+- name: root
+  lock_passwd: false
+  passwd: "${ROOT_PW_HASH}"
+  ssh_authorized_keys:
+    - "${SSH_PUBKEY}"
+
+enable_ssh: true
+ssh_pwauth: false
+
+runcmd:
+  - /boot/firmware/post-install.sh
+  - rm -f /boot/firmware/post-install.sh
+${EXTRA_RUNCMD}
+  - touch /run/cloud-init-complete
+EOF
+echo "Created user-data"
+
+# Create cloud-init meta-data
+write_boot_file "$MOUNT_POINT/meta-data" <<EOF
+instance-id: $HOSTNAME
+EOF
+echo "Created meta-data"
+
+# Configure network via cloud-init network-config (netplan format)
+# Format matches rpi-imager: always include ethernets, dhcp4+dhcp6, optional: true
+if [[ "$NETWORK" == "wifi" ]]; then
+    echo "Fetching WiFi credentials from 1Password..."
+    WIFI_SSID=$(op read "$OP_WIFI_SSID")
+    WIFI_PSK=$(op read "$OP_WIFI_PSK")
+
+    # Hash password using PBKDF2-SHA1, 4096 iterations (WPA2 PSK format, same as rpi-imager)
+    WIFI_PSK_HASH=$(python3 -c "import hashlib; print(hashlib.pbkdf2_hmac('sha1', '$WIFI_PSK'.encode(), '$WIFI_SSID'.encode(), 4096, 32).hex())")
+
+    write_boot_file "$MOUNT_POINT/network-config" <<EOF
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+      dhcp6: true
+      optional: true
+  wifis:
+    wlan0:
+      dhcp4: true
+      dhcp6: true
+      regulatory-domain: "US"
+      access-points:
+        "${WIFI_SSID}":
+          password: "${WIFI_PSK_HASH}"
+      optional: true
+EOF
+    echo "Created network-config for WiFi (SSID: $WIFI_SSID)"
+else
+    write_boot_file "$MOUNT_POINT/network-config" <<EOF
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+      dhcp6: true
+      optional: true
+EOF
+    echo "Created network-config for ethernet"
+fi
+
+# Set WiFi regulatory domain in kernel cmdline (required for first-boot WiFi)
+# Append to end of line (cmdline.txt is a single line)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    CMDLINE=$(cat "${MOUNT_POINT}/cmdline.txt")
+else
+    CMDLINE=$(sudo cat "${MOUNT_POINT}/cmdline.txt")
+fi
+echo "${CMDLINE} cfg80211.ieee80211_regdom=US" | write_boot_file "${MOUNT_POINT}/cmdline.txt"
+echo "Added WiFi regulatory domain to cmdline.txt"
+
+# Copy post-install script
+copy_boot_file "$POST_INSTALL" "$MOUNT_POINT/post-install.sh"
+echo "Copied post-install.sh"
+
+# Enable serial console for debugging via FTDI cable (optional)
+if [[ "$SERIAL" == "true" ]]; then
+    # disable-bt gives us PL011 (better UART) on GPIO 14/15 instead of mini UART
+    # This disables Bluetooth but provides reliable serial at any CPU frequency
+    append_boot_file "$MOUNT_POINT/config.txt" <<EOF
+
+# Enable serial console (PL011 UART on GPIO 14/15)
+enable_uart=1
+dtoverlay=disable-bt
+EOF
+    echo "Enabled serial console (UART on GPIO 14/15, Bluetooth disabled)"
+fi
+
+echo ""
+echo "=== Customization complete ==="
+echo ""
+echo "Image ready: $IMAGE"
+echo ""
+echo "Flash to SD card:"
+echo "  diskutil list                           # Find SD card"
+echo "  diskutil unmountDisk /dev/diskN"
+echo "  sudo dd if=$IMAGE of=/dev/rdiskN bs=4m status=progress"

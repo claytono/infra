@@ -1,0 +1,90 @@
+#!/bin/bash
+# Integration test for rpi-image-customize
+# Downloads image, customizes with --use-test-data mode, boots in QEMU, runs verification
+#
+# Usage: ./scripts/rpi-image-test
+#
+# Requires: Docker (for QEMU emulation)
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TEST_DIR="$REPO_ROOT/tests/rpi"
+TEST_HOSTNAME="test-rpi"
+TEST_IMAGE="/tmp/rpi-test/test.img"
+
+cleanup() {
+    echo ""
+    echo "=== Cleanup ==="
+    cd "$TEST_DIR"
+    docker compose down 2>/dev/null || true
+    rm -rf /tmp/rpi-test
+}
+trap cleanup EXIT
+
+echo "=== RPi Image Integration Test ==="
+echo ""
+
+# Create temp directory for test image
+mkdir -p /tmp/rpi-test
+
+# Ensure SSH key exists (GitHub runners may not have one)
+if [[ ! -f ~/.ssh/id_ed25519.pub ]] && [[ ! -f ~/.ssh/id_rsa.pub ]]; then
+    echo "No SSH key found, generating one..."
+    mkdir -p ~/.ssh
+    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N "" -C "rpi-test" -q
+fi
+
+# Step 1: Customize image with test credentials
+echo "=== Step 1: Customizing image ==="
+"$SCRIPT_DIR/rpi-image-customize" --hostname "$TEST_HOSTNAME" --use-test-data --output "$TEST_IMAGE"
+echo ""
+
+# Step 2: Boot in QEMU via Docker Compose
+echo "=== Step 2: Starting QEMU VM ==="
+cd "$TEST_DIR"
+export RPI_IMAGE="$TEST_IMAGE"
+
+# Build the image first
+docker compose build
+
+# Start container in background and stream logs
+docker compose up -d
+docker compose logs -f &
+LOGS_PID=$!
+
+# Wait for cloud-init to complete (indicated by /run/cloud-init-complete file)
+echo "Waiting for VM to boot and cloud-init to complete (this takes ~8 minutes)..."
+MAX_WAIT=900  # 15 minutes
+WAITED=0
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5 -p 2222"
+
+while ! ssh $SSH_OPTS root@localhost 'test -f /run/cloud-init-complete' 2>&1; do
+    if ! docker compose ps --format json | jq -e 'select(.State == "running")' >/dev/null 2>&1; then
+        kill $LOGS_PID 2>/dev/null || true
+        echo "ERROR: Container stopped unexpectedly"
+        exit 1
+    fi
+    if [[ $WAITED -ge $MAX_WAIT ]]; then
+        kill $LOGS_PID 2>/dev/null || true
+        echo "ERROR: Timeout waiting for cloud-init to complete"
+        exit 1
+    fi
+    sleep 15
+    WAITED=$((WAITED + 15))
+done
+
+# Stop streaming logs
+kill $LOGS_PID 2>/dev/null || true
+wait $LOGS_PID 2>/dev/null || true
+
+echo ""
+echo "Cloud-init complete, VM is ready!"
+echo ""
+
+# Step 3: Run verification tests
+echo "=== Step 3: Running verification tests ==="
+"$TEST_DIR/verify.sh" localhost 2222
+
+echo ""
+echo "=== All tests passed! ==="
