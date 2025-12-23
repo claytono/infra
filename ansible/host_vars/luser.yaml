@@ -1,10 +1,4 @@
 ---
-restic_host_config:
-  default:
-    backup:
-      exclude:
-        - /var/lib/libvirt/images/*
-
 manage_network: true
 interfaces_ether_interfaces:
   - device: ens18
