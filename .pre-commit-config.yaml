@@ -33,6 +33,11 @@ repos:
 
 - repo: local
   hooks:
+  - id: block-secrets-file
+    name: block .secrets.age file
+    language: fail
+    entry: .secrets.age should never be committed - run bootstrap-secrets to regenerate
+    files: ^\.secrets\.age$
   - id: ansible-lint
     name: ansible-lint
     entry: scripts/ansible-lint-wrapper

@@ -31,6 +31,7 @@
             # Pinned packages available in the environment
             packages = with pkgs; [
               act
+              age
               ansible-lint
               # Ansible with ARA in same Python environment
               (python3.withPackages (ps: with ps; [
