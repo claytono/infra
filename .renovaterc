@@ -114,6 +114,17 @@
       "datasourceTemplate": "github-tags",
       "depNameTemplate": "RPi-Distro/pi-gen",
       "versioningTemplate": "regex:^(?<major>\\d{4})-(?<minor>\\d{2})-(?<patch>\\d{2})-raspios-[^-]+-arm64$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "kubernetes/got-your-back/run"
+      ],
+      "matchStrings": [
+        "VERSION=(?<currentValue>\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "GAM-team/got-your-back",
+      "datasourceTemplate": "github-releases"
     }
   ],
   "packageRules": [
