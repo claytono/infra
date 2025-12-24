@@ -14,6 +14,7 @@
     mode: "0644"
     owner: root
     group: root
+  notify: Restart rtl_433 container
 
 - name: Deploy environment file
   ansible.builtin.template:
