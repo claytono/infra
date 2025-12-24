@@ -4,7 +4,11 @@ set -eu -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASEDIR="$(dirname "$SCRIPT_DIR")"
+REPO_ROOT="$(dirname "$(dirname "$BASEDIR")")"
 cd "$SCRIPT_DIR"
+
+# shellcheck source=../../../scripts/require-secrets
+source "$REPO_ROOT/scripts/require-secrets"
 
 image=$(yq -r .spec.jobTemplate.spec.template.spec.containers[0].image <"$BASEDIR/cronjobs/cronjob-b2.yaml")
 
@@ -12,13 +16,8 @@ mkdir -p .cache
 mkdir -p .tmp
 uuidgen >.tmp/uuid
 
-source ./get-1password-secrets
-
-# Get resticprofile password
-export_resticprofile_password
-
-# Get all rclone environment variables
-export_rclone_env_variables
+require_secrets RESTIC_PASSWORD RCLONE_CONFIG_B2_ACCOUNT RCLONE_CONFIG_B2_KEY \
+	RCLONE_CONFIG_B2C_PASSWORD RCLONE_CONFIG_B2C_PASSWORD2 || exit 1
 
 # Now run the Docker container with the config file and necessary environment variables
 docker run --rm \

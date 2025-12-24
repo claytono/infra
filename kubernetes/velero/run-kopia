@@ -7,12 +7,19 @@ set -eo pipefail
 
 # Directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
-source "$SCRIPT_DIR/get-1password-secrets"
+# shellcheck source=../../scripts/require-secrets
+source "$REPO_ROOT/scripts/require-secrets"
 
-# Fetch secrets from 1Password
-echo "Fetching secrets from 1Password..."
-export_velero_b2_variables
+require_secrets VELERO_RCLONE_CONFIG_B2_ACCOUNT VELERO_RCLONE_CONFIG_B2_KEY \
+	VELERO_RCLONE_S3_ACCESS_KEY VELERO_RCLONE_S3_SECRET_KEY KOPIA_PASSWORD || exit 1
+
+# Re-export with names expected by the script
+export RCLONE_CONFIG_B2_ACCOUNT="$VELERO_RCLONE_CONFIG_B2_ACCOUNT"
+export RCLONE_CONFIG_B2_KEY="$VELERO_RCLONE_CONFIG_B2_KEY"
+export RCLONE_S3_ACCESS_KEY="$VELERO_RCLONE_S3_ACCESS_KEY"
+export RCLONE_S3_SECRET_KEY="$VELERO_RCLONE_S3_SECRET_KEY"
 
 # Create temporary directory for kopia config
 TMPDIR=$(mktemp -d)
@@ -28,11 +35,9 @@ S3_PREFIX="velero/kopia/default"
 export AWS_ACCESS_KEY_ID="$RCLONE_S3_ACCESS_KEY"
 export AWS_SECRET_ACCESS_KEY="$RCLONE_S3_SECRET_KEY"
 
-# Kopia password is fetched from 1Password (exported by get-1password-secrets)
-# This is separate from the rclone encryption! Data is encrypted twice:
+# Data is encrypted twice:
 # 1. Kopia encrypts with KOPIA_PASSWORD
 # 2. Rclone encrypts the already-encrypted data with RCLONE_ENCRYPTION_PASSWORD
-# KOPIA_PASSWORD is already set from get-1password-secrets
 
 # Disable Kopia update checks
 export KOPIA_CHECK_FOR_UPDATES=false

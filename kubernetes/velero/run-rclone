@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-# Script to run rclone with secrets from 1Password
+# Script to run rclone with Velero B2 credentials
 # For local development use only
 
 # Directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
-source "$SCRIPT_DIR/get-1password-secrets"
+# shellcheck source=../../scripts/require-secrets
+source "$REPO_ROOT/scripts/require-secrets"
 
-# Fetch secrets from 1Password
-echo "Fetching secrets from 1Password..."
-export_velero_b2_variables
+require_secrets VELERO_RCLONE_CONFIG_B2_ACCOUNT VELERO_RCLONE_CONFIG_B2_KEY \
+	VELERO_RCLONE_ENCRYPTION_PASSWORD || exit 1
+
+# Re-export with names expected by the script
+export RCLONE_CONFIG_B2_ACCOUNT="$VELERO_RCLONE_CONFIG_B2_ACCOUNT"
+export RCLONE_CONFIG_B2_KEY="$VELERO_RCLONE_CONFIG_B2_KEY"
+export RCLONE_ENCRYPTION_PASSWORD="$VELERO_RCLONE_ENCRYPTION_PASSWORD"
 
 # Create temporary directory for rclone config
 TMPDIR=$(mktemp -d)
