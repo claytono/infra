@@ -10,6 +10,7 @@ p3 ansible_host=p3.oneill.net domain=oneill.net
 #gasherbrum ansible_host=gasherbrum.oneill.net domain=oneill.net
 #gasherbrum-display ansible_host=gasherbrum-display.oneill.net domain=oneill.net
 zwavejs ansible_host=zwavejs.oneill.net domain=oneill.net
+garagepi ansible_host=garagepi.oneill.net domain=oneill.net
 infra1 ansible_host=infra1.oneill.net domain=oneill.net
 p1 ansible_host=p1.oneill.net domain=oneill.net
 p2 ansible_host=p2.oneill.net domain=oneill.net
@@ -43,6 +44,7 @@ k4
 #gasherbrum
 #gasherbrum-display
 zwavejs
+garagepi
 
 [pizero]
 #voron2-pizero
@@ -64,3 +66,6 @@ infra1
 
 [docker]
 luser
+
+[rtl433]
+garagepi

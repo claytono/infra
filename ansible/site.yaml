@@ -191,6 +191,12 @@
       when: sysctl_file.changed
       tags: tailscale
 
+- name: RTL433 SDR receivers
+  hosts: rtl433
+  roles:
+    - role: rtl433
+      tags: rtl433
+
 - name: Kubernetes role
   hosts: kubernetes
   roles:

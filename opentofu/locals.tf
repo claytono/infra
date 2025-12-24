@@ -137,5 +137,11 @@ locals {
       hostname = "p4-power.oneill.net"
       note     = "p4 power monitor"
     }
+    garagepi = {
+      mac      = "d8:3a:dd:1c:15:30"
+      ip       = "172.19.74.216"
+      hostname = "garagepi.oneill.net"
+      note     = "Raspberry Pi in garage - rtl433"
+    }
   }
 }

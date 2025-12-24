@@ -1,0 +1,11 @@
+---
+# rtl_433 Docker image version
+# renovate: datasource=docker depName=hertzg/rtl_433
+rtl433_image_tag: "25.12"
+
+# Where to deploy the docker-compose stack
+rtl433_install_dir: /etc/rtl433
+
+# MQTT configuration
+rtl433_mqtt_host: mqtt.k.oneill.net
+rtl433_mqtt_port: 1883
