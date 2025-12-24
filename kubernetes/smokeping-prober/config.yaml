@@ -19,6 +19,7 @@ targets:
   - p9.oneill.net
   - infra1.oneill.net
   - zwavejs.oneill.net
+  - garagepi.oneill.net
   - left-garage-door.oneill.net
   - right-garage-door.oneill.net
   - fs2.oneill.net

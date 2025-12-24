@@ -1,0 +1,26 @@
+services:
+  rtl_433:
+    container_name: rtl_433
+    image: hertzg/rtl_433:{{ rtl433_image_tag }}
+    restart: unless-stopped
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - MQTT_USERNAME=${MQTT_USER}
+      - MQTT_PASSWORD=${MQTT_PASS}
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT}
+      - TZ=America/New_York
+    command:
+      - "-f"
+      - "915Mhz"
+      - "-g"
+      - "0"
+      - "-C"
+      - "si"
+      - "-F"
+      - "json"
+      - "-F"
+      - "mqtt://${MQTT_HOST}:${MQTT_PORT}/retain=0,base=rtl_433,events=rtl_433/devices[/model][/id]"
+      - "-F"
+      - "log"

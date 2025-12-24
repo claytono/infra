@@ -1,0 +1,33 @@
+---
+- name: Ensure rtl433 directory exists
+  ansible.builtin.file:
+    path: "{{ rtl433_install_dir }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Deploy docker-compose.yaml
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ rtl433_install_dir }}/docker-compose.yaml"
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: Deploy environment file
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ rtl433_install_dir }}/.env"
+    mode: "0600"
+    owner: root
+    group: root
+  notify: Restart rtl_433 container
+
+- name: Start rtl_433 container
+  community.docker.docker_compose_v2:
+    project_src: "{{ rtl433_install_dir }}"
+    pull: always
+    recreate: auto
+    state: present
+    wait: true

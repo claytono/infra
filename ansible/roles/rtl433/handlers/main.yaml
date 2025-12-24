@@ -1,0 +1,5 @@
+---
+- name: Restart rtl_433 container
+  community.docker.docker_compose_v2:
+    project_src: "{{ rtl433_install_dir }}"
+    state: restarted

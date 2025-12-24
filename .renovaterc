@@ -48,13 +48,24 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "ansible/group_vars/all.yaml"
+        "ansible/group_vars/all/node_exporter.yaml"
       ],
       "matchStrings": [
         "(?:^|\\n)\\s*node_exporter_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
       ],
       "depNameTemplate": "prometheus/node_exporter",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "ansible/roles/rtl433/defaults/main.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*rtl433_image_tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?\\s*(#.*)?"
+      ],
+      "depNameTemplate": "hertzg/rtl_433",
+      "datasourceTemplate": "docker"
     },
     {
       "customType": "regex",

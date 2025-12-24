@@ -12,3 +12,10 @@ docker_packages_state: present
 
 # containerd configuration - use subdirectory to avoid changing /tmp permissions
 containerd_tmp_directory: "/tmp/containerd"
+
+# Log rotation for all containers
+docker_daemon_options:
+  log-driver: json-file
+  log-opts:
+    max-size: 10m
+    max-file: "3"
