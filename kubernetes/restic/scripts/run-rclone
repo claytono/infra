@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-# Script to run rclone with secrets from 1Password
+# Script to run rclone with restic B2 credentials
 # For local development use only
 
 # Directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 BASEDIR="$(dirname "$SCRIPT_DIR")"
+REPO_ROOT="$(dirname "$(dirname "$BASEDIR")")"
 TEMP_RCLONE_CONFIG="/tmp/rclone.conf"
 
-source "$SCRIPT_DIR/get-1password-secrets"
+# shellcheck source=../../../scripts/require-secrets
+source "$REPO_ROOT/scripts/require-secrets"
 
-# Running locally, fetch secrets from 1Password
-echo "Fetching secrets from 1Password"
-
-# Get all rclone environment variables
-export_rclone_env_variables
+require_secrets RCLONE_CONFIG_B2_ACCOUNT RCLONE_CONFIG_B2_KEY \
+	RCLONE_CONFIG_B2C_PASSWORD RCLONE_CONFIG_B2C_PASSWORD2 || exit 1
 
 # Create a temporary rclone config
 cp "$BASEDIR/rclone.conf" "$TEMP_RCLONE_CONFIG"

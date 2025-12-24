@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-HASS_BEARER_TOKEN=$(op item get --vault infra prometheus --fields hass-bearer-token)
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# shellcheck source=../../scripts/require-secrets
+source "$REPO_ROOT/scripts/require-secrets"
 
+require_secrets HASS_BEARER_TOKEN || exit 1
 exec curl -X GET -q -H "Authorization:Bearer $HASS_BEARER_TOKEN" https://hass.k.oneill.net/api/prometheus
