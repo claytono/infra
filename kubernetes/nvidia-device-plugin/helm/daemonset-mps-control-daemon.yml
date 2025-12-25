@@ -1,0 +1,196 @@
+---
+# Source: nvidia-device-plugin/templates/daemonset-mps-control-daemon.yml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nvidia-device-plugin-mps-control-daemon
+  namespace: nvidia-device-plugin
+  labels:
+    app.kubernetes.io/name: nvidia-device-plugin
+    app.kubernetes.io/instance: nvidia-device-plugin
+    app.kubernetes.io/version: "0.18.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nvidia-device-plugin
+      app.kubernetes.io/instance: nvidia-device-plugin
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nvidia-device-plugin
+        app.kubernetes.io/instance: nvidia-device-plugin
+      annotations:
+        checksum/config: 8d6053408d5110be58d1e1ee7f811737b0ddb287f4f163e30bf0ca43e941107b
+    spec:
+      priorityClassName: system-node-critical
+      runtimeClassName: nvidia
+      securityContext:
+        {}
+      serviceAccountName: nvidia-device-plugin-service-account
+      hostPID: true
+      initContainers:
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+        name: mps-control-daemon-mounts
+        command: [mps-control-daemon, mount-shm]
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: mps-root
+          mountPath: /mps
+          mountPropagation: Bidirectional
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+        name: mps-control-daemon-init
+        command: ["config-manager"]
+        env:
+        - name: ONESHOT
+          value: "true"
+        - name: KUBECONFIG
+          value: ""
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: "spec.nodeName"
+        - name: NODE_LABEL
+          value: "nvidia.com/device-plugin.config"
+        - name: CONFIG_FILE_SRCDIR
+          value: "/available-configs"
+        - name: CONFIG_FILE_DST
+          value: "/config/config.yaml"
+        - name: DEFAULT_CONFIG
+          value: default
+        - name: FALLBACK_STRATEGIES
+          value: named,single
+        - name: SEND_SIGNAL
+          value: "false"
+        - name: SIGNAL
+          value: ""
+        - name: PROCESS_TO_SIGNAL
+          value: ""
+        volumeMounts:
+          - name: available-configs
+            mountPath: /available-configs
+          - name: config
+            mountPath: /config
+      containers:
+        # TODO: How do we synchronize the plugin and control-daemon on restart.
+        - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+          name: mps-control-daemon-sidecar
+          command: ["config-manager"]
+          env:
+          - name: ONESHOT
+            value: "false"
+          - name: KUBECONFIG
+            value: ""
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: "spec.nodeName"
+          - name: NODE_LABEL
+            value: "nvidia.com/device-plugin.config"
+          - name: CONFIG_FILE_SRCDIR
+            value: "/available-configs"
+          - name: CONFIG_FILE_DST
+            value: "/config/config.yaml"
+          - name: DEFAULT_CONFIG
+            value: default
+          - name: FALLBACK_STRATEGIES
+            value: named,single
+          - name: SEND_SIGNAL
+            value: "true"
+          - name: SIGNAL
+            value: "1"
+          - name: PROCESS_TO_SIGNAL
+            value: "/usr/bin/mps-control-daemon"
+          volumeMounts:
+            - name: available-configs
+              mountPath: /available-configs
+            - name: config
+              mountPath: /config
+        - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+          imagePullPolicy: IfNotPresent
+          name: mps-control-daemon-ctr
+          command: [mps-control-daemon]
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: spec.nodeName
+          - name: CONFIG_FILE
+            value: /config/config.yaml
+          - name: NVIDIA_MIG_MONITOR_DEVICES
+            value: all
+          - name: NVIDIA_VISIBLE_DEVICES
+            value: all
+          - name: NVIDIA_DRIVER_CAPABILITIES
+            value: compute,utility
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - name: mps-shm
+            mountPath: /dev/shm
+          - name: mps-root
+            mountPath: /mps
+          - name: available-configs
+            mountPath: /available-configs
+          - name: config
+            mountPath: /config
+      volumes:
+      - name: mps-root
+        hostPath:
+          path: /run/nvidia/mps
+          type: DirectoryOrCreate
+      - name: mps-shm
+        hostPath:
+          path: /run/nvidia/mps/shm
+      - name: available-configs
+        configMap:
+          name: nvidia-device-plugin-configs
+      - name: config
+        emptyDir: {}
+      nodeSelector:
+        # We only deploy this pod if the following sharing label is applied.
+        nvidia.com/mps.capable: "true"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: feature.node.kubernetes.io/pci-10de.present
+                operator: In
+                values:
+                - "true"
+            - matchExpressions:
+              - key: feature.node.kubernetes.io/cpu-model.vendor_id
+                operator: In
+                values:
+                - NVIDIA
+            - matchExpressions:
+              - key: nvidia.com/gpu.present
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoSchedule
+          key: nvidia.com/gpu
+          operator: Exists
+---
+# Source: nvidia-device-plugin/templates/daemonset-mps-control-daemon.yml
+# Copyright 2024 NVIDIA CORPORATION
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.

@@ -6,3 +6,8 @@ worker:
   - effect: NoSchedule
     key: node-role.kubernetes.io/control-plane
     operator: Equal
+  config:
+    sources:
+      pci:
+        deviceLabelFields:
+        - vendor

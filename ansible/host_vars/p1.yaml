@@ -4,6 +4,10 @@ proxmox_install_mac: "90:e2:ba:d8:2a:8c"
 proxmox_install_nic: "enp3s0f0"
 proxmox_zfs_raid: "raid1"
 
+# GPU passthrough for RTX 2060 Super (VGA + Audio only, USB not needed)
+proxmox_gpu_passthrough:
+  pci_ids: "10de:1f06,10de:10f9"
+
 # Enable network management for this host
 proxmox_manage_network: true
 

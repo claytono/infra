@@ -1,0 +1,36 @@
+---
+# GPU passthrough configuration for Proxmox hosts
+# Requires proxmox_gpu_passthrough.pci_ids to be set in host_vars
+
+- name: "Load VFIO modules at boot"
+  ansible.builtin.lineinfile:
+    path: /etc/modules
+    line: "{{ item }}"
+    create: true
+    mode: "0644"
+  loop:
+    - vfio
+    - vfio_iommu_type1
+    - vfio_pci
+  notify: "Update initramfs"
+
+- name: "Configure vfio-pci to claim GPU devices"
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/vfio.conf
+    content: |
+      options vfio-pci ids={{ proxmox_gpu_passthrough.pci_ids }} disable_vga=1
+    mode: "0644"
+  notify: "Update initramfs"
+
+- name: "Blacklist GPU drivers"
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/blacklist-gpu.conf
+    content: |
+      blacklist nouveau
+      blacklist nvidia
+      blacklist nvidiafb
+      blacklist nvidia_drm
+      blacklist nvidia_modeset
+      blacklist i2c_nvidia_gpu
+    mode: "0644"
+  notify: "Update initramfs"

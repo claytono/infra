@@ -36,3 +36,7 @@
 
 - name: "Configure Authentik OIDC realm"
   ansible.builtin.import_tasks: oidc.yaml
+
+- name: "Configure GPU passthrough"
+  ansible.builtin.import_tasks: gpu-passthrough.yaml
+  when: proxmox_gpu_passthrough is defined

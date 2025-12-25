@@ -1,0 +1,25 @@
+---
+# Source: nvidia-device-plugin/templates/configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvidia-device-plugin-configs
+  namespace: nvidia-device-plugin
+  labels:
+    app.kubernetes.io/name: nvidia-device-plugin
+    app.kubernetes.io/instance: nvidia-device-plugin
+    app.kubernetes.io/version: "0.18.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  default: |-
+    version: v1
+    flags:
+      plugin:
+        deviceListStrategy:
+          - cdi-annotations
+        containerDriverRoot: "/"
+    sharing:
+      timeSlicing:
+        resources:
+          - name: nvidia.com/gpu
+            replicas: 4

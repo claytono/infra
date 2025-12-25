@@ -1,0 +1,92 @@
+---
+# NVIDIA GPU driver and container toolkit for Kubernetes nodes
+# Conditional on nvidia_gpu: true in host_vars
+
+- name: "Install NVIDIA driver prerequisites"
+  ansible.builtin.apt:
+    name:
+      - linux-headers-amd64
+      - dkms
+      - build-essential
+
+- name: "Install NVIDIA open driver from Debian repos"
+  ansible.builtin.apt:
+    name:
+      - nvidia-open-kernel-dkms
+      - nvidia-driver
+      - nvidia-smi
+      - libcuda1
+
+- name: "Ensure apt keyrings directory exists"
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: "Add NVIDIA container toolkit GPG key"
+  ansible.builtin.get_url:
+    url: https://nvidia.github.io/libnvidia-container/gpgkey
+    dest: /etc/apt/keyrings/nvidia-container-toolkit.asc
+    mode: "0644"
+
+- name: "Add NVIDIA container toolkit repository"
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.asc] https://nvidia.github.io/libnvidia-container/stable/deb/amd64 /"
+    filename: nvidia-container-toolkit
+    state: present
+
+- name: "Install nvidia-container-toolkit"
+  ansible.builtin.apt:
+    name: nvidia-container-toolkit
+    update_cache: true
+
+- name: "Get checksum of NVIDIA containerd config before"
+  ansible.builtin.stat:
+    path: /etc/containerd/conf.d/99-nvidia.toml
+    checksum_algorithm: sha256
+  register: kubeadm_nvidia_config_before
+
+- name: "Configure containerd to use NVIDIA runtime with CDI"
+  ansible.builtin.command:
+    cmd: nvidia-ctk runtime configure --runtime=containerd --cdi.enabled
+  changed_when: false
+
+- name: "Get checksum of NVIDIA containerd config after"
+  ansible.builtin.stat:
+    path: /etc/containerd/conf.d/99-nvidia.toml
+    checksum_algorithm: sha256
+  register: kubeadm_nvidia_config_after
+
+- name: "Restart containerd if config changed"
+  ansible.builtin.debug:
+    msg: "NVIDIA containerd config changed, restarting containerd"
+  changed_when: kubeadm_nvidia_config_before.stat.checksum | default('') != kubeadm_nvidia_config_after.stat.checksum
+  notify: "Restart containerd"
+
+- name: "Ensure CDI directory exists"
+  ansible.builtin.file:
+    path: /etc/cdi
+    state: directory
+    mode: "0755"
+
+- name: "Get checksum of CDI spec before"
+  ansible.builtin.stat:
+    path: /etc/cdi/nvidia.yaml
+    checksum_algorithm: sha256
+  register: kubeadm_cdi_spec_before
+
+- name: "Generate NVIDIA CDI spec"
+  ansible.builtin.command:
+    cmd: nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+  changed_when: false
+
+- name: "Get checksum of CDI spec after"
+  ansible.builtin.stat:
+    path: /etc/cdi/nvidia.yaml
+    checksum_algorithm: sha256
+  register: kubeadm_cdi_spec_after
+
+- name: "Report CDI spec generation"
+  ansible.builtin.debug:
+    msg: "NVIDIA CDI spec generated/updated"
+  changed_when: kubeadm_cdi_spec_before.stat.checksum | default('') != kubeadm_cdi_spec_after.stat.checksum

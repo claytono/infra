@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: node-feature-discovery
         role: worker
       annotations:
-        checksum/config: ecc48e8ec36b99c939ee619caf63dfdd7d5b2419ddda6910fc5bac1b7a067766
+        checksum/config: 01cca2259c69683ee6d76199ee31cf7a4a1173571ec835916bebf145ed3cc4c6
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       imagePullSecrets: 

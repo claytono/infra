@@ -11,6 +11,9 @@
   ansible.builtin.include_tasks: common.yaml
 - name: Include iscsi tasks
   ansible.builtin.include_tasks: iscsi.yaml
+- name: Configure NVIDIA GPU support
+  ansible.builtin.include_tasks: nvidia.yaml
+  when: kubeadm_nvidia_gpu | default(false)
 - name: Include master tasks
   ansible.builtin.include_tasks: master.yaml
   when: is_kubernetes_master
