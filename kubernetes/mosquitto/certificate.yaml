@@ -1,0 +1,14 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+
+metadata:
+  name: mosquitto-tls
+
+spec:
+  secretName: mosquitto-tls
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+  - mqtt.k.oneill.net

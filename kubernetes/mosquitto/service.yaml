@@ -23,3 +23,9 @@ spec:
   - name: mqtt-websockets
     protocol: TCP
     port: 9001
+  - name: mqtt-tls
+    protocol: TCP
+    port: 8883
+  - name: mqtt-websockets-tls
+    protocol: TCP
+    port: 8084
