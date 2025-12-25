@@ -8,6 +8,7 @@ commonAnnotations:
   argoManaged: 'true'
 
 resources:
+- certificate.yaml
 - deploy.yaml
 - externalsecret.yaml
 - pvc.yaml

@@ -41,6 +41,8 @@ spec:
         ports:
         - containerPort: 9001
         - containerPort: 1883
+        - containerPort: 8883
+        - containerPort: 8084
         volumeMounts:
         - name: config
           mountPath: /mosquitto/config
@@ -49,6 +51,9 @@ spec:
           mountPath: /mosquitto/data
         - name: generated
           mountPath: /generated
+          readOnly: true
+        - name: tls
+          mountPath: /mosquitto/certs
           readOnly: true
       volumes:
       - name: config
@@ -69,3 +74,6 @@ spec:
         configMap:
           name: create-password-file-script
           defaultMode: 0755
+      - name: tls
+        secret:
+          secretName: mosquitto-tls
