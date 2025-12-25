@@ -12,4 +12,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 data:
   nfd-worker.conf: |-
-    null
+    sources:
+      pci:
+        deviceLabelFields:
+        - vendor

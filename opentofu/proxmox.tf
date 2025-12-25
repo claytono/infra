@@ -8,6 +8,18 @@
 # - network_device.queues = cores (multiqueue for parallel packet processing)
 # - agent.enabled = true, agent.trim = true (guest agent with fstrim)
 
+# RTX 2060 Super hardware mapping for PCI passthrough
+resource "proxmox_virtual_environment_hardware_mapping_pci" "rtx2060" {
+  name = "rtx2060"
+  map = [{
+    id           = "10de:1f06"
+    node         = "p1"
+    path         = "0000:01:00"
+    iommu_group  = 2
+    subsystem_id = "1458:3fed"
+  }]
+}
+
 resource "proxmox_virtual_environment_vm" "k1" {
   name      = "k1"
   node_name = "p9"
@@ -66,6 +78,7 @@ resource "proxmox_virtual_environment_vm" "k2" {
 
   started = false
   on_boot = true
+  machine = "q35"
 
   cpu {
     cores   = 4
@@ -99,6 +112,13 @@ resource "proxmox_virtual_environment_vm" "k2" {
     mac_address = "52:54:72:19:74:72"
     model       = "virtio"
     queues      = 4
+  }
+
+  # RTX 2060 Super GPU passthrough from p1
+  hostpci {
+    device  = "hostpci0"
+    mapping = proxmox_virtual_environment_hardware_mapping_pci.rtx2060.name
+    pcie    = true
   }
 
   operating_system {

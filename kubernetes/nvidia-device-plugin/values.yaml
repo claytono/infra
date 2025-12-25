@@ -1,0 +1,18 @@
+---
+runtimeClassName: nvidia
+
+config:
+  default: default
+  map:
+    default: |-
+      version: v1
+      flags:
+        plugin:
+          deviceListStrategy:
+            - cdi-annotations
+          containerDriverRoot: "/"
+      sharing:
+        timeSlicing:
+          resources:
+            - name: nvidia.com/gpu
+              replicas: 4

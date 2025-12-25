@@ -1,4 +1,6 @@
 ---
+kubeadm_nvidia_gpu: true
+
 manage_network: true
 interfaces_ether_interfaces:
   - device: ens18

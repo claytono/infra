@@ -3,3 +3,8 @@
   ansible.builtin.command:
     cmd: ifreload -a
   listen: Reload network configuration
+
+- name: Update initramfs
+  ansible.builtin.command:
+    cmd: update-initramfs -u -k all
+  listen: Update initramfs
