@@ -1,7 +1,8 @@
 ---
-- name: Restart traefik
+- name: Restart nut_webgui
   community.docker.docker_compose_v2:
-    project_src: /etc/traefik
+    project_src: /etc/nut/webgui
     state: present
     recreate: always
     wait: true
+  become: true

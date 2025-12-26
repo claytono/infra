@@ -1,4 +1,8 @@
 ---
+# Traefik config files to deploy
+traefik_config_files:
+  - proxmox
+
 # Tailscale exit node
 tailscale_args: --advertise-routes=172.19.74.0/23,172.20.4.0/22 --advertise-exit-node --accept-dns=false
 ip_forwarding_enabled: true
