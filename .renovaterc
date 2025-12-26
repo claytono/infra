@@ -75,7 +75,7 @@
       "matchStrings": [
         "(?:^|\\n)\\s*zwavejs_image_tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?\\s*(#.*)?"
       ],
-      "depNameTemplate": "zwavejs/zwavejs2mqtt",
+      "depNameTemplate": "zwavejs/zwave-js-ui",
       "datasourceTemplate": "docker"
     },
     {
