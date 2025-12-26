@@ -127,7 +127,7 @@
       tags: [restic, resticprofile]
 
 - name: Traefik
-  hosts: infra1
+  hosts: traefik
   roles:
     - role: traefik
       tags: traefik
@@ -196,6 +196,18 @@
   roles:
     - role: rtl433
       tags: rtl433
+
+- name: ZWaveJS
+  hosts: zwavejs
+  roles:
+    - role: zwavejs
+      tags: zwavejs
+
+- name: Zigbee2MQTT
+  hosts: zigbee2mqtt
+  roles:
+    - role: zigbee2mqtt
+      tags: zigbee2mqtt
 
 - name: Kubernetes role
   hosts: kubernetes

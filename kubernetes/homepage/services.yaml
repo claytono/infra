@@ -5,8 +5,11 @@
       description: UPS Monitoring
       icon: mdi-battery-charging
   - Z-Wave JS:
-      href: http://zwavejs.oneill.net:8091/
+      href: https://zwavejs.oneill.net/
       icon: mdi-z-wave
+  - Zigbee2MQTT:
+      href: https://zigbee2mqtt.oneill.net/
+      icon: mdi-zigbee
 
 - Home Lab:
   - Proxmox:

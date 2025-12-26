@@ -70,6 +70,28 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
+        "ansible/roles/zwavejs/defaults/main.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*zwavejs_image_tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?\\s*(#.*)?"
+      ],
+      "depNameTemplate": "zwavejs/zwavejs2mqtt",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "ansible/roles/zigbee2mqtt/defaults/main.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*zigbee2mqtt_image_tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?\\s*(#.*)?"
+      ],
+      "depNameTemplate": "koenkk/zigbee2mqtt",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
         "/.*\\.ya?ml$/"
       ],
       "matchStrings": [
