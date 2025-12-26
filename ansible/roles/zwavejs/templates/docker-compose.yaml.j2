@@ -1,0 +1,32 @@
+---
+services:
+  zwave-js:
+    image: zwavejs/zwavejs2mqtt:{{ zwavejs_image_tag }}
+    container_name: zwavejs
+    restart: unless-stopped
+    volumes:
+      - {{ zwavejs_data_dir }}/store:/usr/src/app/store
+    environment:
+      - TZ=America/New_York
+    devices:
+      - {{ zwavejs_device }}:/dev/ttyUSB0
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      # UI on port 8091
+      - traefik.http.routers.zwavejs.rule=Host(`{{ zwavejs_hostname }}`)
+      - traefik.http.routers.zwavejs.entrypoints=websecure
+      - traefik.http.routers.zwavejs.tls.certresolver=letsencrypt
+      - traefik.http.routers.zwavejs.service=zwavejs
+      - traefik.http.services.zwavejs.loadbalancer.server.port=8091
+      # WebSocket on port 3000 (via traefik port 3443)
+      - traefik.http.routers.zwavejs-ws.rule=Host(`{{ zwavejs_hostname }}`)
+      - traefik.http.routers.zwavejs-ws.entrypoints=wss
+      - traefik.http.routers.zwavejs-ws.tls.certresolver=letsencrypt
+      - traefik.http.routers.zwavejs-ws.service=zwavejs-ws
+      - traefik.http.services.zwavejs-ws.loadbalancer.server.port=3000
+
+networks:
+  traefik:
+    external: true

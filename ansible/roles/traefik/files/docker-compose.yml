@@ -6,6 +6,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "3443:3443"
     env_file:
       - traefik.env
     volumes:
@@ -25,9 +26,10 @@ services:
       # File provider for external services
       - "--providers.file.directory=/etc/traefik/conf.d"
       - "--providers.file.watch=true"
-      # Entry points (HTTP and HTTPS)
+      # Entry points (HTTP, HTTPS, and WebSocket Secure)
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.wss.address=:3443"
       # Automatic HTTP to HTTPS redirect
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"

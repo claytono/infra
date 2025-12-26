@@ -1,0 +1,26 @@
+---
+services:
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:{{ zigbee2mqtt_image_tag }}
+    container_name: zigbee2mqtt
+    restart: unless-stopped
+    devices:
+      - {{ zigbee2mqtt_device }}:/dev/ttyUSB1
+    volumes:
+      - {{ zigbee2mqtt_data_dir }}/data:/app/data
+      - /run/udev:/run/udev:ro
+    environment:
+      - TZ=America/New_York
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.zigbee2mqtt.rule=Host(`{{ zigbee2mqtt_hostname }}`)
+      - traefik.http.routers.zigbee2mqtt.entrypoints=websecure
+      - traefik.http.routers.zigbee2mqtt.tls.certresolver=letsencrypt
+      - traefik.http.routers.zigbee2mqtt.service=zigbee2mqtt
+      - traefik.http.services.zigbee2mqtt.loadbalancer.server.port=8080
+
+networks:
+  traefik:
+    external: true

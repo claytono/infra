@@ -9,7 +9,7 @@ p3 ansible_host=p3.oneill.net domain=oneill.net
 #voron2-pizero ansible_host=voron2-pizero.oneill.net domain=oneill.net
 #gasherbrum ansible_host=gasherbrum.oneill.net domain=oneill.net
 #gasherbrum-display ansible_host=gasherbrum-display.oneill.net domain=oneill.net
-zwavejs ansible_host=zwavejs.oneill.net domain=oneill.net
+pantrypi ansible_host=pantrypi.oneill.net domain=oneill.net
 garagepi ansible_host=garagepi.oneill.net domain=oneill.net
 infra1 ansible_host=infra1.oneill.net domain=oneill.net
 p1 ansible_host=p1.oneill.net domain=oneill.net
@@ -43,7 +43,7 @@ k4
 #voron2-pizero
 #gasherbrum
 #gasherbrum-display
-zwavejs
+pantrypi
 garagepi
 
 [pizero]
@@ -68,5 +68,15 @@ infra1
 luser
 
 [rtl433]
-zwavejs
+pantrypi
 garagepi
+
+[traefik]
+infra1
+pantrypi
+
+[zwavejs]
+pantrypi
+
+[zigbee2mqtt]
+pantrypi

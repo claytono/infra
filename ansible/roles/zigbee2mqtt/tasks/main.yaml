@@ -1,0 +1,22 @@
+---
+- name: Create zigbee2mqtt directory
+  ansible.builtin.file:
+    path: "{{ zigbee2mqtt_data_dir }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Deploy zigbee2mqtt docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ zigbee2mqtt_data_dir }}/docker-compose.yaml"
+    mode: "0644"
+  become: true
+  notify: Restart zigbee2mqtt
+
+- name: Start zigbee2mqtt
+  community.docker.docker_compose_v2:
+    project_src: "{{ zigbee2mqtt_data_dir }}"
+    state: present
+    wait: true
+  become: true

@@ -1,0 +1,8 @@
+---
+- name: Restart zigbee2mqtt
+  community.docker.docker_compose_v2:
+    project_src: "{{ zigbee2mqtt_data_dir }}"
+    state: present
+    recreate: always
+    wait: true
+  become: true

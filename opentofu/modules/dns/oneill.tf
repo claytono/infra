@@ -180,6 +180,23 @@ resource "aws_route53_record" "pve" {
   records = ["infra1.oneill.net"]
 }
 
+# Service CNAMEs for pantrypi services
+resource "aws_route53_record" "zwavejs" {
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = "zwavejs.oneill.net"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["pantrypi.oneill.net"]
+}
+
+resource "aws_route53_record" "zigbee2mqtt" {
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = "zigbee2mqtt.oneill.net"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["pantrypi.oneill.net"]
+}
+
 # TXT record for Proxmox auto-installer URL discovery
 # The installer looks up proxmox-auto-installer.{search domain}
 resource "aws_route53_record" "proxmox_auto_installer" {

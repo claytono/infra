@@ -143,5 +143,17 @@ locals {
       hostname = "garagepi.oneill.net"
       note     = "Raspberry Pi in garage - rtl433"
     }
+    pantrypi = {
+      mac      = "dc:a6:32:9d:b7:0f"
+      ip       = "172.19.74.120"
+      hostname = "pantrypi.oneill.net"
+      note     = "Raspberry Pi in pantry - zwavejs, zigbee2mqtt, rtl433"
+    }
+    pantrypi-wifi = {
+      mac      = "dc:a6:32:9d:b7:10"
+      ip       = "172.19.74.118"
+      hostname = "pantrypi-wifi.oneill.net"
+      note     = "pantrypi wifi interface"
+    }
   }
 }
