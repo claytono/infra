@@ -23,13 +23,14 @@
     group: root
     mode: "0755"
 
-- name: Deploy Proxmox load balancer configuration
+- name: Deploy traefik dynamic configuration files
   ansible.builtin.template:
-    src: conf.d/proxmox.yml.j2
-    dest: /etc/traefik/conf.d/proxmox.yml
+    src: "conf.d/{{ item }}.yml.j2"
+    dest: "/etc/traefik/conf.d/{{ item }}.yml"
     owner: root
     group: root
     mode: "0644"
+  loop: "{{ traefik_config_files | default([]) }}"
   notify: Restart traefik
 
 - name: Deploy traefik environment file
@@ -39,6 +40,7 @@
     owner: root
     group: root
     mode: "0600"
+  notify: Restart traefik
 
 - name: Deploy traefik docker-compose file
   ansible.builtin.copy:
@@ -47,10 +49,10 @@
     owner: root
     group: root
     mode: "0644"
+  notify: Restart traefik
 
 - name: Start traefik
   community.docker.docker_compose_v2:
     project_src: /etc/traefik
-    pull: always
-    recreate: auto
     state: present
+    wait: true

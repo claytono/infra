@@ -2,6 +2,6 @@
 - name: Restart os-install services
   community.docker.docker_compose_v2:
     project_src: /etc/os-install
-    pull: always
-    recreate: auto
+    recreate: always
     state: present
+    wait: true

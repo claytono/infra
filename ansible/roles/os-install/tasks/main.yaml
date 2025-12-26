@@ -102,3 +102,4 @@
   community.docker.docker_compose_v2:
     project_src: /etc/os-install
     state: present
+    wait: true
