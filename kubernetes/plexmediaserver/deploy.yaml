@@ -24,12 +24,12 @@ spec:
         app.kubernetes.io/instance: plexmediaserver
     spec:
       hostNetwork: true
+      runtimeClassName: nvidia
+      priorityClassName: gpu-priority
       containers:
       - name: plexmediaserver
-        image: plexinc/pms-docker
+        image: lscr.io/linuxserver/plex
         imagePullPolicy: Always
-        securityContext:
-          privileged: true
         livenessProbe:
           exec:
             command: [dd, if=/dev/zero, of=/config/health-check, bs=1M, count=1]
@@ -51,6 +51,16 @@ spec:
         - containerPort: 32414
           protocol: UDP
         env:
+        - name: PUID
+          value: '1001'
+        - name: PGID
+          value: '1001'
+        - name: VERSION
+          value: docker
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: all
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: compute,video,utility
         - name: HOSTNAME
           value: kube-pms
         - name: TZ
@@ -71,13 +81,15 @@ spec:
           requests:
             memory: 8192Mi
             cpu: 2000m
+          limits:
+            nvidia.com/gpu: 1
       volumes:
       - name: config
         persistentVolumeClaim:
           claimName: plexmediaserver-config
       - name: transcode
-        persistentVolumeClaim:
-          claimName: plexmediaserver-transcode
+        emptyDir:
+          sizeLimit: 50Gi
       - nfs:
           server: fs2.oneill.net
           path: /volume2/shared/video

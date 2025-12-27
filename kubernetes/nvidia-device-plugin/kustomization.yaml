@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - runtime-class.yaml
+- priorityclass.yaml
 - helm/configmap.yml
 - helm/service-account.yml
 - helm/role.yml
