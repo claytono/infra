@@ -20,6 +20,35 @@ resource "proxmox_virtual_environment_hardware_mapping_pci" "rtx2060" {
   }]
 }
 
+# Intel iGPU hardware mapping for PCI passthrough
+# Intel HD Graphics 4600 (Haswell) on p2, p4, p9
+resource "proxmox_virtual_environment_hardware_mapping_pci" "intel_igpu" {
+  name = "intel-igpu"
+  map = [
+    {
+      id           = "8086:0412"
+      node         = "p2"
+      path         = "0000:00:02"
+      iommu_group  = 0
+      subsystem_id = "1028:05a4"
+    },
+    {
+      id           = "8086:0412"
+      node         = "p4"
+      path         = "0000:00:02"
+      iommu_group  = 0
+      subsystem_id = "1028:05a4"
+    },
+    {
+      id           = "8086:0412"
+      node         = "p9"
+      path         = "0000:00:02"
+      iommu_group  = 0
+      subsystem_id = "1028:05a4"
+    },
+  ]
+}
+
 resource "proxmox_virtual_environment_vm" "k1" {
   name      = "k1"
   node_name = "p9"
@@ -221,6 +250,12 @@ resource "proxmox_virtual_environment_vm" "k4" {
     mac_address = "52:54:72:19:74:75"
     model       = "virtio"
     queues      = 4
+  }
+
+  # Intel iGPU passthrough from p4
+  hostpci {
+    device  = "hostpci0"
+    mapping = proxmox_virtual_environment_hardware_mapping_pci.intel_igpu.name
   }
 
   operating_system {

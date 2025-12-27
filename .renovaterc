@@ -158,6 +158,18 @@
       ],
       "depNameTemplate": "GAM-team/got-your-back",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStrings": [
+        "nvidia_driver_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "nvidia-driver",
+      "datasourceTemplate": "deb",
+      "registryUrlTemplate": "https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/?suite=./&components=.&binaryArch=x86_64"
     }
   ],
   "packageRules": [

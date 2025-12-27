@@ -19,6 +19,9 @@ kubernetes_repo_versions:
 
 kubernetes_master: "k1.oneill.net"
 
+# NVIDIA driver version (from NVIDIA CUDA repository)
+nvidia_driver_version: "580.105.08-1"
+
 kubeadm_bootstrap_token: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   37393365336231633462663537343639376433383634653964303735353734373034346532303963

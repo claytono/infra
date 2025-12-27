@@ -9,13 +9,36 @@
       - dkms
       - build-essential
 
-- name: "Install NVIDIA open driver from Debian repos"
+- name: "Download NVIDIA CUDA keyring"
+  ansible.builtin.get_url:
+    url: https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+    dest: /tmp/cuda-keyring.deb
+    mode: "0644"
+
+- name: "Install NVIDIA CUDA keyring"
+  ansible.builtin.apt:
+    deb: /tmp/cuda-keyring.deb
+
+- name: "Create NVIDIA driver package pin for version"
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/nvidia-driver
+    content: |
+      Package: nvidia-* libnvidia-* libnvcuvid* libcuda* libgles-nvidia* libnvoptix* libegl-nvidia* libgl1-nvidia* libglx-nvidia* xserver-xorg-video-nvidia* firmware-nvidia-*
+      Pin: version {{ nvidia_driver_version }}
+      Pin-Priority: 900
+    mode: "0644"
+
+- name: "Install NVIDIA driver from official repo"
   ansible.builtin.apt:
     name:
-      - nvidia-open-kernel-dkms
-      - nvidia-driver
-      - nvidia-smi
-      - libcuda1
+      - "nvidia-driver={{ nvidia_driver_version }}"
+      - "nvidia-driver-cuda={{ nvidia_driver_version }}"
+    state: present
+    allow_downgrade: true
+    update_cache: true
+    dpkg_options: force-confnew
+  register: kubeadm_nvidia_driver_install
+  notify: "Update initramfs"
 
 - name: "Ensure apt keyrings directory exists"
   ansible.builtin.file:
@@ -46,9 +69,11 @@
     checksum_algorithm: sha256
   register: kubeadm_nvidia_config_before
 
-- name: "Configure containerd to use NVIDIA runtime with CDI"
+# Note: Do NOT add --cdi.enabled here - it causes vulkan device mount failures.
+# GPU passthrough works correctly via runtimeClassName: nvidia without forcing CDI mode.
+- name: "Configure containerd to use NVIDIA runtime"
   ansible.builtin.command:
-    cmd: nvidia-ctk runtime configure --runtime=containerd --cdi.enabled
+    cmd: nvidia-ctk runtime configure --runtime=containerd
   changed_when: false
 
 - name: "Get checksum of NVIDIA containerd config after"
