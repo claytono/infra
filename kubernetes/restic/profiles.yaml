@@ -37,37 +37,45 @@ b2:
     - /source/shared/video/movies
     - /source/shared/downloads
     no-error-on-warning: true
-    run-before: &run_before |
-      [ -f /tmp/uuid ] || cat /proc/sys/kernel/random/uuid > /tmp/uuid
-      echo "Pinging start URL: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)"
-      wget "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
-      Command: $PROFILE_COMMAND
-      "
-    run-finally: &run_finally |
-      rc="${ERROR_EXIT_CODE:-0}";
-      echo "Pinging finish URL: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)"
-      wget "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/${rc}?rid=$(cat /tmp/uuid)" -O - -S --post-data "Profile: $PROFILE_NAME
-      Command: $PROFILE_COMMAND
-      Message: $ERROR_MESSAGE
-      Command-line: $ERROR_COMMANDLINE
-      Stderr: $ERROR_STDERR
-      "
+    send-before: &send_before
+      method: POST
+      url: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/start
+      body-template: /resticprofile-config/body-start.txt
+      headers:
+      - name: Content-Type
+        value: text/plain; charset=UTF-8
+    send-after: &send_after
+      method: POST
+      url: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}
+      body-template: /resticprofile-config/body-success.txt
+      headers:
+      - name: Content-Type
+        value: text/plain; charset=UTF-8
+    send-after-fail: &send_after_fail
+      method: POST
+      url: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/log
+      body-template: /resticprofile-config/body-failure.txt
+      headers:
+      - name: Content-Type
+        value: text/plain; charset=UTF-8
   forget:
     keep-hourly: 24
     keep-daily: 14
     keep-monthly: 24
     keep-weekly: 12
     prune: true
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
   prometheus-labels:
   - host: kubernetes
   - backend: b2
   prometheus-push: https://pushgateway.k.oneill.net/
   check:
     read-data-subset: 1%
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
   rewrite:
     exclude:
     - /source/k8s-pv/*-resticprofile-cache*
@@ -93,8 +101,9 @@ main-copy:
   copy:
     from-repository: /source/backups/restic/repos/main
     repository: rclone:b2c:restic/main
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
   prometheus-labels:
   - host: kubernetes
   - backend: b2
@@ -120,8 +129,9 @@ xtal-copy:
   copy:
     from-repository: /source/backups/restic/repos/xtal
     repository: rclone:b2c:restic/xtal
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
   prometheus-labels:
   - host: kubernetes
   - backend: b2
@@ -152,13 +162,15 @@ xtal-b2:
     keep-monthly: 12
     keep-yearly: 5
     prune: true
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
 
   check:
     read-data-subset: 1%
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
 
   prometheus-labels:
   - host: kubernetes
@@ -182,13 +194,15 @@ main: &nfs_maintenance
     keep-weekly: 12
     keep-monthly: 24
     prune: true
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
 
   check:
     read-data-subset: 1/10
-    run-before: *run_before
-    run-finally: *run_finally
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
 
   prometheus-labels:
   - host: kubernetes

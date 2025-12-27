@@ -15,6 +15,9 @@ commonAnnotations:
 configMapGenerator:
 - files:
   - profiles.yaml
+  - body-start.txt
+  - body-success.txt
+  - body-failure.txt
   name: resticprofile-config
   options:
     disableNameSuffixHash: true
