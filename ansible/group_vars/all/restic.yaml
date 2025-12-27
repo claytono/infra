@@ -50,22 +50,32 @@ restic_default_config:
         - /var/log/containers/**
         - /var/log/pods/**
 
+      # Auto-create healthcheck if it doesn't exist (runs before send-before)
       run-before: &run_before |-
-        {% raw %}curl -sf https://hc.k.oneill.net/api/v1/checks/  \
-            -d '{ "api_key": "{{ $healthcheck_management_key }}", "name": "restic-{{ .Hostname }}-{{ .Profile.Name }}", "tags": "backup ansible restic", "timeout": 259200, "channels": "*", "unique": ["name"] }' \
-          && curl -sf "https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/start" -d "Profile: $PROFILE_NAME \
-          Command: $PROFILE_COMMAND \
-          "
+        {% raw %}curl -sf https://hc.k.oneill.net/api/v1/checks/ \
+            -d '{ "api_key": "{{ $healthcheck_management_key }}", "name": "restic-{{ .Hostname }}-{{ .Profile.Name }}", "tags": "backup ansible restic", "timeout": 259200, "channels": "*", "unique": ["name"] }'
         {% endraw %}
-      run-finally: &run_finally |-
-        {% raw %}rc="${ERROR_EXIT_CODE:-0}" \
-          && curl -sf "https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/${rc}" -d "Profile: $PROFILE_NAME \
-          Command: $PROFILE_COMMAND \
-          Message: $ERROR_MESSAGE \
-          Command-line: $ERROR_COMMANDLINE \
-          Stderr: $ERROR_STDERR \
-          "
-        {% endraw %}
+      send-before: &send_before
+        method: POST
+        url: "{% raw %}https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/start{% endraw %}"
+        body-template: body-start.txt
+        headers:
+        - name: Content-Type
+          value: text/plain; charset=UTF-8
+      send-after: &send_after
+        method: POST
+        url: "{% raw %}https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}{% endraw %}"
+        body-template: body-success.txt
+        headers:
+        - name: Content-Type
+          value: text/plain; charset=UTF-8
+      send-after-fail: &send_after_fail
+        method: POST
+        url: "{% raw %}https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/log{% endraw %}"
+        body-template: body-failure.txt
+        headers:
+        - name: Content-Type
+          value: text/plain; charset=UTF-8
 restic_prometheus_config:
   default:
     prometheus-push: https://pushgateway.k.oneill.net/

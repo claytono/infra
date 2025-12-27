@@ -19,6 +19,17 @@
     owner: "{{ resticprofile_client_user }}"
     mode: "0600"
 
+- name: Deploy body template files
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ resticprofile_user_info.home }}/.config/resticprofile/{{ item }}"
+    owner: "{{ resticprofile_client_user }}"
+    mode: "0644"
+  loop:
+    - body-start.txt
+    - body-success.txt
+    - body-failure.txt
+
 - name: Write config file
   ansible.builtin.template:
     src: templates/config.j2

@@ -1,0 +1,2 @@
+Profile: {{ .ProfileName }}
+Command: {{ .ProfileCommand }}

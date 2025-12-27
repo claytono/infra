@@ -1,0 +1,10 @@
+Profile: {{ .ProfileName }}
+Command: {{ .ProfileCommand }}
+Exit Code: {{ .Error.ExitCode }}
+
+Error: {{ .Error.Message }}
+
+Command Line: {{ .Error.CommandLine }}
+
+Stderr:
+{{ .Error.Stderr }}
