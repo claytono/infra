@@ -75,10 +75,14 @@ spec:
       enableServiceLinks: false
       serviceAccountName: default
       automountServiceAccountToken: true
+      priorityClassName: gpu-priority
+      runtimeClassName: nvidia
       hostIPC: false
       hostNetwork: false
       hostPID: false
       dnsPolicy: ClusterFirst
+      nodeSelector: 
+        kubernetes.io/hostname: k2
       containers: 
         - env:
           - name: DB_DATABASE_NAME
@@ -116,7 +120,7 @@ spec:
           envFrom:
           - secretRef:
               name: immich-secrets
-          image: ghcr.io/immich-app/immich-machine-learning:v2.3.1
+          image: ghcr.io/immich-app/immich-machine-learning:v2.3.1-cuda
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -139,6 +143,9 @@ spec:
             initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 1
+          resources:
+            limits:
+              nvidia.com/gpu: 1
           startupProbe:
             failureThreshold: 60
             httpGet:
