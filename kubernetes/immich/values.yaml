@@ -73,10 +73,18 @@ machine-learning:
     main:
       annotations:
         reloader.stakater.com/auto: 'true'
+      pod:
+        runtimeClassName: nvidia
+        priorityClassName: gpu-priority
+        nodeSelector:
+          kubernetes.io/hostname: k2
       containers:
         main:
           image:
-            tag: v2.3.1
+            tag: v2.3.1-cuda
+          resources:
+            limits:
+              nvidia.com/gpu: 1
   persistence:
     cache:
       enabled: true
