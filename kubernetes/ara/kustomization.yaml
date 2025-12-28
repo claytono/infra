@@ -25,9 +25,11 @@ patches:
 
 images:
 - name: docker.io/recordsansible/ara-api
-  # Pinned to 080334c to avoid broken migration 0018 in 8774f1c
+  # Using fix-postgresql-migration image until 1.7.5 is released
   # See: https://codeberg.org/ansible-community/ara/issues/628
-  newTag: latest@sha256:8774f1c567a57df1b7a5bf6a9627a42e99d90a5f9eae384e9641af67856832bf
+  # TODO: https://github.com/claytono/infra/issues/998
+  newName: quay.io/recordsansible/ara-api
+  newTag: fix-postgresql-migration@sha256:467952a2da68aee3d2fbb56aa05a4794fd24b2bb20d48de87d0f99d103296c69
 
 commonAnnotations:
   argoManaged: 'true'
