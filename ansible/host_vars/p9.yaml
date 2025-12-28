@@ -3,6 +3,10 @@
 proxmox_install_mac: "b4:96:91:39:e0:70"
 proxmox_install_nic: "enp1s0f0"
 
+# Intel iGPU passthrough (HD Graphics 4600)
+proxmox_gpu_passthrough:
+  pci_ids: "8086:0412"
+
 # Enable network management for this host
 proxmox_manage_network: true
 
