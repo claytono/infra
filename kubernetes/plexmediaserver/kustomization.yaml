@@ -16,7 +16,7 @@ resources:
 
 images:
 - name: lscr.io/linuxserver/plex
-  newTag: 1.42.2.10156-f737b826c-ls288
+  newTag: 1.42.2.10156-f737b826c-ls288@sha256:1720efa8e919a724ff3003cce7c1c0ae91a54e097ca3c8f6713a780c6fd73432
 
 labels:
 

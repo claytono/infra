@@ -1,5 +1,5 @@
 ---
-zigbee2mqtt_image_tag: "2.7.1"
+zigbee2mqtt_image_tag: "2.7.1" # sha256:163e7351430a95d550d5b1bb958527edc1eff115eb013ca627f3545a192e853f
 zigbee2mqtt_data_dir: /etc/zigbee2mqtt
 zigbee2mqtt_device: /dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_621e38fda096ed118be4c498a7669f5d-if00-port0
 zigbee2mqtt_hostname: zigbee2mqtt.oneill.net
