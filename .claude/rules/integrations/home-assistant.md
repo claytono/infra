@@ -1,3 +1,7 @@
+---
+paths: ["kubernetes/hass/**/*"]
+---
+
 # Home Assistant Metrics and Entity Discovery
 
 Script: `kubernetes/hass/get-prom-metrics`

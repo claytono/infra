@@ -1,3 +1,7 @@
+---
+paths: ["kubernetes/**/externalsecret.yaml"]
+---
+
 # External Secrets Integration
 
 Applications use External Secrets Operator with:
