@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.5.1"
+    app.kubernetes.io/version: "v0.6.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -31,7 +31,7 @@ metadata:
   labels:
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.5.1"
+    app.kubernetes.io/version: "v0.6.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     service.kubernetes.io/topology-mode: "auto"
@@ -57,7 +57,7 @@ metadata:
   labels:
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.5.1"
+    app.kubernetes.io/version: "v0.6.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
