@@ -116,10 +116,8 @@
       "matchStrings": [
         "ESPHOME_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
-      "depNameTemplate": "ghcr.io/esphome/esphome",
-      "datasourceTemplate": "docker",
-      "registryUrlTemplate": "https://ghcr.io",
-      "versioningTemplate": "docker"
+      "depNameTemplate": "esphome",
+      "datasourceTemplate": "pypi"
     },
     {
       "customType": "regex",
@@ -296,10 +294,10 @@
         "custom.regex"
       ],
       "matchPackageNames": [
-        "ghcr.io/esphome/esphome"
+        "esphome"
       ],
       "pinDigests": false,
-      "description": "Disable digest pinning for ESPHome Docker images managed by custom regex"
+      "description": "Disable digest pinning for ESPHome PyPI package"
     },
     {
       "matchManagers": [
