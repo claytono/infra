@@ -23,7 +23,8 @@
     "enabled": true
   },
   "kubernetes": {
-    "fileMatch": ["kubernetes/.+\\.yaml$"]
+    "fileMatch": ["kubernetes/.+\\.yaml$"],
+    "ignorePaths": ["kubernetes/**/helm/**"]
   },
   "customManagers": [
     {
