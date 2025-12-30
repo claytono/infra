@@ -12,6 +12,8 @@ metadata:
     gethomepage.dev/description: Location History Tracking
     gethomepage.dev/group: Personal
     gethomepage.dev/icon: dawarich.png
+    ak-type: oidc
+    ak-oidc-callback: /users/auth/openid_connect/callback
 
 spec:
   ingressClassName: nginx

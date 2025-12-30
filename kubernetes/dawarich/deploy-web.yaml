@@ -24,9 +24,9 @@ spec:
     spec:
       containers:
       - name: web
-        image: freikin/dawarich:0.36.3@sha256:4f83ccbfcbc5166ba9f96ba7571ab0812c2596f99079ceffc7808a3f896bef0b
-        command: ['web-entrypoint.sh']
-        args: ['bin/rails', 'server', '-p', '3000', '-b', '::']
+        image: freikin/dawarich:0.37.1@sha256:299596d1ddebd47a5baacf271a6d647f7e11d7c13041d5d70430dc61e1be3bd8
+        command: [web-entrypoint.sh]
+        args: [bin/rails, server, -p, '3000', -b, '::']
         ports:
         - name: http
           containerPort: 3000
@@ -53,7 +53,7 @@ spec:
         - name: DATABASE_HOST
           value: dawarich-postgres-rw
         - name: DATABASE_PORT
-          value: "5432"
+          value: '5432'
         - name: DATABASE_NAME
           valueFrom:
             secretKeyRef:
@@ -75,6 +75,23 @@ spec:
             secretKeyRef:
               name: dawarich-valkey-config
               key: REDIS_URL
+        # OIDC configuration for Authentik
+        - name: OIDC_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-oidc
+              key: OIDC_CLIENT_ID
+        - name: OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-oidc
+              key: OIDC_CLIENT_SECRET
+        - name: OIDC_ISSUER
+          value: https://auth.k.oneill.net/application/o/dawarich/
+        - name: OIDC_REDIRECT_URI
+          value: https://dawarich.k.oneill.net/users/auth/openid_connect/callback
+        - name: OIDC_PROVIDER_NAME
+          value: Authentik
         volumeMounts:
         - name: public
           mountPath: /var/app/public
