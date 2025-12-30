@@ -22,6 +22,9 @@
   "lockFileMaintenance": {
     "enabled": true
   },
+  "kubernetes": {
+    "fileMatch": ["kubernetes/.+\\.yaml$"]
+  },
   "customManagers": [
     {
       "customType": "regex",
