@@ -24,7 +24,7 @@ spec:
         runAsUser: 999
       containers:
       - name: valkey
-        image: valkey/valkey
+        image: valkey/valkey@sha256:546304417feac0874c3dd576e0952c6bb8f06bb4093ea0c9ca303c73cf458f63
         imagePullPolicy: IfNotPresent
         command:
         - /bin/sh

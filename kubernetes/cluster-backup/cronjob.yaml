@@ -20,7 +20,7 @@ spec:
           hostNetwork: true
           containers:
           - name: cluster-backup
-            image: debian
+            image: debian@sha256:c71b05eac0b20adb4cdcc9f7b052227efd7da381ad10bb92f972e8eae7c6cdc9
             imagePullPolicy: Always
             command:
             - /script/backup

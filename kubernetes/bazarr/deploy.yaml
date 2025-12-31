@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: bazarr
-        image: linuxserver/bazarr
+        image: linuxserver/bazarr@sha256:001875e61839c8a50743f0bc0fa4da2a55ed8a038b9b5ed0dd2c663dd3d0bfc7
         ports:
         - containerPort: 6767
         volumeMounts:

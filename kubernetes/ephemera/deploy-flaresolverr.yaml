@@ -22,7 +22,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: flaresolverr
-        image: ghcr.io/flaresolverr/flaresolverr:latest
+        image: ghcr.io/flaresolverr/flaresolverr:latest@sha256:7962759d99d7e125e108e0f5e7f3cdbcd36161776d058d1d9b7153b92ef1af9e
         ports:
         - containerPort: 8191
         env:

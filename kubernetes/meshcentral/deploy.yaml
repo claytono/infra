@@ -31,7 +31,7 @@ spec:
                 operator: Exists
       containers:
       - name: meshcentral
-        image: typhonragewind/meshcentral
+        image: typhonragewind/meshcentral@sha256:9ea262ff902fa18fcca8688af4c7fe62988254f5cf08f273193bec6b4cf626be
         imagePullPolicy: Always
         env:
         - name: TZ
