@@ -41,7 +41,7 @@ spec:
             - --lock-wait
             - 6h
             - backup
-            image: creativeprojects/resticprofile@sha256:c5b0d32983fcde265839fef5e4d1f0e56fbc4ba8649a476bb9f49eb81efb0c1d
+            image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:
