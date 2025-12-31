@@ -24,14 +24,14 @@ spec:
     spec:
       containers:
       - name: ddns-route53
-        image: ghcr.io/crazy-max/ddns-route53
+        image: ghcr.io/crazy-max/ddns-route53@sha256:59b1f3d51530f8e1a8331ad9c63c4be414f72503b306eea7f3b3abf532ce2ae5
         args:
         - --schedule=*/5 * * * *
         envFrom:
         - secretRef:
             name: ddns-route53-oneill
       - name: fnord
-        image: ghcr.io/crazy-max/ddns-route53
+        image: ghcr.io/crazy-max/ddns-route53@sha256:59b1f3d51530f8e1a8331ad9c63c4be414f72503b306eea7f3b3abf532ce2ae5
         args:
         - --schedule=*/5 * * * *
         envFrom:

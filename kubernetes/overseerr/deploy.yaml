@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: overseerr
-        image: linuxserver/overseerr
+        image: linuxserver/overseerr@sha256:f6a782e44742a02bdb6032d32ebb4e9615e261140f879be897b28cdb40ff800e
         ports:
         - containerPort: 5055
         volumeMounts:

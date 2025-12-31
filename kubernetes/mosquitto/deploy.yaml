@@ -19,7 +19,7 @@ spec:
     spec:
       initContainers:
       - name: init-password-file
-        image: debian
+        image: debian@sha256:c71b05eac0b20adb4cdcc9f7b052227efd7da381ad10bb92f972e8eae7c6cdc9
         command: [/bin/sh, -c, /scripts/create-password-file > /generated/passwd]
         volumeMounts:
         - name: script
@@ -32,7 +32,7 @@ spec:
           mountPath: /generated
       containers:
       - name: mosquitto
-        image: eclipse-mosquitto
+        image: eclipse-mosquitto@sha256:077fe4ff4c49df1e860c98335c77dda08360629e0e2a718147027e4db3eace9d
         imagePullPolicy: Always
         resources:
           limits:
