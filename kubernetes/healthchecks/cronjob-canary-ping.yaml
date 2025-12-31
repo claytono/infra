@@ -19,7 +19,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: ping
-            image: curlimages/curl:8.11.1
+            image: curlimages/curl:8.17.0@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40
             env:
             - name: CANARY_PING_KEY
               valueFrom:
