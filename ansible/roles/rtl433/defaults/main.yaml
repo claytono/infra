@@ -1,5 +1,5 @@
 ---
-rtl433_image_tag: "25.12" # sha256:6fe54863dd3a561c9befb4c8e632e9df962cc3535b6ba5bbed15c9b95e1f9882
+rtl433_image_tag: "25.12@sha256:30704a9756bc8a7b897c7b9aaf640524eafd9ddb359bfc01af51e081c03f0918"
 
 # Where to deploy the docker-compose stack
 rtl433_install_dir: /etc/rtl433
