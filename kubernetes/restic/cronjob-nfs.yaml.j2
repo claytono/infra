@@ -6,7 +6,7 @@ metadata:
   name: resticprofile-{{ profile }}-{{ command }}
 
 spec:
-  schedule: "{{ schedule }}"
+  schedule: {{ schedule }}
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300

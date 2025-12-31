@@ -6,7 +6,7 @@ metadata:
   name: resticprofile-flux-forget
 
 spec:
-  schedule: "33 15 * * 2"
+  schedule: 33 15 * * 2
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
@@ -34,7 +34,7 @@ spec:
             - --lock-wait
             - 6h
             - forget
-            image: creativeprojects/resticprofile@sha256:c5b0d32983fcde265839fef5e4d1f0e56fbc4ba8649a476bb9f49eb81efb0c1d
+            image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:

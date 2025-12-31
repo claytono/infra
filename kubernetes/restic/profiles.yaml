@@ -5,6 +5,9 @@ global:
   restic-stale-lock-age: 6h
   restic-lock-retry-after: 2m
   cleanup-cache: true
+  nice: 19
+  ionice: true
+  ionice-class: 3
 
 # B2 profile for direct backup to Backblaze B2
 b2:
@@ -14,7 +17,9 @@ b2:
   verbose: true
   pack-size: 64
 
-  env:
+  env: &rclone_env
+    GOGC: '10'
+    GOMAXPROCS: '1'
     RCLONE_BWLIMIT: 25M
     RCLONE_CONFIG: /rclone-config/rclone.conf
     RCLONE_RC: true
@@ -88,15 +93,7 @@ main-copy:
   verbose: true
   pack-size: 64
 
-  env:
-    RCLONE_BWLIMIT: 25M
-    RCLONE_CONFIG: /rclone-config/rclone.conf
-    RCLONE_RC: true
-    RCLONE_RC_ADDR: 0.0.0.0:5572
-    RCLONE_RC_ENABLE_METRICS: true
-    RCLONE_FAST_LIST: true
-    RESTIC_PROGRESS_FPS: '0.1'
-    RESTIC_CACHE_DIR: /cache
+  env: *rclone_env
 
   copy:
     from-repository: /source/backups/restic/repos/main
@@ -116,15 +113,7 @@ xtal-copy:
   verbose: true
   pack-size: 64
 
-  env:
-    RCLONE_BWLIMIT: 25M
-    RCLONE_CONFIG: /rclone-config/rclone.conf
-    RCLONE_RC: true
-    RCLONE_RC_ADDR: 0.0.0.0:5572
-    RCLONE_RC_ENABLE_METRICS: true
-    RCLONE_FAST_LIST: true
-    RESTIC_PROGRESS_FPS: '0.1'
-    RESTIC_CACHE_DIR: /cache
+  env: *rclone_env
 
   copy:
     from-repository: /source/backups/restic/repos/xtal
@@ -145,15 +134,7 @@ xtal-b2:
   verbose: true
   pack-size: 64
 
-  env:
-    RCLONE_BWLIMIT: 25M
-    RCLONE_CONFIG: /rclone-config/rclone.conf
-    RCLONE_RC: true
-    RCLONE_RC_ADDR: 0.0.0.0:5572
-    RCLONE_RC_ENABLE_METRICS: true
-    RCLONE_FAST_LIST: true
-    RESTIC_PROGRESS_FPS: '0.1'
-    RESTIC_CACHE_DIR: /cache
+  env: *rclone_env
 
   forget:
     keep-hourly: 24
@@ -185,6 +166,8 @@ main: &nfs_maintenance
   verbose: true
 
   env:
+    GOGC: '10'
+    GOMAXPROCS: '1'
     RESTIC_PROGRESS_FPS: '0.1'
     RESTIC_CACHE_DIR: /cache
 
