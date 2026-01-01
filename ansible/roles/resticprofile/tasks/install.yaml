@@ -73,11 +73,16 @@
   when: resticprofile_install_restic
 
 - name: Extract restic
-  ansible.builtin.command: "bunzip2 {{ resticprofile_tmp_dir }}/restic.bz2"
+  ansible.builtin.command:
+    cmd: "bunzip2 {{ resticprofile_tmp_dir }}/restic.bz2"
   when: resticprofile_install_restic
 
 - name: Install restic
-  ansible.builtin.command: "install {{ resticprofile_tmp_dir }}/restic {{ resticprofile_bin_dir }}/"
+  ansible.builtin.copy:
+    src: "{{ resticprofile_tmp_dir }}/restic"
+    dest: "{{ resticprofile_bin_dir }}/restic"
+    mode: "0755"
+    remote_src: true
   when: resticprofile_install_restic
 
 # Install resticprofile
@@ -100,7 +105,11 @@
   when: resticprofile_install_resticprofile
 
 - name: Install resticprofile
-  ansible.builtin.command: "install {{ resticprofile_tmp_dir }}/resticprofile {{ resticprofile_bin_dir }}/"
+  ansible.builtin.copy:
+    src: "{{ resticprofile_tmp_dir }}/resticprofile"
+    dest: "{{ resticprofile_bin_dir }}/resticprofile"
+    mode: "0755"
+    remote_src: true
   when: resticprofile_install_resticprofile
 
 # Cleanup
