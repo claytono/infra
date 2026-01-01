@@ -24,8 +24,8 @@ resource "b2_bucket" "velero_backups" {
 
 # Application key for Velero with access to velero-backups bucket
 resource "b2_application_key" "velero" {
-  key_name  = "velero-backups"
-  bucket_id = b2_bucket.velero_backups.bucket_id
+  key_name   = "velero-backups"
+  bucket_ids = [b2_bucket.velero_backups.bucket_id]
 
   capabilities = [
     "listBuckets",
