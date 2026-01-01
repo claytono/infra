@@ -1,11 +1,13 @@
 ---
 # Vultr VPS running Debian 11 (bullseye)
 # vc2-1c-1gb instance
-tailscale_args: --advertise-exit-node --accept-dns=false
-tailscale_tags: ['flux']
+tailscale_args: --advertise-exit-node
+tailscale_tags: ["flux"]
 ip_forwarding_enabled: true
+qemu_guest_agent_enabled: false
 restic_prometheus_config: {}
 restic_repo: flux
+restic_healthcheck_host: hc.cow-banjo.ts.net
 restic_host_config:
   default:
     # Use a dedicated repo via REST server over Tailscale. This host has limited

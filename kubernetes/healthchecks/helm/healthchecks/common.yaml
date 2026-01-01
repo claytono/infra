@@ -63,7 +63,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: ALLOWED_HOSTS
-              value: hc.k.oneill.net
+              value: hc.k.oneill.net,hc.cow-banjo.ts.net
             - name: DB
               value: postgres
             - name: DB_HOST

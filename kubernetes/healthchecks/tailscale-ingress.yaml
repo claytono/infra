@@ -1,0 +1,19 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: healthchecks-tailscale
+  annotations:
+    tailscale.com/tags: tag:healthchecks
+
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: healthchecks
+      port:
+        number: 8000
+  tls:
+  - hosts:
+    - hc
