@@ -53,9 +53,16 @@ proxmox_nfs_storage:
     content: ["images", "iso", "vztmpl", "backup", "rootdir"]
     options: "vers=4.1,nconnect=4,async,rsize=131072,wsize=131072"
 
-# OIDC credentials from 1Password (for Authentik integration)
-proxmox_oidc_client_id: "{{ lookup('community.general.onepassword', 'proxmox-oidc', field='client-id', vault='infra') }}"
-proxmox_oidc_client_secret: "{{ lookup('community.general.onepassword', 'proxmox-oidc', field='client-secret', vault='infra') }}"
+# OIDC credentials for Authentik integration
+proxmox_oidc_client_id: "proxmox"
+proxmox_oidc_client_secret: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  31373935336234313635393062323732646238626130303565666435323036373939316261636339
+  6166623961613562396634323765373561643464373261310a323466336439636137656338636632
+  33333039663533623062386138613130373737663531613462653630653135346636376662376538
+  3062616539313037380a656663343764323934376634633835333231316630353739323136343039
+  37643461366164623466306138623638333330613836303461386666643766313538626239343865
+  6437633365663332616136376261333931326335343564383937
 
 # ZRAM swap configuration (smaller for Proxmox to leave room for ZFS ARC)
 zram_size: "ram / 4"
