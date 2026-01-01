@@ -15,7 +15,7 @@ infra1 ansible_host=infra1.oneill.net domain=oneill.net
 p1 ansible_host=p1.oneill.net domain=oneill.net
 p2 ansible_host=p2.oneill.net domain=oneill.net
 p4 ansible_host=p4.oneill.net domain=oneill.net
-p9 ansible_host=p9.oneill.net domain=oneill.net
+#p9 ansible_host=p9.oneill.net domain=oneill.net
 
 [kubernetes]
 k1
@@ -55,7 +55,7 @@ p1
 p2
 p3
 p4
-p9
+#p9
 
 [tailscale_disabled]
 #voron2-pizero

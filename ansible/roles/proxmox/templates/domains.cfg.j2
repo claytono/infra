@@ -1,0 +1,15 @@
+pam: pam
+	comment Linux PAM standard authentication
+
+pve: pve
+	comment Proxmox VE authentication server
+
+openid: authentik
+	autocreate 1
+	client-id {{ proxmox_oidc_client_id }}
+	client-key {{ proxmox_oidc_client_secret }}
+	comment Authentik
+	default 1
+	groups-claim groups
+	issuer-url https://auth.k.oneill.net/application/o/proxmox/
+	username-claim preferred_username

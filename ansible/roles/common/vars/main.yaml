@@ -10,7 +10,7 @@ common_packages_to_install:
   - bzip2
   - ca-certificates
   - curl
-  - dnsutils
+  - bind9-dnsutils
   - dstat
   - htop
   - lsb-release
