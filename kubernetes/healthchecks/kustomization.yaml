@@ -13,6 +13,7 @@ resources:
 - postgres-cluster.yaml
 - helm/healthchecks/common.yaml
 - cronjob-canary-ping.yaml
+- tailscale-ingress.yaml
 
 commonAnnotations:
   argoManaged: 'true'

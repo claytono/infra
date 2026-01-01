@@ -2,15 +2,15 @@
 healthchecks:
   controller:
     annotations:
-      reloader.stakater.com/auto: "true"
+      reloader.stakater.com/auto: 'true'
 
   env:
     TZ: America/New_York
     SITE_NAME: Healthchecks
     SITE_ROOT: https://hc.k.oneill.net
-    ALLOWED_HOSTS: hc.k.oneill.net
-    REGISTRATION_OPEN: "False"
-    DEBUG: "False"
+    ALLOWED_HOSTS: hc.k.oneill.net,hc.cow-banjo.ts.net
+    REGISTRATION_OPEN: 'False'
+    DEBUG: 'False'
 
     # Database - CloudNative-PG
     DB: postgres
@@ -29,9 +29,9 @@ healthchecks:
 
     # Email via SMTP relay
     EMAIL_HOST: smtp.k.oneill.net
-    EMAIL_PORT: "587"
+    EMAIL_PORT: '587'
     EMAIL_HOST_USER: relay@oneill.net
-    EMAIL_USE_TLS: "True"
+    EMAIL_USE_TLS: 'True'
     DEFAULT_FROM_EMAIL: healthchecks@oneill.net
 
     # Authentik forward auth - use email header for user identification
