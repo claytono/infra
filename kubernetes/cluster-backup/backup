@@ -10,8 +10,7 @@ CACERT=/etc/kubernetes/pki/etcd/ca.crt
 CERT=/etc/kubernetes/pki/etcd/healthcheck-client.crt
 KEY=/etc/kubernetes/pki/etcd/healthcheck-client.key
 
-apt update
-apt install wget rsync -y
+apk add --no-cache wget rsync
 
 # Download etcd tools
 wget "https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz"
