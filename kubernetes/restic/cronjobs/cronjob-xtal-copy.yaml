@@ -6,7 +6,7 @@ metadata:
   name: resticprofile-xtal-copy
 
 spec:
-  schedule: "48 5 * * *"  # 05:48 daily
+  schedule: 48 5 * * *  # 05:48 daily
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
@@ -34,7 +34,7 @@ spec:
             - --lock-wait
             - 6h
             - copy
-            image: creativeprojects/resticprofile@sha256:c5b0d32983fcde265839fef5e4d1f0e56fbc4ba8649a476bb9f49eb81efb0c1d
+            image: creativeprojects/resticprofile
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:

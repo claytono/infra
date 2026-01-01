@@ -92,7 +92,7 @@ def generate_cronjobs() -> None:
                 schedule=schedule,
             )
             outfile = outdir / f"cronjob-{repo}-{command}.yaml"
-            outfile.write_text(content)
+            outfile.write_text(content.rstrip() + "\n")
             print(f"  Generated {outfile.name} (schedule: {schedule})")
 
 
@@ -223,7 +223,9 @@ def sync_healthchecks() -> None:
                     print(f"  Created/updated: {slug} (schedule: {schedule})")
             except urllib.error.HTTPError as e:
                 body = e.read().decode()
-                print(f"  Error for {slug}: {e.code} {e.reason}: {body}", file=sys.stderr)
+                print(
+                    f"  Error for {slug}: {e.code} {e.reason}: {body}", file=sys.stderr
+                )
 
 
 def sync_secrets() -> None:

@@ -1,6 +1,7 @@
 ---
 restic_repo: main
 resticprofile_enabled: true
+restic_healthcheck_host: hc.k.oneill.net
 
 restic_config_blocks:
   - restic_global_config
@@ -14,11 +15,18 @@ restic_global_config:
     restic-stale-lock-age: 6h
     restic-lock-retry-after: 2m
     cleanup-cache: true
+    nice: 19
+    ionice: true
+    ionice-class: 3
 restic_default_config:
   default:
     force-inactive-lock: true
     repository: "rest:https://{{ '{{' }} $repo_username {{ '}}' }}:{{ '{{' }} $repo_password {{ '}}' }}@restic.k.oneill.net/main"
     password-file: passphrase.txt
+
+    env:
+      GOGC: "10"
+      GOMAXPROCS: "1"
 
     backup:
       no-error-on-warning: true
@@ -52,30 +60,29 @@ restic_default_config:
 
       # Auto-create healthcheck if it doesn't exist (runs before send-before)
       run-before: &run_before |-
-        {% raw %}curl -sf https://hc.k.oneill.net/api/v1/checks/ \
-            -d '{ "api_key": "{{ $healthcheck_management_key }}", "name": "restic-{{ .Hostname }}-{{ .Profile.Name }}", "tags": "backup ansible restic", "timeout": 259200, "channels": "*", "unique": ["name"] }'
-        {% endraw %}
-      send-before: &send_before
+        curl -sf https://{{ restic_healthcheck_host }}/api/v1/checks/ \
+            -d '{ "api_key": "{% raw %}{{ $healthcheck_management_key }}{% endraw %}", "name": "{% raw %}restic-{{ .Hostname }}-{{ .Profile.Name }}{% endraw %}", "tags": "backup ansible restic", "timeout": 259200, "channels": "*", "unique": ["name"] }'
+      send-before:
         method: POST
-        url: "{% raw %}https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/start{% endraw %}"
+        url: "https://{{ restic_healthcheck_host }}/ping/{% raw %}{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}{% endraw %}/start"
         body-template: body-start.txt
         headers:
-        - name: Content-Type
-          value: text/plain; charset=UTF-8
-      send-after: &send_after
+          - name: Content-Type
+            value: text/plain; charset=UTF-8
+      send-after:
         method: POST
-        url: "{% raw %}https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}{% endraw %}"
+        url: "https://{{ restic_healthcheck_host }}/ping/{% raw %}{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}{% endraw %}"
         body-template: body-success.txt
         headers:
-        - name: Content-Type
-          value: text/plain; charset=UTF-8
-      send-after-fail: &send_after_fail
+          - name: Content-Type
+            value: text/plain; charset=UTF-8
+      send-after-fail:
         method: POST
-        url: "{% raw %}https://hc.k.oneill.net/ping/{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}/log{% endraw %}"
+        url: "https://{{ restic_healthcheck_host }}/ping/{% raw %}{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}{% endraw %}/log"
         body-template: body-failure.txt
         headers:
-        - name: Content-Type
-          value: text/plain; charset=UTF-8
+          - name: Content-Type
+            value: text/plain; charset=UTF-8
 restic_prometheus_config:
   default:
     prometheus-push: https://pushgateway.k.oneill.net/
