@@ -54,6 +54,7 @@ controllers:
           OAUTH_PROVIDER_NAME: Authentik
           DISABLE_PASSWORD_AUTH: 'true'
           CRAWLER_FULL_PAGE_ARCHIVE: 'true'
+          CRAWLER_STORE_PDF: 'true'
           CRAWLER_NUM_WORKERS: '3'
           INFERENCE_CONTEXT_LENGTH: '16384'
           INFERENCE_MAX_OUTPUT_TOKENS: '4096'
