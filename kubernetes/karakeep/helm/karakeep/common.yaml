@@ -218,6 +218,8 @@ spec:
             value: "true"
           - name: CRAWLER_NUM_WORKERS
             value: "3"
+          - name: CRAWLER_STORE_PDF
+            value: "true"
           - name: DATABASE_URL
             valueFrom:
               secretKeyRef:
