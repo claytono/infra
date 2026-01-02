@@ -7,6 +7,12 @@
   ansible.builtin.include_role:
     name: githubixx.containerd
 
+- name: Create containerd conf.d directory
+  ansible.builtin.file:
+    path: /etc/containerd/conf.d
+    state: directory
+    mode: "0755"
+
 - name: Include common tasks
   ansible.builtin.include_tasks: common.yaml
 - name: Include iscsi tasks

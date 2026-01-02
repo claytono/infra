@@ -3,6 +3,25 @@ kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
 
+# Override containerd config to include conf.d imports
+# Enables drop-in configs (e.g., nvidia runtime) without modifying main config
+containerd_config: |
+  imports = ["/etc/containerd/conf.d/*.toml"]
+  version = 3
+  [plugins]
+    [plugins.'io.containerd.cri.v1.runtime']
+      [plugins.'io.containerd.cri.v1.runtime'.containerd]
+        default_runtime_name = 'runc'
+        [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes]
+          [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc]
+            runtime_type = 'io.containerd.runc.v2'
+            [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
+              BinaryName = '/usr/local/sbin/runc'
+              SystemdCgroup = true
+      [plugins.'io.containerd.cri.v1.runtime'.cni]
+        bin_dir = '/opt/cni/bin'
+        conf_dir = '/etc/cni/net.d'
+
 # Our goal is to stay one version behind
 kubernetes_short_version: "1.33"
 kubernetes_version: "1.33.5"

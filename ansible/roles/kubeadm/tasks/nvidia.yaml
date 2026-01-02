@@ -63,29 +63,16 @@
     name: nvidia-container-toolkit
     update_cache: true
 
-- name: "Get checksum of NVIDIA containerd config before"
-  ansible.builtin.stat:
-    path: /etc/containerd/conf.d/99-nvidia.toml
-    checksum_algorithm: sha256
-  register: kubeadm_nvidia_config_before
-
-# Note: Do NOT add --cdi.enabled here - it causes vulkan device mount failures.
-# GPU passthrough works correctly via runtimeClassName: nvidia without forcing CDI mode.
 - name: "Configure containerd to use NVIDIA runtime"
-  ansible.builtin.command:
-    cmd: nvidia-ctk runtime configure --runtime=containerd
-  changed_when: false
-
-- name: "Get checksum of NVIDIA containerd config after"
-  ansible.builtin.stat:
-    path: /etc/containerd/conf.d/99-nvidia.toml
-    checksum_algorithm: sha256
-  register: kubeadm_nvidia_config_after
-
-- name: "Restart containerd if config changed"
-  ansible.builtin.debug:
-    msg: "NVIDIA containerd config changed, restarting containerd"
-  changed_when: kubeadm_nvidia_config_before.stat.checksum | default('') != kubeadm_nvidia_config_after.stat.checksum
+  ansible.builtin.copy:
+    dest: /etc/containerd/conf.d/99-nvidia.toml
+    mode: "0644"
+    content: |
+      [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.nvidia]
+        runtime_type = "io.containerd.runc.v2"
+        [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.nvidia.options]
+          BinaryName = "/usr/bin/nvidia-container-runtime"
+          SystemdCgroup = true
   notify: "Restart containerd"
 
 - name: "Ensure CDI directory exists"
