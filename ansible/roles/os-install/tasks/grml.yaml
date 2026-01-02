@@ -80,22 +80,16 @@
         state: absent
       failed_when: false
 
-- name: Create temporary config directory
-  ansible.builtin.tempfile:
-    state: directory
-    prefix: grml-config-
-  register: os_install_grml_tempdir
-
 - name: Create Grml config directory structure
   ansible.builtin.file:
-    path: "{{ os_install_grml_tempdir.path }}/root/.ssh"
+    path: /etc/os-install/assets/grml/config/root/.ssh
     state: directory
     mode: "0700"
 
 - name: Create Grml SSH authorized_keys
   ansible.builtin.copy:
     content: "{{ ssh_keys | join('\n') }}\n"
-    dest: "{{ os_install_grml_tempdir.path }}/root/.ssh/authorized_keys"
+    dest: /etc/os-install/assets/grml/config/root/.ssh/authorized_keys
     mode: "0600"
   register: os_install_grml_authorized_keys
 
@@ -108,11 +102,6 @@
   # Using tar directly because archive module can't set working directory (-C)
   # which is needed for correct relative paths in the tarball
   ansible.builtin.command:
-    cmd: "tar -cjf /etc/os-install/assets/grml/config.tbz -C {{ os_install_grml_tempdir.path }} ."
+    cmd: tar -cjf /etc/os-install/assets/grml/config.tbz -C /etc/os-install/assets/grml/config .
   when: os_install_grml_authorized_keys.changed or not os_install_grml_config_stat.stat.exists
   changed_when: true
-
-- name: Remove temporary config directory
-  ansible.builtin.file:
-    path: "{{ os_install_grml_tempdir.path }}"
-    state: absent

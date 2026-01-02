@@ -26,6 +26,7 @@ genericusers_users:
     shell: /bin/bash
     uid: 10001
     groups: [sudo, audio, video, dialout]
+    append: true
     pass: !vault |
       $ANSIBLE_VAULT;1.1;AES256
       31623865666436383432373566303765326238656334323163363735393337303064316137313761
