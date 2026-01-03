@@ -58,9 +58,8 @@ resource "healthchecksio_check" "gyb_full" {
   name     = "got-your-back-full"
   desc     = "Weekly full Gmail backup via Got Your Back"
   tags     = ["backup", "kubernetes", "gyb"]
-  timeout  = 604800  # 7 days
-  grace    = 1814400 # 21 days
-  schedule = "18 9 * * 0"
+  timeout  = 604800 # 7 days
+  grace    = 86400  # 1 day
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
@@ -71,9 +70,8 @@ resource "healthchecksio_check" "gyb_incremental" {
   name     = "got-your-back-incremental"
   desc     = "Incremental Gmail backup via Got Your Back"
   tags     = ["backup", "kubernetes", "gyb"]
-  timeout  = 14400  # 4 hours
-  grace    = 172800 # 2 days
-  schedule = "13 */4 * * *"
+  timeout  = 28800 # 8 hours (allows one missed run)
+  grace    = 14400 # 4 hours
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
@@ -84,9 +82,8 @@ resource "healthchecksio_check" "rsnapshot_daily" {
   name     = "rsnapshot-daily"
   desc     = "Daily rsnapshot backup"
   tags     = ["backup", "kubernetes", "rsnapshot"]
-  timeout  = 86400  # 1 day
-  grace    = 172800 # 2 days
-  schedule = "30 3 * * *"
+  timeout  = 86400 # 1 day
+  grace    = 86400 # 1 day
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
@@ -97,9 +94,8 @@ resource "healthchecksio_check" "rsnapshot_weekly" {
   name     = "rsnapshot-weekly"
   desc     = "Weekly rsnapshot backup"
   tags     = ["backup", "kubernetes", "rsnapshot"]
-  timeout  = 86400  # 1 day
-  grace    = 172800 # 2 days
-  schedule = "0 3 * * 0"
+  timeout  = 604800 # 7 days
+  grace    = 86400  # 1 day
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
@@ -110,9 +106,8 @@ resource "healthchecksio_check" "rsnapshot_monthly" {
   name     = "rsnapshot-monthly"
   desc     = "Monthly rsnapshot backup"
   tags     = ["backup", "kubernetes", "rsnapshot"]
-  timeout  = 86400  # 1 day
-  grace    = 172800 # 2 days
-  schedule = "30 2 1 * *"
+  timeout  = 2678400 # 31 days
+  grace    = 86400   # 1 day
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
@@ -125,7 +120,6 @@ resource "healthchecksio_check" "velero_daily" {
   tags     = ["backup", "kubernetes", "velero"]
   timeout  = 86400 # 1 day
   grace    = 86400 # 1 day
-  schedule = "0 8 * * *"
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
@@ -190,7 +184,6 @@ resource "healthchecksio_check" "kube_restic_b2_check" {
   tags     = ["backup", "kubernetes", "restic"]
   timeout  = 604800 # 7 days
   grace    = 86400  # 1 day
-  schedule = "0 4 * * 0"
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
@@ -215,7 +208,5 @@ resource "healthchecksio_check" "kube_restic_xtal_b2_check" {
   tags     = ["backup", "kubernetes", "restic"]
   timeout  = 604800 # 7 days
   grace    = 86400  # 1 day
-  schedule = "30 4 * * 0"
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
-
