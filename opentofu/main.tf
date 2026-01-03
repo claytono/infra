@@ -107,7 +107,7 @@ provider "unifi" {
 }
 
 provider "proxmox" {
-  endpoint  = "https://p9.oneill.net:8006"
+  endpoint  = "https://pve.oneill.net"
   api_token = local.proxmox_api_token
   insecure  = false
 
