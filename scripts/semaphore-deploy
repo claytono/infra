@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+"""
+semaphore-deploy — Deploy Ansible via Semaphore with retries and ARA links
+
+This script triggers Semaphore tasks via API and tracks deployment status.
+
+HOW IT WORKS:
+1. Triggers Semaphore template with optional --limit and --tags CLI args
+2. Polls task status until completion
+3. Outputs ARA link after each attempt
+4. Summarizes all attempts with ARA links at the end if retries were needed
+5. Implements retry logic with linear backoff
+6. Exits with error code if deployment fails after all retries
+
+EXAMPLES:
+./semaphore-deploy --hosts all --project Infra --template ansible-deploy
+./semaphore-deploy --hosts "k1 k2" --project Infra --template ansible-deploy --tags common,users
+
+Usage: ./semaphore-deploy --hosts "host1 host2" --project NAME --template NAME [--tags TAGS]
+"""
+
+import argparse
+from datetime import datetime
+import os
+import re
+import sys
+import time
+from typing import Optional
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+import json
+from websocket import create_connection
+
+SEMAPHORE_URL = "https://semaphore.k.oneill.net"
+ARA_URL = "https://ara.k.oneill.net"
+
+
+class DeploymentError(Exception):
+    """Custom exception for deployment failures"""
+
+    pass
+
+
+class SemaphoreDeployer:
+    """Semaphore deployment manager with retry logic and ARA links"""
+
+    def __init__(
+        self,
+        hosts: str,
+        project: str,
+        template: str,
+        tags: Optional[str] = None,
+        max_attempts: int = 3,
+    ):
+        self.hosts = hosts
+        self.project_name = project
+        self.template_name = template
+        self.tags = tags
+        self.max_attempts = max_attempts
+        self.token = os.environ.get("SEMAPHORE_API_TOKEN")
+        self.attempts: list[dict] = []
+        self.project_id: Optional[int] = None
+        self.template_id: Optional[int] = None
+
+        if not self.token:
+            raise DeploymentError("SEMAPHORE_API_TOKEN environment variable is required")
+
+    def api_request(
+        self, method: str, endpoint: str, data: Optional[dict] = None
+    ) -> dict:
+        """Make an API request to Semaphore"""
+        url = f"{SEMAPHORE_URL}/api{endpoint}"
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+        body = json.dumps(data).encode("utf-8") if data else None
+        request = Request(url, data=body, headers=headers, method=method)
+
+        try:
+            with urlopen(request, timeout=30) as response:
+                response_data = response.read().decode("utf-8")
+                return json.loads(response_data) if response_data else {}
+        except HTTPError as e:
+            error_body = e.read().decode("utf-8") if e.fp else ""
+            raise DeploymentError(f"API error {e.code}: {error_body}")
+        except URLError as e:
+            raise DeploymentError(f"Connection error: {e.reason}")
+
+    def resolve_project_id(self) -> int:
+        """Resolve project name to ID via API"""
+        projects = self.api_request("GET", "/projects")
+        for project in projects:
+            if project.get("name") == self.project_name:
+                return project["id"]
+        raise DeploymentError(f"Project '{self.project_name}' not found")
+
+    def resolve_template_id(self, project_id: int) -> int:
+        """Resolve template name to ID via API"""
+        templates = self.api_request("GET", f"/project/{project_id}/templates")
+        for template in templates:
+            if template.get("name") == self.template_name:
+                return template["id"]
+        raise DeploymentError(
+            f"Template '{self.template_name}' not found in project {self.project_name}"
+        )
+
+    def resolve_ids(self) -> None:
+        """Resolve project and template names to IDs"""
+        print(f"Resolving project '{self.project_name}'...")
+        self.project_id = self.resolve_project_id()
+        print(f"  Found project ID: {self.project_id}")
+
+        print(f"Resolving template '{self.template_name}'...")
+        self.template_id = self.resolve_template_id(self.project_id)
+        print(f"  Found template ID: {self.template_id}")
+
+    def build_arguments(self) -> Optional[str]:
+        """Build CLI arguments as JSON string for the Semaphore task"""
+        args = []
+
+        # Add --limit if hosts is not "all"
+        if self.hosts != "all":
+            # Convert space-separated hosts to comma-separated
+            host_list = ",".join(self.hosts.split())
+            args.extend(["--limit", host_list])
+
+        # Add --tags if specified
+        if self.tags:
+            args.extend(["--tags", self.tags])
+
+        # Return JSON string or None if no args
+        return json.dumps(args) if args else None
+
+    def create_task(self) -> int:
+        """Create a new Semaphore task and return its ID"""
+        payload = {
+            "template_id": self.template_id,
+        }
+
+        arguments = self.build_arguments()
+        if arguments:
+            payload["arguments"] = arguments
+
+        print(f"Creating Semaphore task with payload: {json.dumps(payload)}")
+
+        response = self.api_request(
+            "POST", f"/project/{self.project_id}/tasks", payload
+        )
+
+        task_id = response.get("id")
+        if not task_id:
+            raise DeploymentError(f"No task ID in response: {response}")
+
+        print(f"Created task {task_id}")
+        return task_id
+
+    def get_task_status(self, task_id: int) -> dict:
+        """Get the current status of a task"""
+        return self.api_request("GET", f"/project/{self.project_id}/tasks/{task_id}")
+
+    def get_task_output(self, task_id: int) -> str:
+        """Get the output of a task"""
+        response = self.api_request(
+            "GET", f"/project/{self.project_id}/tasks/{task_id}/output"
+        )
+        # Response is a list of output lines
+        if isinstance(response, list):
+            return "\n".join(item.get("output", "") for item in response)
+        return str(response)
+
+    def stream_task_output_ws(self, task_id: int) -> str:
+        """Stream task output via WebSocket, return final status"""
+        ws_url = SEMAPHORE_URL.replace("https://", "wss://") + "/api/ws"
+
+        ws = create_connection(
+            ws_url,
+            header={"Authorization": f"Bearer {self.token}"}
+        )
+
+        try:
+            while True:
+                message = ws.recv()
+                data = json.loads(message)
+
+                # Filter for our task
+                if data.get("task_id") != task_id:
+                    continue
+
+                if data.get("type") == "log":
+                    timestamp = data.get("time", "")
+                    output = data.get("output", "")
+                    if timestamp:
+                        try:
+                            dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                            print(f"  [{dt.strftime('%H:%M:%S.%f')[:-3]}] {output}")
+                        except ValueError:
+                            print(f"  > {output}")
+                    else:
+                        print(f"  > {output}")
+                elif data.get("type") == "update":
+                    status = data.get("status")
+                    if status in ("success", "error", "stopped"):
+                        return status
+        finally:
+            ws.close()
+
+    def extract_ara_url(self, output: str) -> Optional[str]:
+        """Extract ARA playbook URL from task output"""
+        # Look for ARA playbook ID in output
+        # Common patterns: "ara.k.oneill.net/playbooks/xxx" or "playbook id: xxx"
+        match = re.search(rf"{ARA_URL}/playbooks/(\d+)", output)
+        if match:
+            return f"{ARA_URL}/playbooks/{match.group(1)}.html"
+
+        # Also check for playbook ID mention
+        match = re.search(r"Playbook ID:\s*(\d+)", output, re.IGNORECASE)
+        if match:
+            return f"{ARA_URL}/playbooks/{match.group(1)}.html"
+
+        return None
+
+    def wait_for_task(self, task_id: int) -> tuple[bool, Optional[str]]:
+        """Wait for task using WebSocket streaming"""
+        print(f"Streaming output for task {task_id}...")
+
+        final_status = self.stream_task_output_ws(task_id)
+        success = final_status == "success"
+
+        # Fetch full output for ARA extraction
+        output = self.get_task_output(task_id)
+        ara_url = self.extract_ara_url(output)
+
+        if success:
+            print(f"✅ Task {task_id} completed successfully")
+        else:
+            print(f"❌ Task {task_id} failed with status: {final_status}")
+
+        return success, ara_url
+
+    def deploy_single_attempt(self) -> tuple[bool, Optional[str], int]:
+        """Run a single deployment attempt. Returns (success, ara_url, task_id)"""
+        task_id = self.create_task()
+        success, ara_url = self.wait_for_task(task_id)
+
+        if ara_url:
+            print(f"📊 ARA Report: {ara_url}")
+        else:
+            print("📊 ARA Report: Not found in output")
+
+        return success, ara_url, task_id
+
+    def deploy_with_retries(self) -> bool:
+        """Deploy with retry logic"""
+        for attempt in range(1, self.max_attempts + 1):
+            print(f"\n--- Deployment attempt {attempt}/{self.max_attempts} ---")
+
+            success, ara_url, task_id = self.deploy_single_attempt()
+
+            self.attempts.append({
+                "attempt": attempt,
+                "task_id": task_id,
+                "success": success,
+                "ara_url": ara_url,
+            })
+
+            if success:
+                if attempt > 1:
+                    print(f"✅ Deployment succeeded on attempt {attempt}/{self.max_attempts}")
+                return True
+
+            if attempt < self.max_attempts:
+                delay = attempt * 10  # 10s, 20s, 30s delays
+                print(f"❌ Attempt {attempt} failed. Retrying in {delay}s...")
+                time.sleep(delay)
+
+        print(f"❌ All {self.max_attempts} attempts failed")
+        return False
+
+    def print_summary(self) -> None:
+        """Print summary of all attempts"""
+        if len(self.attempts) > 1:
+            print("\n=== Deployment Attempt Summary ===")
+            for attempt in self.attempts:
+                status = "✅" if attempt["success"] else "❌"
+                ara = attempt["ara_url"] or "N/A"
+                print(f"  Attempt {attempt['attempt']}: {status} (Task {attempt['task_id']}) - ARA: {ara}")
+
+    def deploy(self) -> None:
+        """Main deployment entry point"""
+        print(f"Starting Ansible deployment via Semaphore")
+        print(f"  Hosts: {self.hosts}")
+        print(f"  Project: {self.project_name}")
+        print(f"  Template: {self.template_name}")
+        if self.tags:
+            print(f"  Tags: {self.tags}")
+
+        self.resolve_ids()
+
+        success = self.deploy_with_retries()
+        self.print_summary()
+
+        if not success:
+            sys.exit(1)
+
+        print("\n✅ Deployment completed successfully")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Deploy Ansible via Semaphore API",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+
+    parser.add_argument(
+        "--hosts",
+        required=True,
+        help='Hosts to deploy (space-separated, or "all")',
+    )
+    parser.add_argument(
+        "--project",
+        required=True,
+        help="Semaphore project name",
+    )
+    parser.add_argument(
+        "--template",
+        required=True,
+        help="Semaphore template name",
+    )
+    parser.add_argument(
+        "--tags",
+        help="Ansible tags to run (comma-separated)",
+    )
+    parser.add_argument(
+        "--max-attempts",
+        type=int,
+        default=3,
+        help="Maximum deployment attempts (default: 3)",
+    )
+
+    args = parser.parse_args()
+
+    deployer = SemaphoreDeployer(
+        hosts=args.hosts,
+        project=args.project,
+        template=args.template,
+        tags=args.tags,
+        max_attempts=args.max_attempts,
+    )
+
+    deployer.deploy()
+
+
+if __name__ == "__main__":
+    main()

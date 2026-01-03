@@ -1,0 +1,27 @@
+---
+name: Setup Semaphore environment
+description: Connect to Tailscale and configure Semaphore API access
+
+inputs:
+  tailscale_oauth_client_id:
+    required: true
+  tailscale_oauth_secret:
+    required: true
+
+runs:
+  using: composite
+  steps:
+  - name: Connect to Tailscale
+    uses: tailscale/github-action@main
+    with:
+      oauth-client-id: ${{ inputs.tailscale_oauth_client_id }}
+      oauth-secret: ${{ inputs.tailscale_oauth_secret }}
+      tags: tag:github-actions
+      use-cache: true
+
+  - name: Verify Semaphore connectivity
+    shell: bash
+    run: |
+      curl -sf --max-time 10 "https://semaphore.k.oneill.net/api/ping" || {
+        echo "Failed to reach Semaphore API"; exit 1
+      }
