@@ -40,7 +40,7 @@ fi
 if [ -n "$NIX_PYTHON" ]; then
   ARA_CALLBACK_PATH=$("$NIX_PYTHON" -c "import ara.setup; print(ara.setup.callback_plugins)" 2>&1 || true)
   if [ -n "$ARA_CALLBACK_PATH" ] && [[ "$ARA_CALLBACK_PATH" != *"Error"* ]] && [[ "$ARA_CALLBACK_PATH" != *"Traceback"* ]]; then
-    export ANSIBLE_CALLBACK_PLUGINS="$ARA_CALLBACK_PATH"
+    export ANSIBLE_CALLBACK_PLUGINS="$ARA_CALLBACK_PATH:callback_plugins"
     export ANSIBLE_CALLBACKS_ENABLED=ara_default
   fi
 

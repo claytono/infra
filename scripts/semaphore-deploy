@@ -134,6 +134,10 @@ class SemaphoreDeployer:
         # Return JSON string or None if no args
         return json.dumps(args) if args else None
 
+    def get_task_url(self, task_id: int) -> str:
+        """Get the Semaphore UI URL for a task"""
+        return f"{SEMAPHORE_URL}/project/{self.project_id}/history?t={task_id}"
+
     def create_task(self) -> int:
         """Create a new Semaphore task and return its ID"""
         payload = {
@@ -154,7 +158,9 @@ class SemaphoreDeployer:
         if not task_id:
             raise DeploymentError(f"No task ID in response: {response}")
 
+        task_url = self.get_task_url(task_id)
         print(f"Created task {task_id}")
+        print(f"🔗 Semaphore Task: {task_url}")
         return task_id
 
     def get_task_status(self, task_id: int) -> dict:
@@ -240,9 +246,10 @@ class SemaphoreDeployer:
 
         return success, ara_url
 
-    def deploy_single_attempt(self) -> tuple[bool, Optional[str], int]:
-        """Run a single deployment attempt. Returns (success, ara_url, task_id)"""
+    def deploy_single_attempt(self) -> tuple[bool, Optional[str], str, int]:
+        """Run a single deployment attempt. Returns (success, ara_url, task_url, task_id)"""
         task_id = self.create_task()
+        task_url = self.get_task_url(task_id)
         success, ara_url = self.wait_for_task(task_id)
 
         if ara_url:
@@ -250,18 +257,19 @@ class SemaphoreDeployer:
         else:
             print("📊 ARA Report: Not found in output")
 
-        return success, ara_url, task_id
+        return success, ara_url, task_url, task_id
 
     def deploy_with_retries(self) -> bool:
         """Deploy with retry logic"""
         for attempt in range(1, self.max_attempts + 1):
             print(f"\n--- Deployment attempt {attempt}/{self.max_attempts} ---")
 
-            success, ara_url, task_id = self.deploy_single_attempt()
+            success, ara_url, task_url, task_id = self.deploy_single_attempt()
 
             self.attempts.append({
                 "attempt": attempt,
                 "task_id": task_id,
+                "task_url": task_url,
                 "success": success,
                 "ara_url": ara_url,
             })
@@ -286,7 +294,50 @@ class SemaphoreDeployer:
             for attempt in self.attempts:
                 status = "✅" if attempt["success"] else "❌"
                 ara = attempt["ara_url"] or "N/A"
-                print(f"  Attempt {attempt['attempt']}: {status} (Task {attempt['task_id']}) - ARA: {ara}")
+                task_url = attempt["task_url"]
+                print(f"  Attempt {attempt['attempt']}: {status}")
+                print(f"    Semaphore: {task_url}")
+                print(f"    ARA: {ara}")
+
+    def write_summary(self) -> None:
+        """Write deployment summary to console and GitHub Actions job summary"""
+        if not self.attempts:
+            return
+
+        last = self.attempts[-1]
+        status = "✅ Success" if last["success"] else "❌ Failed"
+
+        lines = [
+            "## Deployment Summary",
+            f"**Status:** {status}",
+            f"**Hosts:** {self.hosts}",
+        ]
+
+        if len(self.attempts) == 1:
+            lines.append(f"**Semaphore:** {last['task_url']}")
+            if last["ara_url"]:
+                lines.append(f"**ARA:** {last['ara_url']}")
+        else:
+            lines.append("**Attempts:**")
+            for a in self.attempts:
+                s = "✅" if a["success"] else "❌"
+                lines.append(f"- {s} Attempt {a['attempt']}: {a['task_url']}")
+                if a["ara_url"]:
+                    lines.append(f"  - ARA: {a['ara_url']}")
+
+        summary = "\n".join(lines)
+
+        # Print to console
+        print(f"\n{summary}")
+
+        # Write to GitHub Actions job summary if available
+        summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_file:
+            try:
+                with open(summary_file, "a") as f:
+                    f.write(summary + "\n")
+            except OSError as e:
+                print(f"Warning: Failed to write GitHub summary: {e}")
 
     def deploy(self) -> None:
         """Main deployment entry point"""
@@ -301,11 +352,10 @@ class SemaphoreDeployer:
 
         success = self.deploy_with_retries()
         self.print_summary()
+        self.write_summary()
 
         if not success:
             sys.exit(1)
-
-        print("\n✅ Deployment completed successfully")
 
 
 def main():
