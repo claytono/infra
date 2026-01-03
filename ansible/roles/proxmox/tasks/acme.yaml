@@ -63,3 +63,16 @@
       --acmedomain0 '{{ inventory_hostname }}.{{ domain }},plugin={{ proxmox_acme_plugin_name }}'
   when: >
     (inventory_hostname + '.' + domain + ',plugin=' + proxmox_acme_plugin_name) not in proxmox_node_config.stdout
+
+- name: "Check if certificate is valid"
+  ansible.builtin.command:
+    cmd: openssl verify /etc/pve/nodes/{{ inventory_hostname }}/pve-ssl.pem
+  register: proxmox_cert_valid
+  changed_when: false
+  failed_when: false
+
+- name: "Order ACME certificate"
+  ansible.builtin.command:
+    cmd: pvenode acme cert order
+  timeout: 300
+  when: proxmox_cert_valid.rc != 0
