@@ -113,11 +113,11 @@ locals {
       hostname = "infra1-power.oneill.net"
       note     = "infra1 power monitor"
     }
-    luser-power = {
+    p1-power = {
       mac      = "48:3f:da:2c:20:18"
       ip       = "172.20.6.148"
-      hostname = "luser-power.oneill.net"
-      note     = "luser power monitor"
+      hostname = "p1-power.oneill.net"
+      note     = "p1 power monitor"
     }
     p2-power = {
       mac      = "48:3f:da:2b:fb:35"

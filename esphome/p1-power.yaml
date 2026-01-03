@@ -1,8 +1,8 @@
 ---
 substitutions:
-  devicename: luser-power
-  device_id: luser_power
-  human_devicename: Luser
+  devicename: p1-power
+  device_id: p1_power
+  human_devicename: P1
   icon: mdi:ship-wheel
   restore_mode: always_on
 
