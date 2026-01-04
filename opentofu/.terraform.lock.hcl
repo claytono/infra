@@ -78,6 +78,29 @@ provider "registry.opentofu.org/bpg/proxmox" {
   ]
 }
 
+provider "registry.opentofu.org/cruglobal/semaphoreui" {
+  version     = "1.4.1"
+  constraints = "~> 1.4"
+  hashes = [
+    "h1:L8B3IagTwCpU0T+HBNN5oLJujxQWbCj1JT9icgzKVXg=",
+    "zh:0d325833a72e011c993ec3329db6fb65c7bd909120a8a158149f27bd426fd77c",
+    "zh:67b0e03c21c6ead1c68d140f7d72563cba2b85cf310c1ebe883f6dac31aa4969",
+    "zh:6f3da96ee51694cd7237c9feb45392dc0a3a1466b30c64602d946f1d662246de",
+    "zh:6fa00b55ba338d3835106151eb6492957dc793b09a4b96e093077cc36f6286f5",
+    "zh:7bb7db30fd210444cd18439744e9fb1fee3fabc19f5b52a7d9a1835671770f15",
+    "zh:81ee7d8c8541adf08ab39fdba924c78ca9dca98370243c8a584876f878202d8c",
+    "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
+    "zh:9045be8292b2c08994bb7838cbbe5f0185e2aa544e923c42fe5c659d1e80e370",
+    "zh:95c24e3439dba6e756f7a7c878ac8317b5f295be421ae467d32e142311563fff",
+    "zh:9d39f77141f9b8ce3c79ed87df3dd2eb9562a8468a8944ca8c374a36cc8573ba",
+    "zh:a4c6d876880f7bb365756ceff18f555bcce9b2e4f40af0043baefba048b63c75",
+    "zh:a95399bf601f8b39bda57709b43e1809d57d935f02624ba03593ba638e1969e5",
+    "zh:d1074872e55b6b120728eafb83648a0aeb8e01ef48c3321121248adb4ff1348b",
+    "zh:e70d9b70b468cbf78e354093eb3324bb89df88175ff031dccce8eb1aa0e83725",
+    "zh:ef77b7653f5083d4b78d1b3d17806322dd2fd7ffe995e8957f4a7fd7d442fd92",
+  ]
+}
+
 provider "registry.opentofu.org/filipowm/unifi" {
   version     = "1.0.0"
   constraints = "~> 1.0"

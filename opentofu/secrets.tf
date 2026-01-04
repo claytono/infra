@@ -144,3 +144,19 @@ locals {
   healthchecks_selfhosted_api_key = local.healthchecks_selfhosted_fields["api-key"]
   healthchecks_canary_api_key     = local.healthchecks_selfhosted_fields["canary-api-key"]
 }
+
+# Semaphore credentials from 1Password
+data "onepassword_item" "semaphore_api" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "semaphore-api-token"
+}
+
+data "onepassword_item" "semaphore_ansible_ssh" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "Semaphore Ansible"
+}
+
+locals {
+  semaphore_api_token       = data.onepassword_item.semaphore_api.password
+  semaphore_ansible_ssh_key = data.onepassword_item.semaphore_ansible_ssh.private_key
+}

@@ -12,6 +12,7 @@ resources:
 - externalsecret-ara.yaml
 - externalsecret-encryption.yaml
 - externalsecret-oidc.yaml
+- tailscale-ingress.yaml
 - helm/configmap.yaml
 - helm/deployment.yaml
 - helm/ingress.yaml

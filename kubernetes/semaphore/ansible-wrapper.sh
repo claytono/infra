@@ -4,7 +4,9 @@
 
 export ANSIBLE_HOST_KEY_CHECKING=False
 export ANSIBLE_LOAD_CALLBACK_PLUGINS=1
-export ANSIBLE_STDOUT_CALLBACK=yaml
+# Use default callback with YAML output format (community.general.yaml was removed in v12)
+export ANSIBLE_STDOUT_CALLBACK=default
+export ANSIBLE_STDOUT_CALLBACK_RESULT_FORMAT=yaml
 
 # ARA (Ansible Run Analysis) configuration
 export ARA_API_CLIENT=http
@@ -38,7 +40,7 @@ fi
 if [ -n "$NIX_PYTHON" ]; then
   ARA_CALLBACK_PATH=$("$NIX_PYTHON" -c "import ara.setup; print(ara.setup.callback_plugins)" 2>&1 || true)
   if [ -n "$ARA_CALLBACK_PATH" ] && [[ "$ARA_CALLBACK_PATH" != *"Error"* ]] && [[ "$ARA_CALLBACK_PATH" != *"Traceback"* ]]; then
-    export ANSIBLE_CALLBACK_PLUGINS="$ARA_CALLBACK_PATH"
+    export ANSIBLE_CALLBACK_PLUGINS="$ARA_CALLBACK_PATH:callback_plugins"
     export ANSIBLE_CALLBACKS_ENABLED=ara_default
   fi
 

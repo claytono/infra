@@ -5,8 +5,10 @@ description: Connect to Tailscale and ensure argocd CLI is available
 inputs:
   tailscale_oauth_client_id:
     required: true
+    description: Tailscale OAuth client ID for connecting to tailnet
   tailscale_oauth_secret:
     required: true
+    description: Tailscale OAuth client secret
 
 outputs:
   argocd_path:
@@ -17,7 +19,7 @@ runs:
   using: composite
   steps:
   - name: Connect to Tailscale
-    uses: tailscale/github-action@main
+    uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9  # v4.1.1
     with:
       oauth-client-id: ${{ inputs.tailscale_oauth_client_id }}
       oauth-secret: ${{ inputs.tailscale_oauth_secret }}
