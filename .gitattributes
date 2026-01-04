@@ -8,3 +8,6 @@ ansible/galaxy/** linguist-vendored
 
 # Authentik generated blueprints (first-party, but auto-generated)
 kubernetes/authentik/generated/** linguist-vendored
+
+# Use bd merge for beads JSONL files
+.beads/issues.jsonl merge=beads
