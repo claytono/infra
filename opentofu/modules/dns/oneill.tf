@@ -125,14 +125,6 @@ resource "aws_route53_record" "k_subdomain_ns" {
   records = aws_route53_zone.k_oneill_net.name_servers
 }
 
-resource "aws_route53_record" "oneill_luser" {
-  zone_id = aws_route53_zone.oneill_net.zone_id
-  name    = "luser.oneill.net"
-  type    = "A"
-  ttl     = 300
-  records = ["173.73.171.201"]
-}
-
 resource "aws_route53_record" "router" {
   zone_id = aws_route53_zone.oneill_net.zone_id
   name    = "router.oneill.net"
@@ -144,9 +136,10 @@ resource "aws_route53_record" "router" {
 # Infrastructure hosts - automatically synced with UniFi DHCP reservations
 # Host definitions are in ../../locals.tf (infrastructure_hosts) and shared
 # with unifi_user resources to ensure DNS and DHCP stay automatically in sync.
+# Only creates Route53 records for hosts with public_dns=true (defaults to true)
 
 resource "aws_route53_record" "infrastructure_hosts" {
-  for_each = var.infrastructure_hosts
+  for_each = { for k, v in var.infrastructure_hosts : k => v if v.public_dns }
 
   zone_id = aws_route53_zone.oneill_net.zone_id
   name    = each.value.hostname
