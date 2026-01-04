@@ -59,14 +59,6 @@ resource "aws_route53_record" "lucy" {
   records = ["lucy.allakhazam.com."]
 }
 
-resource "aws_route53_record" "luser" {
-  zone_id = aws_route53_zone.fnord_net.zone_id
-  name    = "luser.fnord.net"
-  type    = "A"
-  ttl     = 300
-  records = ["173.73.171.201"]
-}
-
 resource "aws_route53_record" "ns1_a" {
   zone_id = aws_route53_zone.fnord_net.zone_id
   name    = "ns1.fnord.net"

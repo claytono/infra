@@ -2,11 +2,15 @@
 #
 # infrastructure_hosts defines all infrastructure machines with static IPs.
 # This data structure is consumed by both:
-# - unifi_user resources (DHCP reservations)
-# - aws_route53_record resources (DNS A records)
+# - unifi_user resources (DHCP reservations with internal DNS)
+# - aws_route53_record resources (public DNS A records)
 #
 # This ensures UniFi DHCP and Route53 DNS stay automatically in sync.
 # To add a new host, simply add an entry here and run `opentofu apply`.
+#
+# Optional field: public_dns (default: true)
+# - Set to false to skip creating a public Route53 record
+# - Internal DNS via UniFi is still created
 #
 # Proxmox VE hosts IP plan: 172.19.74.4x (p1=.41, p2=.42, p3=.43, etc.)
 
@@ -88,10 +92,11 @@ locals {
       note     = "Kubernetes worker node (VM)"
     }
     luser = {
-      mac      = "52:54:72:19:74:61"
-      ip       = "172.19.74.161"
-      hostname = "luser.oneill.net"
-      note     = "General purpose VM"
+      mac        = "52:54:72:19:74:61"
+      ip         = "172.19.74.161"
+      hostname   = "luser.oneill.net"
+      note       = "General purpose VM"
+      public_dns = false
     }
     # Other infrastructure
     fs2 = {
