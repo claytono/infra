@@ -84,7 +84,7 @@ jobs:
         if [[ -n "${{ github.event.inputs.tags }}" ]]; then
           TAGS_ARG="--tags ${{ github.event.inputs.tags }}"
         fi
-        nix develop --command \
+        nix develop --command python3 \
           "${GITHUB_WORKSPACE}/trusted-main/scripts/semaphore-deploy" \
           --hosts "${{ steps.hosts.outputs.hosts }}" \
           --project "${{ vars.SEMAPHORE_PROJECT }}" \
