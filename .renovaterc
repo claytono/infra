@@ -212,7 +212,8 @@
         "digest"
       ],
       "matchManagers": [
-        "kustomize"
+        "kustomize",
+        "kubernetes"
       ],
       "minimumReleaseAge": "0 days",
       "automerge": true,
