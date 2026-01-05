@@ -28,8 +28,6 @@ configMapGenerator:
     disableNameSuffixHash: true
 
 images:
-- name: alpine
-  newTag: 3.23@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62
 - name: creativeprojects/resticprofile
   newTag: 0.32.0@sha256:4baba839e9845679a7a072d7961d9156919a06f58afe69bc36b3b41e2966690b
 
