@@ -78,6 +78,19 @@ additionalVolumes:
         - key: caseta.key
           path: caseta.key
           mode: 384
+- name: ssh-key
+  secret:
+    secretName: hass-ssh-key
+    defaultMode: 256
+    items:
+    - key: ssh-privatekey
+      path: id_ed25519
+
+# Mount SSH key for szamar integration
+additionalMounts:
+- name: ssh-key
+  mountPath: /root/.ssh
+  readOnly: true
 
 # Pod annotations for Reloader
 podAnnotations:

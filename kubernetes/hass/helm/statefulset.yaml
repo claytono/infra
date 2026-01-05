@@ -66,6 +66,9 @@ spec:
           volumeMounts:
           - mountPath: /config
             name: hass-home-assistant
+          - mountPath: /root/.ssh
+            name: ssh-key
+            readOnly: true
       initContainers:
         - command:
           - sh
@@ -104,6 +107,13 @@ spec:
                 mode: 384
                 path: caseta.key
               name: hass-caseta-certificates
+      - name: ssh-key
+        secret:
+          defaultMode: 256
+          items:
+          - key: ssh-privatekey
+            path: id_ed25519
+          secretName: hass-ssh-key
   volumeClaimTemplates:
   - metadata:
       name: hass-home-assistant
