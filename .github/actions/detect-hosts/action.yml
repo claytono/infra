@@ -1,0 +1,53 @@
+---
+name: Detect Ansible hosts from changes
+description: Outputs host names that changed between two refs
+
+inputs:
+  base_ref:
+    required: false
+    description: Git ref or SHA to diff from (if empty, returns all hosts)
+  head_ref:
+    required: false
+    description: Git ref or SHA to diff to (if empty, returns all hosts)
+
+outputs:
+  hosts:
+    description: Space-separated list of host names, or "all"
+    value: ${{ steps.collect.outputs.hosts }}
+  has_changes:
+    description: Whether any deployable changes were detected
+    value: ${{ steps.collect.outputs.has_changes }}
+
+runs:
+  using: composite
+  steps:
+  - name: Fetch refs (if provided)
+    shell: bash
+    run: |
+      set -euo pipefail
+      if [[ -n "${{ inputs.base_ref }}" ]]; then
+        git fetch --no-tags --prune origin "+${{ inputs.base_ref }}" || true
+      fi
+      if [[ -n "${{ inputs.head_ref }}" ]]; then
+        git fetch --no-tags --prune origin "+${{ inputs.head_ref }}" || true
+      fi
+
+  - name: Collect hosts
+    id: collect
+    shell: bash
+    run: |
+      set -euo pipefail
+      base='${{ inputs.base_ref }}'
+      head='${{ inputs.head_ref }}'
+      if [[ -z "$base" || -z "$head" ]]; then
+        # No refs provided - deploy all hosts (for workflow_dispatch or similar)
+        echo "No refs provided - targeting all hosts"
+        echo "hosts=all" >> "$GITHUB_OUTPUT"
+        echo "has_changes=true" >> "$GITHUB_OUTPUT"
+      else
+        # Use the ansible-detect-changes script for change detection
+        "${GITHUB_WORKSPACE}/trusted-main/scripts/ansible-detect-changes" \
+          --base-ref "$base" \
+          --head-ref "$head" \
+          --scan-root "${GITHUB_WORKSPACE}"
+      fi

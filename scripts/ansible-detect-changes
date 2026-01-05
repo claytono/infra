@@ -8,19 +8,24 @@ BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$BASEDIR")"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-/dev/stdout}"
 
-BASE_REF="${1:-main}"
-HEAD_REF="${2:-HEAD}"
+# Default values
+BASE_REF="main"
+HEAD_REF="HEAD"
+SCAN_ROOT=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
     --base-ref) BASE_REF="$2"; shift 2 ;;
     --head-ref) HEAD_REF="$2"; shift 2 ;;
+    --scan-root) SCAN_ROOT="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
 
-cd "$REPO_ROOT"
+# Use scan root if provided, otherwise use auto-detected repo root
+EFFECTIVE_ROOT="${SCAN_ROOT:-$REPO_ROOT}"
+cd "$EFFECTIVE_ROOT"
 
 changed_files=$(git diff --name-only "$BASE_REF"..."$HEAD_REF" | grep -E '^ansible/' || true)
 

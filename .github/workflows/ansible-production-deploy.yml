@@ -36,17 +36,16 @@ jobs:
 
     - name: Detect Changed Hosts
       id: detect
-      if: github.event_name != 'workflow_dispatch'
-      run: |
-        "${GITHUB_WORKSPACE}/trusted-main/scripts/ansible-detect-changes" \
-          --base-ref "${{ github.event.before }}" \
-          --head-ref "${{ github.sha }}"
+      uses: ./trusted-main/.github/actions/detect-hosts
+      with:
+        base_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.event.before }}
+        head_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.sha }}
 
-    - name: Set hosts
+    - name: Override hosts for workflow_dispatch
       id: hosts
       run: |
-        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-          echo "hosts=${{ github.event.inputs.hosts || 'all' }}" >> "$GITHUB_OUTPUT"
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.hosts }}" ]]; then
+          echo "hosts=${{ github.event.inputs.hosts }}" >> "$GITHUB_OUTPUT"
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
         else
           echo "hosts=${{ steps.detect.outputs.hosts }}" >> "$GITHUB_OUTPUT"
