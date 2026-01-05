@@ -53,6 +53,19 @@ jobs:
           echo "has_changes=${{ steps.detect.outputs.has_changes }}" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: Setup Nix
+      if: steps.hosts.outputs.has_changes == 'true' && steps.hosts.outputs.hosts != ''
+      uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15  # v31
+      with:
+        github_access_token: ${{ github.token }}
+
+    - name: Setup Cachix
+      if: steps.hosts.outputs.has_changes == 'true' && steps.hosts.outputs.hosts != ''
+      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad  # v16
+      with:
+        name: claytono
+        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
     - name: Setup Semaphore
       if: steps.hosts.outputs.has_changes == 'true' && steps.hosts.outputs.hosts != ''
       uses: ./trusted-main/.github/actions/setup-semaphore
@@ -70,7 +83,8 @@ jobs:
         if [[ -n "${{ github.event.inputs.tags }}" ]]; then
           TAGS_ARG="--tags ${{ github.event.inputs.tags }}"
         fi
-        "${GITHUB_WORKSPACE}/trusted-main/scripts/semaphore-deploy" \
+        nix develop --command \
+          "${GITHUB_WORKSPACE}/trusted-main/scripts/semaphore-deploy" \
           --hosts "${{ steps.hosts.outputs.hosts }}" \
           --project "${{ vars.SEMAPHORE_PROJECT }}" \
           --template "${{ vars.SEMAPHORE_TEMPLATE }}" \
