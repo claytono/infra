@@ -34,7 +34,7 @@ spec:
             - --lock-wait
             - 6h
             - check
-            image: creativeprojects/resticprofile
+            image: creativeprojects/resticprofile@sha256:4baba839e9845679a7a072d7961d9156919a06f58afe69bc36b3b41e2966690b
             imagePullPolicy: IfNotPresent
             envFrom:
             - secretRef:
