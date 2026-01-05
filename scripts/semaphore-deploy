@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 semaphore-deploy — Deploy Ansible via Semaphore with retries and ARA links
@@ -32,6 +33,7 @@ import json
 from websocket import create_connection, WebSocketConnectionClosedException, WebSocketTimeoutException
 
 SEMAPHORE_URL = os.environ.get("SEMAPHORE_URL", "https://semaphore.k.oneill.net")
+SEMAPHORE_DISPLAY_URL = os.environ.get("SEMAPHORE_DISPLAY_URL", SEMAPHORE_URL)
 ARA_URL = "https://ara.k.oneill.net"
 
 
@@ -134,7 +136,7 @@ class SemaphoreDeployer:
 
     def get_task_url(self, task_id: int) -> str:
         """Get the Semaphore UI URL for a task"""
-        return f"{SEMAPHORE_URL}/project/{self.project_id}/history?t={task_id}"
+        return f"{SEMAPHORE_DISPLAY_URL}/project/{self.project_id}/history?t={task_id}"
 
     def create_task(self) -> int:
         """Create a new Semaphore task and return its ID"""
