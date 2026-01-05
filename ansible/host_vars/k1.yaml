@@ -1,5 +1,4 @@
 ---
-# Test comment for auto-deploy verification (Test 2)
 manage_network: true
 interfaces_ether_interfaces:
   - device: ens18
