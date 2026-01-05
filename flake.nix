@@ -40,6 +40,7 @@
                 proxmoxer
                 pyyaml
                 ruamel-yaml
+                websocket-client
                 # ARA (Ansible Run Analysis) for recording playbook runs
                 (ps.buildPythonPackage rec {
                   pname = "ara";

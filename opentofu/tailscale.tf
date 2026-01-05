@@ -14,6 +14,7 @@ resource "tailscale_acl" "main" {
             "tag:k8s": ["tag:k8s-operator"],
             "tag:github-actions": [],
             "tag:argocd": ["tag:k8s-operator"],
+            "tag:semaphore": ["tag:k8s-operator"],
             "tag:flux": ["autogroup:admin"],
             "tag:restic": ["tag:k8s-operator"],
             "tag:healthchecks": ["tag:k8s-operator"],
@@ -53,12 +54,12 @@ resource "tailscale_acl" "main" {
                 "dst":    ["tag:healthchecks:443"],
             },
 
-            // Allow GitHub Actions to reach ArgoCD only
+            // Allow GitHub Actions to reach ArgoCD and Semaphore
             {
                 "action": "accept",
                 "src":    ["tag:github-actions"],
                 "proto":  "tcp",
-                "dst":    ["tag:argocd:443"],
+                "dst":    ["tag:argocd:443", "tag:semaphore:443"],
             },
 
             // Allow k8s operator to manage k8s nodes
@@ -123,7 +124,7 @@ resource "tailscale_acl" "main" {
 resource "tailscale_oauth_client" "k8s_operator" {
   description = "tailscale-operator"
   scopes      = ["devices:core", "auth_keys"]
-  tags        = ["tag:k8s-operator"]
+  tags        = ["tag:k8s-operator", "tag:semaphore"]
 }
 
 # Create OAuth client for GitHub Actions (ephemeral nodes)

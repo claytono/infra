@@ -54,6 +54,10 @@ terraform {
       source  = "kristofferahl/healthchecksio"
       version = "~> 2.0"
     }
+    semaphoreui = {
+      source  = "CruGlobal/semaphoreui"
+      version = "~> 1.4"
+    }
   }
 
   backend "s3" {
@@ -149,4 +153,17 @@ provider "healthchecksio" {
   alias   = "canary"
   api_key = local.healthchecks_canary_api_key
   api_url = "https://hc.k.oneill.net/api/v1"
+}
+
+# Semaphore provider configuration
+provider "semaphoreui" {
+  hostname  = "semaphore.k.oneill.net"
+  protocol  = "https"
+  port      = 443
+  api_token = local.semaphore_api_token
+}
+
+module "semaphore" {
+  source                  = "./modules/semaphore"
+  ansible_ssh_private_key = local.semaphore_ansible_ssh_key
 }
