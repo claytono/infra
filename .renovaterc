@@ -27,7 +27,8 @@
       "/kubernetes/.+\\.yaml$/"
     ],
     "ignorePaths": [
-      "kubernetes/**/helm/**"
+      "kubernetes/**/helm/**",
+      "kubernetes/restic/cronjobs/**"
     ]
   },
   "customManagers": [
