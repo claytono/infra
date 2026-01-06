@@ -67,39 +67,16 @@
     },
     {
       "customType": "regex",
+      "description": "Docker images with comment annotations (generic)",
       "managerFilePatterns": [
-        "ansible/roles/rtl433/defaults/main.yaml"
+        "ansible/**/*.yaml",
+        "ansible/**/*.yml"
       ],
       "matchStrings": [
-        "rtl433_image_tag:\\s*\"(?<currentValue>[^@\"]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
+        "#\\s*renovate:\\s*datasource=docker\\s*\\n(?<prefix>\\s*[a-z0-9_]+:\\s*\"?)(?<depName>[^:\"\\s]+):(?<currentValue>[^@\"\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?(?<suffix>\"?)"
       ],
-      "depNameTemplate": "hertzg/rtl_433",
       "datasourceTemplate": "docker",
-      "autoReplaceStringTemplate": "rtl433_image_tag: \"{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}\""
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "ansible/roles/zwavejs/defaults/main.yaml"
-      ],
-      "matchStrings": [
-        "zwavejs_image_tag:\\s*\"(?<currentValue>[^@\"]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
-      ],
-      "depNameTemplate": "zwavejs/zwave-js-ui",
-      "datasourceTemplate": "docker",
-      "autoReplaceStringTemplate": "zwavejs_image_tag: \"{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}\""
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "ansible/roles/zigbee2mqtt/defaults/main.yaml"
-      ],
-      "matchStrings": [
-        "zigbee2mqtt_image_tag:\\s*\"(?<currentValue>[^@\"]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
-      ],
-      "depNameTemplate": "koenkk/zigbee2mqtt",
-      "datasourceTemplate": "docker",
-      "autoReplaceStringTemplate": "zigbee2mqtt_image_tag: \"{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}\""
+      "autoReplaceStringTemplate": "# renovate: datasource=docker\n{{{prefix}}}{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}{{{suffix}}}"
     },
     {
       "customType": "regex",

@@ -1,7 +1,7 @@
 ---
 services:
   zwave-js:
-    image: zwavejs/zwave-js-ui:{{ zwavejs_image_tag }}
+    image: {{ zwavejs_image }}
     container_name: zwavejs
     restart: unless-stopped
     volumes:

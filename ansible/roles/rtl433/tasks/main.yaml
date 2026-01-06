@@ -8,8 +8,8 @@
     group: root
 
 - name: Deploy docker-compose.yaml
-  ansible.builtin.template:
-    src: docker-compose.yaml.j2
+  ansible.builtin.copy:
+    src: docker-compose.yaml
     dest: "{{ rtl433_install_dir }}/docker-compose.yaml"
     mode: "0644"
     owner: root

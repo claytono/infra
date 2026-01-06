@@ -1,6 +1,7 @@
 ---
 services:
   dnsmasq:
+    # renovate: datasource=docker
     image: dockurr/dnsmasq:2.91@sha256:7873ce2dae1b0aa51d2c13dd4bd3aad47890c233088b3c7f6eb099a01e6e4307
     restart: unless-stopped
     cap_add:
@@ -11,6 +12,7 @@ services:
       - /etc/os-install/assets:/tftpboot:ro
 
   nginx:
+    # renovate: datasource=docker
     image: nginx:1.29-alpine@sha256:8491795299c8e739b7fcc6285d531d9812ce2666e07bd3dd8db00020ad132295
     restart: unless-stopped
     ports:
@@ -30,6 +32,7 @@ services:
       - traefik
 
   proxmox-answer:
+    # renovate: datasource=docker
     image: slothcroissant/proxmox-auto-installer-server:0.3.2@sha256:0f45d7bfe6e3cc76aa00fc578e40b80b9054e377db18a79122866fe5522bc7ed
     restart: unless-stopped
     volumes:
