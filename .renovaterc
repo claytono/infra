@@ -76,7 +76,7 @@
         "#\\s*renovate:\\s*datasource=docker\\s*\\n(?<prefix>\\s*[a-z0-9_]+:\\s*\"?)(?<depName>[^:\"\\s]+):(?<currentValue>[^@\"\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?(?<suffix>\"?)"
       ],
       "datasourceTemplate": "docker",
-      "autoReplaceStringTemplate": "# renovate: datasource=docker\n{{{prefix}}}{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}{{{suffix}}}"
+      "autoReplaceStringTemplate": "# renovate: datasource=docker\\n{{{prefix}}}{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}{{{suffix}}}"
     },
     {
       "customType": "regex",
