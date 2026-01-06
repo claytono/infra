@@ -22,15 +22,14 @@ Renovate uses **RE2 regex engine** which does NOT support:
 - Lookahead assertions (`(?=...)`)
 - Backreferences
 
-## autoReplaceStringTemplate Newlines
+## Multiline Matching Strategy
 
-To include newlines in `autoReplaceStringTemplate`, use `\\n` in JSON (double-escaped):
+For patterns spanning multiple lines (like comment annotations), use `matchStringsStrategy: "recursive"` instead of trying to include newlines in `autoReplaceStringTemplate`. Renovate only replaces the last match in recursive mode, so you can:
 
-```json
-"autoReplaceStringTemplate": "# comment\\n{{{prefix}}}{{{depName}}}"
-```
+1. First pattern: Match the full block (comment + value line)
+2. Second pattern: Extract only the parts to be replaced
 
-The template engine interprets `\n` as a newline escape, so JSON's `\n` (single escape) becomes empty. Double-escape to pass literal `\n` to the template engine.
+This avoids newline escaping issues entirely.
 
 ## Docker Image Annotations
 
@@ -41,4 +40,4 @@ Use comment annotations for Docker images in Ansible:
 variable_name: "image:tag@sha256:digest"
 ```
 
-The generic regex manager in `.renovaterc` handles these automatically.
+The generic regex manager in `.renovaterc` uses `matchStringsStrategy: "recursive"` to handle these - the comment identifies the block, and only the image reference is replaced.
