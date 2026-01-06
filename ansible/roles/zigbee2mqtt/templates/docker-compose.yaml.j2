@@ -1,7 +1,7 @@
 ---
 services:
   zigbee2mqtt:
-    image: koenkk/zigbee2mqtt:{{ zigbee2mqtt_image_tag }}
+    image: {{ zigbee2mqtt_image }}
     container_name: zigbee2mqtt
     restart: unless-stopped
     devices:
