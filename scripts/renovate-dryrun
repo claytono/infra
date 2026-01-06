@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Run Renovate locally in dry-run mode for testing config changes
+# Usage: renovate-dryrun [full|extract|lookup]
+#   full    - Full dry-run including branch/PR creation simulation (default)
+#   extract - Only extract dependencies
+#   lookup  - Extract and lookup new versions
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+MODE="${1:-full}"
+LOGDIR="$REPO_ROOT/.tmp/renovate"
+mkdir -p "$LOGDIR"
+LOGFILE="$LOGDIR/dryrun.log"
+
+echo "Running Renovate dry-run (mode: $MODE)..."
+echo "Log file: $LOGFILE"
+
+docker run --rm \
+  -v "$REPO_ROOT:/usr/src/app" \
+  -e LOG_LEVEL=debug \
+  renovate/renovate:latest \
+  --platform=local \
+  --dry-run="$MODE" 2>&1 | tee "$LOGFILE"
+
+echo ""
+echo "=== Checking for critical errors ==="
+
+# Critical error patterns that indicate config or runtime failures
+ERRORS=$(grep -E \
+  "^ *(ERROR|FATAL):|config-validation|Invalid regExp|invalid perl operator|Could not extract.*after autoreplace|Error updating branch|update failure" \
+  "$LOGFILE" 2>/dev/null || true)
+
+if [[ -n "$ERRORS" ]]; then
+  echo "CRITICAL ERRORS FOUND:"
+  echo "$ERRORS"
+  exit 1
+else
+  echo "No critical errors found."
+  # Show warnings for awareness
+  WARNINGS=$(grep -E "^ *WARN:" "$LOGFILE" 2>/dev/null | grep -v "schedule\|internalChecksFilter" || true)
+  if [[ -n "$WARNINGS" ]]; then
+    echo ""
+    echo "Warnings (may be expected):"
+    echo "$WARNINGS"
+  fi
+fi
