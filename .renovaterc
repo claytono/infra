@@ -242,6 +242,27 @@
       "matchDatasources": [
         "docker"
       ],
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchFileNames": [
+        "ansible/**"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "minimumReleaseAge": "0 days",
+      "automerge": true,
+      "automergeType": "pr",
+      "addLabels": [
+        "automerge"
+      ],
+      "description": "Auto-merge Docker digest updates in Ansible if CI passes"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
       "matchPackageNames": [
         "ghcr.io/cloudnative-pg/postgresql"
       ],
