@@ -3,6 +3,9 @@
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASEDIR/../kubernetes/hass"
 
+# Extract Home Assistant image from rendered Kubernetes manifests
+HASS_IMAGE=$(yq '.spec.template.spec.containers[] | select(.name == "home-assistant") | .image' helm/statefulset.yaml)
+
 # Create temporary config directory
 mkdir -p config-check
 rsync -avP config/ config-check/
@@ -37,5 +40,5 @@ docker run \
   -e DB_URL=fake \
   --rm \
   -v "$(pwd)/config-check:/config:ro" \
-  "ghcr.io/home-assistant/home-assistant:2025.7" \
+  "$HASS_IMAGE" \
   hass --script check_config -c /config

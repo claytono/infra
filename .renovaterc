@@ -106,16 +106,6 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "kubernetes/**/render"
-      ],
-      "matchStrings": [
-        "VERSION=\"(?<currentValue>[^\"]+)\"\\s*\\nGIT_URL=\"https://github.com/(?<depName>[^/]+/[^/]+)\\.git\""
-      ],
-      "datasourceTemplate": "github-tags"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
         "ansible/roles/os-install/vars/main.yaml"
       ],
       "matchStrings": [
