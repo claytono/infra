@@ -76,6 +76,13 @@ repos:
     language: system
     pass_filenames: true
     files: ^kubernetes/.*\.(ya?ml)$
+  - id: beads-flush
+    name: beads pre-commit flush
+    entry: bash -c '[ "$GITHUB_ACTIONS" = "true" ] && exit 0; bd hooks run pre-commit'
+    language: system
+    pass_filenames: false
+    always_run: true
+    stages: [pre-commit]
 
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1
