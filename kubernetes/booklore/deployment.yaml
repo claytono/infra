@@ -20,7 +20,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: booklore
-          image: booklore/booklore:v1.14.1@sha256:da1374a33069122b3bf7b379fe808802914f7ab82c3996f848daa050dff4a94d
+          image: booklore/booklore:v1.16.0@sha256:1efc89c1ec87efa290943270a3b76130fe4dc8294177b287d4252d2aeff0ccbf
           ports:
             - containerPort: 6060
               name: http
