@@ -1,0 +1,438 @@
+#!/usr/bin/env python3
+"""
+ansible-idempotency-test — Verify Ansible playbooks are idempotent via ARA
+
+Triggers Semaphore deploy, checks ARA for 0 changed/0 failed per host,
+retries until idempotent, reports to healthchecks.io.
+
+HOW IT WORKS:
+1. Triggers Semaphore deployment to specified hosts
+2. Extracts playbook ID from ARA URL in task output
+3. Queries ARA API for per-host changed/failed counts
+4. If any host has changed>0 or failed>0, retries (up to max attempts)
+5. Reports final status to healthchecks.io with per-host breakdown
+
+EXAMPLES:
+./ansible-idempotency-test --project Infra --template ansible-deploy --hosts all
+./ansible-idempotency-test --project Infra --template ansible-deploy --hosts "k1 k2"
+"""
+
+import argparse
+import os
+import re
+import sys
+from typing import Optional
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+
+# Force line-buffered output for real-time logging when piped/teed
+if not sys.stdout.isatty():
+    sys.stdout.reconfigure(line_buffering=True)
+
+# Add scripts directory to path for lib imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from lib.semaphore import SemaphoreDeployer, DeploymentError, ARA_URL
+
+
+class IdempotencyError(Exception):
+    """Custom exception for idempotency check failures"""
+
+    pass
+
+
+class AraClient:
+    """Simple ARA HTTP API client"""
+
+    def __init__(
+        self,
+        endpoint: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        timeout: int = 30,
+    ):
+        self.endpoint = endpoint.rstrip("/")
+        self.auth = (username, password) if username and password else None
+        self.timeout = timeout
+
+    def get(self, path: str) -> dict:
+        """Make a GET request to the ARA API"""
+        url = f"{self.endpoint}{path}"
+        request = Request(url)
+        request.add_header("Accept", "application/json")
+
+        if self.auth:
+            import base64
+
+            credentials = f"{self.auth[0]}:{self.auth[1]}"
+            encoded = base64.b64encode(credentials.encode()).decode()
+            request.add_header("Authorization", f"Basic {encoded}")
+
+        try:
+            with urlopen(request, timeout=self.timeout) as response:
+                import json
+
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as e:
+            error_body = e.read().decode("utf-8") if e.fp else ""
+            raise IdempotencyError(f"ARA API error {e.code}: {error_body}")
+        except URLError as e:
+            raise IdempotencyError(f"ARA connection error: {e.reason}")
+
+
+def get_host_id_mapping(ara_client: AraClient, playbook_id: int) -> dict[int, str]:
+    """Return {host_id: hostname} mapping for all hosts in a playbook"""
+    hosts_response = ara_client.get(f"/api/v1/hosts?playbook={playbook_id}")
+    return {host["id"]: host["name"] for host in hosts_response.get("results", [])}
+
+
+def get_hostname_from_result(result: dict, host_id_to_name: dict[int, str]) -> str:
+    """Extract hostname from an ARA result, raising error if not found"""
+    host_id = result.get("host")
+    if host_id is None:
+        raise IdempotencyError(f"Result missing host ID: {result}")
+
+    hostname = host_id_to_name.get(host_id)
+    if hostname is None:
+        raise IdempotencyError(f"Unknown host ID {host_id} not in playbook hosts")
+
+    return hostname
+
+
+def get_host_results(ara_client: AraClient, playbook_id: int) -> dict[str, dict]:
+    """Return {hostname: {changed: N, failed: N, ok: N}} for all hosts in playbook"""
+    # Get host ID → name mapping
+    host_id_to_name = get_host_id_mapping(ara_client, playbook_id)
+
+    # Query results for the playbook
+    results = ara_client.get(f"/api/v1/results?playbook={playbook_id}&limit=10000")
+
+    host_stats: dict[str, dict] = {}
+    for result in results.get("results", []):
+        hostname = get_hostname_from_result(result, host_id_to_name)
+
+        if hostname not in host_stats:
+            host_stats[hostname] = {"changed": 0, "failed": 0, "ok": 0, "skipped": 0}
+
+        status = result.get("status", "")
+        if status == "changed":
+            host_stats[hostname]["changed"] += 1
+        elif status == "failed":
+            host_stats[hostname]["failed"] += 1
+        elif status == "ok":
+            host_stats[hostname]["ok"] += 1
+        elif status == "skipped":
+            host_stats[hostname]["skipped"] += 1
+
+    return host_stats
+
+
+def format_host_summary(host_results: dict[str, dict], indent: str = "") -> str:
+    """Format host results as a readable summary"""
+    if not host_results:
+        return f"{indent}No host results"
+
+    lines = []
+    for host, counts in sorted(host_results.items()):
+        status = "✅" if counts["changed"] == 0 and counts["failed"] == 0 else "❌"
+        lines.append(
+            f"{indent}{status} {host}: {counts['changed']} changed, "
+            f"{counts['failed']} failed, {counts['ok']} ok"
+        )
+    return "\n".join(lines)
+
+
+def is_idempotent(host_results: dict[str, dict]) -> tuple[bool, str]:
+    """Check if all hosts have 0 changed and 0 failed"""
+    non_idempotent = []
+    for host, counts in sorted(host_results.items()):
+        if counts["changed"] > 0 or counts["failed"] > 0:
+            non_idempotent.append(
+                f"{host}: {counts['changed']} changed, {counts['failed']} failed"
+            )
+
+    if non_idempotent:
+        return False, "\n".join(non_idempotent)
+    return True, "All hosts idempotent"
+
+
+def extract_playbook_id(ara_url: str) -> Optional[int]:
+    """Extract playbook ID from ARA URL like https://ara.k.oneill.net/playbooks/123.html"""
+    match = re.search(r"/playbooks/(\d+)\.html", ara_url)
+    return int(match.group(1)) if match else None
+
+
+def report_healthcheck(
+    ping_key: str,
+    success: bool,
+    details: str,
+    ara_urls: list[str],
+    semaphore_urls: list[str],
+) -> None:
+    """POST to healthchecks.io with status and links"""
+    ara_links = "\n".join(f"- {url}" for url in ara_urls)
+    semaphore_links = "\n".join(f"- {url}" for url in semaphore_urls)
+
+    body = f"""Status: {"PASS" if success else "FAIL"}
+
+{details}
+
+ARA Reports:
+{ara_links}
+
+Semaphore Tasks:
+{semaphore_links}"""
+
+    slug = "ansible-idempotency-test"
+    endpoint = slug if success else f"{slug}/fail"
+    url = f"https://hc.k.oneill.net/ping/{ping_key}/{endpoint}"
+
+    request = Request(url, data=body.encode("utf-8"), method="POST")
+    request.add_header("Content-Type", "text/plain")
+
+    try:
+        with urlopen(request, timeout=10) as response:
+            print(f"Healthcheck reported: {response.status}")
+    except (HTTPError, URLError) as e:
+        print(f"Warning: Failed to report healthcheck: {e}")
+
+
+class IdempotencyTester:
+    """Idempotency test runner with retry logic"""
+
+    def __init__(
+        self,
+        semaphore_token: str,
+        hosts: str,
+        project: str,
+        template: str,
+        tags: Optional[str] = None,
+        ara_username: Optional[str] = None,
+        ara_password: Optional[str] = None,
+        healthcheck_key: Optional[str] = None,
+        min_attempts: int = 2,
+        max_attempts: int = 3,
+    ):
+        self.deployer = SemaphoreDeployer(
+            token=semaphore_token,
+            hosts=hosts,
+            project=project,
+            template=template,
+            tags=tags,
+            max_attempts=1,  # Single attempt per try - we manage retries
+        )
+        self.ara_client = AraClient(
+            endpoint=ARA_URL,
+            username=ara_username,
+            password=ara_password,
+        )
+        self.healthcheck_key = healthcheck_key
+        self.min_attempts = min_attempts
+        self.max_attempts = max_attempts
+        self.attempts: list[dict] = []
+
+    def run_single_attempt(self) -> tuple[bool, Optional[str], dict]:
+        """Run a single deploy and check idempotency. Returns (idempotent, ara_url, host_results)"""
+        # Resolve IDs if not already done
+        if self.deployer.project_id is None:
+            self.deployer.resolve_ids()
+
+        # Run deployment
+        success, ara_url, task_url, task_id = self.deployer.deploy_single_attempt()
+
+        if not success:
+            return False, ara_url, {}
+
+        if not ara_url:
+            print("Warning: No ARA URL found in output, cannot check idempotency")
+            return False, ara_url, {}
+
+        playbook_id = extract_playbook_id(ara_url)
+        if not playbook_id:
+            print(f"Warning: Could not extract playbook ID from {ara_url}")
+            return False, ara_url, {}
+
+        # Query ARA for host results
+        print(f"Querying ARA for playbook {playbook_id}...")
+        host_results = get_host_results(self.ara_client, playbook_id)
+
+        # Check idempotency
+        idempotent, message = is_idempotent(host_results)
+        if idempotent:
+            print(f"✅ {message}")
+        else:
+            print("❌ Non-idempotent")
+
+        return idempotent, ara_url, host_results
+
+    def run(self) -> bool:
+        """Run idempotency test with retries"""
+        print("Starting Ansible idempotency test")
+        print(f"  Hosts: {self.deployer.hosts}")
+        print(f"  Project: {self.deployer.project_name}")
+        print(f"  Template: {self.deployer.template_name}")
+        if self.deployer.tags:
+            print(f"  Tags: {self.deployer.tags}")
+        print(f"  Min attempts: {self.min_attempts}")
+        print(f"  Max attempts: {self.max_attempts}")
+
+        ara_urls: list[str] = []
+        semaphore_urls: list[str] = []
+        final_success = False
+        final_details = ""
+
+        for attempt in range(1, self.max_attempts + 1):
+            print(f"\n--- Idempotency test attempt {attempt}/{self.max_attempts} ---")
+
+            idempotent, ara_url, host_results = self.run_single_attempt()
+
+            # Get semaphore task URL from deployer's last attempt
+            semaphore_url = None
+            if self.deployer.attempts:
+                semaphore_url = self.deployer.attempts[-1]["task_url"]
+                semaphore_urls.append(semaphore_url)
+
+            if ara_url:
+                ara_urls.append(ara_url)
+
+            self.attempts.append(
+                {
+                    "attempt": attempt,
+                    "idempotent": idempotent,
+                    "ara_url": ara_url,
+                    "semaphore_url": semaphore_url,
+                    "host_results": host_results,
+                }
+            )
+
+            # Check if this is the final attempt (success after min_attempts, or last retry)
+            is_final = (
+                idempotent and attempt >= self.min_attempts
+            ) or attempt == self.max_attempts
+
+            # Print host summary for non-final attempts (final summary shows all)
+            if not is_final and host_results:
+                print("\nHost Summary:")
+                print(format_host_summary(host_results, indent="  "))
+
+            if idempotent:
+                final_success = True
+                final_details = f"Idempotent on attempt {attempt}/{self.max_attempts}"
+                if host_results:
+                    host_summary = ", ".join(
+                        f"{h}: {c['ok']} ok" for h, c in sorted(host_results.items())
+                    )
+                    final_details += f"\n\nHost summary:\n{host_summary}"
+                # Only stop early if we've reached min_attempts
+                if attempt >= self.min_attempts:
+                    break
+            else:
+                _, message = is_idempotent(host_results)
+                final_details = (
+                    f"Not idempotent after {attempt} attempt(s)\n\n{message}"
+                )
+
+        # Report to healthcheck
+        if self.healthcheck_key:
+            report_healthcheck(
+                self.healthcheck_key,
+                final_success,
+                final_details,
+                ara_urls,
+                semaphore_urls,
+            )
+        else:
+            print("Warning: HEALTHCHECK_PING_KEY not set, skipping healthcheck report")
+
+        # Print summary
+        print("\n--- Idempotency Test Summary ---")
+        print(f"Status: {'✅ PASS' if final_success else '❌ FAIL'}")
+        print(f"Attempts: {len(self.attempts)}")
+        for a in self.attempts:
+            status = "✅" if a["idempotent"] else "❌"
+            print(f"\n  {status} Attempt {a['attempt']}:")
+            if a["semaphore_url"]:
+                print(f"      Semaphore: {a['semaphore_url']}")
+            if a["ara_url"]:
+                print(f"      ARA: {a['ara_url']}")
+            if a["host_results"]:
+                print("      Hosts:")
+                print(format_host_summary(a["host_results"], indent="        "))
+
+        return final_success
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Test Ansible playbook idempotency via Semaphore and ARA",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+
+    parser.add_argument(
+        "--hosts",
+        default="all",
+        help='Hosts to test (space-separated, or "all", default: all)',
+    )
+    parser.add_argument(
+        "--project",
+        required=True,
+        help="Semaphore project name",
+    )
+    parser.add_argument(
+        "--template",
+        required=True,
+        help="Semaphore template name",
+    )
+    parser.add_argument(
+        "--tags",
+        help="Ansible tags to run (comma-separated, for testing)",
+    )
+    parser.add_argument(
+        "--min-attempts",
+        type=int,
+        default=2,
+        help="Minimum test attempts even if idempotent (default: 2)",
+    )
+    parser.add_argument(
+        "--max-attempts",
+        type=int,
+        default=3,
+        help="Maximum test attempts (default: 3)",
+    )
+
+    args = parser.parse_args()
+
+    # Get required environment variables
+    semaphore_token = os.environ.get("SEMAPHORE_API_TOKEN")
+    if not semaphore_token:
+        print("Error: SEMAPHORE_API_TOKEN environment variable is required")
+        sys.exit(1)
+
+    ara_username = os.environ.get("ARA_API_USERNAME")
+    ara_password = os.environ.get("ARA_API_PASSWORD")
+    healthcheck_key = os.environ.get("HEALTHCHECK_PING_KEY")
+
+    tester = IdempotencyTester(
+        semaphore_token=semaphore_token,
+        hosts=args.hosts,
+        project=args.project,
+        template=args.template,
+        tags=args.tags,
+        ara_username=ara_username,
+        ara_password=ara_password,
+        healthcheck_key=healthcheck_key,
+        min_attempts=args.min_attempts,
+        max_attempts=args.max_attempts,
+    )
+
+    try:
+        success = tester.run()
+        sys.exit(0 if success else 1)
+    except (DeploymentError, IdempotencyError) as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

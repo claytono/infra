@@ -24,11 +24,6 @@ fi
 # Set CA bundle for Python requests library
 export REQUESTS_CA_BUNDLE=/etc/ssl/cert.pem
 
-# Load direnv environment to get nix Python in PATH
-if [ -f /infra/.envrc ]; then
-  eval "$(cd /infra && direnv export bash 2>/dev/null)"
-fi
-
 # Enable ARA callback and action plugins using nix Python environment
 NIX_PYTHON=$(find /nix/store -maxdepth 1 -name "*python3-*-env" -type d 2>/dev/null | head -1)/bin/python3
 if [ ! -x "$NIX_PYTHON" ]; then
@@ -70,5 +65,5 @@ TOOL_NAME=$(basename "$0")
 
 echo "Running $TOOL_NAME via ansible-wrapper.sh"
 echo "Args: $*"
-# Exec the nix-provided ansible binary from /ansible-bins
-exec "/ansible-bins/$TOOL_NAME" "$@"
+# Exec the nix-provided ansible binary from /infra/ansible-bins
+exec "/infra/ansible-bins/$TOOL_NAME" "$@"

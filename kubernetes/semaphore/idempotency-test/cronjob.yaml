@@ -1,0 +1,53 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: ansible-idempotency-test
+
+spec:
+  schedule: 0 3 * * *
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      # Script has its own retry logic, don't add Kubernetes retries
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: idempotency-test
+            image: nixos/nix:2.32.5@sha256:eb909ae872c0e176b5e111c968ff0863333df579d2bd545ca88fa93b3bfa8d01
+            env:
+            - name: NIX_CONFIG
+              value: experimental-features = nix-command flakes
+            - name: SEMAPHORE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: idempotency-test
+                  key: SEMAPHORE_API_TOKEN
+            - name: ARA_API_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: idempotency-test
+                  key: ARA_API_USERNAME
+            - name: ARA_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: idempotency-test
+                  key: ARA_API_PASSWORD
+            - name: HEALTHCHECK_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: idempotency-test
+                  key: HEALTHCHECK_PING_KEY
+            command:
+            - nix
+            - run
+            - github:claytono/infra#ansible-idempotency-test
+            - --
+            - --project
+            - Infra
+            - --template
+            - ansible-deploy
