@@ -19,12 +19,16 @@ resources:
 - helm/pvc.yaml
 - helm/service.yaml
 - helm/serviceaccount.yaml
+- idempotency-test/
 
 configMapGenerator:
-- name: semaphore-init-tools
+- name: semaphore-infra
   files:
-  - init-tools.sh
-  - ansible-wrapper.sh
+  - flake.nix
+  - flake.lock
+  - scripts__init-tools.sh=scripts/init-tools.sh
+  - scripts__setup-nix.sh=scripts/setup-nix.sh
+  - scripts__ansible-wrapper.sh=scripts/ansible-wrapper.sh
   options:
     disableNameSuffixHash: true
 

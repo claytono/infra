@@ -210,3 +210,15 @@ resource "healthchecksio_check" "kube_restic_xtal_b2_check" {
   grace    = 86400  # 1 day
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
+
+# Ansible idempotency test - daily verification that playbooks are idempotent
+resource "healthchecksio_check" "ansible_idempotency_test" {
+  provider = healthchecksio.selfhosted
+
+  name     = "ansible-idempotency-test"
+  desc     = "Daily Ansible idempotency smoke test via Semaphore and ARA"
+  tags     = ["ansible", "kubernetes", "semaphore"]
+  timeout  = 86400 # 1 day
+  grace    = 14400 # 4 hours - allow for slow runs or one retry
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
