@@ -35,7 +35,7 @@ spec:
         - name: PLAYWRIGHT_DRIVER_URL
           value: ws://localhost:3000/
       - name: browserless
-        image: dgtlmoon/sockpuppetbrowser@sha256:01a4ab6c9b1bea143af26b864252acb6fe38631ae01cb4aa6fea7286fcbc1cf0
+        image: dgtlmoon/sockpuppetbrowser@sha256:7116c61ef9cfce3d48a7efd9355d2fbe19f593ea3cfb52a5ded40ecbcb0a3f9d
         resources:
           limits:
             memory: 2Gi
