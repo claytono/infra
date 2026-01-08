@@ -4,5 +4,5 @@ name: hass-meta
 version: 0.1.0
 dependencies:
 - name: home-assistant
-  version: 0.3.32
+  version: 0.3.37
   repository: https://pajikos.github.io/home-assistant-helm-chart/
