@@ -8,21 +8,18 @@ metadata:
 spec:
   template:
     spec:
-      # Run container as root to allow nix installation
-      securityContext:
-        runAsUser: 0
-        fsGroup: 1001
-
       containers:
       - name: semaphore
-          # Override command to run our init script
+        securityContext:
+          runAsUser: 0
         command:
-        - /scripts/init-tools.sh
-
-          # Remove liveness probe during init
-        livenessProbe:
-
-          # Add OIDC configuration environment variable
+        - /config-map/scripts__init-tools.sh
+        startupProbe:
+          httpGet:
+            path: /
+            port: 3000
+          failureThreshold: 60
+          periodSeconds: 10
         env:
         - name: SEMAPHORE_OIDC_PROVIDERS
           valueFrom:
@@ -30,11 +27,13 @@ spec:
               name: semaphore-oidc
               key: oidc-config
 
-          # Add volume mounts for init script and secrets
         volumeMounts:
-        - name: init-tools-script
-          mountPath: /scripts
-          readOnly: true
+        - name: infra-configmap
+          mountPath: /config-map
+        - name: infra
+          mountPath: /infra
+        - name: nix
+          mountPath: /nix
         - name: ansible-vault-password
           mountPath: /secrets/ansible-vault
           readOnly: true
@@ -42,12 +41,15 @@ spec:
           mountPath: /secrets/ara
           readOnly: true
 
-      # Add volumes for init script ConfigMap and secrets
       volumes:
-      - name: init-tools-script
+      - name: infra-configmap
         configMap:
-          name: semaphore-init-tools
+          name: semaphore-infra
           defaultMode: 0755
+      - name: infra
+        emptyDir: {}
+      - name: nix
+        emptyDir: {}
       - name: ansible-vault-password
         secret:
           secretName: ansible-vault-password

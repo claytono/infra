@@ -1,3 +1,4 @@
+# DO NOT EDIT - This is a copy from repo root. Edit flake.nix there instead.
 {
   description = "Development environment flake";
 

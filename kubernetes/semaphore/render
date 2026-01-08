@@ -10,6 +10,10 @@ source "$BASEDIR/../scripts/chart-version"
 rm -rf helm tmp
 mkdir -p tmp helm
 
+# Copy flake files for ConfigMap
+cp ../../flake.nix ../../flake.lock .
+{ echo '# DO NOT EDIT - This is a copy from repo root. Edit flake.nix there instead.'; cat flake.nix; } > flake.nix.tmp && mv flake.nix.tmp flake.nix
+
 # Render semaphore chart
 helm_template semaphore semaphore --namespace semaphore --values values.yaml --output-dir tmp
 
