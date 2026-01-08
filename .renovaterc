@@ -233,7 +233,8 @@
         "docker"
       ],
       "matchManagers": [
-        "custom.regex"
+        "custom.regex",
+        "docker-compose"
       ],
       "matchFileNames": [
         "ansible/**"
