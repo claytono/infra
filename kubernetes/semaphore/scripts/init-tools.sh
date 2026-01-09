@@ -9,9 +9,6 @@ cd /infra
 # Overwrite semaphore's default tofu with our nix version (requires root)
 ln -sf "$(which tofu)" /usr/local/bin/tofu
 
-ansible --version
-tofu --version
-
 # Replace Semaphore's bundled ansible with our wrapper pointing to nix ansible
 ANSIBLE_VERSION=$(find /opt/semaphore/apps/ansible -maxdepth 1 -type d -name '[0-9]*' 2>/dev/null | sort -V | tail -1)
 if [ -z "$ANSIBLE_VERSION" ]; then
@@ -33,10 +30,10 @@ else
   exit 1
 fi
 
-export PATH="/infra/bin:$ANSIBLE_VENV:$PATH"
+export PATH="$ANSIBLE_VENV:$PATH"
 
-# Fix ownership of persistent workdir (may have root-owned files from previous runs)
-chown -R semaphore /tmp/semaphore
+ansible --version
+tofu --version
 
 # Drop privileges to semaphore user for the server
 exec su-exec semaphore /usr/local/bin/server-wrapper

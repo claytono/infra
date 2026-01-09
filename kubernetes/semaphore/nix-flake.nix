@@ -1,4 +1,5 @@
-# DO NOT EDIT - This is a copy from repo root. Edit flake.nix there instead.
+# DO NOT EDIT - This is a copy of repo root flake.nix.
+# Renamed to nix-flake.nix to avoid direnv auto-loading.
 {
   description = "Development environment flake";
 
@@ -62,23 +63,6 @@
       ]);
     in
     {
-
-      # Runnable packages
-      packages = forEachSupportedSystem ({ pkgs }:
-        let
-          pythonEnv = mkPythonEnv pkgs;
-        in
-        {
-          ansible-idempotency-test = pkgs.writeShellApplication {
-            name = "ansible-idempotency-test";
-            runtimeInputs = [ pythonEnv ];
-            text = ''
-              export PYTHONPATH="${./scripts}:''${PYTHONPATH:-}"
-              exec python3 ${./scripts/ansible-idempotency-test} "$@"
-            '';
-          };
-        });
-
       # Development environments
       devShells = forEachSupportedSystem ({ pkgs }:
         let
