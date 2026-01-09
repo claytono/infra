@@ -18,7 +18,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: idempotency-test
-            image: nixos/nix:2.32.5@sha256:eb909ae872c0e176b5e111c968ff0863333df579d2bd545ca88fa93b3bfa8d01
+            image: alpine:3.23@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62
             env:
             - name: NIX_CONFIG
               value: experimental-features = nix-command flakes
@@ -43,11 +43,25 @@ spec:
                   name: idempotency-test
                   key: HEALTHCHECK_PING_KEY
             command:
-            - nix
-            - run
-            - github:claytono/infra#ansible-idempotency-test
-            - --
-            - --project
-            - Infra
-            - --template
-            - ansible-deploy
+            - /bin/sh
+            - -c
+            - |
+              apk add --no-cache bash
+              exec /bin/bash /config-map/scripts---run-idempotency-test.sh \
+                --project Infra --template ansible-deploy
+            volumeMounts:
+            - name: config-map
+              mountPath: /config-map
+              readOnly: true
+            - name: nix
+              mountPath: /nix
+            - name: infra
+              mountPath: /infra
+          volumes:
+          - name: config-map
+            configMap:
+              name: semaphore-infra
+          - name: nix
+            emptyDir: {}
+          - name: infra
+            emptyDir: {}

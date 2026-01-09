@@ -2,7 +2,7 @@
 set -xeu -o pipefail
 
 # Source setup script from ConfigMap (does file copy, nix install, eval nix env)
-source /config-map/scripts__setup-nix.sh
+source /config-map/scripts---setup-nix.sh
 
 cd /infra
 

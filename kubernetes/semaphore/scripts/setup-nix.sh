@@ -4,9 +4,9 @@ set -xeu -o pipefail
 # Clear leftover state from previous runs (emptyDirs persist across container restarts in the same pod)
 rm -rf /infra/*
 
-# Copy config files from ConfigMap, decoding __ to /
+# Copy config files from ConfigMap, decoding --- to /
 for f in /config-map/*; do
-  dest="/infra/$(basename "$f" | sed 's|__|/|g')"
+  dest="/infra/$(basename "$f" | sed 's|---|/|g')"
   echo "Copying $f -> $dest"
   mkdir -p "$(dirname "$dest")"
   cp -L "$f" "$dest"
