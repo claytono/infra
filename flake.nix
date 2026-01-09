@@ -61,23 +61,6 @@
       ]);
     in
     {
-
-      # Runnable packages
-      packages = forEachSupportedSystem ({ pkgs }:
-        let
-          pythonEnv = mkPythonEnv pkgs;
-        in
-        {
-          ansible-idempotency-test = pkgs.writeShellApplication {
-            name = "ansible-idempotency-test";
-            runtimeInputs = [ pythonEnv ];
-            text = ''
-              export PYTHONPATH="${./scripts}:''${PYTHONPATH:-}"
-              exec python3 ${./scripts/ansible-idempotency-test} "$@"
-            '';
-          };
-        });
-
       # Development environments
       devShells = forEachSupportedSystem ({ pkgs }:
         let

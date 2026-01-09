@@ -1,7 +1,7 @@
 #!/bin/bash
 set -xeu -o pipefail
 
-# Clear any leftover state from previous runs (emptyDirs persist across restarts)
+# Clear leftover state from previous runs (emptyDirs persist across container restarts in the same pod)
 rm -rf /infra/*
 
 # Copy config files from ConfigMap, decoding __ to /
@@ -24,10 +24,6 @@ curl -fL https://install.determinate.systems/nix \
 
 cd /infra
 eval "$(nix print-dev-env .#semaphore)"
-
-# Create symlinks on shared volume
-mkdir -p /infra/bin
-ln -sf "$(which tofu)" /infra/bin/tofu
 
 # Create ansible-bins directory and populate with symlinks
 PYTHON_ENV_DIR=$(find /nix/store -maxdepth 1 -name "*python3-*-env" -type d 2>/dev/null | head -1)
