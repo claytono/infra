@@ -13,7 +13,7 @@ spec:
         securityContext:
           runAsUser: 0
         command:
-        - /config-map/scripts__init-tools.sh
+        - /config-map/scripts---init-tools.sh
         startupProbe:
           httpGet:
             path: /

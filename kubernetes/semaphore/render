@@ -10,9 +10,18 @@ source "$BASEDIR/../scripts/chart-version"
 rm -rf helm tmp
 mkdir -p tmp helm
 
-# Copy flake files for ConfigMap
-cp ../../flake.nix ../../flake.lock .
-{ echo '# DO NOT EDIT - This is a copy from repo root. Edit flake.nix there instead.'; cat flake.nix; } > flake.nix.tmp && mv flake.nix.tmp flake.nix
+copy_with_header() {
+  local src="$1" dst="$2"
+  { echo "# DO NOT EDIT - This is a copy. Edit the original in the repo root."; cat "$src"; } > "$dst"
+}
+
+copy_with_header ../../flake.nix nix-flake.nix
+cp ../../flake.lock nix-flake.lock
+
+mkdir -p scripts/lib
+copy_with_header ../../scripts/ansible-idempotency-test scripts/ansible-idempotency-test
+copy_with_header ../../scripts/lib/__init__.py scripts/lib/__init__.py
+copy_with_header ../../scripts/lib/semaphore.py scripts/lib/semaphore.py
 
 # Render semaphore chart
 helm_template semaphore semaphore --namespace semaphore --values values.yaml --output-dir tmp

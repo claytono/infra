@@ -1,3 +1,4 @@
+# DO NOT EDIT - This is a copy. Edit the original in the repo root.
 #!/usr/bin/env python3
 """
 ansible-idempotency-test — Verify Ansible playbooks are idempotent via ARA

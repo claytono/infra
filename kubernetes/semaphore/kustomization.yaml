@@ -26,9 +26,13 @@ configMapGenerator:
   files:
   - flake.nix=nix-flake.nix
   - flake.lock=nix-flake.lock
-  - scripts__init-tools.sh=scripts/init-tools.sh
-  - scripts__setup-nix.sh=scripts/setup-nix.sh
-  - scripts__ansible-wrapper.sh=scripts/ansible-wrapper.sh
+  - scripts---init-tools.sh=scripts/init-tools.sh
+  - scripts---setup-nix.sh=scripts/setup-nix.sh
+  - scripts---ansible-wrapper.sh=scripts/ansible-wrapper.sh
+  - scripts---run-idempotency-test.sh=scripts/run-idempotency-test.sh
+  - scripts---ansible-idempotency-test=scripts/ansible-idempotency-test
+  - scripts---lib---__init__.py=scripts/lib/__init__.py
+  - scripts---lib---semaphore.py=scripts/lib/semaphore.py
   options:
     disableNameSuffixHash: true
 

@@ -1,5 +1,4 @@
-# DO NOT EDIT - This is a copy of repo root flake.nix.
-# Renamed to nix-flake.nix to avoid direnv auto-loading.
+# DO NOT EDIT - This is a copy. Edit the original in the repo root.
 {
   description = "Development environment flake";
 
