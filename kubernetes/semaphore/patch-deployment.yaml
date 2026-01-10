@@ -21,6 +21,8 @@ spec:
           failureThreshold: 60
           periodSeconds: 10
         env:
+        - name: TZ
+          value: America/New_York
         - name: SEMAPHORE_OIDC_PROVIDERS
           valueFrom:
             secretKeyRef:
