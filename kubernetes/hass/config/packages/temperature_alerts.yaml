@@ -32,37 +32,37 @@ sensor:
   max_age:
     minutes: 20
 
-binary_sensor:
-- platform: template
-  sensors:
-    garage_freezer_too_warm:
-      friendly_name: Garage Freezer Too Warm
-      device_class: problem
-      value_template: >
-        {% set temp = states("sensor.garage_freezer_temperature_min_20m") %}
-        {{ temp not in ['unknown', 'unavailable'] and temp | float > 10 }}
+template:
 
-    refrigerator_too_warm:
-      friendly_name: Refrigerator Too Warm
-      device_class: problem
-      value_template: >
-        {% set temp = states("sensor.refrigerator_temperature_min_20m") %}
-        {{ temp not in ['unknown', 'unavailable'] and temp | float > 40 }}
+- binary_sensor:
+  - name: Garage Freezer Too Warm
+    unique_id: garage_freezer_too_warm
+    device_class: problem
+    state: >
+      {% set temp = states("sensor.garage_freezer_temperature_min_20m") %}
+      {{ temp not in ['unknown', 'unavailable'] and temp | float > 10 }}
 
-    refrigerator_freezer_too_warm:
-      friendly_name: Refrigerator Freezer Too Warm
-      device_class: problem
-      value_template: >
-        {% set temp = states("sensor.refrigerator_freezer_temperature_min_20m") %}
-        {{ temp not in ['unknown', 'unavailable'] and temp | float > 15 }}
+  - name: Refrigerator Too Warm
+    unique_id: refrigerator_too_warm
+    device_class: problem
+    state: >
+      {% set temp = states("sensor.refrigerator_temperature_min_20m") %}
+      {{ temp not in ['unknown', 'unavailable'] and temp | float > 40 }}
 
-    refrigerator_lower_drawer_too_warm:
-      friendly_name: Refrigerator Lower Drawer Too Warm
-      device_class: problem
-      value_template: >
-        {% set temp = states("sensor.refrigerator_lower_drawer_temperature_min_20m")
-        %}
-        {{ temp not in ['unknown', 'unavailable'] and temp | float > 40 }}
+  - name: Refrigerator Freezer Too Warm
+    unique_id: refrigerator_freezer_too_warm
+    device_class: problem
+    state: >
+      {% set temp = states("sensor.refrigerator_freezer_temperature_min_20m") %}
+      {{ temp not in ['unknown', 'unavailable'] and temp | float > 15 }}
+
+  - name: Refrigerator Lower Drawer Too Warm
+    unique_id: refrigerator_lower_drawer_too_warm
+    device_class: problem
+    state: >
+      {% set temp = states("sensor.refrigerator_lower_drawer_temperature_min_20m")
+      %}
+      {{ temp not in ['unknown', 'unavailable'] and temp | float > 40 }}
 
 alert:
   garage_freezer_too_warm:

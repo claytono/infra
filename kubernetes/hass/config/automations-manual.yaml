@@ -47,13 +47,13 @@
       seconds: 1  # Wait to confirm it's not intentional
   condition:
   - condition: template
-    value_template: "{{ states('sensor.hdfury_vrroom_source') | string != states('sensor.harmony_vrroom_input') }}"
+    value_template: "{{ states('sensor.hdfury_vrroom_source') | string != states('sensor.harmony_expected_vrroom_input') }}"
   action:
   - condition: template
-    value_template: "{{ states('sensor.harmony_vrroom_input') | int != -1 }}"  # Do nothing if input is unknown
+    value_template: "{{ states('sensor.harmony_expected_vrroom_input') | int != -1 }}"  # Do nothing if input is unknown
   - service: rest_command.set_vrroom_input
     data:
-      input: "{{ states('sensor.harmony_vrroom_input') }}"
+      input: "{{ states('sensor.harmony_expected_vrroom_input') }}"
 
 - alias: Sleep Windows PC When Stopping PC Activity
   id: sleep_windows_pc_when_stopping_pc_activity
