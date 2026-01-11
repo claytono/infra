@@ -118,7 +118,7 @@ homekit:
 
     # Harmony
     - switch.basement_tv
-    - switch.appletv
+    - switch.apple_tv
     - switch.xbox
     - switch.playstation
     - switch.nintendo_switch
@@ -152,36 +152,6 @@ climate:
   max_temp: 130
   hot_tolerance: 0
 
-# Garage door covers using Aqara tilt sensors for state, ESPHome buttons for control
-cover:
-- platform: template
-  covers:
-    left_garage_door:
-      device_class: garage
-      friendly_name: Left Garage Door
-      unique_id: left_garage_door_template_cover
-      value_template: "{{ is_state('binary_sensor.left_garage_door_closed', 'off') }}"
-      open_cover:
-        service: button.press
-        target:
-          entity_id: button.opengarage_left_door_opengarage_left_door_trigger
-      close_cover:
-        service: button.press
-        target:
-          entity_id: button.opengarage_left_door_opengarage_left_door_trigger
-    right_garage_door:
-      device_class: garage
-      friendly_name: Right Garage Door
-      unique_id: right_garage_door_template_cover
-      value_template: "{{ is_state('binary_sensor.right_garage_door_closed', 'off') }}"
-      open_cover:
-        service: button.press
-        target:
-          entity_id: button.opengarage_right_door_opengarage_right_door_trigger
-      close_cover:
-        service: button.press
-        target:
-          entity_id: button.opengarage_right_door_opengarage_right_door_trigger
 generic_hygrostat:
 - name: Basement
   humidifier: switch.basement_humidifiers
@@ -207,131 +177,155 @@ light:
   - light.office_sink_light
   - light.office_closet_light
 
-switch:
-- platform: template
-  switches:
-    basement_tv:
-      friendly_name: Basement TV
-      value_template: "{{ not is_state_attr('remote.harmony_hub', 'current_activity', 'power_off') }}"
-      turn_on:
-        service: remote.turn_on
-        data:
-          entity_id: remote.harmony_hub
-          activity: Watch Apple TV
-      turn_off:
-        service: remote.turn_off
-        data:
-          entity_id: remote.harmony_hub
-    appletv:
-      friendly_name: Apple TV
-      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch Apple TV') }}"
-      turn_on:
-        service: remote.turn_on
-        data:
-          entity_id: remote.harmony_hub
-          activity: Watch Apple TV
-      turn_off:
-        service: remote.turn_off
-        data:
-          entity_id: remote.harmony_hub
-    xbox:
-      friendly_name: XBox
-      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Xbox') }}"
-      turn_on:
-        service: remote.turn_on
-        data:
-          entity_id: remote.harmony_hub
-          activity: Play Xbox
-      turn_off:
-        service: remote.turn_off
-        data:
-          entity_id: remote.harmony_hub
-    playstation:
-      friendly_name: Playstation
-      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play PS5') }}"
-      turn_on:
-        service: remote.turn_on
-        data:
-          entity_id: remote.harmony_hub
-          activity: Play PS5
-      turn_off:
-        service: remote.turn_off
-        data:
-          entity_id: remote.harmony_hub
-    nintendo_switch:
-      friendly_name: Nintendo Switch
-      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Nintendo Switch') }}"
-      turn_on:
-        service: remote.turn_on
-        data:
-          entity_id: remote.harmony_hub
-          activity: Play Nintendo Switch
-      turn_off:
-        service: remote.turn_off
-        data:
-          entity_id: remote.harmony_hub
-    windows_pc:
-      friendly_name: Windows PC
-      value_template: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch PC') }}"
-      turn_on:
-      - service: button.press  # Wake-on-LAN
-        target:
-          entity_id: button.wake_on_lan_szamar
-      - service: remote.turn_on  # Start Harmony Hub activity
-        data:
-          entity_id: remote.harmony_hub
-          activity: Watch PC
-      turn_off:
-      - service: remote.turn_off
-        data:
-          entity_id: remote.harmony_hub
-
-    basement_humidifiers:
-      friendly_name: Basement Humidifiers
-      value_template: "{{ is_state('switch.rec_room_humidifier', 'on') or is_state('switch.basement_hallway_humidifier', 'on') }}"
-      turn_on:
-      - service: switch.turn_on
-        entity_id: switch.rec_room_humidifier
-      - service: switch.turn_on
-        entity_id: switch.basement_hallway_humidifier
-      turn_off:
-      - service: switch.turn_off
-        entity_id: switch.rec_room_humidifier
-      - service: switch.turn_off
-        entity_id: switch.basement_hallway_humidifier
-
-    foot_warmer_thermostat:
-      friendly_name: Foot Warmer Thermostat
-      value_template: "{{ is_state('climate.office_foot_warmer', 'heat') }}"
-      turn_on:
-      - service: climate.set_hvac_mode
-        target:
-          entity_id: climate.office_foot_warmer
-        data:
-          hvac_mode: heat
-      turn_off:
-      - service: climate.set_hvac_mode
-        target:
-          entity_id: climate.office_foot_warmer
-        data:
-          hvac_mode: 'off'
-    office_heater_thermostat:
-      friendly_name: Office Heater Thermostat
-      value_template: "{{ is_state('climate.office_thermostat', 'heat') }}"
-      turn_on:
-      - service: climate.set_hvac_mode
-        target:
-          entity_id: climate.office_thermostat
-        data:
-          hvac_mode: heat
-      turn_off:
-      - service: climate.set_hvac_mode
-        target:
-          entity_id: climate.office_thermostat
-        data:
-          hvac_mode: 'off'
-
 template:
+
+# Garage door covers using Aqara tilt sensors for state, ESPHome buttons for control
+- cover:
+  - name: Left Garage Door
+    unique_id: left_garage_door_template_cover
+    device_class: garage
+    state: "{{ 'open' if is_state('binary_sensor.left_garage_door_closed', 'off') else 'closed' }}"
+    open_cover:
+      service: button.press
+      target:
+        entity_id: button.opengarage_left_door_opengarage_left_door_trigger
+    close_cover:
+      service: button.press
+      target:
+        entity_id: button.opengarage_left_door_opengarage_left_door_trigger
+  - name: Right Garage Door
+    unique_id: right_garage_door_template_cover
+    device_class: garage
+    state: "{{ 'open' if is_state('binary_sensor.right_garage_door_closed', 'off') else 'closed' }}"
+    open_cover:
+      service: button.press
+      target:
+        entity_id: button.opengarage_right_door_opengarage_right_door_trigger
+    close_cover:
+      service: button.press
+      target:
+        entity_id: button.opengarage_right_door_opengarage_right_door_trigger
+
+# Harmony Hub activity switches
+- switch:
+  - name: Basement TV
+    unique_id: basement_tv
+    state: "{{ not is_state_attr('remote.harmony_hub', 'current_activity', 'power_off') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Watch Apple TV
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Apple TV
+    unique_id: appletv
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch Apple TV') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Watch Apple TV
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: XBox
+    unique_id: xbox
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Xbox') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Play Xbox
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Playstation
+    unique_id: playstation
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play PS5') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Play PS5
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Nintendo Switch
+    unique_id: nintendo_switch
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Nintendo Switch') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Play Nintendo Switch
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Windows PC
+    unique_id: windows_pc
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch PC') }}"
+    turn_on:
+    - service: button.press
+      target:
+        entity_id: button.wake_on_lan_szamar
+    - service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Watch PC
+    turn_off:
+    - service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Basement Humidifiers
+    unique_id: basement_humidifiers
+    state: "{{ is_state('switch.rec_room_humidifier', 'on') or is_state('switch.basement_hallway_humidifier', 'on') }}"
+    turn_on:
+    - service: switch.turn_on
+      entity_id: switch.rec_room_humidifier
+    - service: switch.turn_on
+      entity_id: switch.basement_hallway_humidifier
+    turn_off:
+    - service: switch.turn_off
+      entity_id: switch.rec_room_humidifier
+    - service: switch.turn_off
+      entity_id: switch.basement_hallway_humidifier
+  - name: Foot Warmer Thermostat
+    unique_id: foot_warmer_thermostat
+    state: "{{ is_state('climate.office_foot_warmer', 'heat') }}"
+    turn_on:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.office_foot_warmer
+      data:
+        hvac_mode: heat
+    turn_off:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.office_foot_warmer
+      data:
+        hvac_mode: 'off'
+  - name: Office Heater Thermostat
+    unique_id: office_heater_thermostat
+    state: "{{ is_state('climate.office_thermostat', 'heat') }}"
+    turn_on:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.office_thermostat
+      data:
+        hvac_mode: heat
+    turn_off:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.office_thermostat
+      data:
+        hvac_mode: 'off'
 
 # Garage door state from Aqara vibration sensor tilt angle
 # Closed: angle_y ~ -78 to -80 (vertical panel)
@@ -397,6 +391,100 @@ template:
           | list
         }}
 
+  # Airvisual sensors
+  - name: Airvisual CO2
+    unique_id: airvisual_co2
+    state: "{{ state_attr('air_quality.office_node_pro_air_quality', 'carbon_dioxide') | default(0) }}"
+    unit_of_measurement: ppm
+  - name: Airvisual PM0.1
+    unique_id: airvisual_pm01
+    state: "{{ state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_0_1') | default(0) }}"
+    unit_of_measurement: ug/m3
+  - name: Airvisual PM2.5
+    unique_id: airvisual_pm25
+    state: "{{ state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_2_5') | default(0) }}"
+    unit_of_measurement: ug/m3
+  - name: Airvisual PM10
+    unique_id: airvisual_pm10
+    state: "{{ state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_10') | default(0) }}"
+    unit_of_measurement: ug/m3
+  - name: Airvisual PM2.5 Sensor Life
+    unique_id: airvisual_pm25_sensor_life
+    state: "{{ state_attr('air_quality.office_node_pro_air_quality', 'pm2_5_sensor_life') | default(0) }}"
+    unit_of_measurement: ug/m3
+
+  - name: Harmony Expected VRRoom Input
+    unique_id: harmony_vrroom_input
+    state: >-
+      {% set mapping = {
+        "Watch Apple TV": 0,
+        "Play PS5": 1,
+        "Play Xbox": 2,
+        "Watch PC": 3
+      } %}
+      {{ mapping.get(state_attr('remote.harmony_hub', 'current_activity'), -1) }}
+
+  - name: HDFury VRRoom Source
+    unique_id: hdfury_vrroom_source
+    state: >-
+      {% set status = states('sensor.hdfury_vrroom_status') | float(-1) %}
+      {% if status == 0 %}
+      Apple TV
+      {% elif status == 1 %}
+      PS5
+      {% elif status == 2 %}
+      Xbox Series X
+      {% elif status == 3 %}
+      Windows PC
+      {% else %}
+      Unknown
+      {% endif %}
+
+  # Plant moisture sensors (calibrated)
+  - name: Plant A Soil Moisture
+    unique_id: plant_sensor_a_d1f5_moisture_calibrated
+    unit_of_measurement: '%'
+    device_class: moisture
+    state: >-
+      {% set raw = states('sensor.plant_sensor_a_d1f5_moisture') | float %}
+      {% set mn  = states('input_number.plant_sensor_a_d1f5_moisture_min') | float %}
+      {% set mx  = states('input_number.plant_sensor_a_d1f5_moisture_max') | float %}
+      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+      {%- endif %}
+
+  - name: Plant B Soil Moisture
+    unique_id: plant_sensor_b_d1d7_moisture_calibrated
+    unit_of_measurement: '%'
+    device_class: moisture
+    state: >-
+      {% set raw = states('sensor.plant_sensor_b_d1d7_moisture') | float %}
+      {% set mn  = states('input_number.plant_sensor_b_d1d7_moisture_min') | float %}
+      {% set mx  = states('input_number.plant_sensor_b_d1d7_moisture_max') | float %}
+      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+      {%- endif %}
+
+  - name: Plant C Soil Moisture
+    unique_id: plant_sensor_c_f419_moisture_calibrated
+    unit_of_measurement: '%'
+    device_class: moisture
+    state: >-
+      {% set raw = states('sensor.plant_sensor_c_f419_moisture') | float %}
+      {% set mn  = states('input_number.plant_sensor_c_f419_moisture_min') | float %}
+      {% set mx  = states('input_number.plant_sensor_c_f419_moisture_max') | float %}
+      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+      {%- endif %}
+
+  - name: Plant D Soil Moisture
+    unique_id: plant_sensor_d_d0ad_moisture_calibrated
+    unit_of_measurement: '%'
+    device_class: moisture
+    state: >-
+      {% set raw = states('sensor.plant_sensor_d_d0ad_moisture') | float %}
+      {% set mn  = states('input_number.plant_sensor_d_d0ad_moisture_min') | float %}
+      {% set mx  = states('input_number.plant_sensor_d_d0ad_moisture_max') | float %}
+      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
+      {%- endif %}
+
 - binary_sensor:
   - name: Washer Running
     unique_id: washer_running
@@ -412,6 +500,12 @@ template:
       seconds: 10
     availability: >
       {{ states('sensor.washing_machine_electric_consumption_w')|float(-1) >= 0 }}
+
+  - name: Freezer Door Open Too Long
+    unique_id: freezer_door_open_delayed
+    delay_on:
+      minutes: 5
+    state: "{{ is_state('binary_sensor.freezer_door_closed', 'on') }}"
 
   # This exists to give Alexa a clean motion sensor event when the washer finishes
   # so it can announce it.  The debounce is done in the washer_running sensor above.
@@ -474,41 +568,8 @@ input_number:
     name: Plant D Moisture Max
     initial: 52
 
-# Sensors
+# REST sensors
 sensor:
-- platform: template
-    # Airvisual sensors
-  sensors:
-    airvisual_co2:
-      friendly_name: Airvisual CO2
-      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'carbon_dioxide') | default(0) }}"
-      unit_of_measurement: ppm
-    airvisual_pm01:
-      friendly_name: Airvisual PM0.1
-      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_0_1') | default(0) }}"
-      unit_of_measurement: ug/m3
-    airvisual_pm25:
-      friendly_name: Airvisual PM2.5
-      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_2_5') | default(0) }}"
-      unit_of_measurement: ug/m3
-    airvisual_pm10:
-      friendly_name: Airvisual PM10
-      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'particulate_matter_10') | default(0) }}"
-      unit_of_measurement: ug/m3
-    airvisual_pm25_sensor_life:
-      friendly_name: Airvisual PM2.5 Sensor Life
-      value_template: "{{  state_attr('air_quality.office_node_pro_air_quality', 'pm2_5_sensor_life') | default(0) }}"
-      unit_of_measurement: ug/m3
-    harmony_vrroom_input:
-      friendly_name: Harmony Expected VRRoom Input
-      value_template: >-
-        {% set mapping = {
-          "Watch Apple TV": 0,
-          "Play PS5": 1,
-          "Play Xbox": 2,
-          "Watch PC": 3
-        } %}
-        {{ mapping.get(state_attr('remote.harmony_hub', 'current_activity'), -1) }}
 - platform: rest
   name: HDFury VRRoom Status
   resource: http://vrroom-37.oneill.net/ssi/infopage.ssi
@@ -525,87 +586,7 @@ sensor:
   - SINK0
   - SINK1
   scan_interval: 00:01
-- platform: template
-  sensors:
-    hdfury_vrroom_source:
-      friendly_name: HDFury VRRoom Source
-      value_template: >-
-        {% if states('sensor.hdfury_vrroom_status') | float == 0 %}
-        Apple TV
-        {% elif states('sensor.hdfury_vrroom_status') | float == 1 %}
-        PS5
-        {% elif states('sensor.hdfury_vrroom_status') | float == 2 %}
-        Xbox Series X
-        {% elif states('sensor.hdfury_vrroom_status') | float == 3 %}
-        Windows PC
-        {% else %}
-        Unknown
-        {% endif %}
-- platform: template
-  sensors:
-    plant_sensor_a_d1f5_moisture_calibrated:
-      friendly_name: Plant A Soil Moisture
-      unit_of_measurement: '%'
-      device_class: moisture
-      unique_id: plant_sensor_a_d1f5_moisture_calibrated
-      value_template: >-
-        {% set raw = states('sensor.plant_sensor_a_d1f5_moisture') | float %}
-        {% set mn  = states('input_number.plant_sensor_a_d1f5_moisture_min') | float
-        %}
-        {% set mx  = states('input_number.plant_sensor_a_d1f5_moisture_max') | float
-        %}
-        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-        {%- endif %}
 
-    plant_sensor_b_d1d7_moisture_calibrated:
-      friendly_name: Plant B Soil Moisture
-      unit_of_measurement: '%'
-      device_class: moisture
-      unique_id: plant_sensor_b_d1d7_moisture_calibrated
-      value_template: >-
-        {% set raw = states('sensor.plant_sensor_b_d1d7_moisture') | float %}
-        {% set mn  = states('input_number.plant_sensor_b_d1d7_moisture_min') | float
-        %}
-        {% set mx  = states('input_number.plant_sensor_b_d1d7_moisture_max') | float
-        %}
-        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-        {%- endif %}
-
-    plant_sensor_c_f419_moisture_calibrated:
-      friendly_name: Plant C Soil Moisture
-      unit_of_measurement: '%'
-      device_class: moisture
-      unique_id: plant_sensor_c_f419_moisture_calibrated
-      value_template: >-
-        {% set raw = states('sensor.plant_sensor_c_f419_moisture') | float %}
-        {% set mn  = states('input_number.plant_sensor_c_f419_moisture_min') | float
-        %}
-        {% set mx  = states('input_number.plant_sensor_c_f419_moisture_max') | float
-        %}
-        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-        {%- endif %}
-
-    plant_sensor_d_d0ad_moisture_calibrated:
-      friendly_name: Plant D Soil Moisture
-      unit_of_measurement: '%'
-      device_class: moisture
-      unique_id: plant_sensor_d_d0ad_moisture_calibrated
-      value_template: >-
-        {% set raw = states('sensor.plant_sensor_d_d0ad_moisture') | float %}
-        {% set mn  = states('input_number.plant_sensor_d_d0ad_moisture_min') | float
-        %}
-        {% set mx  = states('input_number.plant_sensor_d_d0ad_moisture_max') | float
-        %}
-        {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-        {%- endif %}
-
-binary_sensor:
-- platform: template
-  sensors:
-    freezer_door_open_delayed:
-      friendly_name: Freezer Door Open Too Long
-      delay_on: 00:05:00
-      value_template: "{{ is_state('binary_sensor.freezer_door_closed', 'on') }}"
 alert:
   basement_sump_water:
     name: Water is detected in the basement near the sump!
@@ -653,7 +634,7 @@ alert:
   freezer_door_open:
     name: Freezer Door Left Open
     done_message: Freezer door is now closed.
-    entity_id: binary_sensor.freezer_door_open_delayed
+    entity_id: binary_sensor.freezer_door_open_too_long
     state: 'on'
     repeat: 10
     notifiers:
