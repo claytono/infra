@@ -4,13 +4,15 @@
   ],
   "timezone": "America/New_York",
   "schedule": [
-    "before 6am on monday"
+    "on monday"
   ],
   "ignorePaths": [
     "ansible/galaxy/**"
   ],
   "rebaseWhen": "behind-base-branch",
   "minimumReleaseAge": "14 days",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
   "internalChecksFilter": "strict",
   "semanticCommits": "disabled",
   "addLabels": [
