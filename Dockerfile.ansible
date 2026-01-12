@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6
 
 # Debian 13 = trixie
-FROM geerlingguy/docker-debian13-ansible:latest@sha256:afb2e84b6787fb89c687c8df557ebf465cc9ef2302aed4324bc6c7f3c65f07b5
+FROM geerlingguy/docker-debian13-ansible:latest@sha256:ba08af53eef5fa1f74773608a9057d1f286e132ff55bad1c0fd7d39daf950d4d
 
 # Enable non-free repositories for firmware packages
 RUN sed -i 's/Components: main/Components: main non-free-firmware/' /etc/apt/sources.list.d/debian.sources
