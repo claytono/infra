@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Wait for previous deployments
-      uses: softprops/turnstyle@15f9da4059166900981058ba251e0b652511c68f
+      uses: softprops/turnstyle@ca1ed088d57e03b0cd5c8bbf23c722b749eb8466
 
     - name: Checkout code
       uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
