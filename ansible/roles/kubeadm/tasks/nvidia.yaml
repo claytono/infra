@@ -102,3 +102,51 @@
   ansible.builtin.debug:
     msg: "NVIDIA CDI spec generated/updated"
   changed_when: kubeadm_cdi_spec_before.stat.checksum | default('') != kubeadm_cdi_spec_after.stat.checksum
+
+# Workaround for CUDA repo packages installing Vulkan ICD to different path than Debian
+# See: https://github.com/NVIDIA/nvidia-container-toolkit/issues/1517
+# TODO: Review when packages update: https://github.com/claytono/infra/issues/1120
+- name: "Check for Vulkan ICD file from CUDA repo"
+  ansible.builtin.stat:
+    path: /usr/share/vulkan/icd.d/nvidia_icd.json
+  register: kubeadm_vulkan_icd_file
+
+- name: "Create Vulkan ICD symlink for CUDA repo packages"
+  ansible.builtin.file:
+    src: /usr/share/vulkan/icd.d/nvidia_icd.json
+    dest: /etc/vulkan/icd.d/nvidia_icd.json
+    state: link
+    force: true
+  when: kubeadm_vulkan_icd_file.stat.exists
+
+- name: "Check for Vulkan layers file from CUDA repo"
+  ansible.builtin.stat:
+    path: /usr/share/vulkan/implicit_layer.d/nvidia_layers.json
+  register: kubeadm_vulkan_layers_file
+
+- name: "Create Vulkan layers symlink for CUDA repo packages"
+  ansible.builtin.file:
+    src: /usr/share/vulkan/implicit_layer.d/nvidia_layers.json
+    dest: /etc/vulkan/implicit_layer.d/nvidia_layers.json
+    state: link
+    force: true
+  when: kubeadm_vulkan_layers_file.stat.exists
+
+# Workaround for nvidia-cdi-refresh.service ExecCondition bug with compressed modules
+# Fixed in nvidia-container-toolkit v1.18.2: https://github.com/NVIDIA/nvidia-container-toolkit/pull/1518
+# TODO: Remove after v1.18.2 is released: https://github.com/claytono/infra/issues/1119
+- name: "Create nvidia-cdi-refresh.service drop-in directory"
+  ansible.builtin.file:
+    path: /etc/systemd/system/nvidia-cdi-refresh.service.d
+    state: directory
+    mode: "0755"
+
+- name: "Fix nvidia-cdi-refresh ExecCondition for compressed modules"
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/nvidia-cdi-refresh.service.d/fix-compressed-modules.conf
+    mode: "0644"
+    content: |
+      [Service]
+      ExecCondition=
+      ExecCondition=/usr/bin/grep -qE '/(nvidia|nvidia-current)\\.ko(\\.xz|\\.zst)?[:]' /lib/modules/%v/modules.dep
+  notify: "Reload systemd"
