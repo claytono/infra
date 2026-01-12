@@ -168,6 +168,13 @@
       "description": "Only allow qbittorrent versions < 14 to avoid Ubuntu LTS tags"
     },
     {
+      "matchPackageNames": [
+        "linuxserver/radarr"
+      ],
+      "allowedVersions": "< 6",
+      "description": "Block radarr 6.x"
+    },
+    {
       "matchManagers": [
         "pre-commit"
       ],
