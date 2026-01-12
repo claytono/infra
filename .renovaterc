@@ -315,6 +315,46 @@
         "automerge"
       ],
       "description": "Auto-merge digest updates for CI base image"
+    },
+    {
+      "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
+      "allowedVersions": "/^(11\\.8|11\\.4|10\\.11|10\\.6)\\./",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "mariadb"
+      ]
+    },
+    {
+      "description": "PostgreSQL: Major versions at least 6 months old (auto-managed)",
+      "allowedVersions": "/^(17|16|15|14)\\./",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/cloudnative-pg/postgresql"
+      ]
+    },
+    {
+      "description": "ESPHome: One month behind latest (auto-managed)",
+      "allowedVersions": "/^2025\\.11\\./",
+      "matchDatasources": [
+        "pypi"
+      ],
+      "matchPackageNames": [
+        "esphome"
+      ]
+    },
+    {
+      "description": "Home Assistant: One month behind latest (auto-managed)",
+      "allowedVersions": "/^2025\\.12\\./",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/home-assistant/home-assistant"
+      ]
     }
   ],
   "gitIgnoredAuthors": [
