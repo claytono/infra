@@ -185,24 +185,26 @@ template:
     unique_id: left_garage_door_template_cover
     device_class: garage
     state: "{{ 'open' if is_state('binary_sensor.left_garage_door_closed', 'off') else 'closed' }}"
+    availability: "{{ states('sensor.left_garage_door_vibration_angle_y') | is_number }}"
     open_cover:
-      service: button.press
+      action: button.press
       target:
         entity_id: button.opengarage_left_door_opengarage_left_door_trigger
     close_cover:
-      service: button.press
+      action: button.press
       target:
         entity_id: button.opengarage_left_door_opengarage_left_door_trigger
   - name: Right Garage Door
     unique_id: right_garage_door_template_cover
     device_class: garage
     state: "{{ 'open' if is_state('binary_sensor.right_garage_door_closed', 'off') else 'closed' }}"
+    availability: "{{ states('sensor.right_garage_door_vibration_angle_y') | is_number }}"
     open_cover:
-      service: button.press
+      action: button.press
       target:
         entity_id: button.opengarage_right_door_opengarage_right_door_trigger
     close_cover:
-      service: button.press
+      action: button.press
       target:
         entity_id: button.opengarage_right_door_opengarage_right_door_trigger
 
