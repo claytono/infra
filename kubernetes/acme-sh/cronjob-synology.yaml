@@ -13,7 +13,7 @@ spec:
         spec:
           containers:
           - name: acme-sh
-            image: neilpang/acme.sh@sha256:3dd06f8747ea18947f0d0b0e97d84813ff046332a453237f5d0e710eff68adfd
+            image: neilpang/acme.sh@sha256:da8e0ad517f9cefc5f48e5d1cec6bbaab29eba4b54daa9510a721885e6dc149b
             command: [/bin/sh, /scripts/acme-synology.sh]
             securityContext:
               allowPrivilegeEscalation: false
