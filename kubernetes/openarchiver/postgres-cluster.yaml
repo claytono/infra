@@ -8,7 +8,7 @@ metadata:
 
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.7-standard-trixie@sha256:ff3da23cb0b7fa8583edc8e520c09dd1105fc831cf8eb192b54e964c0ebd07e6
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.7-standard-trixie@sha256:7cbdee605ab7466d651cbc7f6756dc1f236a5fdc43a6c30ad2b4a96846f30095
   enablePDB: false
 
   storage:
