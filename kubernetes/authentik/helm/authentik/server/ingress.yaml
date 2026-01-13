@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: "server"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/part-of: "authentik"
-    app.kubernetes.io/version: "2025.10.2"
+    app.kubernetes.io/version: "2025.10.3"
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: Identity Provider & SSO
