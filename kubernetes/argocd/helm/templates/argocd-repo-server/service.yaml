@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: repo-server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.2.1"
+    app.kubernetes.io/version: "v3.2.3"
   name: argocd-repo-server
   namespace: argocd
 spec:  

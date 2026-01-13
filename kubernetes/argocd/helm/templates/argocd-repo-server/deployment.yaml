@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: repo-server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.2.1"
+    app.kubernetes.io/version: "v3.2.3"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -28,14 +28,14 @@ spec:
         app.kubernetes.io/component: repo-server
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.2.1"
+        app.kubernetes.io/version: "v3.2.3"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-repo-server
       automountServiceAccountToken: true
       containers:
       - name: repo-server
-        image: quay.io/argoproj/argocd:v3.2.1
+        image: quay.io/argoproj/argocd:v3.2.3
         imagePullPolicy: IfNotPresent
         args:
         - /usr/local/bin/argocd-repo-server
@@ -361,7 +361,7 @@ spec:
         - --update=none
         - /usr/local/bin/argocd
         - /var/run/argocd/argocd-cmp-server
-        image: quay.io/argoproj/argocd:v3.2.1
+        image: quay.io/argoproj/argocd:v3.2.3
         imagePullPolicy: IfNotPresent
         name: copyutil
         resources:
