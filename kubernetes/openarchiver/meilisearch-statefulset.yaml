@@ -24,9 +24,11 @@ spec:
         runAsUser: 1000
       containers:
       - name: meilisearch
-        image: getmeili/meilisearch@sha256:61b1c86c459fa52d0653516f573702791e611574737dc76175ae9d2628c911f5
+        image: getmeili/meilisearch@sha256:1af40ecce0b3a21f9a4ff14defaa80da602af3d456ef40a81e83e20043e97485
         imagePullPolicy: IfNotPresent
         env:
+        - name: MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE
+          value: "true"
         - name: MEILI_MASTER_KEY
           valueFrom:
             secretKeyRef:

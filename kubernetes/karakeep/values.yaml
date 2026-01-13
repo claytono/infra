@@ -70,6 +70,8 @@ controllers:
 
 meilisearch:
   enabled: true
+  environment:
+    MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE: "true"
   auth:
     existingMasterKeySecret: karakeep-meilisearch
   persistence:
