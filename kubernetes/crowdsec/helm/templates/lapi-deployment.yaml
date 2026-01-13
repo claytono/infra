@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: crowdsec-lapi
-        image: "crowdsecurity/crowdsec:v1.7.3"
+        image: "crowdsecurity/crowdsec:v1.7.4"
         imagePullPolicy: IfNotPresent
         env:
           - name: LOCAL_API_URL
