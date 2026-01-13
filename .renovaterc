@@ -310,7 +310,8 @@
         "dockerfile"
       ],
       "matchFileNames": [
-        "Dockerfile.ansible"
+        "Dockerfile.ansible",
+        "tests/rpi/Dockerfile"
       ],
       "matchUpdateTypes": [
         "digest"
@@ -321,7 +322,7 @@
       "addLabels": [
         "automerge"
       ],
-      "description": "Auto-merge digest updates for CI base image"
+      "description": "Auto-merge digest updates for CI/test Dockerfiles"
     },
     {
       "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
