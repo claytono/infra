@@ -3,6 +3,7 @@
 .vscode/extensions.json
 .direnv/
 .secrets.age
+.secrets.tmpl.hash
 .tmp/
 
 # Ansible
