@@ -11,13 +11,13 @@ metadata:
     release: "reloader"
     app.kubernetes.io/name: reloader
     app.kubernetes.io/instance: "reloader"
-    chart: "reloader-2.2.6"
+    chart: "reloader-2.2.7"
     heritage: "Helm"
     app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/version: "v1.4.11"
+    app.kubernetes.io/version: "v1.4.12"
     group: com.stakater.platform
     provider: stakater
-    version: v1.4.11
+    version: v1.4.12
   name: reloader
   namespace: default
 spec:
@@ -34,16 +34,16 @@ spec:
         release: "reloader"
         app.kubernetes.io/name: reloader
         app.kubernetes.io/instance: "reloader"
-        chart: "reloader-2.2.6"
+        chart: "reloader-2.2.7"
         heritage: "Helm"
         app.kubernetes.io/managed-by: "Helm"
-        app.kubernetes.io/version: "v1.4.11"
+        app.kubernetes.io/version: "v1.4.12"
         group: com.stakater.platform
         provider: stakater
-        version: v1.4.11
+        version: v1.4.12
     spec:
       containers:
-      - image: "ghcr.io/stakater/reloader:v1.4.11"
+      - image: "ghcr.io/stakater/reloader:v1.4.12"
         imagePullPolicy: IfNotPresent
         name: reloader
         env:
