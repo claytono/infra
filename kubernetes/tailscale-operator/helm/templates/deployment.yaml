@@ -27,7 +27,7 @@ spec:
             secretName: operator-oauth
       containers:
         - name: operator
-          image: tailscale/k8s-operator:v1.90.9
+          image: tailscale/k8s-operator:v1.92.4
           imagePullPolicy: Always
           env:
             - name: OPERATOR_INITIAL_TAGS
@@ -51,7 +51,7 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /oauth/client_secret
             - name: PROXY_IMAGE
-              value: tailscale/tailscale:v1.90.9
+              value: tailscale/tailscale:v1.92.4
             - name: PROXY_TAGS
               value: tag:k8s
             - name: APISERVER_PROXY
@@ -67,8 +67,8 @@ spec:
                 fieldRef:
                   fieldPath: metadata.uid
           volumeMounts:
-          - name: oauth
-            mountPath: /oauth
-            readOnly: true
+            - name: oauth
+              mountPath: /oauth
+              readOnly: true
       nodeSelector:
         kubernetes.io/os: linux
