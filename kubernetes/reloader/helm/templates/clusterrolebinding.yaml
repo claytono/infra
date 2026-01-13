@@ -12,10 +12,10 @@ metadata:
     release: "reloader"
     app.kubernetes.io/name: reloader
     app.kubernetes.io/instance: "reloader"
-    chart: "reloader-2.2.6"
+    chart: "reloader-2.2.7"
     heritage: "Helm"
     app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/version: "v1.4.11"
+    app.kubernetes.io/version: "v1.4.12"
   name: reloader-role-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
