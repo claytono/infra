@@ -1,9 +1,11 @@
 ---
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: booklore
   namespace: booklore
+
 spec:
   replicas: 1
   strategy:
@@ -19,47 +21,47 @@ spec:
       securityContext:
         fsGroup: 10001
       containers:
-        - name: booklore
-          image: booklore/booklore:v1.16.0@sha256:1efc89c1ec87efa290943270a3b76130fe4dc8294177b287d4252d2aeff0ccbf
-          ports:
-            - containerPort: 6060
-              name: http
-          env:
-            - name: BOOKLORE_PORT
-              value: "6060"
-            - name: DATABASE_URL
-              value: jdbc:mariadb://mariadb.booklore.svc.cluster.local:3306/booklore
-            - name: DATABASE_USERNAME
-              value: booklore
-            - name: DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secrets
-                  key: user-password
-            - name: TZ
-              value: EST5EDT
-            - name: USER_ID
-              value: "10001"
-            - name: GROUP_ID
-              value: "10001"
-            - name: SWAGGER_ENABLED
-              value: "true"
-          volumeMounts:
-            - name: data
-              mountPath: /app/data
-            - name: books
-              mountPath: /books
-            - name: bookdrop
-              mountPath: /bookdrop
-      volumes:
+      - name: booklore
+        image: booklore/booklore:v1.16.5@sha256:3b95a0c0085b6972f19075db695a118a9fe589561eec7816e4441465ae915ecd
+        ports:
+        - containerPort: 6060
+          name: http
+        env:
+        - name: BOOKLORE_PORT
+          value: '6060'
+        - name: DATABASE_URL
+          value: jdbc:mariadb://mariadb.booklore.svc.cluster.local:3306/booklore
+        - name: DATABASE_USERNAME
+          value: booklore
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secrets
+              key: user-password
+        - name: TZ
+          value: EST5EDT
+        - name: USER_ID
+          value: '10001'
+        - name: GROUP_ID
+          value: '10001'
+        - name: SWAGGER_ENABLED
+          value: 'true'
+        volumeMounts:
         - name: data
-          persistentVolumeClaim:
-            claimName: booklore-data
+          mountPath: /app/data
         - name: books
-          nfs:
-            server: fs2.oneill.net
-            path: /volume2/shared/books/booklore
+          mountPath: /books
         - name: bookdrop
-          nfs:
-            server: fs2.oneill.net
-            path: /volume2/shared/downloads/booklore-ingestion
+          mountPath: /bookdrop
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: booklore-data
+      - name: books
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/books/booklore
+      - name: bookdrop
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads/booklore-ingestion
