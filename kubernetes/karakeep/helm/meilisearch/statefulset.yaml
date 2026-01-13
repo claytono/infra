@@ -28,7 +28,7 @@ spec:
         app.kubernetes.io/part-of: meilisearch
         app.kubernetes.io/managed-by: Helm
       annotations:
-        checksum/config: 87186460929524abb1a98fcb0deb528c232cee24aeb7ae42a939fb5c84882977
+        checksum/config: c1ea38479afd481f11fa588d3466d631f87bbd3ca920651685e33aaa4075eb1a
     spec:
       serviceAccountName: karakeep-meilisearch
       securityContext:

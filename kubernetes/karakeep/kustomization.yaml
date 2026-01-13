@@ -22,3 +22,5 @@ commonAnnotations:
 images:
 - name: ghcr.io/karakeep-app/karakeep
   newTag: 0.30.0@sha256:2724d4a9a6d13a7fa3babf53b9245767aae56c34f06042a8463ee983c6b41caf
+- name: getmeili/meilisearch
+  newTag: v1.31.0@sha256:1af40ecce0b3a21f9a4ff14defaa80da602af3d456ef40a81e83e20043e97485
