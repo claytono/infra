@@ -27,14 +27,14 @@
     path: "/etc/kubernetes/admin.conf"
     regexp: "^(\\s+)server:\\s+"
     backrefs: true
-    line: "\\1server: https://{{ ansible_fqdn }}:6443"
+    line: "\\1server: https://{{ ansible_facts['fqdn'] }}:6443"
 
 - name: "Fixup super-admin.conf to use fqdn"
   ansible.builtin.lineinfile:
     path: "/etc/kubernetes/super-admin.conf"
     regexp: "^(\\s+)server:\\s+"
     backrefs: true
-    line: "\\1server: https://{{ ansible_fqdn }}:6443"
+    line: "\\1server: https://{{ ansible_facts['fqdn'] }}:6443"
 
 - name: "Fetch admin.conf for local use"
   ansible.builtin.fetch:

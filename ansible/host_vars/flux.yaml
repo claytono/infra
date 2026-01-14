@@ -12,4 +12,4 @@ restic_host_config:
   default:
     # Use a dedicated repo via REST server over Tailscale. This host has limited
     # disk and memory, so pulling the index for all other machines is not practical.
-    repository: "rest:https://{{ '{{' }} $repo_username {{ '}}' }}:{{ '{{' }} $repo_password {{ '}}' }}@restic.cow-banjo.ts.net/{{ ansible_hostname }}"
+    repository: "rest:https://{{ '{{' }} $repo_username {{ '}}' }}:{{ '{{' }} $repo_password {{ '}}' }}@restic.cow-banjo.ts.net/{{ ansible_facts['hostname'] }}"
