@@ -3,9 +3,9 @@
 # renovate: datasource=github-releases depName=moby/moby
 docker_version: "29.1.1"
 docker_packages:
-  - "docker-ce=5:{{ docker_version }}-1~{{ ansible_distribution | lower }}.{{ ansible_distribution_major_version }}~{{ ansible_distribution_release }}"
-  - "docker-ce-cli=5:{{ docker_version }}-1~{{ ansible_distribution | lower }}.{{ ansible_distribution_major_version }}~{{ ansible_distribution_release }}"
-  - "docker-ce-rootless-extras=5:{{ docker_version }}-1~{{ ansible_distribution | lower }}.{{ ansible_distribution_major_version }}~{{ ansible_distribution_release }}"
+  - "docker-ce=5:{{ docker_version }}-1~{{ ansible_facts['distribution'] | lower }}.{{ ansible_facts['distribution_major_version'] }}~{{ ansible_facts['distribution_release'] }}"
+  - "docker-ce-cli=5:{{ docker_version }}-1~{{ ansible_facts['distribution'] | lower }}.{{ ansible_facts['distribution_major_version'] }}~{{ ansible_facts['distribution_release'] }}"
+  - "docker-ce-rootless-extras=5:{{ docker_version }}-1~{{ ansible_facts['distribution'] | lower }}.{{ ansible_facts['distribution_major_version'] }}~{{ ansible_facts['distribution_release'] }}"
   - "containerd.io"
   - "docker-buildx-plugin"
   - "docker-compose-plugin"

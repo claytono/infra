@@ -17,10 +17,10 @@ kind: ClusterConfiguration
 apiVersion: kubeadm.k8s.io/v1beta3
 apiServer:
   certSANs:
-  - {{ ansible_fqdn }}
+  - {{ ansible_facts['fqdn'] }}
   - k1.oneill.net
 clusterName: kubernetes
-controlPlaneEndpoint: "{{ ansible_fqdn }}:6443"
+controlPlaneEndpoint: "{{ ansible_facts['fqdn'] }}:6443"
 controllerManager:
   extraArgs:
     allocate-node-cidrs: "true"
