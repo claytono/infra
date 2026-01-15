@@ -12,6 +12,7 @@ pantrypi ansible_host=pantrypi.oneill.net domain=oneill.net
 garagepi ansible_host=garagepi.oneill.net domain=oneill.net
 infra1 ansible_host=infra1.oneill.net domain=oneill.net
 p1 ansible_host=p1.oneill.net domain=oneill.net
+p2 ansible_host=p2.oneill.net domain=oneill.net
 p4 ansible_host=p4.oneill.net domain=oneill.net
 
 [kubernetes]
@@ -30,6 +31,7 @@ k3
 infra1
 
 [nut_client]
+p2
 p3
 p4
 
@@ -46,6 +48,7 @@ garagepi
 
 [proxmox]
 p1
+p2
 p3
 p4
 
