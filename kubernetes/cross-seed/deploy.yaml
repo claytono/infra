@@ -37,8 +37,8 @@ spec:
           mountPath: /torrents
           subPath: qBittorrent/BT_backup
           readOnly: true
-        - name: shared
-          mountPath: /shared
+        - name: downloads
+          mountPath: /downloads
         - name: cross-seed-data
           mountPath: /cross-seeds
         env:
@@ -82,7 +82,7 @@ spec:
       - name: cross-seed-data
         persistentVolumeClaim:
           claimName: cross-seed-data
-      - name: shared
+      - name: downloads
         nfs:
           server: fs2.oneill.net
-          path: /volume2/shared
+          path: /volume2/shared/downloads

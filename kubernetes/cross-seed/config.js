@@ -33,7 +33,7 @@ module.exports = {
      * 		dataDirs: ["C:\\My Data\\Downloads"]
      */
     dataDirs: [
-        "/shared/downloads/qbittorrent/completed",
+        "/downloads/qbittorrent/completed",
     ],
     /**
      * Determines flexibility of naming during matching. "safe" will allow only perfect name matches
@@ -57,7 +57,7 @@ module.exports = {
     /**
      * List of directories where cross-seed will create links to scanned files.
      */
-    linkDirs: ["/shared/downloads/qbittorrent/cross-seeds"],
+    linkDirs: ["/downloads/qbittorrent/cross-seeds"],
     /**
      * cross-seed will use links of this type to inject data-based matches into your client.
      * Only relevant if dataDirs is specified.
