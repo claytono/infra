@@ -23,17 +23,79 @@ spec:
         app.kubernetes.io/instance: ddns-route53
     spec:
       containers:
-      - name: ddns-route53
+      - name: oneill
         image: ghcr.io/crazy-max/ddns-route53@sha256:59b1f3d51530f8e1a8331ad9c63c4be414f72503b306eea7f3b3abf532ce2ae5
         args:
         - --schedule=*/5 * * * *
-        envFrom:
-        - secretRef:
-            name: ddns-route53-oneill
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: DDNSR53_CREDENTIALS_ACCESSKEYID
+          valueFrom:
+            secretKeyRef:
+              name: ddns-route53-aws
+              key: DDNSR53_CREDENTIALS_ACCESSKEYID
+        - name: DDNSR53_CREDENTIALS_SECRETACCESSKEY
+          valueFrom:
+            secretKeyRef:
+              name: ddns-route53-aws
+              key: DDNSR53_CREDENTIALS_SECRETACCESSKEY
+        - name: DDNSR53_ROUTE53_HOSTEDZONEID
+          valueFrom:
+            secretKeyRef:
+              name: ddns-route53-aws
+              key: ONEILL_NET_ZONE_ID
+        - name: DDNSR53_ROUTE53_RECORDSSET_0_NAME
+          value: luser.oneill.net.
+        - name: DDNSR53_ROUTE53_RECORDSSET_0_TYPE
+          value: A
+        - name: DDNSR53_ROUTE53_RECORDSSET_0_TTL
+          value: "300"
+        - name: DDNSR53_ROUTE53_RECORDSSET_1_NAME
+          value: luser.oneill.net.
+        - name: DDNSR53_ROUTE53_RECORDSSET_1_TYPE
+          value: AAAA
+        - name: DDNSR53_ROUTE53_RECORDSSET_1_TTL
+          value: "300"
       - name: fnord
         image: ghcr.io/crazy-max/ddns-route53@sha256:59b1f3d51530f8e1a8331ad9c63c4be414f72503b306eea7f3b3abf532ce2ae5
         args:
         - --schedule=*/5 * * * *
-        envFrom:
-        - secretRef:
-            name: ddns-route53-fnord
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: DDNSR53_CREDENTIALS_ACCESSKEYID
+          valueFrom:
+            secretKeyRef:
+              name: ddns-route53-aws
+              key: DDNSR53_CREDENTIALS_ACCESSKEYID
+        - name: DDNSR53_CREDENTIALS_SECRETACCESSKEY
+          valueFrom:
+            secretKeyRef:
+              name: ddns-route53-aws
+              key: DDNSR53_CREDENTIALS_SECRETACCESSKEY
+        - name: DDNSR53_ROUTE53_HOSTEDZONEID
+          valueFrom:
+            secretKeyRef:
+              name: ddns-route53-aws
+              key: FNORD_NET_ZONE_ID
+        - name: DDNSR53_ROUTE53_RECORDSSET_0_NAME
+          value: luser.fnord.net.
+        - name: DDNSR53_ROUTE53_RECORDSSET_0_TYPE
+          value: A
+        - name: DDNSR53_ROUTE53_RECORDSSET_0_TTL
+          value: "300"
+        - name: DDNSR53_ROUTE53_RECORDSSET_1_NAME
+          value: luser.fnord.net.
+        - name: DDNSR53_ROUTE53_RECORDSSET_1_TYPE
+          value: AAAA
+        - name: DDNSR53_ROUTE53_RECORDSSET_1_TTL
+          value: "300"

@@ -160,5 +160,12 @@ locals {
       hostname = "pantrypi-wifi.oneill.net"
       note     = "pantrypi wifi interface"
     }
+    # Desktop PCs
+    szamar = {
+      mac      = "9c:6b:00:9b:16:ef"
+      ip       = "172.19.74.50"
+      hostname = "szamar.oneill.net"
+      note     = "Gaming PC"
+    }
   }
 }
