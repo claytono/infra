@@ -205,12 +205,32 @@ data "dns_a_record_set" "k_oneill_net_ns" {
   host     = each.value
 }
 
+# Look up UDMP router for split DNS nameserver
+data "tailscale_device" "udmp" {
+  hostname = "UDMP"
+}
+
+locals {
+  # Extract IPv4 address (100.x.x.x) from UDMP's Tailscale addresses
+  # API ordering isn't guaranteed, so filter explicitly
+  udmp_ipv4 = one([
+    for addr in data.tailscale_device.udmp.addresses : addr
+    if can(regex("^100\\.", addr))
+  ])
+}
+
 resource "tailscale_dns_configuration" "main" {
   # Enable MagicDNS for *.ts.net resolution
   magic_dns = true
 
-  # Don't override local DNS - prefer local DNS when not using exit node
-  override_local_dns = false
+  # Use configured nameservers for external resolution
+  override_local_dns = true
+
+  # Global fallback nameserver for queries not matched by split DNS
+  nameservers {
+    address            = "1.1.1.1"
+    use_with_exit_node = true
+  }
 
   # Split DNS for k.oneill.net subdomain (Kubernetes ingresses)
   # Uses AWS Route53 nameservers resolved to IP addresses
@@ -231,10 +251,11 @@ resource "tailscale_dns_configuration" "main" {
   }
 
   # Split DNS for oneill.net parent domain (infrastructure hosts + local services)
+  # Uses router's Tailscale IP so it's reachable from all tailnet nodes
   split_dns {
     domain = "oneill.net"
     nameservers {
-      address            = "172.19.74.1"
+      address            = local.udmp_ipv4
       use_with_exit_node = true
     }
   }
