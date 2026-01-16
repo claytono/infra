@@ -120,7 +120,7 @@
 - name: Chrony, relaymail, and resticprofile
   hosts: all
   roles:
-    - tbaczynski.chrony
+    - chrony
     - role: yannik.relaymail
       when: is_vagrant is undefined or not is_vagrant
     - role: resticprofile
