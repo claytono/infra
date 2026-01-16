@@ -1,0 +1,15 @@
+{{ ansible_managed | comment }}
+pool {{ chrony_pool }} iburst maxsources 4
+
+driftfile /var/lib/chrony/chrony.drift
+logdir /var/log/chrony
+log tracking measurements statistics
+
+maxupdateskew 100.0
+rtcsync
+makestep 1 3
+
+# Allow chronyc/node_exporter stats queries
+allow 127/8
+
+leapsecmode slew

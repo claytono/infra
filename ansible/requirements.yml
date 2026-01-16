@@ -1,7 +1,5 @@
 ---
 roles:
-  - src: tbaczynski.chrony
-    version: "v1.0.7"
   - name: githubixx.containerd
     version: "0.16.0+2.1.4"
   - name: githubixx.runc
