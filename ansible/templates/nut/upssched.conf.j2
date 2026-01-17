@@ -1,23 +1,29 @@
-CMDSCRIPT /etc/nut/notify-email.sh
 PIPEFN /run/nut/upssched.pipe
 LOCKFN /run/nut/upssched.lock
+
+{% if nut_shutdown_delay is defined %}
+# Client: shutdown after battery timeout
+CMDSCRIPT /etc/nut/upssched-cmd.sh
+
+AT ONBATT * START-TIMER shutdown {{ nut_shutdown_delay }}
+AT ONLINE * CANCEL-TIMER shutdown
+AT LOWBATT * START-TIMER shutdown 30
+AT FSD * EXECUTE shutdown
+
+{% elif nut_notify_email is defined %}
+# Server: email notifications
+CMDSCRIPT /etc/nut/notify-email.sh
 
 AT ONBATT * START-TIMER onbatt_timer 15
 AT ONLINE * START-TIMER online_timer 15
 AT LOWBATT * START-TIMER lowbatt_timer 15
-AT FSD * START-TIMER fsd_timer 15
 AT COMMBAD * START-TIMER commbad_timer 15
 AT COMMOK * START-TIMER commok_timer 15
-AT REPLBATT * START-TIMER replbatt_timer 15
-AT NOCOMM * START-TIMER nocomm_timer 15
-AT SHUTDOWN * START-TIMER shutdown_timer 15
 
 AT onbatt_timer * EXECUTE onbatt_timer
 AT online_timer * EXECUTE online_timer
 AT lowbatt_timer * EXECUTE lowbatt_timer
-AT fsd_timer * EXECUTE fsd_timer
 AT commbad_timer * EXECUTE commbad_timer
 AT commok_timer * EXECUTE commok_timer
-AT replbatt_timer * EXECUTE replbatt_timer
-AT nocomm_timer * EXECUTE nocomm_timer
-AT shutdown_timer * EXECUTE shutdown_timer
+
+{% endif %}

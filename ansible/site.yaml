@@ -138,6 +138,12 @@
     - role: nut
       tags: nut
 
+- name: NUT clients
+  hosts: nut_client
+  roles:
+    - role: nut
+      tags: nut
+
 - name: OS install server
   hosts: infra1
   roles:

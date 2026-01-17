@@ -15,13 +15,13 @@ nut_ups:
   - name: "ups2"
     driver: "usbhid-ups"
     device: auto
-    description: "UPS for luser, p2, p3, p4"
+    description: "UPS for p1, p2, p3, p4"
     extra: |
       serial = "CXXPV7000092"
   - name: "ups3"
     driver: "usbhid-ups"
     device: auto
-    description: "UPS for network gear"
+    description: "UPS for network gear & infra1"
     extra: |
       serial = "CXXPX7007632"
 
