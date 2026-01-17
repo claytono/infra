@@ -4,6 +4,8 @@ substitutions:
   device_id: living_room_bme280
   human_devicename: Living Room BME280
   icon: mdi:coolant-temperature
+  mac: 4C:11:AE:0D:D1:8A
+  ip: 172.20.6.176
 
 packages:
   wifi: !include common/wifi.yaml

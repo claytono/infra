@@ -1,0 +1,316 @@
+#!/usr/bin/env python3
+"""Generate opentofu/esphome-hosts.tf from esphome/*.yaml configs.
+
+Parses ESPHome configuration files to extract mac and ip substitutions,
+then generates OpenTofu configuration for DHCP reservations and DNS records.
+"""
+
+import argparse
+import ipaddress
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
+
+# Paths relative to repo root
+REPO_ROOT = Path(__file__).parent.parent
+ESPHOME_DIR = REPO_ROOT / "esphome"
+OUTPUT_FILE = REPO_ROOT / "opentofu" / "esphome-hosts.tf"
+OPENTOFU_DIR = REPO_ROOT / "opentofu"
+
+# IoT network range
+IOT_NETWORK = ipaddress.ip_network("172.20.4.0/22")
+
+# MAC address regex (colon-separated, case-insensitive)
+MAC_REGEX = re.compile(r"^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$")
+
+# Files to skip
+SKIP_FILES = {"secrets.yaml"}
+
+
+# Custom YAML loader that ignores ESPHome-specific tags
+class ESPHomeLoader(yaml.SafeLoader):
+    pass
+
+
+def _ignore_tag(loader, tag_suffix, node):
+    """Ignore unknown tags and return None or the node value."""
+    if isinstance(node, yaml.ScalarNode):
+        return loader.construct_scalar(node)
+    elif isinstance(node, yaml.SequenceNode):
+        return loader.construct_sequence(node)
+    elif isinstance(node, yaml.MappingNode):
+        return loader.construct_mapping(node)
+    print(
+        f"Warning: unhandled YAML node type {type(node).__name__} for tag {tag_suffix}",
+        file=sys.stderr,
+    )
+    return None
+
+
+# Register handlers for ESPHome-specific tags
+ESPHomeLoader.add_multi_constructor("!", _ignore_tag)
+
+
+def parse_esphome_config(config_file: Path) -> dict | None:
+    """Parse an ESPHome config file and extract relevant substitutions.
+
+    Returns dict with devicename, mac, ip, human_devicename, or None if
+    the file doesn't have a devicename substitution.
+    """
+    try:
+        with open(config_file, encoding="utf-8") as f:
+            # Use custom loader to handle ESPHome-specific tags
+            config = yaml.load(f, Loader=ESPHomeLoader)
+    except yaml.YAMLError as e:
+        print(f"Error parsing {config_file}: {e}", file=sys.stderr)
+        return None
+
+    if not config or "substitutions" not in config:
+        return None
+
+    subs = config["substitutions"]
+
+    # Extract fields (validation happens later)
+    devicename = subs.get("devicename")
+
+    if not devicename:
+        return None
+
+    return {
+        "devicename": devicename,
+        "mac": subs.get("mac"),
+        "ip": subs.get("ip"),
+        "human_devicename": subs.get("human_devicename"),
+        "config_file": config_file.name,
+    }
+
+
+def validate_device(device: dict) -> tuple[list[str], list[str]]:
+    """Validate a device has all required fields with valid values.
+
+    Returns (missing_errors, other_errors) tuple.
+    """
+    missing_errors = []
+    other_errors = []
+    config_file = device["config_file"]
+
+    mac = device.get("mac")
+    ip = device.get("ip")
+    human_devicename = device.get("human_devicename")
+
+    # Check for missing required fields
+    if not mac:
+        missing_errors.append(f"{config_file}: missing mac")
+    if not ip:
+        missing_errors.append(f"{config_file}: missing ip")
+    if not human_devicename:
+        missing_errors.append(f"{config_file}: missing human_devicename")
+
+    # Validate MAC format (only if present)
+    if mac and not MAC_REGEX.match(mac):
+        other_errors.append(
+            f"{config_file}: Invalid MAC format '{mac}' "
+            f"(expected colon-separated, e.g., AA:BB:CC:DD:EE:FF)"
+        )
+
+    # Validate IP format and range (only if present)
+    if ip:
+        try:
+            ip_addr = ipaddress.ip_address(ip)
+            if ip_addr not in IOT_NETWORK:
+                other_errors.append(
+                    f"{config_file}: IP {ip} is outside IoT network {IOT_NETWORK}"
+                )
+        except ValueError:
+            other_errors.append(f"{config_file}: Invalid IP address '{ip}'")
+
+    return missing_errors, other_errors
+
+
+def check_duplicates(devices: list[dict]) -> list[str]:
+    """Check for duplicate MACs and IPs across devices."""
+    errors = []
+    seen_macs = {}
+    seen_ips = {}
+
+    for device in devices:
+        mac = device.get("mac")
+        ip = device.get("ip")
+        devicename = device["devicename"]
+
+        if mac:
+            mac_lower = mac.lower()
+            if mac_lower in seen_macs:
+                errors.append(
+                    f"Duplicate MAC {mac}: {devicename} and {seen_macs[mac_lower]}"
+                )
+            else:
+                seen_macs[mac_lower] = devicename
+
+        if ip:
+            if ip in seen_ips:
+                errors.append(f"Duplicate IP {ip}: {devicename} and {seen_ips[ip]}")
+            else:
+                seen_ips[ip] = devicename
+
+    return errors
+
+
+def generate_tf(devices: list[dict]) -> str:
+    """Generate terraform HCL content from device list."""
+    lines = [
+        "# AUTO-GENERATED - DO NOT EDIT",
+        "# Generated by: scripts/gen-esphome-hosts",
+        "# Source: esphome/*.yaml configs",
+        "#",
+        "# To regenerate and apply: scripts/gen-esphome-hosts --apply",
+        "",
+        "locals {",
+        "  esphome_hosts = {",
+    ]
+
+    # Sort devices alphabetically by devicename
+    sorted_devices = sorted(devices, key=lambda d: d["devicename"])
+
+    for device in sorted_devices:
+        devicename = device["devicename"]
+        mac = device["mac"].upper()
+        ip = device["ip"]
+        human_devicename = device["human_devicename"]
+
+        lines.append(f"    {devicename} = {{")
+        lines.append(f'      mac      = "{mac}"')
+        lines.append(f'      ip       = "{ip}"')
+        lines.append(f'      hostname = "{devicename}.oneill.net"')
+        lines.append(f'      note     = "ESPHome: {human_devicename}"')
+        lines.append("    }")
+
+    lines.append("  }")
+    lines.append("}")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate opentofu/esphome-hosts.tf from esphome configs"
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Check if generated file matches existing file",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Skip devices missing mac/ip instead of erroring",
+    )
+    parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Generate and run tofu plan",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Generate and run tofu apply",
+    )
+    args = parser.parse_args()
+
+    # Parse all ESPHome configs
+    devices = []
+    all_errors = []
+
+    for config_file in sorted(ESPHOME_DIR.glob("*.yaml")):
+        if config_file.name in SKIP_FILES:
+            continue
+
+        device = parse_esphome_config(config_file)
+        if device is None:
+            continue
+
+        # Validate the device
+        missing_errors, other_errors = validate_device(device)
+
+        if other_errors:
+            # Format/range errors are always fatal
+            all_errors.extend(other_errors)
+            continue
+
+        if missing_errors:
+            if args.force:
+                for err in missing_errors:
+                    print(f"Warning: {err} (skipping)", file=sys.stderr)
+                continue
+            else:
+                all_errors.extend(missing_errors)
+                continue
+
+        devices.append(device)
+
+    # Check for duplicates
+    dup_errors = check_duplicates(devices)
+    all_errors.extend(dup_errors)
+
+    # Report validation errors (always fatal)
+    if all_errors:
+        print("Validation errors:", file=sys.stderr)
+        for error in all_errors:
+            print(f"  {error}", file=sys.stderr)
+        sys.exit(1)
+
+    # Generate terraform content
+    tf_content = generate_tf(devices)
+
+    # Check mode - compare against existing file
+    if args.check:
+        if OUTPUT_FILE.exists():
+            existing = OUTPUT_FILE.read_text(encoding="utf-8")
+            if existing == tf_content:
+                sys.exit(0)
+            else:
+                print(
+                    f"{OUTPUT_FILE} is out of date.\n\n"
+                    "Run:\n"
+                    "  scripts/gen-esphome-hosts --apply\n\n"
+                    "Then commit the updated esphome-hosts.tf",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+        else:
+            print(
+                f"{OUTPUT_FILE} does not exist.\n\n"
+                "Run:\n"
+                "  scripts/gen-esphome-hosts --apply",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+    # Write the file
+    OUTPUT_FILE.write_text(tf_content, encoding="utf-8")
+    print(f"Generated {OUTPUT_FILE} with {len(devices)} devices")
+
+    # Run tofu plan/apply if requested
+    if args.plan or args.apply:
+        targets = [
+            "-target=unifi_user.esphome_hosts",
+            "-target=aws_route53_record.esphome_hosts",
+        ]
+        cmd = ["tofu", "plan" if args.plan else "apply"]
+        if args.apply:
+            cmd.append("-auto-approve")
+        cmd.extend(targets)
+
+        print(f"\nRunning: {' '.join(cmd)}")
+        os.chdir(OPENTOFU_DIR)
+        result = subprocess.run(cmd)
+        sys.exit(result.returncode)
+
+
+if __name__ == "__main__":
+    main()

@@ -4,6 +4,8 @@ substitutions:
   device_id: bedjet
   human_devicename: Bed Jet
   icon: mdi:bed
+  mac: 24:0A:C4:C0:69:E8
+  ip: 172.20.7.111
 
 packages:
   lolin_d32_pro: !include common/device-classes/lolin_d32_pro.yaml

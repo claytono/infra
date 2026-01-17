@@ -8,6 +8,8 @@ substitutions:
   human_devicename: UPS Power
   icon: mdi:ship-wheel
   restore_mode: always_on
+  mac: 48:3F:DA:2A:F4:96
+  ip: 172.20.7.182
 
 packages:
   wifi: !include common/wifi.yaml

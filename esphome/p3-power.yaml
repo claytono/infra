@@ -5,6 +5,8 @@ substitutions:
   human_devicename: P3
   icon: mdi:ship-wheel
   restore_mode: always_on
+  mac: 48:3F:DA:2B:78:8A
+  ip: 172.20.5.22
 
 packages:
   wifi: !include common/wifi.yaml

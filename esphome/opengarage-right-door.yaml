@@ -4,6 +4,8 @@ substitutions:
   device_id: opengarage_right_door
   human_devicename: OpenGarage Right Door
   icon: mdi:garage
+  mac: A4:CF:12:DE:9F:AC
+  ip: 172.20.6.244
 
 packages:
   wifi: !include common/wifi.yaml

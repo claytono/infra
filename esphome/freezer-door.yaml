@@ -4,6 +4,8 @@ substitutions:
   device_id: freezer_door
   human_devicename: Freezer Door
   icon: mdi:coolant-temperature
+  mac: 4C:11:AE:0D:D9:E5
+  ip: 172.20.7.156
 
 packages:
   wifi: !include common/wifi.yaml
@@ -12,95 +14,95 @@ packages:
   d1_mini_bme280: !include common/device-classes/d1_mini.yaml
 
 binary_sensor:
-  - platform: gpio
-    name: ${human_devicename} Closed
-    pin:
-      number: D3
-      mode: INPUT_PULLUP
-      inverted: false
-    filters:
-      - delayed_on: 50ms
-      - delayed_off: 50ms
-    device_class: door
-    on_press:
-      - script.execute: reset_timer
-      - rtttl.play: 'close:d=16,o=6,b=160:g,c'
-    on_release:
-      - rtttl.play: 'open:d=16,o=6,b=160:c,g'
+- platform: gpio
+  name: ${human_devicename} Closed
+  pin:
+    number: D3
+    mode: INPUT_PULLUP
+    inverted: false
+  filters:
+  - delayed_on: 50ms
+  - delayed_off: 50ms
+  device_class: door
+  on_press:
+  - script.execute: reset_timer
+  - rtttl.play: close:d=16,o=6,b=160:g,c
+  on_release:
+  - rtttl.play: open:d=16,o=6,b=160:c,g
 
 output:
-  - platform: esp8266_pwm
-    id: buzzer_pwm
-    pin: D5
-  - platform: gpio
-    id: status_led
-    pin:
-      number: D4
-      inverted: true
+- platform: esp8266_pwm
+  id: buzzer_pwm
+  pin: D5
+- platform: gpio
+  id: status_led
+  pin:
+    number: D4
+    inverted: true
 
 rtttl:
   output: buzzer_pwm
   id: buzzer
 
 globals:
-  - id: door_duration
-    type: int
-    restore_value: false
-    initial_value: '0'
-  - id: alert_active
-    type: bool
-    initial_value: 'false'
+- id: door_duration
+  type: int
+  restore_value: false
+  initial_value: '0'
+- id: alert_active
+  type: bool
+  initial_value: 'false'
 
 switch:
-  - platform: template
-    name: ${human_devicename} Alert
-    id: alert_switch
-    lambda: |-
-      return id(alert_active);
-    turn_on_action:
-      - globals.set:
-          id: alert_active
-          value: 'true'
-      - while:
-          condition:
-            lambda: return id(alert_active);
-          then:
-            - rtttl.play: 'siren:d=8,o=5,b=100:d,e,d,e,d,e,d,e'
-            - wait_until:
-                not:
-                  rtttl.is_playing:
-            - delay: 1s
-    turn_off_action:
-      - globals.set:
-          id: alert_active
-          value: 'false'
-      - rtttl.stop:
+- platform: template
+  name: ${human_devicename} Alert
+  id: alert_switch
+  lambda: |-
+    return id(alert_active);
+  turn_on_action:
+  - globals.set:
+      id: alert_active
+      value: 'true'
+  - while:
+      condition:
+        lambda: return id(alert_active);
+      then:
+      - rtttl.play: siren:d=8,o=5,b=100:d,e,d,e,d,e,d,e
+      - wait_until:
+          not:
+            rtttl.is_playing:
+      - delay: 1s
+  turn_off_action:
+  - globals.set:
+      id: alert_active
+      value: 'false'
+  - rtttl.stop:
 
 sensor:
-  - platform: template
-    name: ${human_devicename} State Duration
-    id: door_state_duration_sensor
-    lambda: |-
-      return id(door_duration);
-    unit_of_measurement: s
-    icon: mdi:timer-outline
-    update_interval: 1s
+- platform: template
+  name: ${human_devicename} State Duration
+  id: door_state_duration_sensor
+  lambda: |-
+    return id(door_duration);
+  unit_of_measurement: s
+  icon: mdi:timer-outline
+  update_interval: 1s
 
 interval:
-  - interval: 1s
-    then:
-      - lambda: |-
-          id(door_duration) += 1;
-      - if:
-          condition:
-            lambda: return id(door_duration) % 2 == 0;
-          then:
-            - output.turn_on: status_led
-          else:
-            - output.turn_off: status_led
+- interval: 1s
+  then:
+  - lambda: |-
+      id(door_duration) += 1;
+  - if:
+      condition:
+        lambda: return id(door_duration) % 2 == 0;
+      then:
+      - output.turn_on: status_led
+      else:
+      - output.turn_off: status_led
 
 script:
-  - id: reset_timer
-    then:
-      - lambda: |-
-          id(door_duration) = 0;
+- id: reset_timer
+  then:
+  - lambda: |-
+      id(door_duration) = 0;

@@ -4,6 +4,8 @@ substitutions:
   device_id: bedjet_power
   human_devicename: BedJet Power
   icon: mdi:power-socket-us
+  mac: C8:2B:96:06:40:6D
+  ip: 172.20.7.189
 
 packages:
   wifi: !include common/wifi.yaml

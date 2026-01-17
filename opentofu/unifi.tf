@@ -6,6 +6,8 @@
 #
 # Host definitions are in locals.tf (infrastructure_hosts) and shared with
 # Route53 DNS records to ensure UniFi DHCP and DNS stay automatically in sync.
+#
+# ESPHome hosts are managed separately in esphome-hosts.tf (auto-generated).
 
 resource "unifi_user" "infrastructure_hosts" {
   for_each = local.infrastructure_hosts

@@ -4,6 +4,8 @@ substitutions:
   device_id: freezer
   human_devicename: Freezer
   icon: mdi:coolant-temperature
+  mac: EC:FA:BC:4F:E2:AA
+  ip: 172.20.6.41
 
 packages:
   wifi: !include common/wifi.yaml

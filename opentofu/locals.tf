@@ -111,37 +111,6 @@ locals {
       hostname = "infra1.oneill.net"
       note     = "Infrastructure services"
     }
-    # ESPHome power monitors (Sonoff S31)
-    infra1-power = {
-      mac      = "c4:5b:be:e4:ab:22"
-      ip       = "172.20.5.218"
-      hostname = "infra1-power.oneill.net"
-      note     = "infra1 power monitor"
-    }
-    p1-power = {
-      mac      = "48:3f:da:2c:20:18"
-      ip       = "172.20.6.148"
-      hostname = "p1-power.oneill.net"
-      note     = "p1 power monitor"
-    }
-    p2-power = {
-      mac      = "48:3f:da:2b:fb:35"
-      ip       = "172.20.7.163"
-      hostname = "p2-power.oneill.net"
-      note     = "p2 power monitor"
-    }
-    p3-power = {
-      mac      = "48:3f:da:2b:78:8a"
-      ip       = "172.20.5.22"
-      hostname = "p3-power.oneill.net"
-      note     = "p3 power monitor"
-    }
-    p4-power = {
-      mac      = "c8:2b:96:06:7a:88"
-      ip       = "172.20.5.17"
-      hostname = "p4-power.oneill.net"
-      note     = "p4 power monitor"
-    }
     garagepi = {
       mac      = "d8:3a:dd:1c:15:30"
       ip       = "172.19.74.216"

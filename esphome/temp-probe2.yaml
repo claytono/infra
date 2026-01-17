@@ -4,6 +4,8 @@ substitutions:
   device_id: temp_probe2
   human_devicename: K-Type Thermocouple 2
   icon: mdi:temperature
+  mac: D8:F1:5B:14:71:13
+  ip: 172.20.5.133
 
 packages:
   wifi: !include common/wifi.yaml

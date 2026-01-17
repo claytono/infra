@@ -4,6 +4,8 @@ substitutions:
   device_id: garage_bme280
   human_devicename: Garage BME280
   icon: mdi:coolant-temperature
+  mac: 84:0D:8E:8F:4B:BE
+  ip: 172.20.7.130
 
 packages:
   wifi: !include common/wifi.yaml
