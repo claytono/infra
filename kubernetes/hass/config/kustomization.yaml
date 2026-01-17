@@ -13,3 +13,4 @@ configMapGenerator:
   - input_select.yaml=input_select.yaml
   - packages__office_thermostat_gaming.yaml=packages/office_thermostat_gaming.yaml
   - packages__temperature_alerts.yaml=packages/temperature_alerts.yaml
+  - packages__ups_power.yaml=packages/ups_power.yaml
