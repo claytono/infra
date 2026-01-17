@@ -44,6 +44,20 @@ Do NOT use `kubectl apply -f <file>` directly.
 - ArgoCD manages deployments from main branch, but apply locally first to verify changes work before committing
 - For cronjobs, trigger a manual run with: `kubectl create job --from=cronjob/<name> <test-name>`
 
+## ConfigMap and Secret Reload
+
+Most workloads have [Reloader](https://github.com/stakater/Reloader) configured
+via the `reloader.stakater.com/auto: "true"` pod annotation. This automatically
+triggers a rolling restart when referenced ConfigMaps or Secrets change.
+
+**Implications:**
+
+- After `kubectl apply`, pods restart automatically—no manual deletion needed
+- Changes propagate within ~30 seconds of ConfigMap update
+- Not all workloads have this; check pod annotations if restart doesn't occur
+- If a workload is missing Reloader and would benefit from it, ask about adding
+  the annotation
+
 ## Rendering Helm Charts
 
 Render scripts for Kubernetes applications are standardized across this repository. Refer to [helm-rendering.md](./helm-rendering.md) for the canonical render script pattern, helper usage, and best practices that apply to all applications.

@@ -1,0 +1,73 @@
+---
+template:
+
+- sensor:
+  - name: UPS Synology Power
+    unique_id: ups_synology_power_watts
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    state: >
+      {% set load = states('sensor.ups_synology_load') | float(0) %}
+      {% set nominal = states('sensor.ups_nominal_real_power') | float(0) %}
+      {{ (load / 100 * nominal) | round(0) }}
+    availability: >
+      {{ states('sensor.ups_synology_load') | is_number and
+         states('sensor.ups_nominal_real_power') | is_number }}
+
+  - name: UPS2 Servers Power
+    unique_id: ups2_servers_power_watts
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    state: >
+      {% set load = states('sensor.ups2_servers_10g_switch_load') | float(0) %}
+      {% set nominal = states('sensor.ups2_nominal_real_power') | float(0) %}
+      {{ (load / 100 * nominal) | round(0) }}
+    availability: >
+      {{ states('sensor.ups2_servers_10g_switch_load') | is_number and
+         states('sensor.ups2_nominal_real_power') | is_number }}
+
+  - name: UPS3 Network Power
+    unique_id: ups3_network_power_watts
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    state: >
+      {% set load = states('sensor.ups3_network_gear_load') | float(0) %}
+      {% set nominal = states('sensor.ups3_nominal_real_power') | float(0) %}
+      {{ (load / 100 * nominal) | round(0) }}
+    availability: >
+      {{ states('sensor.ups3_network_gear_load') | is_number and
+         states('sensor.ups3_nominal_real_power') | is_number }}
+
+sensor:
+- platform: integration
+  source: sensor.ups_synology_power
+  name: UPS Synology Energy
+  unique_id: ups_synology_energy_kwh
+  unit_prefix: k
+  round: 2
+  method: left
+  max_sub_interval:
+    minutes: 5
+
+- platform: integration
+  source: sensor.ups2_servers_power
+  name: UPS2 Servers Energy
+  unique_id: ups2_servers_energy_kwh
+  unit_prefix: k
+  round: 2
+  method: left
+  max_sub_interval:
+    minutes: 5
+
+- platform: integration
+  source: sensor.ups3_network_power
+  name: UPS3 Network Energy
+  unique_id: ups3_network_energy_kwh
+  unit_prefix: k
+  round: 2
+  method: left
+  max_sub_interval:
+    minutes: 5
