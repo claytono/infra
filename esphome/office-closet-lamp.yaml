@@ -4,6 +4,8 @@ substitutions:
   device_id: office_closet_lamp
   human_devicename: Office Closet Lamp
   icon: mdi:lamp
+  mac: A4:CF:12:B7:F7:D2
+  ip: 172.20.5.137
 
 packages:
   wifi: !include common/wifi.yaml

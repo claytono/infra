@@ -4,6 +4,8 @@ substitutions:
   device_id: office_bme280
   human_devicename: Office BME280
   icon: mdi:coolant-temperature
+  mac: 4C:11:AE:0D:CD:08
+  ip: 172.20.7.221
 
 packages:
   wifi: !include common/wifi.yaml

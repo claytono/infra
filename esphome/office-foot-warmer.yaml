@@ -4,6 +4,8 @@ substitutions:
   device_id: office_foot_warmer
   human_devicename: Office Foot Warmer
   icon: mdi:coolant-temperature
+  mac: B4:E6:2D:7F:A1:0C
+  ip: 172.20.6.6
 
 esphome:
   name: ${devicename}

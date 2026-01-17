@@ -4,6 +4,8 @@ substitutions:
   device_id: office_heater
   human_devicename: Office Heater
   icon: mdi:radiator
+  mac: C4:5B:BE:E4:82:53
+  ip: 172.20.6.149
 
 packages:
   wifi: !include common/wifi.yaml

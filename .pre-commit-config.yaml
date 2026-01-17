@@ -76,6 +76,13 @@ repos:
     language: system
     pass_filenames: true
     files: ^kubernetes/.*\.(ya?ml)$
+  - id: esphome-hosts-check
+    name: check ESPHome hosts terraform is up to date
+    entry: scripts/gen-esphome-hosts --check
+    language: python
+    additional_dependencies: [pyyaml]
+    files: ^(esphome/[^/]+\.yaml|opentofu/esphome-hosts\.tf|scripts/gen-esphome-hosts)$
+    pass_filenames: false
   - id: beads-flush
     name: beads pre-commit flush
     entry: bash -c '[ "$GITHUB_ACTIONS" = "true" ] && exit 0; bd hooks run pre-commit'

@@ -4,6 +4,8 @@ substitutions:
   device_id: x1c_ams2_monitor
   human_devicename: X1C AMS2 Monitor
   icon: mdi:coolant-temperature
+  mac: A8:42:E3:46:F2:F8
+  ip: 172.20.5.59
 
 packages:
   wifi: !include common/wifi.yaml

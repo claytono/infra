@@ -4,6 +4,8 @@ substitutions:
   device_id: szamar_power
   human_devicename: Szamar Power
   icon: mdi:checkbox-blank-outline
+  mac: C4:5B:BE:E5:1F:43
+  ip: 172.20.6.52
 
 packages:
   wifi: !include common/wifi.yaml

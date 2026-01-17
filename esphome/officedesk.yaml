@@ -4,6 +4,8 @@ substitutions:
   device_id: officedesk
   human_devicename: Office Desk
   icon: mdi:bed
+  mac: CC:50:E3:C4:99:CD
+  ip: 172.20.7.13
 
 packages:
   d1_mini: !include common/device-classes/d1_mini.yaml

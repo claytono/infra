@@ -5,6 +5,8 @@ substitutions:
   human_devicename: Infra1
   icon: mdi:ship-wheel
   restore_mode: always_on
+  mac: C4:5B:BE:E4:AB:22
+  ip: 172.20.5.218
 
 packages:
   wifi: !include common/wifi.yaml
