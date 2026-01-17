@@ -1,0 +1,27 @@
+---
+nut_mode: netclient
+nut_enabled: true
+
+# Empty - clients don't need ups.conf (no local drivers)
+nut_ups: []
+nut_packages:
+  - nut-client
+
+nut_services:
+  - nut-monitor
+
+# Shutdown after 5 minutes on battery (ups2 has ~12 min runtime)
+nut_shutdown_delay: 300
+
+nut_upsmon_extra: |
+  MONITOR ups2@nut.oneill.net 1 monuser secret secondary
+  MINSUPPLIES 1
+  SHUTDOWNCMD "/sbin/shutdown -h +0"
+  HOSTSYNC 60
+  FINALDELAY 5
+  RUN_AS_USER root
+  NOTIFYCMD /usr/sbin/upssched
+  NOTIFYFLAG ONBATT SYSLOG+EXEC
+  NOTIFYFLAG ONLINE SYSLOG+EXEC
+  NOTIFYFLAG LOWBATT SYSLOG+EXEC
+  NOTIFYFLAG FSD SYSLOG+EXEC

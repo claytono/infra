@@ -50,7 +50,17 @@
     owner: "root"
     group: "nut"
     mode: "0640"
-  when: "nut_onbatt_timer is defined"
+  when: nut_shutdown_delay is defined or nut_notify_email is defined
+  tags: nut
+
+- name: Install upssched-cmd.sh script (for client shutdown)
+  ansible.builtin.template:
+    src: upssched-cmd.sh.j2
+    dest: /etc/nut/upssched-cmd.sh
+    owner: root
+    group: nut
+    mode: "0750"
+  when: nut_shutdown_delay is defined
   tags: nut
 
 - name: Include webgui tasks if enabled
