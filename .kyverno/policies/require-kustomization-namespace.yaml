@@ -1,0 +1,27 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+
+metadata:
+  name: require-kustomization-namespace
+
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: require-namespace-field
+    match:
+      any:
+      - resources:
+          kinds:
+          - Kustomization
+    exclude:
+      any:
+      - resources:
+          annotations:
+            kyverno.io/skip-namespace: 'true'
+    validate:
+      message: >-
+        Kustomization files must have a 'namespace' field set to ensure
+        resources are applied to the correct namespace.
+      pattern:
+        namespace: ?*

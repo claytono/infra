@@ -2,6 +2,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+metadata:
+  annotations:
+    # Excluded: contains only cluster-scoped Namespace resources
+    kyverno.io/skip-namespace: 'true'
+
 resources:
 - default.yaml
 - kube-system.yaml
