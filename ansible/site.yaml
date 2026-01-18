@@ -117,11 +117,13 @@
     - role: zram
       tags: zram
 
-- name: Chrony, relaymail, and resticprofile
+- name: Chrony, postfix, and resticprofile
   hosts: all
   roles:
-    - chrony
-    - role: yannik.relaymail
+    - role: chrony
+      tags: chrony
+    - role: oefenweb.postfix
+      tags: postfix
       when: is_vagrant is undefined or not is_vagrant
     - role: resticprofile
       tags: [restic, resticprofile]
