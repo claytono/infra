@@ -1,0 +1,8 @@
+# test file
+---
+- name: converge
+  hosts: localhost
+  connection: local
+  become: true
+  roles:
+    - ../../

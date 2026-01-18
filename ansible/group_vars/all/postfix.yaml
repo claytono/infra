@@ -1,0 +1,22 @@
+---
+postfix_relayhost: smtp.gmail.com
+postfix_relayhost_port: 587
+postfix_relaytls: true
+
+postfix_sasl_user: clayton.oneill@gmail.com
+postfix_sasl_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  36356161616463613432643930323363663533336432623133636263636635333634333236353534
+  3837326363313663323664373935326366386261653737330a383734313664366236323966366165
+  33353738363136643266313162646664333435343239386363323766353737623363616637613339
+  6463353564616264650a353837323562646462626537386339393738633336383131316230306361
+  36656338616634323135666332363837663061343362343862373939613537323634
+
+# Forward ALL mail to single address
+postfix_recipient_canonical_maps_database_type: regexp
+postfix_recipient_canonical_maps:
+  - recipient: "/.+/"
+    rewrite: "clayton.oneill@gmail.com"
+
+# Keep old var for smartd.conf.j2 template compatibility
+relaymail_overwrite_to_target: clayton.oneill@gmail.com
