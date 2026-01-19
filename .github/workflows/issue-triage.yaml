@@ -187,6 +187,23 @@ jobs:
           This helps detect if we already updated via Renovate. If relevant Renovate PRs exist
           (open or recently closed), include links to them in your output.
 
+          **IMPORTANT:** When you find alternatives mentioned in comments (e.g., "Qui" as alternative to qBittorrent SSO):
+          - Search this repo: `grep -r "alternative-name" kubernetes/ ansible/`
+          - Check if it's already deployed - this changes the recommendation
+          - If deployed, the issue may be actionable NOW rather than blocked
+
+          **Check intermediate dependencies:** When an upstream app releases a new version:
+          - If we use a Helm chart: check if the chart's appVersion has been updated
+          - `helm show chart <repo>/<chart>` or check the chart repo
+          - A released app version doesn't help if the Helm chart still pins the old version
+          - Note any gaps: "App v1.2.0 released, but Helm chart still at v1.1.0"
+
+          **Search for recent upstream issues:** The linked issue may be outdated. Check for newer issues:
+          ```bash
+          gh issue list --repo <upstream-repo> --search "keyword created:>$(date -u -d '30 days ago' +%Y-%m-%d)" --json number,title,createdAt --limit 10
+          ```
+          Recent issues may have better context, workarounds, or show the problem persists.
+
           ## STEP 4: REVIEW ALL COMMENTS
 
           Read through ALL comments on the issue for context:
