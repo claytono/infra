@@ -24,7 +24,7 @@ spec:
         runAsUser: 1000
       containers:
       - name: meilisearch
-        image: getmeili/meilisearch@sha256:1af40ecce0b3a21f9a4ff14defaa80da602af3d456ef40a81e83e20043e97485
+        image: getmeili/meilisearch@sha256:d3127a6732bf283d5a387ecf42afee969c8e4211e2dbbdd680f307969511be2e
         imagePullPolicy: IfNotPresent
         env:
         - name: MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE
