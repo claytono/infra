@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: mail
     app.kubernetes.io/instance: smtp
-    app.kubernetes.io/version: "4.4.0"
+    app.kubernetes.io/version: "5.1.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     # Auto-reload postfix if somebody changes config map directly in Kuberentes.
@@ -42,7 +42,7 @@ spec:
       terminationGracePeriodSeconds: 120
       containers:
         - name: mail
-          image: "boky/postfix:4.4.0"
+          image: "boky/postfix:5.1.0"
           imagePullPolicy: IfNotPresent
           securityContext:
             {}
@@ -88,13 +88,13 @@ spec:
                 command:
                   - bash
                   - -c
-                  - touch /tmp/container_is_terminating && while ! [[ "`mailq`" == *empty* ]]; do echo "Flushing queue..." && postfix flush; sleep 1; done; killall5 -15 supervisord
+                  - sleep 0 && touch /tmp/container_is_terminating && while ! [[ "`mailq`" == *empty* ]]; do echo "Flushing queue..." && postfix flush; sleep 1; done; killall5 -15 supervisord
+          
           envFrom:
             - configMapRef:
                 name: "smtp"
             - secretRef:
                 name: "smtp-relay"
-          
           volumeMounts:
             - mountPath: /var/spool/postfix
               name: "smtp"
@@ -103,7 +103,7 @@ spec:
               mountPath: /var/run/certs
               readOnly: true
             - name: certs-init
-              mountPath: /docker-init.db/_enable_tls.sh
+              mountPath: /docker-init.d/_enable_tls.sh
               readOnly: true
               subPath: _enable_tls.sh
           resources: 
