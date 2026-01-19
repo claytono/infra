@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: mail
     app.kubernetes.io/instance: smtp
-    app.kubernetes.io/version: "4.4.0"
+    app.kubernetes.io/version: "5.1.0"
     app.kubernetes.io/managed-by: Helm
 data:
   ALLOWED_SENDER_DOMAINS: oneill.net k.oneill.net fnord.net
