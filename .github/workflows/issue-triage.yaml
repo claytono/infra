@@ -55,7 +55,7 @@ jobs:
     if: needs.collect-issues.outputs.has_issues == 'true'
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 1
       matrix: ${{ fromJson(needs.collect-issues.outputs.matrix) }}
     steps:
     - name: Checkout
@@ -68,7 +68,11 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         claude_args: |
           --model opus
-          --allowedTools "Bash(gh issue:*),Bash(gh pr:*),WebFetch"
+          --allowedTools "Bash(gh issue:*),Bash(gh pr:*),Bash(date *),WebFetch"
+        settings: |
+          {
+            "alwaysThinkingEnabled": true
+          }
         prompt: |-
           # Issue Triage for  #${{ matrix.issue }}
 
@@ -100,7 +104,7 @@ jobs:
 
           For each upstream reference found:
 
-          - **GitHub PRs:** `gh pr view {url} --json state,merged,mergedAt,title`
+          - **GitHub PRs:** `gh pr view {url} --json state,mergedAt,title`
           - **GitHub Issues:** `gh issue view {url} --json state,stateReason,title`
           - **Other URLs:** Use WebFetch to check current status
 
