@@ -3,7 +3,7 @@ name: Weekly Issue Triage
 
 on:
   schedule:
-  - cron: 0 20 * * 1  # Monday 8pm UTC (after Renovate)
+  - cron: 0 1 * * 2  # Tuesday 1am UTC
   workflow_dispatch:
     inputs:
       issue_number:
@@ -62,11 +62,13 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
 
     - name: Run Claude Issue Triage
-      uses: anthropics/claude-code-action@a017b830c03e23789b11fb69ed571ea61c12e45c # v1
+      uses: anthropics/claude-code-action@a017b830c03e23789b11fb69ed571ea61c12e45c  # v1
       with:
         claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        claude_args: --model opus
+        claude_args: |
+          --model opus
+          --allowedTools "Bash(gh issue:*),Bash(gh pr:*),WebFetch"
         prompt: |-
           # Issue Triage for  #${{ matrix.issue }}
 
