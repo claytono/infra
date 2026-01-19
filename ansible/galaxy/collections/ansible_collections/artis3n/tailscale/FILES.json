@@ -11,14 +11,14 @@
    "name": "requirements.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "bafb8954c0e9c4fae87dbf903fd3c26347ace0e206cb167b02749596f1982d2a",
+   "chksum_sha256": "1a871e5860014f767f9392eb12c6cf12be5417386024818bf0de233a2b299663",
    "format": 1
   },
   {
    "name": "renovate.json",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "e80b4e42a3043bc12fa0640db4bac392d2bf770acf841360d7c8ceeeac2ec1a9",
+   "chksum_sha256": "d412a0323b7c299e392efc735d9279db65746e44d060067f9fade9b60a870d98",
    "format": 1
   },
   {
@@ -26,6 +26,13 @@
    "ftype": "file",
    "chksum_type": "sha256",
    "chksum_sha256": "da955305a4a795e571a3c5ac16695bd1108ab6601cade10e40045da63533bd2f",
+   "format": 1
+  },
+  {
+   "name": "DEVELOPMENT.md",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "125b1cc083f9ff81278430bc0d0b71e9cc3275f13e501a824312d704d4588a53",
    "format": 1
   },
   {
@@ -43,17 +50,17 @@
    "format": 1
   },
   {
-   "name": "extensions/ansible.cfg",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "368d08a091e1686e0b92d2cba9254f2ef8772da84e9ada7bf6c17fd5ddc6999e",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule",
    "ftype": "dir",
    "chksum_type": null,
    "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "extensions/molecule/DEVELOPMENT.md",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9944bf765acf9cc3bd6ab15339e2865d8116a7638daf2a33daa5a240787eeee8",
    "format": 1
   },
   {
@@ -81,7 +88,7 @@
    "name": "extensions/molecule/role-machine-skip-authentication/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "f0f140ccb1069e0da20e7a88885accfd1e4064b972a5e40b1e7c271cc85afb90",
+   "chksum_sha256": "906268a0c42866d3d83af94c5c3a0cf95f54fbb5e00283cbb7c2294ebbf8a369",
    "format": 1
   },
   {
@@ -92,13 +99,6 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-strategy-free/verify.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "76c16172fb0666178872870b80095d0189db062bfad5fd39345907d5218ac212",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-strategy-free/converge.yml",
    "ftype": "file",
    "chksum_type": "sha256",
@@ -106,17 +106,10 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-strategy-free/cleanup.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "5b3a14bb23d1cf9e9654691a720d2beb5a9f0b8a942a81568c30521824d36e34",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-strategy-free/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "8cc056955ce58ee17703751a4be0eec11167a0a1b11509eca1ec3293625897c6",
+   "chksum_sha256": "0d9ad44f6fa65a0cfa0d6b030e369d7a534ff759a47580ff75dd53ae884bd66a",
    "format": 1
   },
   {
@@ -130,7 +123,7 @@
    "name": "extensions/molecule/role-machine-state-absent/verify.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "b01b8307d72428cc5a3cec0b207fe0b3d884325ef1e4132199cf6554cd7761b0",
+   "chksum_sha256": "e67a9d38953cc47c0eb20dfc141706c0075d2e1cb7df7030063ea3083e1003dc",
    "format": 1
   },
   {
@@ -144,7 +137,7 @@
    "name": "extensions/molecule/role-machine-state-absent/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "72c9f22d63355af7f068b1d986d0ef3dbc385a0d4dee4870fb46fad1e4fa3afd",
+   "chksum_sha256": "218f1138b19b993ec7f476e44b753245affd527543831af677bd9e6e1f7553d3",
    "format": 1
   },
   {
@@ -155,13 +148,6 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-state-idempotency/verify.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "327cb4db4ddcb5b403141dc5bcbdfcdaf6b1fdc8c834f5f1801effcc05ab8c9c",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-state-idempotency/converge.yml",
    "ftype": "file",
    "chksum_type": "sha256",
@@ -169,17 +155,10 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-state-idempotency/cleanup.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "9cbb792ddfb6d111a5e193cd982f35eff4485ae7185c591f37950018c9d3950e",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-state-idempotency/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "3c00572746050c18715a5930c9bf92db154908cf62a70a0d5a9d9a17e2826669",
+   "chksum_sha256": "8024c1699a5a3161d6d039c0a12efc0cec1e44319a0ae9abea2b696b62c45627",
    "format": 1
   },
   {
@@ -190,13 +169,6 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-idempotent-up/verify.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "327cb4db4ddcb5b403141dc5bcbdfcdaf6b1fdc8c834f5f1801effcc05ab8c9c",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-idempotent-up/converge.yml",
    "ftype": "file",
    "chksum_type": "sha256",
@@ -204,17 +176,10 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-idempotent-up/cleanup.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "9cbb792ddfb6d111a5e193cd982f35eff4485ae7185c591f37950018c9d3950e",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-idempotent-up/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "184b3249029ac6c7291a65e8c4830f3f478a4b1e8dc352f695ee6dba9afb7cf2",
+   "chksum_sha256": "cabc6d1fce15b12f5b1bf1a035deb5abb9e915ce0a1527a93173bb9565fed461",
    "format": 1
   },
   {
@@ -225,13 +190,6 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-args/verify.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "327cb4db4ddcb5b403141dc5bcbdfcdaf6b1fdc8c834f5f1801effcc05ab8c9c",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-args/converge.yml",
    "ftype": "file",
    "chksum_type": "sha256",
@@ -239,17 +197,10 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-args/cleanup.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "9cbb792ddfb6d111a5e193cd982f35eff4485ae7185c591f37950018c9d3950e",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-args/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "3893d02036a320e4cd68df8d0a3c1a240abf149566063eb7a4a2079d713545a5",
+   "chksum_sha256": "322d32b37b8c2b2691e81fad116d03b8e9fde699d6335147c918dff71ce60ecc",
    "format": 1
   },
   {
@@ -298,7 +249,7 @@
    "name": "extensions/molecule/role-machine-default/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "e62556ab775bce79c0b6abd2693fb631e13ed6559e44c24920a76afca1c988fb",
+   "chksum_sha256": "70ee6ddcdc3e8372ffa1fda47b6930b24b548ce08074ab3ed110df22747b9140",
    "format": 1
   },
   {
@@ -316,13 +267,6 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-oauth/verify.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "327cb4db4ddcb5b403141dc5bcbdfcdaf6b1fdc8c834f5f1801effcc05ab8c9c",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-oauth/converge.yml",
    "ftype": "file",
    "chksum_type": "sha256",
@@ -330,17 +274,10 @@
    "format": 1
   },
   {
-   "name": "extensions/molecule/role-machine-oauth/cleanup.yml",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "9cbb792ddfb6d111a5e193cd982f35eff4485ae7185c591f37950018c9d3950e",
-   "format": 1
-  },
-  {
    "name": "extensions/molecule/role-machine-oauth/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "3b6a06814f91e2f1c541b16e99874926f0977b3b67e825d128c5f2ed50e92d37",
+   "chksum_sha256": "6332ec3d0c3e9bf4eade07e21b0424b2dfacf75fc565477b22ae56feafa301cc",
    "format": 1
   },
   {
@@ -368,7 +305,7 @@
    "name": "extensions/molecule/role-machine-reinstall/molecule.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "68d01e881140c99980d43ee30de1fa6bf5e7cd096424cec4ee98162d55c00b7e",
+   "chksum_sha256": "ec7a1f6259137b9a5b65acfd4d803ed2fd69546e4469b6f65383a64a2a0c9242",
    "format": 1
   },
   {
@@ -424,7 +361,7 @@
    "name": "roles/machine/tasks/install.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "369a76ef1764b438b41986a98a7ac9c5af6e1c6bc7c8d5ec2e30ad9875001eb0",
+   "chksum_sha256": "78195e17a93109c02b0f3de1b56d44e58cc7ccc36b5fefd1d7e950d13a799fed",
    "format": 1
   },
   {
@@ -438,14 +375,14 @@
    "name": "roles/machine/tasks/opensuse/install.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "91bc84d19d85bd305b9d67009e9d145146442962c21cbbbd55998b93d678fe7a",
+   "chksum_sha256": "b87f9a57af907661fa46d284d561170f7cba34643ec4cdd2df277d758ec54492",
    "format": 1
   },
   {
    "name": "roles/machine/tasks/opensuse/uninstall.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "dd69f7d2e2de94d48d4121a0fac048d60cbc9500c2007d06b98a5bb055b6cb74",
+   "chksum_sha256": "d360cef27f193afda83c91bf29dcfb59515a97a2fa2522ae7bcd26cda8976efa",
    "format": 1
   },
   {
@@ -466,21 +403,21 @@
    "name": "roles/machine/tasks/debian/apt-codename.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "73584728891ac3250e41f9280597e6c75558bf929fbc485401806c54e6cd5136",
+   "chksum_sha256": "a5aa21b3bb4dd329ca4b223f6fd4253a582be4285d6c542a46bc58b63d8720c1",
    "format": 1
   },
   {
    "name": "roles/machine/tasks/debian/install.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "86658d644f2316f21f4a171263cefc98ef9f92449b9d1332a5c8d536970574de",
+   "chksum_sha256": "54cd20bcee47be265684a4345da72ac5a4c6113304b5ad209bef6a68fcac0376",
    "format": 1
   },
   {
    "name": "roles/machine/tasks/debian/uninstall.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "0befdda8487c4f329725227b23c871dde80eec2dd169184b809273e1bb5cc8ef",
+   "chksum_sha256": "914971ce77e6540abcbb122928647bea4be0ebd3f1bd825e55254c3ca7f7ee46",
    "format": 1
   },
   {
@@ -494,14 +431,14 @@
    "name": "roles/machine/tasks/centos/install.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "69738da3ebbb44c66e734d8580f0e3a0c970fea76ba0053bce9df487b340f604",
+   "chksum_sha256": "697265ee628e7ea566f18c85cb3d2c58d98cd9a15d53887a97c76f83be39a92b",
    "format": 1
   },
   {
    "name": "roles/machine/tasks/centos/uninstall.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "34dcb6ebe263689e3038f73b3932f43f6fdac443bf97223b7d84b003caf519a6",
+   "chksum_sha256": "cda95f99b9aa9dfa6c0ef65bda1e175ed386c3d48d3dc630d8008dcbd248914e",
    "format": 1
   },
   {
@@ -536,7 +473,7 @@
    "name": "roles/machine/tasks/fedora/install.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "551e79124cbe40f45f7456e5cdc6d6d7c50a6e17b0cc66935e788574f49c5f50",
+   "chksum_sha256": "f595a6a04c0b8dd5c6218e13fe877d619e5a3a5bac9328ac62b6635535523a4b",
    "format": 1
   },
   {
@@ -550,7 +487,7 @@
    "name": "roles/machine/tasks/fedora/uninstall.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "1b945a095cc051bacc34c12569f080e4dfb3e91368630d3e076fb4f25f28ce91",
+   "chksum_sha256": "a7db34f724d57172c7db612baa6e6e500055f4aa826852d3dae58e872513398f",
    "format": 1
   },
   {
@@ -568,17 +505,24 @@
    "format": 1
   },
   {
+   "name": "roles/machine/tasks/determine_distro_family.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "21bd7768cce321e277dd1b662d777a704ed5fff96a1ced5bea82f0d10234f247",
+   "format": 1
+  },
+  {
    "name": "roles/machine/tasks/main.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "f244353fbafec9aef6d6c967d1abbd43d369c698340d71fab15376be73699f97",
+   "chksum_sha256": "5b4505f0a26179969e0bbbbb6e53edf6b58b0297ad7d54ff5d1d7737b4990577",
    "format": 1
   },
   {
    "name": "roles/machine/tasks/uninstall.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "c074c7ba4e8352b3218528321b599833eb5fa47f0d1ada6fb079a1fc1dfb87bb",
+   "chksum_sha256": "a570a9ad0e9846d89a73b75418ce7244488765affc107672869ec1494bcbf526",
    "format": 1
   },
   {
@@ -683,7 +627,7 @@
    "name": "roles/machine/vars/main.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "e671f4630b745a8fab80dff7af5a1cf73c64639970d4e6c67bf157769007cfca",
+   "chksum_sha256": "53228b0396a2c500e65a7c040d5b69689da3a4b5c81809bc3bcfc1fdef923ab4",
    "format": 1
   },
   {
@@ -715,17 +659,17 @@
    "format": 1
   },
   {
-   "name": "DEVLEOPMENT.md",
+   "name": ".envrc.example",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "4a131c34e703128044c3b73295ebe0233c074a8beb838d509cad396a193a4783",
+   "chksum_sha256": "98efd0b55806c655d06db99e8141868100d07213f216f0451256abb7f6e4e0b5",
    "format": 1
   },
   {
    "name": ".gitignore",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "02f266ab4ce623976d43fb1456aacdb1e65844f9c739ab4af76646f69e41d1e0",
+   "chksum_sha256": "945e52c6fd3b07251867430da5f95c3ecf654b5e5c8d6404747d76f57c503cc4",
    "format": 1
   },
   {
@@ -736,17 +680,38 @@
    "format": 1
   },
   {
+   "name": ".config",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": ".config/molecule",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": ".config/molecule/config.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f3d5068d68f1da3f5ad28674f5ac46d96fba7aadf0edaebc87ddb9363f274400",
+   "format": 1
+  },
+  {
    "name": ".python-version",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "02e735b3dfe1c32833eb550b7ff8ffa17f5f2bc3fa1e7bae61a8f5a3883ce398",
+   "chksum_sha256": "a876e0b10411037a012498b9fe18d9bc1df32ed8b722a13564dc944ddcfd9135",
    "format": 1
   },
   {
    "name": "pyproject.toml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "d217d878c7092f8c2e57d46b8f8166e1eacee87a2ab7a2d90a2ffab4dc98dab1",
+   "chksum_sha256": "3e84a80478370ac52233379202dc654de1a24643850d9a331ed89291b7a9bd6b",
    "format": 1
   },
   {
@@ -760,7 +725,7 @@
    "name": "ansible.cfg",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "d886e86bcc8e25c17f9712af552968618450651da220f8a7abdfc90cad64338a",
+   "chksum_sha256": "d3d8e4ab60de16358f2ce5f1cc1df6def98a90d5606a76fa0225f35b0bfaf3af",
    "format": 1
   },
   {
@@ -774,21 +739,21 @@
    "name": "uv.lock",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "e0b26a0139cdd903ca868ab2cc698a6f1a08a4f8b480e5ce4ac19e49ec2112eb",
+   "chksum_sha256": "0d3c21ee8dc2cdb77976ebbbdf7dc157145ec529dabd06dcae50bf040cf3b790",
    "format": 1
   },
   {
    "name": ".pre-commit-config.yaml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "84494b370cdc946015ffea4d905f2b9f357447e9131c172ec37557e70f5dc0ba",
+   "chksum_sha256": "b1535df2f26ab9b05daed3e725ff7bba2236df8e42d13993c4471ff0d93f928a",
    "format": 1
   },
   {
    "name": "Makefile",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "e39a10b770125372e22bc5ef65918181062ef11ad3696ca924d1d5ac77f31e9b",
+   "chksum_sha256": "b32bb09f751616251df8f60525a344070241f9126fb8660f77c5d6b2d7a486af",
    "format": 1
   }
  ],

@@ -17,9 +17,14 @@
     # "bash: tailscale: command not found"
     - tailscale_status.rc != 127
 
+- name: Uninstall | Determine state folder
+  ansible.builtin.set_fact:
+    # Following https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+    tailscale_state_folder: "{{ ansible_facts.env.XDG_STATE_HOME | default(ansible_facts.env.HOME + '/.local/state') }}"
+
 - name: Uninstall | Delete Tailscale State
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.artis3n-tailscale"
+    path: "{{ tailscale_state_folder }}/artis3n-tailscale"
     state: absent
 
 - name: Uninstall | Gather Service Facts
@@ -33,33 +38,23 @@
     enabled: false
   when: tailscale_service in ansible_facts.services
 
-- name: Uninstall | Tailscale binaries
+- name: Uninstall | Determine distribution family
+  ansible.builtin.include_tasks: determine_distro_family.yml
   when: "not tailscale_manage_binaries_skip"
-  block:
-    - name: Uninstall | CentOS and related families
-      when: ansible_distribution in tailscale_centos_family_distros
-      ansible.builtin.include_tasks: centos/uninstall.yml
 
-    - name: Uninstall | Debian and related families
-      when: ansible_distribution in tailscale_debian_family_distros
-      ansible.builtin.include_tasks: debian/uninstall.yml
+- name: Uninstall | Tailscale binaries
+  ansible.builtin.include_tasks: "{{ tailscale_distro_family }}/uninstall.yml"
+  when: "not tailscale_manage_binaries_skip"
 
-    - name: Uninstall | Fedora and related families
-      when: >
-        ansible_distribution == 'Fedora'
-        or (ansible_distribution == 'Amazon' and ansible_distribution_major_version | int >= 2023)
-      ansible.builtin.include_tasks: fedora/uninstall.yml
+- name: Uninstall | Remove Tailscale daemon state and logs
+  become: true
+  ansible.builtin.file:
+    path: "/var/lib/tailscale"
+    state: absent
+  when: "not tailscale_manage_binaries_skip"
 
-    - name: Uninstall | Arch
-      when: ansible_distribution == 'Archlinux'
-      ansible.builtin.include_tasks: arch/uninstall.yml
-
-    - name: Uninstall | OpenSUSE
-      when: ansible_distribution in tailscale_opensuse_family_distros
-      ansible.builtin.include_tasks: opensuse/uninstall.yml
-
-    - name: Uninstall | Remove Tailscale Daemon State and Logs
-      become: true
-      ansible.builtin.file:
-        path: "/var/lib/tailscale"
-        state: absent
+- name: Uninstall | Remove tailscaled config
+  become: true
+  ansible.builtin.file:
+    path: /etc/default/tailscaled
+    state: absent
