@@ -44,4 +44,9 @@ tools/recyclarr/data/logs/
 tools/recyclarr/data/repositories/
 tools/recyclarr/data/settings.yml
 
+# Beads (JSONL committed only to beads-sync branch)
+.beads/issues.jsonl
+.beads/interactions.jsonl
+
+
 # Tools - Managarr (nothing to ignore - config.yml is committed)
