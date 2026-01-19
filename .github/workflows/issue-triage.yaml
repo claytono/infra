@@ -75,6 +75,14 @@ jobs:
         eval "$(nix print-dev-env)"
         echo "PATH=$PATH" >> "$GITHUB_ENV"
 
+    - name: Install investigation skills
+      run: |
+        git clone --depth 1 https://github.com/obra/superpowers .tmp/superpowers
+        mkdir -p .claude/skills
+        cp -r .tmp/superpowers/skills/systematic-debugging .claude/skills/
+        cp -r .tmp/superpowers/skills/verification-before-completion .claude/skills/
+        ls -la .claude/skills/
+
     - name: Run Claude Issue Triage
       uses: anthropics/claude-code-action@a017b830c03e23789b11fb69ed571ea61c12e45c  # v1
       with:
@@ -105,6 +113,14 @@ jobs:
           - You CAN read issues, PRs, and comments
           - You CANNOT post comments, modify labels, or make any changes
           - Write your triage result to `/tmp/triage-result.json` (see OUTPUT FORMAT below)
+
+          ## INVESTIGATION METHODOLOGY
+
+          Use the `superpowers:systematic-debugging` skill for all upstream investigation:
+          - Follow ALL links found in issues/comments to check their status
+          - Verify claims independently (if comment says "fixed in v2.0", check if v2.0 exists)
+          - Don't trust - verify. Check actual state, not just what people say
+          - If one approach doesn't find info, try alternatives (gh, WebFetch, skopeo)
 
           ## STEP 1: FETCH THE ISSUE
 
