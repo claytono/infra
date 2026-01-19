@@ -31,6 +31,12 @@ resource "github_actions_secret" "infra_semaphore_api_token" {
   plaintext_value = local.semaphore_api_token
 }
 
+resource "github_actions_secret" "infra_claude_code_oauth_token" {
+  repository      = "infra"
+  secret_name     = "CLAUDE_CODE_OAUTH_TOKEN"
+  plaintext_value = data.onepassword_item.claude_code_oauth_token.credential
+}
+
 resource "github_actions_variable" "infra_semaphore_project" {
   repository    = "infra"
   variable_name = "SEMAPHORE_PROJECT"
