@@ -114,13 +114,26 @@ jobs:
           - You CANNOT post comments, modify labels, or make any changes
           - Write your triage result to `/tmp/triage-result.json` (see OUTPUT FORMAT below)
 
-          ## INVESTIGATION METHODOLOGY
+          ## INVESTIGATION METHODOLOGY - MANDATORY
 
-          Use the `superpowers:systematic-debugging` skill for all upstream investigation:
+          **STOP. Before doing ANYTHING else, you MUST read these skill files:**
+
+          ```
+          .claude/skills/systematic-debugging/SKILL.md
+          .claude/skills/verification-before-completion/SKILL.md
+          ```
+
+          **This is NOT optional.** Read BOTH skill files NOW and follow their methodology:
+          - `systematic-debugging`: How to investigate upstream issues thoroughly
+          - `verification-before-completion`: How to verify your findings before concluding
+
+          These skills teach you to:
           - Follow ALL links found in issues/comments to check their status
           - Verify claims independently (if comment says "fixed in v2.0", check if v2.0 exists)
           - Don't trust - verify. Check actual state, not just what people say
           - If one approach doesn't find info, try alternatives (gh, WebFetch, skopeo)
+
+          **DO NOT SKIP THIS STEP.** Your triage quality depends on following these skills' discipline.
 
           ## STEP 1: FETCH THE ISSUE
 
@@ -244,9 +257,6 @@ jobs:
           ### What Changed (only on status changes, not first assessment)
           - Previous status
           - What changed to trigger this update
-
-          ---
-          *Automated triage · Next check: ~1 week*
           ```
 
           **STATE_JSON** is a compact JSON object embedded in the HTML comment to track state:
