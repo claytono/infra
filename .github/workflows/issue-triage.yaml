@@ -195,7 +195,8 @@ jobs:
 
           ## STEP 6: OUTPUT FORMAT
 
-          Write your triage result to `/tmp/triage-result.json` with this structure:
+          Write your triage result to `/tmp/triage-result.json` with this structure.
+          After writing the file, output the comment_body content as readable markdown text so it's easy to review in the logs.
 
           ```json
           {
@@ -257,6 +258,20 @@ jobs:
         name: triage-result-${{ matrix.issue }}
         path: /tmp/triage-result.json
         if-no-files-found: warn
+
+    - name: Display triage result
+      if: always()
+      run: |
+        echo "=== Triage Result for Issue #${{ matrix.issue }} ==="
+        if [ -f /tmp/triage-result.json ]; then
+          echo "--- JSON Structure ---"
+          jq . /tmp/triage-result.json
+          echo ""
+          echo "--- Comment Preview ---"
+          jq -r '.comment_body // "No comment body"' /tmp/triage-result.json
+        else
+          echo "No triage result file found"
+        fi
 
   post-results:
     name: Post Results
