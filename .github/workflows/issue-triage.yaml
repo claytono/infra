@@ -16,10 +16,6 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: read
-  issues: write
-
 jobs:
   collect-issues:
     runs-on: ubuntu-latest
@@ -61,14 +57,32 @@ jobs:
     - name: Checkout
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
 
+    - name: Install Nix
+      uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15  # v31
+      with:
+        github_access_token: ${{ github.token }}
+
+    - name: Setup Cachix
+      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad  # v16
+      with:
+        name: claytono
+        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+    - name: Setup Nix environment
+      run: |
+        # Export nix flake environment to GITHUB_ENV for subsequent steps
+        # Using eval to directly apply the environment (like setup-nix.sh does)
+        eval "$(nix print-dev-env)"
+        echo "PATH=$PATH" >> "$GITHUB_ENV"
+
     - name: Run Claude Issue Triage
       uses: anthropics/claude-code-action@a017b830c03e23789b11fb69ed571ea61c12e45c  # v1
       with:
         claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ github.token }}
         claude_args: |
           --model opus
-          --allowedTools "Bash(gh issue:*),Bash(gh pr:*),Bash(date *),WebFetch"
+          --dangerously-skip-permissions
         settings: |
           {
             "alwaysThinkingEnabled": true
@@ -78,6 +92,19 @@ jobs:
 
           Repository: ${{ github.repository }}
           Dry Run: ${{ inputs.dry_run || 'false' }}
+
+          ## ENVIRONMENT
+
+          All tools from the repo's flake.nix are available directly (skopeo, kubectl, helm, jq, etc.).
+
+          Example: `skopeo list-tags docker://ghcr.io/example/image`
+
+          You can run ANY bash command. There are no tool restrictions.
+
+          **IMPORTANT: You have READ-ONLY access to GitHub.**
+          - You CAN read issues, PRs, and comments
+          - You CANNOT post comments, modify labels, or make any changes
+          - Write your triage result to `/tmp/triage-result.json` (see OUTPUT FORMAT below)
 
           ## STEP 1: FETCH THE ISSUE
 
@@ -98,7 +125,7 @@ jobs:
           - Documentation improvements
           - Refactoring tasks
 
-          **If NOT a candidate:** Stop here. No comment, no label change needed.
+          **If NOT a candidate:** Write JSON with `action: "skip"` and stop.
 
           ## STEP 3: DEEP ANALYSIS (only for candidates)
 
@@ -107,6 +134,7 @@ jobs:
           - **GitHub PRs:** `gh pr view {url} --json state,mergedAt,title`
           - **GitHub Issues:** `gh issue view {url} --json state,stateReason,title`
           - **Other URLs:** Use WebFetch to check current status
+          - **Container images:** Use `skopeo list-tags docker://{image}` to check available versions
 
           **IMPORTANT:** This repo uses Renovate for dependency updates. Even if an upstream
           PR is merged, we may still be blocked waiting for:
@@ -118,12 +146,17 @@ jobs:
           gh pr list --label renovate --json number,title,state --limit 100
           ```
 
-          Also check recently closed Renovate PRs (past 2 weeks):
+          Also check recently closed Renovate PRs (past 2 weeks). First get the date:
           ```bash
-          gh pr list --label renovate --state closed --search "closed:>$(date -u -d '2 weeks ago' +%Y-%m-%d)" --json number,title,closedAt --limit 100
+          date -u -d '2 weeks ago' +%Y-%m-%d
+          ```
+          Then use that date in the search:
+          ```bash
+          gh pr list --label renovate --state closed --search "closed:>YYYY-MM-DD" --json number,title,closedAt --limit 100
           ```
 
-          This helps detect if we already updated via Renovate.
+          This helps detect if we already updated via Renovate. If relevant Renovate PRs exist
+          (open or recently closed), include links to them in your output.
 
           ## STEP 4: REVIEW ALL COMMENTS
 
@@ -135,15 +168,41 @@ jobs:
 
           ## STEP 5: DETERMINE ACTION
 
-          Only post a comment if:
+          Only write a comment if:
           a) This is the FIRST triage (no previous triage comment), OR
           b) The status has CHANGED since last triage
 
-          **DO NOT comment if status is unchanged.**
+          Compare this JSON to the previous triage comment's JSON. If the status and
+          upstream states are identical, no new comment is needed.
 
-          ## STEP 6: COMMENT FORMAT (when commenting)
+          **If status is unchanged:** Write JSON with `action: "no_change"` and stop.
 
-          Use this format:
+          ## STEP 6: OUTPUT FORMAT
+
+          Write your triage result to `/tmp/triage-result.json` with this structure:
+
+          ```json
+          {
+            "action": "comment",
+            "status": "BLOCKED",
+            "label_action": "add",
+            "comment_body": "<!-- issue-triage:v1:{...} -->\n## Issue Triage Report\n\n**Status:** BLOCKED\n\n..."
+          }
+          ```
+
+          **Note:** Do NOT include `issue_number` - it's determined by the workflow.
+
+          **Action values:**
+          - `"skip"` - Issue is not about external blockers (no comment needed)
+          - `"no_change"` - Status unchanged since last triage (no comment needed)
+          - `"comment"` - Post the comment and update labels
+
+          **Label action values:**
+          - `"add"` - Add the `blocked` label
+          - `"remove"` - Remove the `blocked` label
+          - `"none"` - Don't change labels
+
+          **Comment format (for comment_body):**
 
           ```
           <!-- issue-triage:v1:STATE_JSON -->
@@ -176,15 +235,60 @@ jobs:
           **STATE_JSON** is a compact JSON object embedded in the HTML comment to track state:
           `{"status":"BLOCKED","upstreams":[{"url":"...","state":"open"}]}`
 
-          Compare this JSON to the previous triage comment's JSON. If the status and
-          upstream states are identical, no new comment is needed.
+    - name: Upload triage result
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6
+      with:
+        name: triage-result-${{ matrix.issue }}
+        path: /tmp/triage-result.json
+        if-no-files-found: warn
 
-          ## STEP 7: MANAGE LABELS
+  post-results:
+    name: Post Results
+    runs-on: ubuntu-latest
+    needs: [collect-issues, triage-issue]
+    if: needs.collect-issues.outputs.has_issues == 'true' && inputs.dry_run != true
+    permissions:
+      issues: write
+    steps:
+    - name: Download all triage results
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+      with:
+        path: /tmp/results
+        pattern: triage-result-*
 
-          - If BLOCKED: `gh issue edit ${{ matrix.issue }} --add-label blocked`
-          - If UNBLOCKED: `gh issue edit ${{ matrix.issue }} --remove-label blocked`
+    - name: Post comments and manage labels
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |-
+        for result_dir in /tmp/results/triage-result-*; do
+          if [ ! -d "$result_dir" ]; then
+            continue
+          fi
 
-          ## STEP 8: DRY RUN MODE
+          # Extract issue number from directory name (triage-result-123 -> 123)
+          # This avoids prompt injection by not trusting Claude's JSON output for the issue number
+          ISSUE=$(basename "$result_dir" | sed 's/triage-result-//')
 
-          If dry_run is true (${{ inputs.dry_run || 'false' }}): Do NOT post comments or modify labels.
-          Instead, output what WOULD be done.
+          RESULT=$(cat "$result_dir/triage-result.json")
+          ACTION=$(echo "$RESULT" | jq -r '.action')
+
+          echo "Processing issue #$ISSUE: action=$ACTION"
+
+          if [ "$ACTION" = "skip" ] || [ "$ACTION" = "no_change" ]; then
+            echo "  No action needed"
+            continue
+          fi
+
+          COMMENT=$(echo "$RESULT" | jq -r '.comment_body')
+          LABEL_ACTION=$(echo "$RESULT" | jq -r '.label_action')
+
+          # Post comment
+          echo "$COMMENT" | gh issue comment "$ISSUE" --repo "${{ github.repository }}" -F -
+
+          # Manage labels
+          if [ "$LABEL_ACTION" = "add" ]; then
+            gh issue edit "$ISSUE" --repo "${{ github.repository }}" --add-label blocked
+          elif [ "$LABEL_ACTION" = "remove" ]; then
+            gh issue edit "$ISSUE" --repo "${{ github.repository }}" --remove-label blocked
+          fi
+        done

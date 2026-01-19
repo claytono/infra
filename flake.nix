@@ -84,6 +84,7 @@
               awscli2
               curl
               jq
+              kubernetes-helm
               kopia
               kubeconform
               kubecolor
