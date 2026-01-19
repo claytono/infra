@@ -43,7 +43,7 @@ jobs:
 
     - name: Cache pre-commit
       if: env.ACT != 'true' && steps.changes.outputs.terraform == 'true'
-      uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb  # v5
+      uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7  # v5
       with:
         path: ~/.cache/pre-commit
         key: precommit-terraform-${{ hashFiles('.pre-commit-config.yaml') }}
