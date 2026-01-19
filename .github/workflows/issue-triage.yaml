@@ -32,7 +32,7 @@ jobs:
           ISSUES='[{"number": ${{ inputs.issue_number }}}]'
         else
           ISSUES=$(gh issue list --repo "${{ github.repository }}" \
-            --state open --json number --limit 100)
+            --state open --author claytono --json number --limit 100)
         fi
         COUNT=$(echo "$ISSUES" | jq 'length')
         echo "Found $COUNT open issues"
