@@ -29,6 +29,8 @@ cat > config/kustomization.yaml << 'EOF'
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+namespace: hass
+
 configMapGenerator:
 - name: hass-config
   options:
