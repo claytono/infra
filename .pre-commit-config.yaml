@@ -85,7 +85,8 @@ repos:
     pass_filenames: false
   - id: beads-flush
     name: beads pre-commit flush
-    entry: bash -c '[ "$GITHUB_ACTIONS" = "true" ] && exit 0; bd hooks run pre-commit'
+    entry: bash -c '[ "$GITHUB_ACTIONS" = "true" ] && exit 0; [ "$(git rev-parse --abbrev-ref
+      HEAD)" != "beads-sync" ] && exit 0; bd hooks run pre-commit'
     language: system
     pass_filenames: false
     always_run: true
