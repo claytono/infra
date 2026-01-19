@@ -9,7 +9,7 @@ metadata:
     
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.2.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -24,7 +24,7 @@ spec:
         
         app.kubernetes.io/name: external-secrets-webhook
         app.kubernetes.io/instance: external-secrets
-        app.kubernetes.io/version: "v1.2.0"
+        app.kubernetes.io/version: "v1.2.1"
         app.kubernetes.io/managed-by: Helm
     spec:
       hostNetwork: false
@@ -42,7 +42,7 @@ spec:
             runAsUser: 1000
             seccompProfile:
               type: RuntimeDefault
-          image: ghcr.io/external-secrets/external-secrets:v1.2.0
+          image: ghcr.io/external-secrets/external-secrets:v1.2.1
           imagePullPolicy: IfNotPresent
           args:
           - webhook
