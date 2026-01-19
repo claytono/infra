@@ -160,3 +160,9 @@ locals {
   semaphore_api_token       = data.onepassword_item.semaphore_api.password
   semaphore_ansible_ssh_key = data.onepassword_item.semaphore_ansible_ssh.private_key
 }
+
+# Claude Code OAuth token from 1Password
+data "onepassword_item" "claude_code_oauth_token" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "claude-code-api-token"
+}

@@ -1,0 +1,184 @@
+---
+name: Weekly Issue Triage
+
+on:
+  schedule:
+  - cron: 0 20 * * 1  # Monday 8pm UTC (after Renovate)
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Specific issue number (blank = all)
+        required: false
+        type: string
+      dry_run:
+        description: Dry run (no comments/labels)
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  collect-issues:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.get-issues.outputs.matrix }}
+      has_issues: ${{ steps.get-issues.outputs.has_issues }}
+    steps:
+    - name: Get open issues
+      id: get-issues
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ -n "${{ inputs.issue_number }}" ]; then
+          ISSUES='[{"number": ${{ inputs.issue_number }}}]'
+        else
+          ISSUES=$(gh issue list --repo "${{ github.repository }}" \
+            --state open --json number --limit 100)
+        fi
+        COUNT=$(echo "$ISSUES" | jq 'length')
+        echo "Found $COUNT open issues"
+        if [ "$COUNT" -eq 0 ]; then
+          echo "has_issues=false" >> "$GITHUB_OUTPUT"
+          echo 'matrix={"issue":[]}' >> "$GITHUB_OUTPUT"
+        else
+          echo "has_issues=true" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(echo "$ISSUES" | jq -c '{issue: [.[].number]}')" >> "$GITHUB_OUTPUT"
+        fi
+
+  triage-issue:
+    name: 'Triage #${{ matrix.issue }}'
+    runs-on: ubuntu-latest
+    needs: collect-issues
+    if: needs.collect-issues.outputs.has_issues == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJson(needs.collect-issues.outputs.matrix) }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+
+    - name: Run Claude Issue Triage
+      uses: anthropics/claude-code-action@v1
+      with:
+        claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        claude_args: --model opus
+        prompt: |-
+          # Issue Triage for  #${{ matrix.issue }}
+
+          Repository: ${{ github.repository }}
+          Dry Run: ${{ inputs.dry_run || 'false' }}
+
+          ## STEP 1: FETCH THE ISSUE
+
+          Run: `gh issue view ${{ matrix.issue }} --json number,title,body,labels,comments`
+
+          ## STEP 2: CANDIDATE CHECK
+
+          Determine if this issue is about being blocked on something external.
+
+          **Examples of blocker-related issues:**
+          - "Update X after upstream PR merges" with link to another repo's PR
+          - "Waiting for v2.0 release" referencing an external project
+          - "Blocked by upstream issue" with link to github.com, gitlab.com, codeberg.org
+
+          **Examples of issues NOT about external blockers:**
+          - Feature requests for this project
+          - Bug reports about local code
+          - Documentation improvements
+          - Refactoring tasks
+
+          **If NOT a candidate:** Stop here. No comment, no label change needed.
+
+          ## STEP 3: DEEP ANALYSIS (only for candidates)
+
+          For each upstream reference found:
+
+          - **GitHub PRs:** `gh pr view {url} --json state,merged,mergedAt,title`
+          - **GitHub Issues:** `gh issue view {url} --json state,stateReason,title`
+          - **Other URLs:** Use WebFetch to check current status
+
+          **IMPORTANT:** This repo uses Renovate for dependency updates. Even if an upstream
+          PR is merged, we may still be blocked waiting for:
+          - A new version to be released
+          - Renovate to pick up and propose the update
+
+          Check for existing Renovate PRs in this repo that might relate:
+          ```bash
+          gh pr list --label renovate --json number,title,state --limit 100
+          ```
+
+          Also check recently closed Renovate PRs (past 2 weeks):
+          ```bash
+          gh pr list --label renovate --state closed --search "closed:>$(date -u -d '2 weeks ago' +%Y-%m-%d)" --json number,title,closedAt --limit 100
+          ```
+
+          This helps detect if we already updated via Renovate.
+
+          ## STEP 4: REVIEW ALL COMMENTS
+
+          Read through ALL comments on the issue for context:
+          - Human discussions may provide additional context
+          - Other automation may have added relevant info
+          - Previous triage comments (marked with `<!-- issue-triage:`) show historical
+            status - extract the JSON state to compare against current state
+
+          ## STEP 5: DETERMINE ACTION
+
+          Only post a comment if:
+          a) This is the FIRST triage (no previous triage comment), OR
+          b) The status has CHANGED since last triage
+
+          **DO NOT comment if status is unchanged.**
+
+          ## STEP 6: COMMENT FORMAT (when commenting)
+
+          Use this format:
+
+          ```
+          <!-- issue-triage:v1:STATE_JSON -->
+          ## Issue Triage Report
+
+          **Status:** BLOCKED | UNBLOCKED
+
+          ### Upstream Dependencies
+
+          **PR/Issue: [Title](url)**
+          - State: Open/Merged/Closed
+          - Created: date
+          - Last activity: date
+          - Notable: Any important comments, reviewer feedback, blockers
+          - Link: full url
+
+          ### What's Needed (for BLOCKED status)
+          - What needs to happen for this to become unblocked
+          - Examples: PR needs to merge, issue needs resolution, version needs release
+          - If waiting for new version: mention Renovate will create a PR when available
+
+          ### What Changed (only on status changes, not first assessment)
+          - Previous status
+          - What changed to trigger this update
+
+          ---
+          *Automated triage · Next check: ~1 week*
+          ```
+
+          **STATE_JSON** is a compact JSON object embedded in the HTML comment to track state:
+          `{"status":"BLOCKED","upstreams":[{"url":"...","state":"open"}]}`
+
+          Compare this JSON to the previous triage comment's JSON. If the status and
+          upstream states are identical, no new comment is needed.
+
+          ## STEP 7: MANAGE LABELS
+
+          - If BLOCKED: `gh issue edit ${{ matrix.issue }} --add-label blocked`
+          - If UNBLOCKED: `gh issue edit ${{ matrix.issue }} --remove-label blocked`
+
+          ## STEP 8: DRY RUN MODE
+
+          If dry_run is true (${{ inputs.dry_run || 'false' }}): Do NOT post comments or modify labels.
+          Instead, output what WOULD be done.
