@@ -1,6 +1,27 @@
-# Semaphore Deployment (Optional)
+# Semaphore Deployment
 
-## When to Use Semaphore
+## Automatic Deployment
+
+Merges to `main` that touch `ansible/**` automatically trigger deployment via
+GitHub Actions
+([ansible-production-deploy.yaml](/.github/workflows/ansible-production-deploy.yaml)).
+
+The workflow:
+
+1. Detects which hosts are affected by the changes
+2. Deploys only to affected hosts via Semaphore
+
+This means Ansible changes are deployed immediately after PR merge - no manual
+action required.
+
+## Manual Deployment via GitHub Actions
+
+You can trigger deployment manually via GitHub Actions:
+
+- Go to Actions → "Ansible Production Deployment" → Run workflow
+- Optionally specify hosts and tags
+
+## When to Use Semaphore CLI
 
 Semaphore deploys from the **git repository**, not local changes. This makes it
 unsuitable for interactive development.
