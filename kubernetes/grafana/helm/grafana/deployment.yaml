@@ -115,13 +115,13 @@ spec:
             failureThreshold: 10
             httpGet:
               path: /api/health
-              port: 3000
+              port: grafana
             initialDelaySeconds: 60
             timeoutSeconds: 30
           readinessProbe:
             httpGet:
               path: /api/health
-              port: 3000
+              port: grafana
       volumes:
         - name: config
           configMap:
