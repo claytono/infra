@@ -1,0 +1,144 @@
+---
+# EGO Battery Charger Quarterly Maintenance
+#
+# Sequentially charges two EGO batteries on zigbee outlets every 3 months.
+# Per EGO guidelines, batteries should be charged every 3-6 months in storage.
+# https://community.egopowerplus.com/s/article/how-do-i-take-care-of-my-ego-battery-battery-tips-and-tricks
+#
+# Manual trigger: Developer Tools > Services > automation.trigger
+#   entity_id: automation.ego_charger_quarterly_maintenance
+
+automation:
+- alias: EGO Charger Quarterly Maintenance
+  id: ego_charger_quarterly_maintenance
+  description: Sequential charging of EGO batteries every 3 months
+  trigger:
+  - platform: time
+    at: 03:00:00
+  condition:
+  - condition: template
+    value_template: >
+      {{ now().day == 1 and now().month in [3, 6, 9, 12] }}
+  action:
+  # Charger 1
+  - service: notify.future_planning_committee
+    data:
+      message: 🔋⚡ EGO Charger 1 started
+  - service: switch.turn_on
+    target:
+      entity_id: switch.ego_power_1
+  # Wait for charging to start (power > 10W for 15 seconds)
+  - wait_for_trigger:
+    - platform: numeric_state
+      entity_id: sensor.ego_power_1_power
+      above: 10
+      for:
+        seconds: 15
+    timeout:
+      minutes: 3
+  - if:
+    - condition: template
+      value_template: '{{ wait.trigger is none }}'
+    then:
+    # Power never rose - battery already charged or not present
+    - service: switch.turn_off
+      target:
+        entity_id: switch.ego_power_1
+    - service: notify.future_planning_committee
+      data:
+        message: 🔋ℹ️ EGO Charger 1 - already charged or no battery
+    else:
+    # Charging started - wait for completion (power drops below 5W for 2 min)
+    - wait_for_trigger:
+      - platform: numeric_state
+        entity_id: sensor.ego_power_1_power
+        below: 5
+        for:
+          minutes: 2
+      timeout:
+        hours: 4
+    - service: switch.turn_off
+      target:
+        entity_id: switch.ego_power_1
+    - if:
+      - condition: template
+        value_template: '{{ wait.trigger is none }}'
+      then:
+      - service: notify.future_planning_committee
+        data:
+          message: 🔋⚠️ EGO Charger 1 timed out after 4 hours
+      else:
+      - service: notify.future_planning_committee
+        data:
+          message: 🔋✅ EGO Charger 1 complete
+
+  # Charger 2
+  - service: notify.future_planning_committee
+    data:
+      message: 🔋⚡ EGO Charger 2 started
+  - service: switch.turn_on
+    target:
+      entity_id: switch.ego_power_2
+  # Wait for charging to start (power > 10W for 15 seconds)
+  - wait_for_trigger:
+    - platform: numeric_state
+      entity_id: sensor.ego_power_2_power
+      above: 10
+      for:
+        seconds: 15
+    timeout:
+      minutes: 3
+  - if:
+    - condition: template
+      value_template: '{{ wait.trigger is none }}'
+    then:
+    # Power never rose - battery already charged or not present
+    - service: switch.turn_off
+      target:
+        entity_id: switch.ego_power_2
+    - service: notify.future_planning_committee
+      data:
+        message: 🔋ℹ️ EGO Charger 2 - already charged or no battery
+    else:
+    # Charging started - wait for completion (power drops below 5W for 2 min)
+    - wait_for_trigger:
+      - platform: numeric_state
+        entity_id: sensor.ego_power_2_power
+        below: 5
+        for:
+          minutes: 2
+      timeout:
+        hours: 4
+    - service: switch.turn_off
+      target:
+        entity_id: switch.ego_power_2
+    - if:
+      - condition: template
+        value_template: '{{ wait.trigger is none }}'
+      then:
+      - service: notify.future_planning_committee
+        data:
+          message: 🔋⚠️ EGO Charger 2 timed out after 4 hours
+      else:
+      - service: notify.future_planning_committee
+        data:
+          message: 🔋✅ EGO Charger 2 complete
+
+  - service: notify.future_planning_committee
+    data:
+      message: ℹ️ EGO charger maintenance cycle finished
+  mode: single
+
+- alias: EGO Charger Daily Safety Off
+  id: ego_charger_daily_safety_off
+  description: Ensure chargers are off every morning (safety reset)
+  trigger:
+  - platform: time
+    at: 12:00:00
+  action:
+  - service: switch.turn_off
+    target:
+      entity_id:
+      - switch.ego_power_1
+      - switch.ego_power_2
+  mode: single
