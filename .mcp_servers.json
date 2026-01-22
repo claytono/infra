@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hass": {
+      "command": "uvx",
+      "args": ["hass-mcp"],
+      "env": {
+        "HA_URL": "https://hass.k.oneill.net",
+        "HA_TOKEN": "${HASS_BEARER_TOKEN}"
+      }
+    }
+  }
+}
