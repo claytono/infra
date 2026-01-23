@@ -22,7 +22,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: huntarr
-        image: ghcr.io/plexguide/huntarr@sha256:94f7395112535e86fb76f9119cfdeece38bcffb73e39853e08c7f8e869411ff1
+        image: ghcr.io/plexguide/huntarr@sha256:f84ea30ce0a358e6be628925f8e45cdcafcdff1d4bed59e4e64f493011415822
         ports:
         - containerPort: 9705
         volumeMounts:
