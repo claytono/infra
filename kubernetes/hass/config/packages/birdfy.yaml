@@ -1,0 +1,41 @@
+---
+# Birdfy bird feeder monitoring
+# Alerts if fewer than 3 birds detected in 24 hours (may need refilling)
+
+template:
+
+- trigger:
+  - platform: state
+    entity_id: image.birdfy_last_bird
+    attribute: detection_time
+  binary_sensor:
+  - name: Birdfy Bird Detected Event
+    unique_id: birdfy_bird_detected_event
+    state: 'on'
+    auto_off:
+      seconds: 1
+
+sensor:
+- platform: history_stats
+  name: Birdfy Birds Last 24h
+  entity_id: binary_sensor.birdfy_bird_detected_event
+  state: 'on'
+  type: count
+  start: '{{ now() - timedelta(hours=24) }}'
+  end: '{{ now() }}'
+
+automation:
+- alias: Notify Slack Low Bird Count
+  id: notify_slack_low_bird_count
+  trigger:
+  - platform: time
+    at: 09:00:00
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.birdfy_birds_last_24h
+    below: 3
+  action:
+  - service: notify.future_planning_committee
+    data:
+      message: 🐦 Only {{ states('sensor.birdfy_birds_last_24h') | int }} birds visited
+        the feeder in the last 24 hours. Time to refill? 🌻
