@@ -3,6 +3,7 @@ flux ansible_host=flux.fnord.net domain=fnord.net
 k1 ansible_host=k1.oneill.net domain=oneill.net
 k2 ansible_host=k2.oneill.net domain=oneill.net
 k3 ansible_host=k3.oneill.net domain=oneill.net
+k4 ansible_host=k4.oneill.net domain=oneill.net
 p3 ansible_host=p3.oneill.net domain=oneill.net
 #voron2 ansible_host=voron2.oneill.net domain=oneill.net
 #voron2-pizero ansible_host=voron2-pizero.oneill.net domain=oneill.net
@@ -19,6 +20,7 @@ p4 ansible_host=p4.oneill.net domain=oneill.net
 k1
 k2
 k3
+k4
 
 [kubernetes_master]
 k1
@@ -26,6 +28,7 @@ k1
 [kubernetes_node]
 k2
 k3
+k4
 
 [nut]
 infra1
