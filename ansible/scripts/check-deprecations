@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""
+Check ansible output for deprecation warnings against a YAML allowlist.
+
+Usage:
+    check-deprecations <logfile>             Check against allowlist
+    check-deprecations --generate <logfile>  Generate new allowlist
+"""
+
+import re
+import sys
+from pathlib import Path
+
+import yaml
+
+SCRIPT_DIR = Path(__file__).parent
+ALLOWLIST_FILE = SCRIPT_DIR.parent / "deprecation-allowlist.yaml"
+
+
+def extract_deprecations(logfile: Path) -> dict[str, list[str]]:
+    """Extract deprecations with their task context from ansible output."""
+    deprecations: dict[str, list[str]] = {}
+    current_task = ""
+
+    task_pattern = re.compile(r"^(TASK|PLAY|RUNNING HANDLER) \[(.+)\]")
+    deprecation_pattern = re.compile(r"\[DEPRECATION WARNING\]: (.+)")
+
+    with open(logfile, encoding="utf-8") as f:
+        for line in f:
+            # Track current task/play context
+            if match := task_pattern.match(line):
+                current_task = match.group(0).replace("*", "").strip()
+
+            # Capture deprecation with context
+            if match := deprecation_pattern.search(line):
+                msg = match.group(1)
+                # Use first 50 chars as pattern key
+                pattern = msg[:50]
+                if pattern not in deprecations:
+                    deprecations[pattern] = []
+                if current_task and current_task not in deprecations[pattern]:
+                    deprecations[pattern].append(current_task)
+
+    return deprecations
+
+
+def generate_allowlist(deprecations: dict[str, list[str]], logfile: Path) -> None:
+    """Output YAML allowlist to stdout."""
+    print("---")
+    print("# Ansible Deprecation Allowlist")
+    print("#")
+    print("# Format: deprecation pattern -> list of task contexts")
+    print(f"# Auto-generated from: {logfile}")
+    print("#")
+    print("# Regenerate with: check-deprecations --generate <logfile>")
+    print()
+    print(yaml.dump(deprecations, default_flow_style=False, sort_keys=True))
+
+
+def check_deprecations(
+    found: dict[str, list[str]], expected: dict[str, list[str]]
+) -> bool:
+    """Check found deprecations against expected. Returns True if all match."""
+    print("=" * 46)
+    print("DEPRECATION WARNING REPORT")
+    print("=" * 46)
+    print()
+
+    total = sum(len(contexts) for contexts in found.values())
+    print(f"Total warnings found: {total}")
+    print()
+
+    has_errors = False
+    print("Deprecation status:")
+
+    # Check each found deprecation
+    for pattern, found_contexts in sorted(found.items()):
+        found_set = set(found_contexts)
+        count = len(found_contexts)
+
+        if pattern in expected:
+            expected_set = set(expected[pattern])
+            if found_set == expected_set:
+                print(f"  ✓ {pattern}... ({count} occurrences)")
+            else:
+                print(f"  ✗ {pattern}... (CHANGED)")
+                print(f"    Expected ({len(expected_set)}):")
+                for ctx in sorted(expected_set):
+                    print(f"      {ctx}")
+                print(f"    Found ({len(found_set)}):")
+                for ctx in sorted(found_set):
+                    print(f"      {ctx}")
+                has_errors = True
+        else:
+            print(f"  ✗ {pattern}... (NEW - {count} occurrences)")
+            print("    Contexts:")
+            for ctx in sorted(found_set):
+                print(f"      {ctx}")
+            has_errors = True
+
+    # Check for removed deprecations
+    for pattern in expected:
+        if pattern not in found:
+            print(f"  ⬇ {pattern}... (REMOVED - update allowlist)")
+            has_errors = True
+
+    print()
+
+    if has_errors:
+        print("To fix:")
+        print("  1. Address the deprecation in the code, OR")
+        print(
+            "  2. Regenerate: check-deprecations --generate <log> > "
+            "ansible/deprecation-allowlist.yaml"
+        )
+        print()
+        print("Status: FAIL")
+        print("=" * 46)
+        return False
+
+    print("Status: PASS")
+    print("=" * 46)
+    return True
+
+
+def main() -> int:
+    args = sys.argv[1:]
+
+    generate_mode = False
+    if args and args[0] == "--generate":
+        generate_mode = True
+        args = args[1:]
+
+    if len(args) != 1:
+        print("Usage: check-deprecations [--generate] <logfile>", file=sys.stderr)
+        return 1
+
+    logfile = Path(args[0])
+    if not logfile.exists():
+        print(f"Error: Log file not found: {logfile}", file=sys.stderr)
+        return 1
+
+    deprecations = extract_deprecations(logfile)
+
+    if generate_mode:
+        generate_allowlist(deprecations, logfile)
+        return 0
+
+    if not ALLOWLIST_FILE.exists():
+        print(f"Error: Allowlist file not found: {ALLOWLIST_FILE}", file=sys.stderr)
+        return 1
+
+    with open(ALLOWLIST_FILE, encoding="utf-8") as f:
+        expected = yaml.safe_load(f) or {}
+
+    if check_deprecations(deprecations, expected):
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

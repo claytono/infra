@@ -67,10 +67,22 @@ if [[ $# -eq 0 ]]; then
     # Copy vault password to workspace and execute the playbook inside the running container
     # Note: Mount to /var/lib/ because systemd mounts tmpfs over /tmp and /run
     docker exec "$CONTAINER_ID" cp /var/lib/ansible-vault-password /workspace/ansible/ansible-vault-password
-    if docker exec "$CONTAINER_ID" bash -c "cd /workspace && nix develop --command bash -c 'cd ansible && ansible-playbook -i inventory/test_local site.yaml'"; then
+
+    # Run playbook and capture output for deprecation analysis
+    ANSIBLE_LOG="/var/lib/ansible-output.log"
+    if docker exec "$CONTAINER_ID" bash -c "set -o pipefail; cd /workspace && nix develop --command bash -c 'cd ansible && ansible-playbook -i inventory/test_local site.yaml' 2>&1 | tee $ANSIBLE_LOG"; then
         EXIT_CODE=0
     else
         EXIT_CODE=$?
+    fi
+
+    # Check for new deprecation warnings (only if playbook succeeded)
+    if [[ $EXIT_CODE -eq 0 ]]; then
+        echo ""
+        echo "Checking for new deprecation warnings..."
+        if ! docker exec "$CONTAINER_ID" bash -c "cd /workspace && nix develop --command ansible/scripts/check-deprecations $ANSIBLE_LOG"; then
+            EXIT_CODE=1
+        fi
     fi
 
     # Clean up container

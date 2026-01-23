@@ -11,5 +11,5 @@ node_exporter_arch: >-
       'x86_64': 'amd64',
       'aarch64': 'arm64',
       'armv7l': 'armv7'
-    }.get(ansible_architecture, ansible_architecture)
+    }.get(ansible_facts['architecture'], ansible_facts['architecture'])
   }}
