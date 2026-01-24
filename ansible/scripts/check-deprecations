@@ -70,7 +70,8 @@ def check_deprecations(
     print(f"Total warnings found: {total}")
     print()
 
-    has_errors = False
+    has_new = False
+    needs_update = False
     print("Deprecation status:")
 
     # Check each found deprecation
@@ -90,27 +91,34 @@ def check_deprecations(
                 print(f"    Found ({len(found_set)}):")
                 for ctx in sorted(found_set):
                     print(f"      {ctx}")
-                has_errors = True
+                needs_update = True
+                # New contexts appeared - this is a real issue
+                if found_set - expected_set:
+                    has_new = True
         else:
             print(f"  ✗ {pattern}... (NEW - {count} occurrences)")
             print("    Contexts:")
             for ctx in sorted(found_set):
                 print(f"      {ctx}")
-            has_errors = True
+            has_new = True
 
     # Check for removed deprecations
     for pattern in expected:
         if pattern not in found:
             print(f"  ⬇ {pattern}... (REMOVED - update allowlist)")
-            has_errors = True
+            needs_update = True
 
     print()
 
-    if has_errors:
+    if has_new or needs_update:
         print("To fix:")
-        print("  1. Address the deprecation in the code, OR")
+        if has_new:
+            print("  1. Address the new deprecation in the code, OR")
+            print("  2. Add to allowlist if it cannot be fixed")
+        else:
+            print("  Deprecations were fixed! Regenerate the allowlist:")
         print(
-            "  2. Regenerate: check-deprecations --generate <log> > "
+            "     check-deprecations --generate <logfile> > "
             "ansible/deprecation-allowlist.yaml"
         )
         print()
