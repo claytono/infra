@@ -10,8 +10,6 @@
   - "TASK [oefenweb.postfix : configure mailname]"
   - "TASK [oefenweb.postfix : facts | set | is_docker_guest]"
   - "TASK [oefenweb.postfix : update configuration file]"
-  - "TASK [resticprofile : Download restic]"
-  - "TASK [resticprofile : Download resticprofile]"
 
 "Importing 'to_native' from 'ansible.module_utils._":
   - "TASK [common : Configure sysctl for inotify]"

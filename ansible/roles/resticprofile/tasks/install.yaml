@@ -69,7 +69,7 @@
     dest: "{{ resticprofile_tmp_dir }}/restic.bz2"
     mode: "0640"
   vars:
-    resticprofile_os: "{{ ansible_system | lower }}"
+    resticprofile_os: "{{ ansible_facts['system'] | lower }}"
   when: resticprofile_install_restic
 
 - name: Extract restic
@@ -94,7 +94,7 @@
     dest: "{{ resticprofile_tmp_dir }}/resticprofile.tar.gz"
     mode: "0640"
   vars:
-    resticprofile_os: "{{ ansible_system | lower }}"
+    resticprofile_os: "{{ ansible_facts['system'] | lower }}"
   when: resticprofile_install_resticprofile
 
 - name: Extract resticprofile.tgz
