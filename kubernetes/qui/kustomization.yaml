@@ -14,10 +14,6 @@ resources:
 - externalsecret.yaml
 - pvc-config.yaml
 
-images:
-- name: ghcr.io/autobrr/qui
-  newTag: v1.12.0@sha256:b3b18f82f340642fc19ffb8935c112673008e7e6ae0ead5b6e8bb39c9b4462a3
-
 labels:
 
 - pairs:

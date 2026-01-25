@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: awair-exporter
-        image: dvorak/awair_exporter@sha256:5c0cae7ff6b699eec82c28ad1b54b22142ab09aeb99688cd397948167f8cca91
+        image: dvorak/awair_exporter:latest@sha256:5c0cae7ff6b699eec82c28ad1b54b22142ab09aeb99688cd397948167f8cca91
         imagePullPolicy: Always
         envFrom:
         - secretRef:

@@ -14,7 +14,7 @@ spec:
         spec:
           containers:
           - name: got-your-back
-            image: debian@sha256:5cf544fad978371b3df255b61e209b373583cb88b733475c86e49faa15ac2104
+            image: debian:stable-slim@sha256:ed542b2d269ff08139fc5ab8c762efe8c8986b564a423d5241a5ce9fb09b6c08
             command: [/usr/local/bin/run]
             imagePullPolicy: Always
             env:

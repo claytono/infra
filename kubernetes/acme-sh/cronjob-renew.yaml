@@ -13,7 +13,7 @@ spec:
         spec:
           containers:
           - name: acme-sh
-            image: neilpang/acme.sh@sha256:c4dfbb35feddff3145ed417cf5179b25faa89bd32551d1104ce28d50bd190920
+            image: neilpang/acme.sh:3.1.2@sha256:3c6b40e30e2c0c79863ba6ef5545d93350a040371213058099066ccd85b46aad
             command: [/bin/sh, /scripts/acme-renew.sh]
             securityContext:
               allowPrivilegeEscalation: false

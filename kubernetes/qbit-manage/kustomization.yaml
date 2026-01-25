@@ -9,10 +9,6 @@ commonAnnotations:
 
 components:
 - ../components/authentik
-images:
-- name: qbit-manage
-  newName: ghcr.io/stuffanthings/qbit_manage
-  newTag: v4.6.5@sha256:4f36632a138b4e5aeab3b765b7f389087bfb140c80dbbec1343eca74dc351245
 
 resources:
 - deploy.yaml

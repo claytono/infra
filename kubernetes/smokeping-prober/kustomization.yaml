@@ -18,10 +18,6 @@ configMapGenerator:
   files:
   - config.yaml
 
-images:
-- name: quay.io/superq/smokeping-prober
-  newTag: v0.10.0@sha256:614b8fca5cad698d254a77a61bda643fea867a87dbc17851c9332a2fef1b555f
-
 labels:
 
 - pairs:

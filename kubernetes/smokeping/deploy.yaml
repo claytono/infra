@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: smokeping
-        image: dvorak/docker-smokeping@sha256:f458e95b8d4ae8499e6efff9bb891b937eff13bd65550cb59f5b7a246a0de352
+        image: dvorak/docker-smokeping:latest@sha256:f458e95b8d4ae8499e6efff9bb891b937eff13bd65550cb59f5b7a246a0de352
         imagePullPolicy: Always
         ports:
         - containerPort: 80

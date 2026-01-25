@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: netatmo-wunderground-agent
-        image: brbeaird/netatmo-wunderground-agent@sha256:9762b8722cb99722fa7f0669d389b4298f8b8599c8f06d745683ae1d89f319fe
+        image: brbeaird/netatmo-wunderground-agent:latest@sha256:9762b8722cb99722fa7f0669d389b4298f8b8599c8f06d745683ae1d89f319fe
         env:
         - name: netatmo_tokenFileDirectory
           value: /data

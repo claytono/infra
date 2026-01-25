@@ -17,12 +17,6 @@ resources:
 - pvc.yaml
 - externalsecret.yaml
 
-images:
-- name: hairyhenderson/gomplate
-  newTag: v4.3.3@sha256:55db623a1e3d620501fbf3ff01753cfde101d9b49fa5ff0132b4a8d0c246c16c
-- name: prom/alertmanager
-  newTag: v0.30.0@sha256:abb750ac7b63116761c16dd481ae92496fbe04721686c0920f0fa4d0728cd4a6
-
 labels:
 
 - pairs:

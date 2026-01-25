@@ -12,10 +12,6 @@ resources:
 - ingress.yaml
 - service.yaml
 
-images:
-- name: prom/pushgateway
-  newTag: v1.11.2@sha256:c835998819105d84d484918908df132807c78c05f3e0e649df0c0479c6780d98
-
 labels:
 
 - pairs:
