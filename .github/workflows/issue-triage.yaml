@@ -314,14 +314,23 @@ jobs:
         path: /tmp/results
         pattern: triage-result-*
 
+    - name: Debug artifact structure
+      run: |
+        echo "Contents of /tmp/results:"
+        ls -laR /tmp/results/ || echo "Directory not found"
+
     - name: Post comments and manage labels
       env:
         GH_TOKEN: ${{ github.token }}
       run: |-
+        shopt -s nullglob
+        found_results=false
+
         for result_dir in /tmp/results/triage-result-*; do
           if [ ! -d "$result_dir" ]; then
             continue
           fi
+          found_results=true
 
           # Extract issue number from directory name (triage-result-123 -> 123)
           # This avoids prompt injection by not trusting Claude's JSON output for the issue number
@@ -350,3 +359,9 @@ jobs:
             gh issue edit "$ISSUE" --repo "${{ github.repository }}" --remove-label blocked
           fi
         done
+
+        if [ "$found_results" = false ]; then
+          echo "WARNING: No triage result directories found"
+          echo "Expected pattern: /tmp/results/triage-result-*"
+          ls -la /tmp/results/ 2>/dev/null || echo "Results directory does not exist"
+        fi
