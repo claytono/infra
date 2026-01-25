@@ -1,8 +1,0 @@
-download_url: https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/artifacts/community-proxmox-1.5.0.tar.gz
-format_version: 1.0.0
-name: proxmox
-namespace: community
-server: https://galaxy.ansible.com/api/
-signatures: []
-version: 1.5.0
-version_url: /api/v3/plugin/ansible/content/published/collections/index/community/proxmox/versions/1.5.0/
