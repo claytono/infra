@@ -279,11 +279,17 @@ jobs:
           **STATE_JSON** is a compact JSON object embedded in the HTML comment to track state:
           `{"status":"BLOCKED","upstreams":[{"url":"...","state":"open"}]}`
 
+    - name: Rename triage result with issue number
+      run: |
+        if [ -f /tmp/triage-result.json ]; then
+          cp /tmp/triage-result.json "/tmp/triage-result-${{ matrix.issue }}.json"
+        fi
+
     - name: Upload triage result
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6
       with:
         name: triage-result-${{ matrix.issue }}
-        path: /tmp/triage-result.json
+        path: /tmp/triage-result-${{ matrix.issue }}.json
         if-no-files-found: warn
 
     - name: Display triage result
@@ -314,29 +320,35 @@ jobs:
         path: /tmp/results
         pattern: triage-result-*
 
-    - name: Debug artifact structure
-      run: |
-        echo "Contents of /tmp/results:"
-        ls -laR /tmp/results/ || echo "Directory not found"
-
     - name: Post comments and manage labels
       env:
         GH_TOKEN: ${{ github.token }}
       run: |-
         shopt -s nullglob
-        found_results=false
 
-        for result_dir in /tmp/results/triage-result-*; do
-          if [ ! -d "$result_dir" ]; then
-            continue
-          fi
-          found_results=true
+        # download-artifact v7 extracts single artifacts flat (no subdirectory)
+        # but creates subdirectories for multiple artifacts. Collect JSON files
+        # from both layouts into a single list.
+        result_files=()
+        for f in /tmp/results/triage-result-*.json; do
+          result_files+=("$f")
+        done
+        for f in /tmp/results/triage-result-*/triage-result-*.json; do
+          result_files+=("$f")
+        done
 
-          # Extract issue number from directory name (triage-result-123 -> 123)
-          # This avoids prompt injection by not trusting Claude's JSON output for the issue number
-          ISSUE=$(basename "$result_dir" | sed 's/triage-result-//')
+        if [ ${#result_files[@]} -eq 0 ]; then
+          echo "WARNING: No triage result files found"
+          ls -laR /tmp/results/ 2>/dev/null || echo "Results directory does not exist"
+          exit 0
+        fi
 
-          RESULT=$(cat "$result_dir/triage-result.json")
+        for result_file in "${result_files[@]}"; do
+          # Extract issue number from filename (triage-result-123.json -> 123)
+          # This avoids prompt injection by not trusting Claude's JSON output
+          ISSUE=$(basename "$result_file" .json | sed 's/triage-result-//')
+
+          RESULT=$(cat "$result_file")
           ACTION=$(echo "$RESULT" | jq -r '.action')
 
           echo "Processing issue #$ISSUE: action=$ACTION"
@@ -359,9 +371,3 @@ jobs:
             gh issue edit "$ISSUE" --repo "${{ github.repository }}" --remove-label blocked
           fi
         done
-
-        if [ "$found_results" = false ]; then
-          echo "WARNING: No triage result directories found"
-          echo "Expected pattern: /tmp/results/triage-result-*"
-          ls -la /tmp/results/ 2>/dev/null || echo "Results directory does not exist"
-        fi
