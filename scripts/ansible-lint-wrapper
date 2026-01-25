@@ -2,6 +2,9 @@
 
 set -eu -o pipefail
 
+# Set Ansible temp directory to avoid sandbox permission issues with ~/.ansible/tmp
+export ANSIBLE_LOCAL_TEMP="${PWD}/.tmp/ansible"
+
 # Change to the ansible directory
 cd ansible
 
