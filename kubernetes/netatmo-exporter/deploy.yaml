@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: netatmo-exporter
-        image: ghcr.io/xperimental/netatmo-exporter@sha256:db0f94e68faa98bde52b597a5085a0ca46ec50615fedd6f187080f18ac43344c
+        image: ghcr.io/xperimental/netatmo-exporter:2.1.2@sha256:db0f94e68faa98bde52b597a5085a0ca46ec50615fedd6f187080f18ac43344c
         env:
         - name: NETATMO_EXPORTER_TOKEN_FILE
           value: /data/token.json

@@ -14,10 +14,6 @@ resources:
 - pvc.yaml
 - externalsecret.yaml
 
-images:
-- name: ghcr.io/xperimental/netatmo-exporter
-  newTag: 2.1.2@sha256:db0f94e68faa98bde52b597a5085a0ca46ec50615fedd6f187080f18ac43344c
-
 labels:
 
 - pairs:
