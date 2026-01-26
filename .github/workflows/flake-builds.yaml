@@ -15,9 +15,21 @@ on:
     - flake.lock
 
 jobs:
-  build-linux-amd64:
-    name: Build flake outputs (linux amd64)
-    runs-on: ubuntu-latest
+  build-flake-outputs:
+    name: Build flake outputs (${{ matrix.label }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        include:
+        - label: linux amd64
+          runs-on: ubuntu-latest
+          flake-output: .#devShells.x86_64-linux.default
+        - label: linux arm64
+          runs-on: ubuntu-24.04-arm
+          flake-output: .#devShells.aarch64-linux.default
+        - label: macos arm64
+          runs-on: macos-26
+          flake-output: .#devShells.aarch64-darwin.default
 
     steps:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
@@ -28,52 +40,10 @@ jobs:
         github_access_token: ${{ github.token }}
 
     - name: Setup Cachix
-      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad  # v16
+      uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1  # v16
       with:
         name: claytono
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
     - name: Build dev shell
-      run: nix build .#devShells.x86_64-linux.default
-
-  build-linux-arm64:
-    name: Build flake outputs (linux arm64)
-    runs-on: ubuntu-24.04-arm
-
-    steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
-
-    - name: Install Nix
-      uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15  # v31
-      with:
-        github_access_token: ${{ github.token }}
-
-    - name: Setup Cachix
-      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad  # v16
-      with:
-        name: claytono
-        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-    - name: Build dev shell
-      run: nix build .#devShells.aarch64-linux.default
-
-  build-macos-arm64:
-    name: Build flake outputs (macos arm64)
-    runs-on: macos-26
-
-    steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
-
-    - name: Install Nix
-      uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15  # v31
-      with:
-        github_access_token: ${{ github.token }}
-
-    - name: Setup Cachix
-      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad  # v16
-      with:
-        name: claytono
-        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-    - name: Build dev shell
-      run: nix build .#devShells.aarch64-darwin.default
+      run: nix build --print-build-logs --log-format raw --verbose ${{ matrix.flake-output }}
