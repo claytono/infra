@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: pinepods-render
+version: 0.1.0
+description: Render helper for PinePods chart
+type: application
+
+dependencies:
+- name: pinepods
+  version: 0.8.2
+  repository: http://helm.pinepods.online

@@ -1,0 +1,19 @@
+---
+# Source: pinepods/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinepods
+  labels:
+    app.kubernetes.io/name: pinepods
+    app.kubernetes.io/instance: pinepods
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8040
+      targetPort: 8040
+  selector:
+    app.kubernetes.io/name: pinepods
+    app.kubernetes.io/instance: pinepods
+    app.kubernetes.io/component: main
