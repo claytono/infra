@@ -141,6 +141,7 @@
               velero
               yamlfix
               yq-go
+              ripgrep
             ] ++ lib.optional (builtins.elem stdenv.hostPlatform.system [ "aarch64-darwin" "x86_64-linux" ]) (mkMcpCli pkgs);
 
             shellHook = ''
