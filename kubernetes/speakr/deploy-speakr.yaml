@@ -1,0 +1,107 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: speakr
+  namespace: speakr
+  labels:
+    app.kubernetes.io/name: speakr
+    app.kubernetes.io/component: web
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: speakr
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: speakr
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+      - name: speakr
+        image: learnedmachine/speakr:0.8.4@sha256:bcb0b10b1cebcafe61b7a560b502d9f2563a03570eee426e37f51d55ae78b5f1
+        ports:
+        - name: http
+          containerPort: 8899
+          protocol: TCP
+        env:
+        - name: TZ
+          value: America/New_York
+        # Database configuration
+        - name: SQLALCHEMY_DATABASE_URI
+          valueFrom:
+            secretKeyRef:
+              name: speakr-postgres-app
+              key: uri
+        # ASR (WhisperX) configuration
+        - name: ASR_BASE_URL
+          value: http://whisperx:9000
+        - name: ASR_DIARIZE
+          value: 'true'
+        - name: ASR_RETURN_SPEAKER_EMBEDDINGS
+          value: 'true'
+        # Text model configuration (for summarization)
+        - name: TEXT_MODEL_BASE_URL
+          value: https://api.openai.com/v1
+        - name: TEXT_MODEL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: speakr-secrets
+              key: TEXT_MODEL_API_KEY
+        - name: TEXT_MODEL_NAME
+          value: gpt-5-mini
+        # Enable semantic search
+        - name: ENABLE_INQUIRE_MODE
+          value: 'true'
+        # SSO configuration (Authentik OIDC)
+        - name: ENABLE_SSO
+          value: 'true'
+        - name: SSO_PROVIDER_NAME
+          value: Authentik
+        - name: SSO_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: speakr-oidc
+              key: SSO_CLIENT_ID
+        - name: SSO_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: speakr-oidc
+              key: SSO_CLIENT_SECRET
+        - name: SSO_DISCOVERY_URL
+          value: https://auth.k.oneill.net/application/o/speakr/.well-known/openid-configuration
+        - name: SSO_REDIRECT_URI
+          value: https://speakr.k.oneill.net/auth/sso/callback
+        - name: SSO_AUTO_REGISTER
+          value: 'true'
+        - name: SSO_DISABLE_PASSWORD_LOGIN
+          value: 'true'
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: speakr-uploads

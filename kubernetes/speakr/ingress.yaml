@@ -1,0 +1,35 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: speakr
+  namespace: speakr
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    nginx.ingress.kubernetes.io/proxy-body-size: '0'
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Speakr
+    gethomepage.dev/description: Audio Transcription & Search
+    gethomepage.dev/group: Tools
+    gethomepage.dev/icon: mdi-microphone
+    ak-type: oidc
+    ak-oidc-callback: /auth/sso/callback
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - speakr.k.oneill.net
+    secretName: speakr-tls
+  rules:
+  - host: speakr.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: speakr
+            port:
+              number: 80
