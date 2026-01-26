@@ -59,3 +59,18 @@ resource "onepassword_item" "karakeep_openai" {
 
   password = openai_project_service_account.karakeep.api_key_value
 }
+
+# Service account for speakr application
+resource "openai_project_service_account" "speakr" {
+  project_id = local.default_project.id
+  name       = "speakr"
+}
+
+# Store the speakr OpenAI API key in 1Password
+resource "onepassword_item" "speakr_openai" {
+  vault    = data.onepassword_vault.infra.uuid
+  title    = "speakr-openai-api-key"
+  category = "password"
+
+  password = openai_project_service_account.speakr.api_key_value
+}

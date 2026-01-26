@@ -1,0 +1,67 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: whisperx
+  namespace: speakr
+  labels:
+    app.kubernetes.io/name: speakr
+    app.kubernetes.io/component: whisperx
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: speakr
+      app.kubernetes.io/component: whisperx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: speakr
+        app.kubernetes.io/component: whisperx
+    spec:
+      runtimeClassName: nvidia
+      priorityClassName: gpu-priority
+      containers:
+      - name: whisperx
+        image: learnedmachine/whisperx-asr-service:0.2.0@sha256:d78d05f9f35918363e771fb0b066b959696ef6118bc1b8bca2cdd78eaa170753
+        ports:
+        - name: http
+          containerPort: 9000
+          protocol: TCP
+        env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: speakr-secrets
+              key: HF_TOKEN
+        - name: DEVICE
+          value: cuda
+        - name: COMPUTE_TYPE
+          value: int8
+        - name: BATCH_SIZE
+          value: '4'
+        # Model cache directories
+        - name: HF_HOME
+          value: /cache/huggingface
+        - name: TORCH_HOME
+          value: /cache/torch
+        - name: XDG_CACHE_HOME
+          value: /cache
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: cache
+          mountPath: /cache
+        - name: cache
+          mountPath: /.cache
+      volumes:
+      - name: cache
+        persistentVolumeClaim:
+          claimName: whisperx-cache
