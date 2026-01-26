@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir -p tmp helm/pinepods helm/valkey
+
+# Render PinePods chart
+helm_template pinepods pinepods --namespace pinepods --values values.yaml --output-dir tmp
+
+# Move pinepods templates
+mv tmp/pinepods/templates/* helm/pinepods/
+
+# Move valkey templates if they exist
+if [[ -d tmp/pinepods/charts/valkey/templates ]]; then
+    mv tmp/pinepods/charts/valkey/templates/* helm/valkey/
+fi
+
+# Clean up
+rm -rf tmp
+rm -rf helm/*/tests
+
+echo "Rendered PinePods manifests into helm/"

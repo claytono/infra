@@ -1,0 +1,50 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pinepods
+
+resources:
+- namespace.yaml
+- postgres-cluster.yaml
+- pvc-downloads.yaml
+- externalsecret.yaml
+  # PinePods
+- helm/pinepods/deployment.yaml
+- helm/pinepods/ingress.yaml
+- helm/pinepods/pvc.yaml
+- helm/pinepods/secret.yaml
+- helm/pinepods/service.yaml
+  # Valkey
+- helm/valkey/configmap.yaml
+- helm/valkey/headless-svc.yaml
+- helm/valkey/health-configmap.yaml
+- helm/valkey/scripts-configmap.yaml
+- helm/valkey/primary/application.yaml
+- helm/valkey/primary/service.yaml
+- helm/valkey/primary/serviceaccount.yaml
+
+commonAnnotations:
+  argoManaged: 'true'
+
+images:
+- name: madeofpendletonwool/pinepods
+  newTag: latest@sha256:ee412e52e59b6c49f4f852c41db82e9a258563ddc2e31d7c6e7ef824b8abcb70
+- name: docker.io/bitnami/valkey
+  newTag: latest@sha256:47527871c911759a5f0c31c2e569f2b58d737d44958e1814485d9a7d4a7b598e
+
+patches:
+
+- target:
+    kind: Deployment
+    name: pinepods
+  patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/livenessProbe
+    - op: remove
+      path: /spec/template/spec/containers/0/readinessProbe
+    - op: add
+      path: /spec/template/spec/containers/0/envFrom/-
+      value:
+        secretRef:
+          name: pinepods-oidc

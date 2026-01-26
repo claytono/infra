@@ -1,0 +1,20 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+
+metadata:
+  name: pinepods-postgres
+  namespace: pinepods
+
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.7-standard-trixie@sha256:3ecc80c3619b99c29be6086ce1d766b51970becf0b91d1dfd6fb5bfa124e96e6
+  enablePDB: false
+
+  storage:
+    size: 5Gi
+
+  bootstrap:
+    initdb:
+      database: pinepods
+      owner: pinepods

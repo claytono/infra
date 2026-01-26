@@ -1,0 +1,82 @@
+---
+# Only override what differs from chart defaults
+
+ingress:
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    nginx.ingress.kubernetes.io/proxy-body-size: '0'
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: PinePods
+    gethomepage.dev/description: Podcast Management
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: mdi-podcast
+    ak-type: oidc
+    ak-oidc-callback: /api/auth/callback
+  hosts:
+  - host: pinepods.k.oneill.net
+    paths:
+    - path: /
+      pathType: Prefix
+  tls:
+  - hosts:
+    - pinepods.k.oneill.net
+    secretName: pinepods-tls
+
+persistence:
+  downloads:
+    existingClaim: pinepods-downloads
+    size: 20Gi
+
+# Disable built-in PostgreSQL - use CloudNativePG
+postgresql:
+  enabled: false
+
+# External database (CloudNativePG)
+# CNPG automatically creates secret: pinepods-postgres-app with 'password' key
+externalDatabase:
+  type: postgresql
+  host: pinepods-postgres-rw
+  port: 5432
+  user: pinepods
+  database: pinepods
+  existingSecret:
+    enabled: true
+    name: pinepods-postgres-app
+    key: password
+
+# Valkey (Redis) - required for the app
+valkey:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  replica:
+    replicaCount: 0
+  primary:
+    persistence:
+      enabled: false
+
+# Disable backend (podcast search API) and podpeople (host/guest DB)
+# These are publicly available at search.pinepods.online and people.pinepods.online
+# No need to self-host - saves resources and doesn't require Podcast Index API keys
+backend:
+  enabled: false
+
+podpeople:
+  enabled: false
+
+env:
+  TZ: America/New_York
+  RUST_LOG: debug
+  # No admin credentials needed - OIDC only
+  # OIDC configuration (client ID/secret come from external secret)
+  OIDC_PROVIDER_NAME: Authentik
+  OIDC_AUTHORIZATION_URL: https://auth.k.oneill.net/application/o/authorize/
+  OIDC_TOKEN_URL: https://auth.k.oneill.net/application/o/token/
+  OIDC_USER_INFO_URL: https://auth.k.oneill.net/application/o/userinfo/
+  OIDC_BUTTON_TEXT: Login with Authentik
+  OIDC_SCOPE: openid email profile
+  OIDC_BUTTON_COLOR: '#fd4d0d'
+  OIDC_BUTTON_TEXT_COLOR: '#ffffff'
+  OIDC_DISABLE_STANDARD_LOGIN: 'true'
