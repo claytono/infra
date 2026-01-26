@@ -31,7 +31,7 @@ jobs:
 
   build-flake-outputs:
     name: Build flake outputs (${{ matrix.label }})
-    if: needs.changes.outputs.flake == 'true'
+    if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.runs-on }}
     needs: changes
     strategy:
