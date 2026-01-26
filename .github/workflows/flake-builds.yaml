@@ -5,19 +5,35 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths:
-    - flake.nix
-    - flake.lock
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-    - flake.nix
-    - flake.lock
 
 jobs:
+  changes:
+    name: Check for flake changes
+    runs-on: ubuntu-latest
+
+    outputs:
+      flake: ${{ steps.changes.outputs.flake }}
+
+    steps:
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+
+    - name: Check for flake changes
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3
+      id: changes
+      with:
+        filters: |
+          flake:
+            - 'flake.nix'
+            - 'flake.lock'
+            - '.github/workflows/flake-builds.yaml'
+
   build-flake-outputs:
     name: Build flake outputs (${{ matrix.label }})
+    if: needs.changes.outputs.flake == 'true'
     runs-on: ${{ matrix.runs-on }}
+    needs: changes
     strategy:
       matrix:
         include:
