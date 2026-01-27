@@ -9,32 +9,9 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  changes:
-    name: Check for flake changes
-    runs-on: ubuntu-latest
-
-    outputs:
-      flake: ${{ steps.changes.outputs.flake }}
-
-    steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
-      with:
-        fetch-depth: 0
-
-    - name: Check for flake changes
-      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3
-      id: changes
-      with:
-        filters: |
-          flake:
-            - 'flake.nix'
-            - 'flake.lock'
-            - '.github/workflows/flake-builds.yaml'
-
   build-flake-outputs:
     name: Build flake outputs (${{ matrix.label }})
     runs-on: ${{ matrix.runs-on }}
-    needs: changes
     strategy:
       matrix:
         include:
@@ -49,26 +26,37 @@ jobs:
           flake-output: .#devShells.aarch64-darwin.default
 
     steps:
-    - name: Skip flake build (no changes)
-      if: needs.changes.outputs.flake != 'true' && github.event_name != 'workflow_dispatch'
-      run: echo "No flake changes detected."
-
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
-      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
+      with:
+        fetch-depth: 0
+
+    - name: Check for flake changes
+      if: github.event_name != 'workflow_dispatch'
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3
+      id: changes
+      with:
+        filters: |
+          flake:
+            - 'flake.nix'
+            - 'flake.lock'
+            - '.github/workflows/flake-builds.yaml'
 
     - name: Install Nix
-      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
+      if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.flake
+        == 'true'
       uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15  # v31
       with:
         github_access_token: ${{ github.token }}
 
     - name: Setup Cachix
-      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
+      if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.flake
+        == 'true'
       uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1  # v16
       with:
         name: claytono
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
     - name: Build dev shell
-      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
+      if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.flake
+        == 'true'
       run: nix build --print-build-logs --log-format raw --verbose ${{ matrix.flake-output }}
