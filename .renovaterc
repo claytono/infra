@@ -69,6 +69,17 @@
     },
     {
       "customType": "regex",
+      "managerFilePatterns": [
+        "ansible/requirements.yml"
+      ],
+      "matchStrings": [
+        "name:\\s*https://github\\.com/(?<depName>[^\\s/]+/[^\\s.]+)\\.git\\s*\\n\\s*type:\\s*git\\s*\\n\\s*version:\\s*v?(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
       "description": "Docker images with comment annotations (generic)",
       "managerFilePatterns": [
         "ansible/**/*.yaml",
@@ -148,6 +159,16 @@
       ],
       "enabled": false,
       "description": "Disable lockFileMaintenance globally (re-enabled per-manager below)"
+    },
+    {
+      "matchManagers": [
+        "ansible-galaxy"
+      ],
+      "matchPackageNames": [
+        "https://github.com/artis3n/ansible-collection-tailscale.git"
+      ],
+      "enabled": false,
+      "description": "Handle tailscale git collection via regex manager"
     },
     {
       "matchDatasources": [
