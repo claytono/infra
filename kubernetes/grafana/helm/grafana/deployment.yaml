@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grafana
         app.kubernetes.io/version: "12.3.1"
       annotations:
-        checksum/config: 732da2089bd084c54b7e7deb6e877cde9e957076944a926dea20d7424bc06c8f
+        checksum/config: 2badbe7d25db90caec2dc4deb9dccd5e133aa5844963dbdace6c34f35f08f0db
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
         kubectl.kubernetes.io/default-container: grafana
         reloader.stakater.com/auto: "true"
@@ -80,6 +80,8 @@ spec:
               subPath: grafana.ini
             - name: storage
               mountPath: "/var/lib/grafana"
+            - name: search
+              mountPath: "/var/lib/grafana-search"
           ports:
             - name: grafana
               containerPort: 3000
@@ -106,6 +108,8 @@ spec:
               value: /var/lib/grafana/plugins
             - name: GF_PATHS_PROVISIONING
               value: /etc/grafana/provisioning
+            - name: GF_UNIFIED_STORAGE_INDEX_PATH
+              value: /var/lib/grafana-search/bleve
             - name: "GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION"
               value: "true"
           envFrom:
@@ -129,3 +133,5 @@ spec:
         - name: storage
           persistentVolumeClaim:
             claimName: grafana
+        - name: search
+          emptyDir: {}
