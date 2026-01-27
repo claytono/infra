@@ -7,6 +7,16 @@
         "HA_URL": "https://hass.k.oneill.net",
         "HA_TOKEN": "${HASS_BEARER_TOKEN}"
       }
+    },
+    "unifi": {
+      "command": "go-unifi-mcp",
+      "env": {
+        "UNIFI_HOST": "https://udmp.oneill.net",
+        "UNIFI_API_KEY": "${UNIFI_API_KEY}",
+        "UNIFI_SITE": "default",
+        "UNIFI_VERIFY_SSL": "false",
+        "UNIFI_TOOL_MODE": "eager"
+      }
     }
   }
 }

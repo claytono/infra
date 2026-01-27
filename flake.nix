@@ -3,10 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    go-unifi-mcp.url = "github:claytono/go-unifi-mcp";
   };
 
   # Flake outputs that other flakes can use
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, go-unifi-mcp }:
     let
       # Helpers for producing system-specific outputs
       supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
@@ -141,6 +142,7 @@
               velero
               yamlfix
               yq-go
+              go-unifi-mcp.packages.${pkgs.stdenv.hostPlatform.system}.default
             ] ++ lib.optional (builtins.elem stdenv.hostPlatform.system [ "aarch64-darwin" "x86_64-linux" ]) (mkMcpCli pkgs);
 
             shellHook = ''
