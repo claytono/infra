@@ -33,7 +33,6 @@ jobs:
 
   build-flake-outputs:
     name: Build flake outputs (${{ matrix.label }})
-    if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.runs-on }}
     needs: changes
     strategy:
@@ -50,18 +49,26 @@ jobs:
           flake-output: .#devShells.aarch64-darwin.default
 
     steps:
+    - name: Skip flake build (no changes)
+      if: needs.changes.outputs.flake != 'true' && github.event_name != 'workflow_dispatch'
+      run: echo "No flake changes detected."
+
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
 
     - name: Install Nix
+      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
       uses: cachix/install-nix-action@4e002c8ec80594ecd40e759629461e26c8abed15  # v31
       with:
         github_access_token: ${{ github.token }}
 
     - name: Setup Cachix
+      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
       uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1  # v16
       with:
         name: claytono
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
     - name: Build dev shell
+      if: needs.changes.outputs.flake == 'true' || github.event_name == 'workflow_dispatch'
       run: nix build --print-build-logs --log-format raw --verbose ${{ matrix.flake-output }}
