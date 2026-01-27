@@ -1,6 +1,7 @@
 ---
 global:
   scrape_interval: 15s
+  scrape_native_histograms: true
 
 rule_files:
 - /etc/prometheus/rules.yml
