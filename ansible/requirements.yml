@@ -24,9 +24,11 @@ roles:
     version: "3.0.0"
 
 collections:
-  - name: https://github.com/artis3n/ansible-collection-tailscale.git
+  - name: artis3n.tailscale
+    source: https://github.com/artis3n/ansible-collection-tailscale.git
     type: git
-    version: v1.2.0
-  - name: https://github.com/ansible-collections/community.proxmox.git
+    version: "1.2.0"
+  - name: community.proxmox
+    source: https://github.com/ansible-collections/community.proxmox.git
     type: git
     version: "1.5.0"
