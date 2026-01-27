@@ -46,3 +46,5 @@ data:
     [server]
     domain = grafana.k.oneill.net
     root_url = https://grafana.k.oneill.net
+    [unified_storage]
+    index_path = /var/lib/grafana-search/bleve
