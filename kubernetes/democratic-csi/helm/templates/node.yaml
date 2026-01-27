@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configmap: be3be23b8b52f8a7bc9319f0e70f83561f80a3ac2567bde5ff721188dc747e6a
+        checksum/configmap: 541936c0b6604ba82cb0d61ff7fd5bb8dacbf3647ddef67d962e08dc64b55592
       labels:
         app.kubernetes.io/name: democratic-csi
         app.kubernetes.io/instance: democratic-csi
@@ -111,7 +111,7 @@ spec:
         - name: extra-ca-certs
           mountPath: /tmp/certs
       - name: csi-proxy
-        image: "docker.io/democraticcsi/csi-grpc-proxy:v0.5.6"
+        image: "ghcr.io/democratic-csi/csi-grpc-proxy:v0.5.7"
         env:
         - name: BIND_TO
           value: "unix:///csi-data/csi.sock"
@@ -179,7 +179,7 @@ spec:
       - name: registration-dir
         hostPath:
           path: /var/lib/kubelet/plugins_registry
-          type: Directory
+          type: DirectoryOrCreate
       - name: kubelet-dir
         hostPath:
           path: /var/lib/kubelet
