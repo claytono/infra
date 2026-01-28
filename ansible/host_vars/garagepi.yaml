@@ -1,0 +1,20 @@
+---
+manage_network: true
+host_ipv4: "172.19.74.216"
+
+# WiFi configuration (layereight.wifi role)
+wifi_country: "US"
+wifi_ssid: "bleh"
+wifi_psk: "{{ vault_wifi_psk_bleh }}"
+
+# Static IP configuration (michaelrigart.interfaces role)
+interfaces_ether_interfaces:
+  - device: wlan0
+    allowclass: allow-hotplug
+    bootproto: static
+    address: "172.19.74.216"
+    netmask: "255.255.255.0"
+    gateway: 172.19.74.1
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
+    wpaconf: /etc/wpa_supplicant/wpa_supplicant.conf
