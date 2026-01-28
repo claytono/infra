@@ -116,6 +116,39 @@
     - ansible_facts['architecture'] in ['x86_64', 'i386']
     - ansible_facts['virtualization_role'] != 'guest'
 
+- name: "Configure IPv6 hardening sysctls"
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-ipv6-hardening.conf
+    content: |
+      # Disable SLAAC (using static configuration)
+      net.ipv6.conf.all.autoconf=0
+      net.ipv6.conf.default.autoconf=0
+      # Disable Router Advertisement acceptance
+      net.ipv6.conf.all.accept_ra=0
+      net.ipv6.conf.default.accept_ra=0
+      # Disable IPv6 redirects
+      net.ipv6.conf.all.accept_redirects=0
+      net.ipv6.conf.default.accept_redirects=0
+    mode: "0644"
+  notify: Reload sysctl
+
+- name: "Configure IP forwarding sysctls"
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-ip-forwarding.conf
+    content: |
+      net.ipv4.ip_forward=1
+      net.ipv6.conf.all.forwarding=1
+    mode: "0644"
+  when: ip_forwarding_enabled | default(false) | bool
+  notify: Reload sysctl
+
+- name: "Remove IP forwarding sysctl when not enabled"
+  ansible.builtin.file:
+    path: /etc/sysctl.d/99-ip-forwarding.conf
+    state: absent
+  when: not (ip_forwarding_enabled | default(false) | bool)
+  notify: Reload sysctl
+
 - name: "Enable fstrim timer for SSD TRIM support"
   ansible.builtin.systemd:
     name: fstrim.timer

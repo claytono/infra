@@ -157,28 +157,10 @@
     - role: geerlingguy.docker
       tags: docker
 
-- name: Tailscale sysctl config
+- name: Tailscale
   hosts: all,!tailscale_disabled
   roles:
     - role: artis3n.tailscale.machine
-      tags: tailscale
-  tasks:
-    - name: "Configure sysctl for tailscale ip forwarding"
-      ansible.builtin.copy:
-        dest: /etc/sysctl.d/99-kubernetes-cri.conf
-        content: |
-          net.ipv4.ip_forward=1
-          net.ipv6.conf.all.forwarding=1
-        mode: "0644"
-      register: sysctl_file
-      when: ip_forwarding_enabled | default(false) | bool
-      tags: tailscale
-      notify: Reload sysctl for tailscale ip forwarding
-
-  handlers:
-    - name: Reload sysctl for tailscale ip forwarding
-      ansible.builtin.command: sysctl --system
-      when: sysctl_file.changed
       tags: tailscale
 
 - name: RTL433 SDR receivers

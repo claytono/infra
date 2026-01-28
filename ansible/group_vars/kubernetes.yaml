@@ -1,4 +1,6 @@
 ---
+ip_forwarding_enabled: true
+
 kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
