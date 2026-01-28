@@ -2,6 +2,10 @@
 # Used by chrony role to conditionally configure UFW firewall rules
 enable_ufw: false
 
+# Disable rfkill unblock globally - wifi is not soft-blocked on any host
+# and the layereight.wifi role's rfkill task is not idempotent
+wifi_rfkill_unblock: false
+
 # WiFi PSK for garagepi (SSID: bleh)
 vault_wifi_psk_bleh: !vault |
   $ANSIBLE_VAULT;1.1;AES256
