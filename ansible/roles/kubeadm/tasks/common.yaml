@@ -20,31 +20,16 @@
     - overlay
     - br_netfilter
 
-- name: "Configure sysctl for containerd"
-  ansible.posix.sysctl:
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    state: present
-    sysctl_file: /etc/sysctl.d/99-kubernetes.conf
-    reload: true
-  with_items:
-    - { name: "net.bridge.bridge-nf-call-iptables", value: "1" }
-    - { name: "net.ipv4.ip_forward", value: "1" }
-    - { name: "net.bridge.bridge-nf-call-ip6tables", value: "1" }
-
-- name: "Disabling accepting ICMP redirects"
-  ansible.posix.sysctl:
-    name: "net.ipv4.conf.all.accept_redirects"
-    value: "0"
-    sysctl_file: /etc/sysctl.d/99-kubernetes.conf
-    reload: true
-
-- name: "Disabling sending ICMP redirects"
-  ansible.posix.sysctl:
-    name: "net.ipv4.conf.all.send_redirects"
-    value: "0"
-    sysctl_file: /etc/sysctl.d/99-kubernetes.conf
-    reload: true
+- name: "Configure sysctl for Kubernetes networking"
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-kubernetes.conf
+    content: |
+      net.bridge.bridge-nf-call-iptables=1
+      net.bridge.bridge-nf-call-ip6tables=1
+      net.ipv4.conf.all.accept_redirects=0
+      net.ipv4.conf.all.send_redirects=0
+    mode: "0644"
+  notify: Reload sysctl
 
 - name: "Install apt-transport-https"
   ansible.builtin.apt:
