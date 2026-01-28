@@ -1,0 +1,15 @@
+---
+ip_forwarding_enabled: true
+
+manage_network: true
+host_ipv4: "172.19.74.120"
+
+interfaces_ether_interfaces:
+  - device: eth0
+    bootproto: static
+    address: "172.19.74.120"
+    netmask: "255.255.255.0"
+    gateway: 172.19.74.1
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
+    allowclass: allow-hotplug
