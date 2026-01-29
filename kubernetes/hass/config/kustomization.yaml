@@ -13,6 +13,7 @@ configMapGenerator:
   - configuration.yaml=configuration.yaml
   - input_boolean.yaml=input_boolean.yaml
   - input_select.yaml=input_select.yaml
+  - packages__basement_humidifier_alert.yaml=packages/basement_humidifier_alert.yaml
   - packages__ego_charger_maintenance.yaml=packages/ego_charger_maintenance.yaml
   - packages__office_thermostat_gaming.yaml=packages/office_thermostat_gaming.yaml
   - packages__temperature_alerts.yaml=packages/temperature_alerts.yaml
