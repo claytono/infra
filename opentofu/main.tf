@@ -122,8 +122,9 @@ provider "proxmox" {
 }
 
 module "dns" {
-  source               = "./modules/dns"
-  infrastructure_hosts = local.infrastructure_hosts
+  source                     = "./modules/dns"
+  infrastructure_hosts       = local.infrastructure_hosts
+  infrastructure_ipv6_prefix = local.infrastructure_ipv6_prefix
 }
 
 # Authentik provider configuration via 1Password (see locals in secrets.tf)

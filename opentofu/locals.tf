@@ -8,13 +8,16 @@
 # This ensures UniFi DHCP and Route53 DNS stay automatically in sync.
 # To add a new host, simply add an entry here and run `opentofu apply`.
 #
-# Optional field: public_dns (default: true)
-# - Set to false to skip creating a public Route53 record
-# - Internal DNS via UniFi is still created
+# Optional fields:
+# - public_dns (default: true) - set to false to skip public Route53 record
+# - enable_ipv6 (default: true) - set to false to skip AAAA record creation
 #
 # Proxmox VE hosts IP plan: 172.19.74.4x (p1=.41, p2=.42, p3=.43, etc.)
 
 locals {
+  # IPv6 prefix for Default VLAN (172.19.74.0/24)
+  infrastructure_ipv6_prefix = "2600:4040:2ece:7500"
+
   infrastructure_hosts = {
     # Proxmox VE hosts
     p1 = {
@@ -41,30 +44,27 @@ locals {
       hostname = "p4.oneill.net"
       note     = "Proxmox VE host"
     }
-    p9 = {
-      mac      = "b4:96:91:39:e0:70"
-      ip       = "172.19.74.155"
-      hostname = "p9.oneill.net"
-      note     = "Proxmox VE host"
-    }
     # AMT/vPro management interfaces
     p2-amt = {
-      mac      = "34:17:eb:aa:83:12"
-      ip       = "172.19.74.201"
-      hostname = "p2-amt.oneill.net"
-      note     = "p2 AMT interface"
+      mac         = "34:17:eb:aa:83:12"
+      ip          = "172.19.74.201"
+      hostname    = "p2-amt.oneill.net"
+      note        = "p2 AMT interface"
+      enable_ipv6 = false
     }
     p3-amt = {
-      mac      = "98:90:96:b8:cc:3d"
-      ip       = "172.19.74.82"
-      hostname = "p3-amt.oneill.net"
-      note     = "p3 AMT interface"
+      mac         = "98:90:96:b8:cc:3d"
+      ip          = "172.19.74.82"
+      hostname    = "p3-amt.oneill.net"
+      note        = "p3 AMT interface"
+      enable_ipv6 = false
     }
     p4-amt = {
-      mac      = "64:00:6a:4d:46:30"
-      ip       = "172.19.74.83"
-      hostname = "p4-amt.oneill.net"
-      note     = "p4 AMT interface"
+      mac         = "64:00:6a:4d:46:30"
+      ip          = "172.19.74.83"
+      hostname    = "p4-amt.oneill.net"
+      note        = "p4 AMT interface"
+      enable_ipv6 = false
     }
     # Kubernetes nodes
     k1 = {
@@ -100,10 +100,11 @@ locals {
     }
     # Other infrastructure
     fs2 = {
-      mac      = "b4:96:91:4e:1b:ac"
-      ip       = "172.19.74.139"
-      hostname = "fs2.oneill.net"
-      note     = "Synology NAS"
+      mac         = "b4:96:91:4e:1b:ac"
+      ip          = "172.19.74.139"
+      hostname    = "fs2.oneill.net"
+      note        = "Synology NAS"
+      enable_ipv6 = false
     }
     infra1 = {
       mac      = "c0:3f:d5:6a:49:30"
@@ -123,18 +124,13 @@ locals {
       hostname = "pantrypi.oneill.net"
       note     = "Raspberry Pi in pantry - zwavejs, zigbee2mqtt, rtl433"
     }
-    pantrypi-wifi = {
-      mac      = "dc:a6:32:9d:b7:10"
-      ip       = "172.19.74.118"
-      hostname = "pantrypi-wifi.oneill.net"
-      note     = "pantrypi wifi interface"
-    }
     # Desktop PCs
     szamar = {
-      mac      = "9c:6b:00:9b:16:ef"
-      ip       = "172.19.74.50"
-      hostname = "szamar.oneill.net"
-      note     = "Gaming PC"
+      mac         = "9c:6b:00:9b:16:ef"
+      ip          = "172.19.74.50"
+      hostname    = "szamar.oneill.net"
+      note        = "Gaming PC"
+      enable_ipv6 = false
     }
   }
 }
