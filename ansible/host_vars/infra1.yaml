@@ -1,4 +1,6 @@
 ---
+host_ipv4: "172.19.74.31"
+
 # Traefik config files to deploy
 traefik_config_files:
   - proxmox
@@ -17,6 +19,10 @@ interfaces_ether_interfaces:
     gateway: 172.19.74.1
     dnsnameservers: 172.19.74.1
     dnssearch: oneill.net
+    ip6:
+      address: "{{ infrastructure_ipv6_prefix }}::74:{{ host_ipv4.split('.')[3] }}"
+      prefix: "{{ infrastructure_ipv6_netmask }}"
+      gateway: "{{ infrastructure_ipv6_gateway }}"
 
 # NUT server - monitors UPS devices but does NOT shut itself down
 nut_upsmon_extra: |

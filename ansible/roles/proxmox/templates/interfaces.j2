@@ -23,6 +23,11 @@ iface {{ bridge.name }} inet static
 	bridge-fd {{ bridge.bridge_fd }}
 {% if bridge.comment is defined %}	# {{ bridge.comment }}
 {% endif %}
+{% if bridge.address is defined and host_ipv4 is defined %}
+iface {{ bridge.name }} inet6 static
+	address {{ infrastructure_ipv6_prefix }}::74:{{ host_ipv4.split('.')[3] }}/{{ infrastructure_ipv6_netmask }}
+	gateway {{ infrastructure_ipv6_gateway }}
+{% endif %}
 
 {% endfor %}
 source /etc/network/interfaces.d/*

@@ -1,0 +1,4 @@
+---
+infrastructure_ipv6_prefix: "2600:4040:2ece:7500"
+infrastructure_ipv6_gateway: "2600:4040:2ece:7500::1"
+infrastructure_ipv6_netmask: "64"
