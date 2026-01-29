@@ -1,0 +1,47 @@
+---
+template:
+
+- binary_sensor:
+  - name: Rec Room Humidifier Not Running
+    unique_id: rec_room_humidifier_not_running
+    device_class: problem
+    delay_on:
+      minutes: 25
+    state: >
+      {% set switch_on = is_state('switch.rec_room_humidifier', 'on') %}
+      {% set power = states('sensor.rec_room_humidifier_power') | float(0) %}
+      {{ switch_on and power < 2 }}
+    availability: >
+      {{ states('sensor.rec_room_humidifier_power') | is_number }}
+
+  - name: Basement Hallway Humidifier Not Running
+    unique_id: basement_hallway_humidifier_not_running
+    device_class: problem
+    delay_on:
+      minutes: 25
+    state: >
+      {% set switch_on = is_state('switch.basement_hallway_humidifier', 'on') %}
+      {% set power = states('sensor.basement_hallway_humidifier_power') | float(0)
+      %}
+      {{ switch_on and power < 2 }}
+    availability: >
+      {{ states('sensor.basement_hallway_humidifier_power') | is_number }}
+
+alert:
+  rec_room_humidifier_not_running:
+    name: 🚰 Rec room humidifier is on but not drawing power. Check water level.
+    done_message: ✅ Rec room humidifier is running again.
+    entity_id: binary_sensor.rec_room_humidifier_not_running
+    state: 'on'
+    repeat: 240
+    notifiers:
+    - future_planning_committee
+
+  basement_hallway_humidifier_not_running:
+    name: 🚰 Basement hallway humidifier is on but not drawing power. Check water level.
+    done_message: ✅ Basement hallway humidifier is running again.
+    entity_id: binary_sensor.basement_hallway_humidifier_not_running
+    state: 'on'
+    repeat: 240
+    notifiers:
+    - future_planning_committee
