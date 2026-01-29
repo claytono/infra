@@ -1,4 +1,5 @@
 ---
+offline: true
 exclude_paths:
   - galaxy/
 skip_list:
