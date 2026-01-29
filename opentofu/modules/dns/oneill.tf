@@ -148,6 +148,19 @@ resource "aws_route53_record" "infrastructure_hosts" {
   records = [each.value.ip]
 }
 
+resource "aws_route53_record" "infrastructure_hosts_aaaa" {
+  for_each = {
+    for k, v in var.infrastructure_hosts : k => v
+    if v.public_dns && v.enable_ipv6
+  }
+
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = each.value.hostname
+  type    = "AAAA"
+  ttl     = 300
+  records = [format("%s::74:%s", var.infrastructure_ipv6_prefix, split(".", each.value.ip)[3])]
+}
+
 # Service CNAMEs for infra1 services
 resource "aws_route53_record" "nut" {
   zone_id = aws_route53_zone.oneill_net.zone_id
