@@ -10,7 +10,6 @@ wifi_psk: "{{ vault_wifi_psk_bleh }}"
 # Static IP configuration (michaelrigart.interfaces role)
 interfaces_ether_interfaces:
   - device: wlan0
-    allowclass: allow-hotplug
     bootproto: static
     address: "172.19.74.216"
     netmask: "255.255.255.0"
@@ -18,3 +17,7 @@ interfaces_ether_interfaces:
     dnsnameservers: 172.19.74.1
     dnssearch: oneill.net
     wpaconf: /etc/wpa_supplicant/wpa_supplicant.conf
+    ip6:
+      address: "{{ infrastructure_ipv6_prefix }}::74:{{ host_ipv4.split('.')[3] }}"
+      prefix: "{{ infrastructure_ipv6_netmask }}"
+      gateway: "{{ infrastructure_ipv6_gateway }}"

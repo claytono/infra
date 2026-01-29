@@ -1,4 +1,6 @@
 ---
+host_ipv4: "172.19.74.75"
+
 manage_network: true
 interfaces_ether_interfaces:
   - device: ens18
@@ -8,4 +10,7 @@ interfaces_ether_interfaces:
     gateway: 172.19.74.1
     dnsnameservers: 172.19.74.1
     dnssearch: oneill.net
-    allowclass: allow-hotplug
+    ip6:
+      address: "{{ infrastructure_ipv6_prefix }}::74:{{ host_ipv4.split('.')[3] }}"
+      prefix: "{{ infrastructure_ipv6_netmask }}"
+      gateway: "{{ infrastructure_ipv6_gateway }}"
