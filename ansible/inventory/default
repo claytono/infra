@@ -79,3 +79,6 @@ pantrypi
 
 [zigbee2mqtt]
 pantrypi
+
+[matter]
+pantrypi

@@ -4,14 +4,12 @@
     path: "{{ zwavejs_data_dir }}"
     state: directory
     mode: "0755"
-  become: true
 
 - name: Deploy zwavejs docker-compose file
   ansible.builtin.template:
     src: docker-compose.yaml.j2
     dest: "{{ zwavejs_data_dir }}/docker-compose.yaml"
     mode: "0644"
-  become: true
   notify: Restart zwavejs
 
 - name: Start zwavejs
@@ -19,4 +17,3 @@
     project_src: "{{ zwavejs_data_dir }}"
     state: present
     wait: true
-  become: true

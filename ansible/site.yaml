@@ -85,7 +85,7 @@
 
     - name: Restart sshd
       ansible.builtin.service:
-        name: sshd
+        name: ssh
         state: restarted
       when: sshd_config_validation | default(true) | bool
 
@@ -180,6 +180,12 @@
   roles:
     - role: zigbee2mqtt
       tags: zigbee2mqtt
+
+- name: Matter (OTBR + Matter Server)
+  hosts: matter
+  roles:
+    - role: matter
+      tags: matter
 
 - name: Kubernetes role
   hosts: kubernetes

@@ -1,7 +1,8 @@
 ---
-- name: Restart zigbee2mqtt
+- name: Restart matter
   community.docker.docker_compose_v2:
-    project_src: "{{ zigbee2mqtt_data_dir }}"
+    project_src: "{{ matter_data_dir }}"
     state: present
     recreate: always
     wait: true
+    wait_timeout: 120

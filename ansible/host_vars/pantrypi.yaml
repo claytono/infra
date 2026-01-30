@@ -16,3 +16,13 @@ interfaces_ether_interfaces:
       address: "{{ infrastructure_ipv6_prefix }}::74:{{ host_ipv4.split('.')[3] }}"
       prefix: "{{ infrastructure_ipv6_netmask }}"
       gateway: "{{ infrastructure_ipv6_gateway }}"
+
+# Matter / Thread
+matter_device: /dev/serial/by-id/usb-Nabu_Casa_ZBT-2_DCB4D9122BA8-if00
+matter_backbone_interface: eth0
+matter_server_hostname: matter.oneill.net
+matter_otbr_hostname: otbr.oneill.net
+
+# Traefik file provider configs
+traefik_config_files:
+  - matter

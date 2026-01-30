@@ -203,6 +203,22 @@ resource "aws_route53_record" "zigbee2mqtt" {
   records = ["pantrypi.oneill.net"]
 }
 
+resource "aws_route53_record" "matter" {
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = "matter.oneill.net"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["pantrypi.oneill.net"]
+}
+
+resource "aws_route53_record" "otbr" {
+  zone_id = aws_route53_zone.oneill_net.zone_id
+  name    = "otbr.oneill.net"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["pantrypi.oneill.net"]
+}
+
 # TXT record for Proxmox auto-installer URL discovery
 # The installer looks up proxmox-auto-installer.{search domain}
 resource "aws_route53_record" "proxmox_auto_installer" {

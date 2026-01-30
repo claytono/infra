@@ -1,5 +1,5 @@
 ---
 node_exporter_enabled: true
 
-restic_arch: arm
-resticprofile_arch: armv6
+restic_arch: arm64
+resticprofile_arch: arm64
