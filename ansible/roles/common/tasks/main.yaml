@@ -74,6 +74,15 @@
     - ansible_facts['architecture'] == 'x86_64'
     - ansible_facts['virtualization_role'] != 'guest'
 
+- name: "Disable and stop dhcpcd"
+  ansible.builtin.systemd:
+    name: dhcpcd
+    state: stopped
+    enabled: false
+    masked: true
+  when: disable_dhcpcd | default(true) | bool
+  failed_when: false
+
 - name: "Turn on passwordless sudo for sudo group"
   ansible.builtin.lineinfile:
     dest: /etc/sudoers
