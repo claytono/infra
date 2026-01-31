@@ -61,6 +61,49 @@
         (mkAra ps)
       ]);
 
+      # logcli for querying Grafana Loki from CLI
+      mkLogcli = pkgs: let
+        version = "3.6.4";
+        sources = {
+          "aarch64-darwin" = {
+            url = "https://github.com/grafana/loki/releases/download/v${version}/logcli-darwin-arm64.zip";
+            hash = "sha256-owKAFh2l5k8YXgbi8S0n/j0xO32rGJGbhlfO0g1YIDo=";
+          };
+          "x86_64-linux" = {
+            url = "https://github.com/grafana/loki/releases/download/v${version}/logcli-linux-amd64.zip";
+            hash = "sha256-YTs6k3G6xz+D0qLIlnu+QwrAyGYJijNtXHujPv5WYOA=";
+          };
+          "aarch64-linux" = {
+            url = "https://github.com/grafana/loki/releases/download/v${version}/logcli-linux-arm64.zip";
+            hash = "sha256-ohjbTGhTI6qaMnBO6vXjZY5fd1os0F7JZoc117R3NMw=";
+          };
+        };
+        src = sources.${pkgs.stdenv.hostPlatform.system} or (throw "Unsupported system for logcli");
+      in pkgs.stdenv.mkDerivation {
+        pname = "logcli";
+        inherit version;
+
+        src = pkgs.fetchurl {
+          inherit (src) url hash;
+        };
+
+        nativeBuildInputs = [ pkgs.unzip ];
+        dontUnpack = true;
+
+        installPhase = ''
+          mkdir -p $out/bin
+          unzip $src -d $out/bin
+          mv $out/bin/logcli-* $out/bin/logcli
+          chmod +x $out/bin/logcli
+        '';
+
+        meta = {
+          description = "CLI for querying Grafana Loki";
+          homepage = "https://grafana.com/docs/loki/latest/query/logcli/";
+          platforms = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+        };
+      };
+
       # mcp-cli for invoking MCP servers from CLI
       mkMcpCli = pkgs: let
         version = "0.1.4";
@@ -87,7 +130,12 @@
 
         installPhase = ''
           mkdir -p $out/bin
-          cp $src $out/bin/mcp-cli
+          cp $src $out/bin/real.mcp-cli
+          chmod +x $out/bin/real.mcp-cli
+          cat > $out/bin/mcp-cli <<'WRAPPER'
+          #!/usr/bin/env bash
+          exec "$(dirname "$0")/real.mcp-cli" "$@" 2>/dev/null
+          WRAPPER
           chmod +x $out/bin/mcp-cli
         '';
 
@@ -143,7 +191,8 @@
               yamlfix
               yq-go
               go-unifi-mcp.packages.${pkgs.stdenv.hostPlatform.system}.default
-            ] ++ lib.optional (builtins.elem stdenv.hostPlatform.system [ "aarch64-darwin" "x86_64-linux" ]) (mkMcpCli pkgs);
+            ] ++ lib.optional (builtins.elem stdenv.hostPlatform.system [ "aarch64-darwin" "x86_64-linux" ]) (mkMcpCli pkgs)
+              ++ lib.optional (builtins.elem stdenv.hostPlatform.system [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ]) (mkLogcli pkgs);
 
             shellHook = ''
               # Run pre-commit gc weekly
