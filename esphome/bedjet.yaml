@@ -31,8 +31,6 @@ logger:
 #  - platform: ble_scanner
 #    name: "BLE Devices Scanner"
 
-mqtt: !remove
-
 ble_client:
 - mac_address: 08:D1:F9:0A:B9:0A
   id: bedjet_ble_id1

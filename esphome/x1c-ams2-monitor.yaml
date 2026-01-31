@@ -10,4 +10,5 @@ substitutions:
 packages:
   wifi: !include common/wifi.yaml
   base: !include common/base.yaml
+  mqtt: !include common/mqtt.yaml
   ams_monitor: !include common/ams-monitor.yaml
