@@ -55,7 +55,7 @@ jobs:
 
     - name: Cache pre-commit
       if: steps.changes.outputs.need-render-helm == 'true'
-      uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7  # v5
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306  # v5
       with:
         path: ~/.cache/pre-commit
         key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
