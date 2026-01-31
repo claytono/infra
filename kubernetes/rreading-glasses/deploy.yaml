@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: rreading-glasses
-        image: blampe/rreading-glasses:hardcover@sha256:ea0bf65669fc606fabfabf634b3dc108d760d9565d1a9803656a07c929ab3d37
+        image: blampe/rreading-glasses:hardcover@sha256:1148c8ce40ce6ae68f22a9164ac682e20334b9104778503dcfaa7eec5bd95454
         command:
         - /main
         - serve
