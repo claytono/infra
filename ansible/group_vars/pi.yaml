@@ -1,5 +1,22 @@
 ---
 node_exporter_enabled: true
 
-restic_arch: arm64
-resticprofile_arch: arm64
+# Map Ansible architecture to restic release names (arm covers armv6/armv7)
+restic_arch: >-
+  {{
+    {
+      'aarch64': 'arm64',
+      'armv7l': 'arm',
+      'armv6l': 'arm'
+    }.get(ansible_facts['architecture'], ansible_facts['architecture'])
+  }}
+
+# Map Ansible architecture to resticprofile release names
+resticprofile_arch: >-
+  {{
+    {
+      'aarch64': 'arm64',
+      'armv7l': 'armv7',
+      'armv6l': 'armv6'
+    }.get(ansible_facts['architecture'], ansible_facts['architecture'])
+  }}
