@@ -17,6 +17,8 @@ services:
       OT_INFRA_IF: {{ matter_backbone_interface }}
       OT_REST_LISTEN_ADDR: "0.0.0.0"
       OT_REST_LISTEN_PORT: "8081"
+      OT_WEB_LISTEN_ADDR: "0.0.0.0"
+      OT_WEB_LISTEN_PORT: "8080"
       TZ: America/New_York
     healthcheck:
       test: ["CMD", "test", "-S", "/run/openthread-wpan0.sock"]
