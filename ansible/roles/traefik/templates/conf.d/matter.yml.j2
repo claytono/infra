@@ -1,0 +1,29 @@
+---
+http:
+  routers:
+    matter-server:
+      rule: "Host(`{{ matter_server_hostname }}`)"
+      entryPoints:
+        - websecure
+      service: matter-server
+      tls:
+        certResolver: letsencrypt
+
+    otbr:
+      rule: "Host(`{{ matter_otbr_hostname }}`)"
+      entryPoints:
+        - websecure
+      service: otbr
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    matter-server:
+      loadBalancer:
+        servers:
+          - url: "http://{{ ansible_host }}:5580"
+
+    otbr:
+      loadBalancer:
+        servers:
+          - url: "http://{{ ansible_host }}:8081"

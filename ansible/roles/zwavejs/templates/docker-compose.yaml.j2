@@ -7,7 +7,7 @@ services:
     volumes:
       - {{ zwavejs_data_dir }}/store:/usr/src/app/store
     environment:
-      - TZ=America/New_York
+      TZ: America/New_York
     devices:
       - {{ zwavejs_device }}:/dev/ttyUSB0
     networks:

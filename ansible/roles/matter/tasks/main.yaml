@@ -1,0 +1,24 @@
+---
+- name: Create matter directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ matter_data_dir }}"
+    - "{{ matter_data_dir }}/server-data"
+    - "{{ matter_thread_data_dir }}"
+
+- name: Deploy matter docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ matter_data_dir }}/docker-compose.yaml"
+    mode: "0644"
+  notify: Restart matter
+
+- name: Start matter
+  community.docker.docker_compose_v2:
+    project_src: "{{ matter_data_dir }}"
+    state: present
+    wait: true
+    wait_timeout: 120

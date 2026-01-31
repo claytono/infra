@@ -1,0 +1,50 @@
+---
+services:
+  otbr:
+    image: {{ matter_otbr_image }}
+    container_name: otbr
+    restart: unless-stopped
+    network_mode: host
+    # Privileged required for Thread network interface creation (wpan0)
+    privileged: true
+    devices:
+      - {{ matter_device }}:/dev/ttyACM0
+    volumes:
+      - {{ matter_thread_data_dir }}:/data/thread
+      - /run/udev:/run/udev:ro
+    environment:
+      OT_RCP_DEVICE: "spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800&uart-flow-control"
+      OT_INFRA_IF: {{ matter_backbone_interface }}
+      OT_REST_LISTEN_ADDR: "0.0.0.0"
+      OT_REST_LISTEN_PORT: "8081"
+      TZ: America/New_York
+    healthcheck:
+      test: ["CMD", "test", "-S", "/run/openthread-wpan0.sock"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  matter-server:
+    image: {{ matter_server_image }}
+    container_name: matter-server
+    restart: unless-stopped
+    network_mode: host
+    # AppArmor unconfined required for D-Bus and Bluetooth access
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+      - {{ matter_data_dir }}/server-data:/data
+      - /run/dbus:/run/dbus:ro
+    environment:
+      TZ: America/New_York
+    command: ["--storage-path", "/data", "--bluetooth-adapter", "0"]
+    depends_on:
+      otbr:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5580"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

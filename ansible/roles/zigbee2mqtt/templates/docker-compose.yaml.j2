@@ -10,7 +10,7 @@ services:
       - {{ zigbee2mqtt_data_dir }}/data:/app/data
       - /run/udev:/run/udev:ro
     environment:
-      - TZ=America/New_York
+      TZ: America/New_York
     networks:
       - traefik
     labels:
