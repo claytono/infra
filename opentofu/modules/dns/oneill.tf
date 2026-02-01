@@ -211,9 +211,9 @@ resource "aws_route53_record" "matter" {
   records = ["pantrypi.oneill.net"]
 }
 
-resource "aws_route53_record" "otbr" {
+resource "aws_route53_record" "thread" {
   zone_id = aws_route53_zone.oneill_net.zone_id
-  name    = "otbr.oneill.net"
+  name    = "thread.oneill.net"
   type    = "CNAME"
   ttl     = 300
   records = ["pantrypi.oneill.net"]

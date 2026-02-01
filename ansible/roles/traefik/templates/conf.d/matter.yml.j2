@@ -13,7 +13,16 @@ http:
       rule: "Host(`{{ matter_otbr_hostname }}`)"
       entryPoints:
         - websecure
-      service: otbr
+      service: otbr-web
+      tls:
+        certResolver: letsencrypt
+
+    otbr-api:
+      rule: "Host(`{{ matter_otbr_hostname }}`) && (PathPrefix(`/node`) || PathPrefix(`/diagnostics`) || PathPrefix(`/v1`))"
+      entryPoints:
+        - websecure
+      service: otbr-api
+      priority: 100
       tls:
         certResolver: letsencrypt
 
@@ -23,7 +32,12 @@ http:
         servers:
           - url: "http://{{ ansible_host }}:5580"
 
-    otbr:
+    otbr-web:
       loadBalancer:
         servers:
-          - url: "http://{{ ansible_host }}:8081"
+          - url: "http://{{ ansible_docker0.ipv4.address }}:8080"
+
+    otbr-api:
+      loadBalancer:
+        servers:
+          - url: "http://{{ ansible_docker0.ipv4.address }}:8081"
