@@ -2,6 +2,26 @@
 # NVIDIA GPU driver and container toolkit for Kubernetes nodes
 # Conditional on nvidia_gpu: true in host_vars
 
+# Workaround: Sequoia (sqv) rejects SHA1 binding signatures on GPG keys.
+# The NVIDIA CUDA repo signing key uses SHA1, causing apt update to fail.
+# Remove when NVIDIA re-signs their repo key.
+# See: https://github.com/claytono/infra/issues/1334
+- name: "Ensure crypto-policies directory exists"
+  ansible.builtin.file:
+    path: /etc/crypto-policies/back-ends
+    state: directory
+    mode: "0755"
+
+- name: "Extend Sequoia SHA1 deadline for NVIDIA CUDA repo"
+  ansible.builtin.copy:
+    dest: /etc/crypto-policies/back-ends/apt-sequoia.config
+    mode: "0644"
+    content: |
+      [hash_algorithms]
+      sha1.second_preimage_resistance = 2027-02-01
+      sha1.collision_resistance = 2027-02-01
+# End Sequoia SHA1 workaround
+
 - name: "Install NVIDIA driver prerequisites"
   ansible.builtin.apt:
     name:
@@ -58,9 +78,20 @@
     filename: nvidia-container-toolkit
     state: present
 
+- name: "Create nvidia-container-toolkit package pin for version"
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/nvidia-container-toolkit
+    content: |
+      Package: nvidia-container-toolkit nvidia-container-toolkit-base libnvidia-container1 libnvidia-container-tools
+      Pin: version {{ nvidia_container_toolkit_version }}
+      Pin-Priority: 900
+    mode: "0644"
+
 - name: "Install nvidia-container-toolkit"
   ansible.builtin.apt:
-    name: nvidia-container-toolkit
+    name: "nvidia-container-toolkit={{ nvidia_container_toolkit_version }}"
+    state: present
+    allow_downgrade: true
     update_cache: true
 
 - name: "Configure containerd to use NVIDIA runtime"
@@ -131,22 +162,3 @@
     state: link
     force: true
   when: kubeadm_vulkan_layers_file.stat.exists
-
-# Workaround for nvidia-cdi-refresh.service ExecCondition bug with compressed modules
-# Fixed in nvidia-container-toolkit v1.18.2: https://github.com/NVIDIA/nvidia-container-toolkit/pull/1518
-# TODO: Remove after v1.18.2 is released: https://github.com/claytono/infra/issues/1119
-- name: "Create nvidia-cdi-refresh.service drop-in directory"
-  ansible.builtin.file:
-    path: /etc/systemd/system/nvidia-cdi-refresh.service.d
-    state: directory
-    mode: "0755"
-
-- name: "Fix nvidia-cdi-refresh ExecCondition for compressed modules"
-  ansible.builtin.copy:
-    dest: /etc/systemd/system/nvidia-cdi-refresh.service.d/fix-compressed-modules.conf
-    mode: "0644"
-    content: |
-      [Service]
-      ExecCondition=
-      ExecCondition=/usr/bin/grep -qE '/(nvidia|nvidia-current)\\.ko(\\.xz|\\.zst)?[:]' /lib/modules/%v/modules.dep
-  notify: "Reload systemd"
