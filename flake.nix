@@ -158,6 +158,16 @@
 
           pythonEnv = mkPythonEnv pkgs;
 
+          # Override pre-commit to remove dotnet-sdk from nativeCheckInputs.
+          # The dotnet tests are already disabled upstream, but the build input
+          # remains, pulling in dotnet-vmr which fails to build on aarch64-darwin.
+          # https://github.com/NixOS/nixpkgs/issues/294088
+          pre-commit = pkgs.pre-commit.overridePythonAttrs (old: {
+            nativeCheckInputs = builtins.filter
+              (dep: builtins.match ".*dotnet.*" (dep.name or "") == null)
+              (old.nativeCheckInputs or []);
+          });
+
         in
         {
           default = pkgs.mkShell {
