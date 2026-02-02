@@ -1,0 +1,20 @@
+---
+# Source: snapshot-controller/templates/service_webhook.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: volume-snapshot-controller-conversion-webhook
+  namespace: volume-snapshot-controller
+  labels:
+    app.kubernetes.io/name: conversion-webhook
+    app.kubernetes.io/instance: volume-snapshot-controller
+    app.kubernetes.io/version: "v8.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  ports:
+    - port: 443
+      targetPort: 8443
+      name: https
+  selector:
+    app.kubernetes.io/name: conversion-webhook
+    app.kubernetes.io/instance: volume-snapshot-controller

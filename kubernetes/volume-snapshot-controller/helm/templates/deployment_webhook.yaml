@@ -1,0 +1,64 @@
+---
+# Source: snapshot-controller/templates/deployment_webhook.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: volume-snapshot-controller-conversion-webhook
+  namespace: volume-snapshot-controller
+  labels:
+    app.kubernetes.io/name: conversion-webhook
+    app.kubernetes.io/instance: volume-snapshot-controller
+    app.kubernetes.io/version: "v8.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: conversion-webhook
+      app.kubernetes.io/instance: volume-snapshot-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: conversion-webhook
+        app.kubernetes.io/instance: volume-snapshot-controller
+    spec:
+      serviceAccountName: volume-snapshot-controller-conversion-webhook
+      securityContext:
+        {}
+      containers:
+        - name: "conversion-webhook"
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          image: "ghcr.io/piraeusdatastore/snapshot-conversion-webhook:v8.4.0"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --port=8443
+            - --tls-cert-file=/etc/webhook/tls.crt
+            - --tls-private-key-file=/etc/webhook/tls.key
+          ports:
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              port: https
+              path: /readyz
+              scheme: HTTPS
+          resources:
+            {}
+          volumeMounts:
+            - name: tls
+              mountPath: /etc/webhook
+              readOnly: true
+      hostNetwork: false
+      dnsPolicy: ClusterFirst
+      volumes:
+      - name: tls
+        secret:
+          secretName: volume-snapshot-controller-conversion-webhook
