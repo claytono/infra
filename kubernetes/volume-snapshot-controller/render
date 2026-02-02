@@ -2,7 +2,7 @@
 BASEDIR=$(dirname "$0")
 source "$BASEDIR/../scripts/chart-version"
 
-rm -rf helm tmp crds && mkdir tmp helm crds
+rm -rf helm tmp && mkdir tmp helm
 
 # Render Helm chart
 helm_template volume-snapshot-controller snapshot-controller \
@@ -11,12 +11,3 @@ helm_template volume-snapshot-controller snapshot-controller \
   --output-dir tmp
 
 mv tmp/*/* helm && rmdir tmp/*
-
-# Extract snapshotter version from rendered manifests
-SNAPSHOTTER_VERSION=$(grep -o 'snapshot-controller:v[0-9.]*' helm/templates/deployment_controller.yaml | cut -d: -f2)
-SNAPSHOTTER_BASE_URL="https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/${SNAPSHOTTER_VERSION}/client/config/crd"
-
-# Download matching CRDs
-curl -s "${SNAPSHOTTER_BASE_URL}/snapshot.storage.k8s.io_volumesnapshotclasses.yaml" -o crds/volumesnapshotclasses-crd.yaml
-curl -s "${SNAPSHOTTER_BASE_URL}/snapshot.storage.k8s.io_volumesnapshots.yaml" -o crds/volumesnapshots-crd.yaml
-curl -s "${SNAPSHOTTER_BASE_URL}/snapshot.storage.k8s.io_volumesnapshotcontents.yaml" -o crds/volumesnapshotcontents-crd.yaml
