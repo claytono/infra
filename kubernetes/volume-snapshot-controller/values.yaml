@@ -2,3 +2,14 @@
 snapshot-controller:
   # Deploy the snapshot controller
   enabled: true
+
+# Disable VolumeGroupSnapshot feature gate - democratic-csi doesn't support it
+controller:
+  args:
+    featureGates: ''
+
+# Conversion webhook not needed - we don't use VolumeGroupSnapshots
+webhook:
+  enabled: false
+  tls:
+    autogenerate: false

@@ -38,6 +38,7 @@ spec:
           image: "registry.k8s.io/sig-storage/snapshot-controller:v8.4.0"
           imagePullPolicy: IfNotPresent
           args:
+            - --feature-gates=
             - --http-endpoint=:8080
             - --leader-election=true
             - --leader-election-namespace=$(NAMESPACE)
