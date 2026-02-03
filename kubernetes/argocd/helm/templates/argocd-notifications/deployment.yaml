@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: notifications-controller
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.2.3"
+    app.kubernetes.io/version: "v3.2.5"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -30,14 +30,14 @@ spec:
         app.kubernetes.io/component: notifications-controller
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.2.3"
+        app.kubernetes.io/version: "v3.2.5"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-notifications-controller
       automountServiceAccountToken: true
       containers:
         - name: notifications-controller
-          image: quay.io/argoproj/argocd:v3.2.3
+          image: quay.io/argoproj/argocd:v3.2.5
           imagePullPolicy: IfNotPresent
           args:
             - /usr/local/bin/argocd-notifications
