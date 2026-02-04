@@ -21,6 +21,10 @@ iface {{ bridge.name }} inet static
 	bridge-ports {{ bridge.bridge_ports }}
 	bridge-stp {{ bridge.bridge_stp }}
 	bridge-fd {{ bridge.bridge_fd }}
+{% if bridge.bridge_vlan_aware is defined %}	bridge-vlan-aware {{ bridge.bridge_vlan_aware }}
+{% endif %}
+{% if bridge.bridge_vids is defined %}	bridge-vids {{ bridge.bridge_vids }}
+{% endif %}
 {% if bridge.comment is defined %}	# {{ bridge.comment }}
 {% endif %}
 {% if bridge.address is defined and host_ipv4 is defined %}

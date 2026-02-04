@@ -64,5 +64,22 @@ proxmox_oidc_client_secret: !vault |
   37643461366164623466306138623638333330613836303461386666643766313538626239343865
   6437633365663332616136376261333931326335343564383937
 
+# SDN configuration
+proxmox_sdn_zone:
+  name: "vlans"
+  type: "vlan"
+  bridge: "vmbr0"
+
+proxmox_sdn_vnets:
+  - name: "iot"
+    alias: "IOT (VLAN 10)"
+    tag: 10
+  - name: "guest"
+    alias: "Guest (VLAN 3)"
+    tag: 3
+  - name: "dmz"
+    alias: "DMZ (VLAN 78)"
+    tag: 78
+
 # ZRAM swap configuration (smaller for Proxmox to leave room for ZFS ARC)
 zram_size: "ram / 4"

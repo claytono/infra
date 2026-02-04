@@ -33,4 +33,6 @@ proxmox_bridges:
     bridge_ports: nic1
     bridge_stp: "off"
     bridge_fd: "0"
-    comment: "Primary VM bridge on 10G"
+    bridge_vlan_aware: "yes"
+    bridge_vids: "2-4094"
+    comment: "Primary VM bridge on 10G (VLAN-aware)"
