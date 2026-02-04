@@ -2,7 +2,7 @@
 services:
   dnsmasq:
     # renovate: datasource=docker
-    image: dockurr/dnsmasq:2.92@sha256:e84feecd6551b586cf86f830f111ef36c399b0ca26a9bb6dae4a8ceb11626373
+    image: dockurr/dnsmasq:2.91@sha256:7873ce2dae1b0aa51d2c13dd4bd3aad47890c233088b3c7f6eb099a01e6e4307
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
