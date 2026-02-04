@@ -1,0 +1,32 @@
+---
+- name: "Create SDN VLAN zone"
+  community.proxmox.proxmox_zone:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    state: present
+    zone: "{{ proxmox_sdn_zone.name }}"
+    type: "{{ proxmox_sdn_zone.type }}"
+    bridge: "{{ proxmox_sdn_zone.bridge }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: "Create SDN VNets"
+  community.proxmox.proxmox_vnet:
+    api_host: "{{ ansible_host }}"
+    api_user: "root@pam"
+    api_token_id: "{{ proxmox_api_token_id }}"
+    api_token_secret: "{{ proxmox_api_token_secret }}"
+    state: present
+    vnet: "{{ item.name }}"
+    zone: "{{ proxmox_sdn_zone.name }}"
+    tag: "{{ item.tag }}"
+    alias: "{{ item.alias | default(omit) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  loop: "{{ proxmox_sdn_vnets }}"
+  loop_control:
+    label: "{{ item.name }} (VLAN {{ item.tag }})"

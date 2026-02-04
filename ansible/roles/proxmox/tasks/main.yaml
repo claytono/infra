@@ -28,6 +28,9 @@
 - name: "Initialize Proxmox cluster"
   ansible.builtin.import_tasks: cluster.yaml
 
+- name: "Configure SDN zones and VNets"
+  ansible.builtin.import_tasks: sdn.yaml
+
 - name: "Configure NFS storage"
   ansible.builtin.import_tasks: storage.yaml
 
