@@ -2,9 +2,6 @@
 # smartd configuration for disk health monitoring
 # See smartd.conf(5) man page for details
 
-# Scan SATA/ATA devices only (excludes iSCSI and other SCSI devices):
-#
-# -d sat: Only monitor SATA/ATA devices (physical SSDs/HDDs)
 # -a: Monitor all SMART attributes
 # -o on: Enable automatic offline tests
 # -S on: Enable attribute autosave
@@ -21,4 +18,4 @@
 # - Temperature excursions (if supported)
 # - Changes in SMART attributes beyond thresholds
 
-DEVICESCAN -d sat -a -o on -S on -s (S/../.././02|L/../../6/03) -m root -M exec /usr/share/smartmontools/smartd-runner
+DEVICESCAN -a -o on -S on -s (S/../.././02|L/../../6/03) -m root -M exec /usr/share/smartmontools/smartd-runner
