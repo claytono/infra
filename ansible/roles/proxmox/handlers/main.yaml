@@ -8,3 +8,7 @@
   ansible.builtin.command:
     cmd: update-initramfs -u -k all
   listen: Update initramfs
+
+- name: Apply SDN configuration
+  ansible.builtin.command:
+    cmd: pvesh set /cluster/sdn
