@@ -1,0 +1,10 @@
+{% for vnet in proxmox_sdn_vnets %}
+vnet: {{ vnet.name }}
+	zone {{ proxmox_sdn_zone.name }}
+{% if vnet.alias is defined %}
+	alias {{ vnet.alias }}
+{% endif %}
+	isolate-ports 0
+	tag {{ vnet.tag }}
+
+{% endfor %}

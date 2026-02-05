@@ -124,6 +124,13 @@ locals {
       hostname = "pantrypi.oneill.net"
       note     = "Raspberry Pi in pantry - zwavejs, zigbee2mqtt, rtl433"
     }
+    # Test VMs
+    testvm = {
+      mac      = "BC:24:11:59:85:90"
+      ip       = "172.19.74.60"
+      hostname = "testvm.oneill.net"
+      note     = "Test VM"
+    }
     # Desktop PCs
     szamar = {
       mac         = "9c:6b:00:9b:16:ef"
