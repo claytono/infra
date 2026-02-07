@@ -1,0 +1,129 @@
+---
+parent:
+  # iSCSI for SQLite metadata (default storageclass is "-")
+  database:
+    storageclass: synology-iscsi
+    volumesize: 10Gi
+
+  # iSCSI for alarms (default storageclass is "-")
+  alarms:
+    storageclass: synology-iscsi
+
+  # NFS volume for dbengine time-series data (overlays dbengine subdir)
+  extraVolumes:
+  - name: dbengine
+    persistentVolumeClaim:
+      claimName: netdata-parent-dbengine
+  - name: stream-conf
+    emptyDir: {}
+
+  extraVolumeMounts:
+  - name: dbengine
+    mountPath: /var/cache/netdata/dbengine
+  - name: stream-conf
+    mountPath: /etc/netdata/stream.conf
+    subPath: stream.conf
+
+  # Init container to inject the streaming API key into stream.conf
+  # (only parent supports extraInitContainers; child/k8sState use kustomize patches)
+  extraInitContainers:
+  - name: inject-stream-key
+    image: alpine:3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
+    command:
+    - sh
+    - -c
+    - |
+      sed "s/11111111-2222-3333-4444-555555555555/$NETDATA_STREAM_API_KEY/g" \
+        /etc/netdata-tmpl/stream > /etc/netdata-out/stream.conf
+    envFrom:
+    - secretRef:
+        name: netdata-streaming
+    volumeMounts:
+    - name: configmap
+      mountPath: /etc/netdata-tmpl
+    - name: stream-conf
+      mountPath: /etc/netdata-out
+
+  podAnnotations:
+    reloader.stakater.com/auto: 'true'
+
+  configs:
+    stream:
+      # .tmpl path avoids mount conflict with emptyDir at the real path
+      path: /etc/netdata/stream.conf.tmpl
+
+  # Upstream defaults to `Default` but parent doesn't use hostNetwork
+  dnsPolicy: ClusterFirst
+
+  # Chart defaults runAsUser: 201 but the entrypoint needs root for setup
+  # (group management, telemetry opt-out file). It drops privileges itself via
+  # `netdata -u netdata`.
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+
+  env:
+    DO_NOT_TRACK: 1
+
+child:
+  podAnnotations:
+    reloader.stakater.com/auto: 'true'
+
+  extraVolumes:
+  - name: stream-conf
+    emptyDir: {}
+
+  extraVolumeMounts:
+  - name: stream-conf
+    mountPath: /etc/netdata/stream.conf
+    subPath: stream.conf
+
+  # No extraInitContainers — chart doesn't support it for child.
+  # Init container added via kustomize patch (patch-child-stream-init.yaml)
+
+  configs:
+    stream:
+      path: /etc/netdata/stream.conf.tmpl
+
+  env:
+    DO_NOT_TRACK: 1
+
+k8sState:
+  podAnnotations:
+    reloader.stakater.com/auto: 'true'
+
+  extraVolumes:
+  - name: stream-conf
+    emptyDir: {}
+
+  extraVolumeMounts:
+  - name: stream-conf
+    mountPath: /etc/netdata/stream.conf
+    subPath: stream.conf
+
+  # No extraInitContainers — chart doesn't support it for k8sState.
+  # Init container added via kustomize patch (patch-k8s-state-stream-init.yaml)
+
+  configs:
+    stream:
+      path: /etc/netdata/stream.conf.tmpl
+
+  env:
+    DO_NOT_TRACK: 1
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Netdata
+    gethomepage.dev/group: Monitoring
+    gethomepage.dev/icon: netdata.png
+  spec:
+    ingressClassName: nginx
+  hosts:
+  - netdata.k.oneill.net
+  tls:
+  - secretName: netdata-tls
+    hosts:
+    - netdata.k.oneill.net

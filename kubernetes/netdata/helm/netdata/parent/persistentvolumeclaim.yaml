@@ -1,0 +1,38 @@
+---
+# Source: netdata/templates/parent/persistentvolumeclaim.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: netdata-parent-database
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+    role: parent
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: "synology-iscsi"
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Source: netdata/templates/parent/persistentvolumeclaim.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: netdata-parent-alarms
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+    role: parent
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: "synology-iscsi"
+  resources:
+    requests:
+      storage: 1Gi

@@ -1,0 +1,37 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: netdata
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- externalsecret.yaml
+- dbengine-pvc.yaml
+- helm/netdata/serviceaccount.yaml
+- helm/netdata/clusterrole.yaml
+- helm/netdata/clusterrolebinding.yaml
+- helm/netdata/parent/configmap.yaml
+- helm/netdata/parent/persistentvolumeclaim.yaml
+- helm/netdata/parent/service.yaml
+- helm/netdata/parent/deployment.yaml
+- helm/netdata/parent/ingress.yaml
+- helm/netdata/child/configmap.yaml
+- helm/netdata/child/daemonset.yaml
+- helm/netdata/k8s-state/configmap.yaml
+- helm/netdata/k8s-state/persistentvolumeclaim.yaml
+- helm/netdata/k8s-state/deployment.yaml
+
+patches:
+- path: patch-child-stream-init.yaml
+- path: patch-k8s-state-stream-init.yaml
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: netdata
+    app.kubernetes.io/instance: netdata
+  includeSelectors: true

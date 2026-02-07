@@ -1,0 +1,37 @@
+---
+# Source: netdata/templates/parent/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: netdata
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Monitoring
+    gethomepage.dev/icon: netdata.png
+    gethomepage.dev/name: Netdata
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - netdata.k.oneill.net
+      secretName: netdata-tls
+  rules:
+    - host: netdata.k.oneill.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: netdata
+                port:
+                  name: http
