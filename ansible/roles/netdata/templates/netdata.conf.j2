@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+[global]
+    hostname = {{ inventory_hostname }}
+
+[web]
+    bind to = localhost
+    mode = none
+
+[db]
+    mode = ram
+
+[health]
+    enabled = no
+
+[ml]
+    enabled = no

@@ -20,3 +20,7 @@ mv tmp/netdata/templates/* helm/netdata/
 
 rm -rf tmp
 rm -rf helm/*/tests
+
+# Remove checksum annotations (Reloader handles config changes)
+find helm -name '*.yaml' -exec sed -i.bak '/checksum\/config:/d' {} +
+find helm -name '*.bak' -delete
