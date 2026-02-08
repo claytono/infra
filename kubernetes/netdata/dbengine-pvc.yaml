@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: netdata-parent-dbengine
+
+spec:
+  accessModes:
+  - ReadWriteOncePod
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 20Gi

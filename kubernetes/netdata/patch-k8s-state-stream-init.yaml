@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: netdata-k8s-state
+  namespace: netdata
+
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: inject-stream-key
+        image: alpine:3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
+        command:
+        - sh
+        - -c
+        - |
+          sed "s/11111111-2222-3333-4444-555555555555/$NETDATA_STREAM_API_KEY/g" \
+            /etc/netdata-tmpl/stream > /etc/netdata-out/stream.conf
+        envFrom:
+        - secretRef:
+            name: netdata-streaming
+        volumeMounts:
+        - name: configmap
+          mountPath: /etc/netdata-tmpl
+        - name: stream-conf
+          mountPath: /etc/netdata-out

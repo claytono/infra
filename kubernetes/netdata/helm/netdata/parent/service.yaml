@@ -1,0 +1,25 @@
+---
+# Source: netdata/templates/parent/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: netdata
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+    role: parent
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 19999
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: netdata
+    release: netdata
+    role: parent

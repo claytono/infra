@@ -1,0 +1,18 @@
+---
+# Source: netdata/templates/k8s-state/persistentvolumeclaim.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: netdata-k8s-state-varlib
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+    role: k8sState
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 1Gi

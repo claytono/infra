@@ -1,0 +1,60 @@
+---
+# Source: netdata/templates/k8s-state/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: netdata-conf-k8s-state
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+data:
+    
+  go.d: |
+        default_run: no
+        modules:
+          k8s_state: yes
+  go.d-k8s_state: |
+        jobs:
+          - name: k8s_state
+            update_every: 1
+  netdata: |
+        [global]
+          hostname = netdata-k8s-state
+        [db]
+          mode = ram
+        [web]
+          bind to = localhost:19999
+        [health]
+          enabled = no
+        [ml]
+          enabled = no
+        [plugins]
+          timex = no
+          checks = no
+          idlejitter = no
+          tc = no
+          diskspace = no
+          proc = no
+          cgroups = no
+          enable running new plugins = no
+          slabinfo = no
+          perf = no
+          go.d = yes
+          ioping = no
+          ebpf = no
+          charts.d = no
+          apps = no
+          python.d = no
+          fping = no
+  stream: |
+        [stream]
+          enabled = yes
+          destination = netdata:19999
+          api key = 11111111-2222-3333-4444-555555555555
+          timeout seconds = 60
+          buffer size bytes = 1048576
+          reconnect delay seconds = 5
+          initial clock resync iterations = 60

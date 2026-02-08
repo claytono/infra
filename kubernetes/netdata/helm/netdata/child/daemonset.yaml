@@ -1,0 +1,173 @@
+---
+# Source: netdata/templates/child/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: netdata-child
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+    role: child
+spec:
+  selector:
+    matchLabels:
+      app: netdata
+      release: netdata
+      role: child
+  template:
+    metadata:
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/netdata: unconfined
+        checksum/config: da298d4e234854f41c853996da6b1f51b5fbdadc445031c5539305700f27ad5e
+        reloader.stakater.com/auto: "true"
+      labels:
+        app: netdata
+        release: netdata
+        role: child
+    spec:
+      serviceAccountName: netdata
+      restartPolicy: Always
+      hostPID: true
+      hostIPC: true
+      hostNetwork: true
+      initContainers:
+        - name: init-persistence
+          image: "alpine:latest"
+          resources:
+            requests:
+              cpu: 10m
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: persistencevarlibdir
+              mountPath: "/persistencevarlibdir"
+          command:
+            - "/bin/sh"
+          args:
+            - "-c"
+            - '
+            chmod 777 /persistencevarlibdir;
+            '
+      containers:
+        - name: netdata
+          image: "netdata/netdata:v2.8.5"
+          imagePullPolicy: Always
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NETDATA_LISTENER_PORT
+              value: '19999'
+            - name: DO_NOT_TRACK
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 19999
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+              - /usr/sbin/netdatacli
+              - ping
+            initialDelaySeconds: 0
+            failureThreshold: 3
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+              - /usr/sbin/netdatacli
+              - ping
+            initialDelaySeconds: 0
+            failureThreshold: 3
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: proc
+              readOnly: true
+              mountPath: /host/proc
+            - name: sys
+              mountPath: /host/sys
+            - name: os-release
+              mountPath: /host/etc/os-release
+            - name: varlog
+              mountPath: /host/var/log
+            - name: configmap
+              mountPath: /etc/netdata/go.d.conf
+              subPath: go.d
+            - name: configmap
+              mountPath: /etc/netdata/go.d/k8s_kubelet.conf
+              subPath: kubelet
+            - name: configmap
+              mountPath: /etc/netdata/go.d/k8s_kubeproxy.conf
+              subPath: kubeproxy
+            - name: configmap
+              mountPath: /etc/netdata/netdata.conf
+              subPath: netdata
+            - name: configmap
+              mountPath: /etc/netdata/stream.conf.tmpl
+              subPath: stream
+            - name: persistencevarlibdir
+              mountPath: /var/lib/netdata
+            - name: sdconfigmap
+              mountPath: "/etc/netdata/go.d/sd/k8s.conf"
+              subPath: config.yml
+            - mountPath: /etc/netdata/stream.conf
+              name: stream-conf
+              subPath: stream.conf
+          securityContext:
+            capabilities:
+              add:
+                - SYS_PTRACE
+                - SYS_ADMIN
+          resources:
+            {}
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: os-release
+          hostPath:
+            path: /etc/os-release
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: configmap
+          configMap:
+            name: netdata-conf-child
+            optional: true
+        - name: configsecret
+          secret:
+            secretName: netdata-conf-child
+            optional: true
+        - name: persistencevarlibdir
+          hostPath:
+            path: /var/lib/netdata-k8s-child/var/lib/netdata
+            type: DirectoryOrCreate
+        - name: sdconfigmap
+          configMap:
+            name: netdata-child-sd-config-map
+            optional: true
+        - emptyDir: {}
+          name: stream-conf
+      dnsPolicy: ClusterFirstWithHostNet

@@ -1,0 +1,144 @@
+---
+# Source: netdata/templates/parent/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netdata-parent
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+    role: parent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: netdata
+      release: netdata
+      role: parent
+  template:
+    metadata:
+      labels:
+        app: netdata
+        release: netdata
+        role: parent
+      annotations:
+        checksum/config: 3593a1a2512ae7890431f94cfdd5515e59386ef76ad3bab54910c99fddf06d90
+        reloader.stakater.com/auto: "true"
+    spec:
+      securityContext:
+        fsGroup: 201
+      serviceAccountName: netdata
+      initContainers:
+        - command:
+          - sh
+          - -c
+          - |
+            sed "s/11111111-2222-3333-4444-555555555555/$NETDATA_STREAM_API_KEY/g" \
+              /etc/netdata-tmpl/stream > /etc/netdata-out/stream.conf
+          envFrom:
+          - secretRef:
+              name: netdata-streaming
+          image: alpine:3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
+          name: inject-stream-key
+          volumeMounts:
+          - mountPath: /etc/netdata-tmpl
+            name: configmap
+          - mountPath: /etc/netdata-out
+            name: stream-conf
+      containers:
+        - name: netdata
+          image: "netdata/netdata:v2.8.5"
+          imagePullPolicy: Always
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NETDATA_LISTENER_PORT
+              value: '19999'
+            - name: DO_NOT_TRACK
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 19999
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+              - /usr/sbin/netdatacli
+              - ping
+            initialDelaySeconds: 0
+            failureThreshold: 3
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+              - /usr/sbin/netdatacli
+              - ping
+            initialDelaySeconds: 0
+            failureThreshold: 3
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: os-release
+              mountPath: /host/etc/os-release
+            - name: configmap
+              mountPath: /etc/netdata/health_alarm_notify.conf
+              subPath: health
+            - name: configmap
+              mountPath: /etc/netdata/netdata.conf
+              subPath: netdata
+            - name: configmap
+              mountPath: /etc/netdata/stream.conf.tmpl
+              subPath: stream
+            - name: database
+              mountPath: /var/cache/netdata
+            - name: alarms
+              mountPath: /var/lib/netdata
+            - mountPath: /var/cache/netdata/dbengine
+              name: dbengine
+            - mountPath: /etc/netdata/stream.conf
+              name: stream-conf
+              subPath: stream.conf
+          resources:
+            {}
+      terminationGracePeriodSeconds: 300
+      volumes:
+        - name: os-release
+          hostPath:
+            path: /etc/os-release
+        - name: configmap
+          configMap:
+            name: netdata-conf-parent
+            optional: true
+        - name: configsecret
+          secret:
+            secretName: netdata-conf-parent
+            optional: true
+        - name: database
+          persistentVolumeClaim:
+            claimName: netdata-parent-database
+        - name: alarms
+          persistentVolumeClaim:
+            claimName: netdata-parent-alarms
+        - name: dbengine
+          persistentVolumeClaim:
+            claimName: netdata-parent-dbengine
+        - emptyDir: {}
+          name: stream-conf
+      dnsPolicy: ClusterFirst

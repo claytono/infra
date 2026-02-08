@@ -1,0 +1,119 @@
+---
+# Source: netdata/templates/k8s-state/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netdata-k8s-state
+  namespace: netdata
+  labels:
+    app: netdata
+    chart: netdata-3.7.158
+    release: netdata
+    heritage: Helm
+    role: k8sState
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: netdata
+      release: netdata
+      role: k8sState
+  template:
+    metadata:
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/netdata: unconfined
+        checksum/config: b0479dd3f8bfbdf689b7d6c77fd78022efb7603e76f1070e35836d15a6b68ab0
+        reloader.stakater.com/auto: "true"
+      labels:
+        app: netdata
+        release: netdata
+        role: k8sState
+    spec:
+      securityContext:
+        fsGroup: 201
+      serviceAccountName: netdata
+      restartPolicy: Always
+      initContainers:
+      containers:
+        - name: netdata
+          image: "netdata/netdata:v2.8.5"
+          imagePullPolicy: Always
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NETDATA_LISTENER_PORT
+              value: '19999'
+            - name: DO_NOT_TRACK
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 19999
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - /usr/sbin/netdatacli
+                - ping
+            initialDelaySeconds: 0
+            failureThreshold: 3
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - /usr/sbin/netdatacli
+                - ping
+            initialDelaySeconds: 0
+            failureThreshold: 3
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: os-release
+              mountPath: /host/etc/os-release
+            - name: configmap
+              mountPath: /etc/netdata/go.d.conf
+              subPath: go.d
+            - name: configmap
+              mountPath: /etc/netdata/go.d/k8s_state.conf
+              subPath: go.d-k8s_state
+            - name: configmap
+              mountPath: /etc/netdata/netdata.conf
+              subPath: netdata
+            - name: configmap
+              mountPath: /etc/netdata/stream.conf.tmpl
+              subPath: stream
+            - name: varlib
+              mountPath: /var/lib/netdata
+            - mountPath: /etc/netdata/stream.conf
+              name: stream-conf
+              subPath: stream.conf
+          resources:
+            {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: os-release
+          hostPath:
+            path: /etc/os-release
+        - name: configmap
+          configMap:
+            name: netdata-conf-k8s-state
+            optional: true
+        - name: configsecret
+          secret:
+            secretName: netdata-conf-k8s-state
+            optional: true
+        - name: varlib
+          persistentVolumeClaim:
+            claimName: netdata-k8s-state-varlib
+        - emptyDir: {}
+          name: stream-conf
+      dnsPolicy: ClusterFirstWithHostNet
