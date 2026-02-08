@@ -1,0 +1,46 @@
+---
+- name: "Install python3-debian for deb822_repository"
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+
+- name: "Add Netdata APT repository"
+  ansible.builtin.deb822_repository:
+    name: netdata-stable
+    types: deb
+    uris: https://repository.netdata.cloud/repos/stable/debian/
+    suites: "{{ ansible_facts['distribution_release'] }}/"
+    signed_by: https://repository.netdata.cloud/netdatabot.gpg.key
+    state: present
+    enabled: true
+  register: netdata_repo
+
+- name: "Install Netdata"
+  ansible.builtin.apt:
+    name: netdata
+    state: present
+    update_cache: "{{ netdata_repo is changed }}"
+
+- name: "Deploy Netdata configuration"
+  ansible.builtin.template:
+    src: netdata.conf.j2
+    dest: /etc/netdata/netdata.conf
+    owner: root
+    group: netdata
+    mode: "0644"
+  notify: Restart netdata
+
+- name: "Deploy Netdata streaming configuration"
+  ansible.builtin.template:
+    src: stream.conf.j2
+    dest: /etc/netdata/stream.conf
+    owner: root
+    group: netdata
+    mode: "0640"
+  notify: Restart netdata
+
+- name: "Enable and start Netdata service"
+  ansible.builtin.service:
+    name: netdata
+    state: started
+    enabled: true

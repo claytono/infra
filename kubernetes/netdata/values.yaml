@@ -16,6 +16,11 @@ parent:
       claimName: netdata-parent-dbengine
   - name: stream-conf
     emptyDir: {}
+  - name: streaming-tls
+    secret:
+      secretName: netdata-streaming-tls
+  - name: netdata-conf
+    emptyDir: {}
 
   extraVolumeMounts:
   - name: dbengine
@@ -23,18 +28,32 @@ parent:
   - name: stream-conf
     mountPath: /etc/netdata/stream.conf
     subPath: stream.conf
+  - name: streaming-tls
+    mountPath: /etc/netdata/ssl
+    readOnly: true
+  - name: netdata-conf
+    mountPath: /etc/netdata/netdata.conf
+    subPath: netdata.conf
 
-  # Init container to inject the streaming API key into stream.conf
+  # Init container to inject secrets/config that can't be expressed in values.yaml:
+  # - stream.conf: replace placeholder API key with real secret
+  # - netdata.conf: append SSL config for streaming TLS
   # (only parent supports extraInitContainers; child/k8sState use kustomize patches)
   extraInitContainers:
-  - name: inject-stream-key
+  - name: inject-configs
     image: alpine:3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
     command:
     - sh
     - -c
     - |
       sed "s/11111111-2222-3333-4444-555555555555/$NETDATA_STREAM_API_KEY/g" \
-        /etc/netdata-tmpl/stream > /etc/netdata-out/stream.conf
+        /etc/netdata-tmpl/stream > /out/stream/stream.conf
+      cp /etc/netdata-tmpl/netdata /out/netdata/netdata.conf
+      cat >> /out/netdata/netdata.conf <<'EOF'
+      [web]
+        ssl key = /etc/netdata/ssl/tls.key
+        ssl certificate = /etc/netdata/ssl/tls.crt
+      EOF
     envFrom:
     - secretRef:
         name: netdata-streaming
@@ -42,7 +61,9 @@ parent:
     - name: configmap
       mountPath: /etc/netdata-tmpl
     - name: stream-conf
-      mountPath: /etc/netdata-out
+      mountPath: /out/stream
+    - name: netdata-conf
+      mountPath: /out/netdata
 
   podAnnotations:
     reloader.stakater.com/auto: 'true'
@@ -51,6 +72,8 @@ parent:
     stream:
       # .tmpl path avoids mount conflict with emptyDir at the real path
       path: /etc/netdata/stream.conf.tmpl
+    netdata:
+      path: /etc/netdata/netdata.conf.tmpl
 
   # Upstream defaults to `Default` but parent doesn't use hostNetwork
   dnsPolicy: ClusterFirst
@@ -84,6 +107,15 @@ child:
   configs:
     stream:
       path: /etc/netdata/stream.conf.tmpl
+      data: |
+        [stream]
+          enabled = yes
+          destination = netdata-stream.k.oneill.net:19999:SSL
+          api key = 11111111-2222-3333-4444-555555555555
+          timeout seconds = 60
+          buffer size bytes = 1048576
+          reconnect delay seconds = 5
+          initial clock resync iterations = 60
 
   env:
     DO_NOT_TRACK: 1
@@ -107,6 +139,15 @@ k8sState:
   configs:
     stream:
       path: /etc/netdata/stream.conf.tmpl
+      data: |
+        [stream]
+          enabled = yes
+          destination = netdata-stream.k.oneill.net:19999:SSL
+          api key = 11111111-2222-3333-4444-555555555555
+          timeout seconds = 60
+          buffer size bytes = 1048576
+          reconnect delay seconds = 5
+          initial clock resync iterations = 60
 
   env:
     DO_NOT_TRACK: 1
@@ -115,6 +156,7 @@ ingress:
   enabled: true
   annotations:
     cert-manager.io/cluster-issuer: zerossl
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Netdata
     gethomepage.dev/group: Monitoring

@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+
+metadata:
+  name: netdata-streaming
+  namespace: netdata
+
+spec:
+  secretName: netdata-streaming-tls
+  issuerRef:
+    name: zerossl
+    kind: ClusterIssuer
+  dnsNames:
+  - netdata-stream.k.oneill.net

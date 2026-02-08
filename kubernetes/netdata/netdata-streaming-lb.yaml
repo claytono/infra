@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: netdata-streaming
+  namespace: netdata
+  annotations:
+    metallb.io/allow-shared-ip: plexmediaserver
+    metallb.io/loadBalancerIPs: 172.19.74.21
+    external-dns.alpha.kubernetes.io/hostname: netdata-stream.k.oneill.net
+
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 19999
+    targetPort: http
+    protocol: TCP
+    name: streaming
+  selector:
+    app: netdata
+    release: netdata
+    role: parent

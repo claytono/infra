@@ -21,7 +21,6 @@ spec:
     metadata:
       annotations:
         container.apparmor.security.beta.kubernetes.io/netdata: unconfined
-        checksum/config: da298d4e234854f41c853996da6b1f51b5fbdadc445031c5539305700f27ad5e
         reloader.stakater.com/auto: "true"
       labels:
         app: netdata
