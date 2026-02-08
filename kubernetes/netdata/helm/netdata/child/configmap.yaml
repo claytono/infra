@@ -43,7 +43,7 @@ data:
   stream: |
         [stream]
           enabled = yes
-          destination = netdata:19999
+          destination = netdata-stream.k.oneill.net:19999:SSL
           api key = 11111111-2222-3333-4444-555555555555
           timeout seconds = 60
           buffer size bytes = 1048576

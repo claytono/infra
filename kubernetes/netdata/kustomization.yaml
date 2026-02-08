@@ -24,6 +24,8 @@ resources:
 - helm/netdata/k8s-state/configmap.yaml
 - helm/netdata/k8s-state/persistentvolumeclaim.yaml
 - helm/netdata/k8s-state/deployment.yaml
+- netdata-streaming-lb.yaml
+- certificate-streaming.yaml
 
 patches:
 - path: patch-child-stream-init.yaml

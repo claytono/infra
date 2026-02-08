@@ -209,3 +209,10 @@
         owner: node_exporter
         group: node_exporter
       when: "node_exporter_enabled | default(false)"
+
+- name: Netdata monitoring agent
+  hosts: all,!kubernetes
+  roles:
+    - role: netdata
+      when: "netdata_enabled | default(false)"
+      tags: netdata
