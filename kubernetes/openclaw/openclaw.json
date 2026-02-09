@@ -1,0 +1,54 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "lan",
+    "auth": {
+      "mode": "token"
+    },
+
+    "controlUi": {
+      "allowInsecureAuth": true
+    }
+  },
+  "channels": {
+    "slack": {
+      "enabled": true,
+      "dm": {
+        "enabled": true,
+        "policy": "allowlist",
+        "allowFrom": ["U1DPF8U75"]
+      }
+    }
+  },
+  "tools": {
+    "exec": {
+      "ask": "always"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "slack": {
+        "enabled": true
+      }
+    }
+  },
+  "browser": {
+    "headless": true,
+    "noSandbox": true,
+    "defaultProfile": "openclaw",
+    "profiles": {
+      "openclaw": {
+        "cdpUrl": "http://127.0.0.1:9222",
+        "color": "#FF4500"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "sandbox": {
+        "mode": "off",
+        "workspaceAccess": "rw"
+      }
+    }
+  }
+}

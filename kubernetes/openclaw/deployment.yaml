@@ -1,0 +1,112 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: openclaw
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openclaw
+      app.kubernetes.io/instance: openclaw
+  template:
+    metadata:
+      name: openclaw
+      labels:
+        app.kubernetes.io/name: openclaw
+        app.kubernetes.io/instance: openclaw
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: openclaw
+        image: alpine/openclaw:2026.2.6-3@sha256:0ecbdbda258bc82eb3ab7f142dcfbbb2f309f21583489c0eb6a68a6debed1310
+        command:
+        - node
+        - dist/index.js
+        - gateway
+        ports:
+        - name: gateway
+          containerPort: 18789
+        env:
+        - name: HOME
+          value: /home/node
+        - name: TERM
+          value: xterm-256color
+        - name: NPM_CONFIG_CACHE
+          value: /home/node/.openclaw/.npm
+        envFrom:
+        - secretRef:
+            name: openclaw-secrets
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          limits:
+            cpu: '1'
+            memory: 4Gi
+        volumeMounts:
+        - name: config
+          mountPath: /home/node/.openclaw/openclaw.json
+          subPath: openclaw.json
+          readOnly: true
+        - name: data
+          mountPath: /home/node/.openclaw
+        - name: tmp
+          mountPath: /tmp
+      - name: browser
+        image: zenika/alpine-chrome:latest@sha256:f76678189d2832fe08de641b7bf0dcab54f9189b7e952e08035ca412ded8188b
+        args:
+        - --no-sandbox
+        - --disable-gpu
+        - --disable-dev-shm-usage
+        - --disable-blink-features=AutomationControlled
+        - --window-size=1920,1080
+        - --remote-debugging-address=0.0.0.0
+        - --remote-debugging-port=9222
+        - --headless=new
+        ports:
+        - name: cdp
+          containerPort: 9222
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          limits:
+            cpu: '1'
+            memory: 2Gi
+        volumeMounts:
+        - name: browser-tmp
+          mountPath: /tmp
+      volumes:
+      - name: config
+        configMap:
+          name: openclaw-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: openclaw-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 10Gi
+      - name: browser-tmp
+        emptyDir:
+          sizeLimit: 1Gi

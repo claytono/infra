@@ -16,6 +16,7 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.healthchecks.id,
     authentik_provider_proxy.homepage.id,
     authentik_provider_proxy.huntarr.id,
+    authentik_provider_proxy.openclaw.id,
     authentik_provider_proxy.prometheus.id,
     authentik_provider_proxy.prowlarr.id,
     authentik_provider_proxy.qbit-manage.id,
