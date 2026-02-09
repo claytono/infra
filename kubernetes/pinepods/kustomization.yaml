@@ -31,7 +31,7 @@ images:
 - name: madeofpendletonwool/pinepods
   newTag: latest@sha256:ee412e52e59b6c49f4f852c41db82e9a258563ddc2e31d7c6e7ef824b8abcb70
 - name: docker.io/bitnami/valkey
-  newTag: latest@sha256:72169720d7a2a3348ef91283f6dcd00337885c90e62c8e394c0e549c1571a184
+  newTag: latest@sha256:67c73ace1bb66fdb3eddbce842a6b98fee6d1cf8b7d9a4010e321d7f58fe1507
 
 patches:
 
