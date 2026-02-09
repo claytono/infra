@@ -3,3 +3,10 @@
     enabled = yes
     destination = {{ netdata_parent }}:{{ netdata_parent_port }}:SSL
     api key = {{ netdata_stream_api_key }}
+{% if netdata_streaming_skip_tls_verify | default(false) %}
+    # Parent cert is issued for netdata-stream.k.oneill.net but this host
+    # connects via Tailscale (netdata.cow-banjo.ts.net), causing a hostname
+    # mismatch. TLS still encrypts the connection; WireGuard provides
+    # additional transport encryption; the API key authenticates the stream.
+    ssl skip certificate verification = yes
+{% endif %}

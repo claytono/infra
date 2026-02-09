@@ -25,6 +25,7 @@ resources:
 - helm/netdata/k8s-state/persistentvolumeclaim.yaml
 - helm/netdata/k8s-state/deployment.yaml
 - netdata-streaming-lb.yaml
+- tailscale-service.yaml
 - certificate-streaming.yaml
 
 patches:
