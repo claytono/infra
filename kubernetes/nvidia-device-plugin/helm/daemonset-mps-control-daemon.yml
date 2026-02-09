@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nvidia-device-plugin
     app.kubernetes.io/instance: nvidia-device-plugin
-    app.kubernetes.io/version: "0.18.0"
+    app.kubernetes.io/version: "0.18.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/name: nvidia-device-plugin
         app.kubernetes.io/instance: nvidia-device-plugin
       annotations:
-        checksum/config: 8d6053408d5110be58d1e1ee7f811737b0ddb287f4f163e30bf0ca43e941107b
+        checksum/config: ab97feaabd9d0bb7a778be5f44bfa7e870c33a676b36437887a907c41af5775f
     spec:
       priorityClassName: system-node-critical
       runtimeClassName: nvidia
@@ -32,7 +32,7 @@ spec:
       serviceAccountName: nvidia-device-plugin-service-account
       hostPID: true
       initContainers:
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.2
         name: mps-control-daemon-mounts
         command: [mps-control-daemon, mount-shm]
         securityContext:
@@ -41,7 +41,7 @@ spec:
         - name: mps-root
           mountPath: /mps
           mountPropagation: Bidirectional
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.2
         name: mps-control-daemon-init
         command: ["config-manager"]
         env:
@@ -76,7 +76,7 @@ spec:
             mountPath: /config
       containers:
         # TODO: How do we synchronize the plugin and control-daemon on restart.
-        - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+        - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.2
           name: mps-control-daemon-sidecar
           command: ["config-manager"]
           env:
@@ -109,7 +109,7 @@ spec:
               mountPath: /available-configs
             - name: config
               mountPath: /config
-        - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+        - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.2
           imagePullPolicy: IfNotPresent
           name: mps-control-daemon-ctr
           command: [mps-control-daemon]
