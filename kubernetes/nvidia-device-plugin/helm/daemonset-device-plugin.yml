@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nvidia-device-plugin
     app.kubernetes.io/instance: nvidia-device-plugin
-    app.kubernetes.io/version: "0.18.0"
+    app.kubernetes.io/version: "0.18.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/name: nvidia-device-plugin
         app.kubernetes.io/instance: nvidia-device-plugin
       annotations:
-        checksum/config: 8d6053408d5110be58d1e1ee7f811737b0ddb287f4f163e30bf0ca43e941107b
+        checksum/config: ab97feaabd9d0bb7a778be5f44bfa7e870c33a676b36437887a907c41af5775f
     spec:
       priorityClassName: system-node-critical
       runtimeClassName: nvidia
@@ -32,7 +32,7 @@ spec:
       serviceAccountName: nvidia-device-plugin-service-account
       shareProcessNamespace: true
       initContainers:
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.2
         name: nvidia-device-plugin-init
         command: ["config-manager"]
         env:
@@ -66,7 +66,7 @@ spec:
           - name: config
             mountPath: /config
       containers:
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.2
         name: nvidia-device-plugin-sidecar
         command: ["config-manager"]
         env:
@@ -103,7 +103,7 @@ spec:
           capabilities:
             add:
               - SYS_ADMIN
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.2
         imagePullPolicy: IfNotPresent
         name: nvidia-device-plugin-ctr
         command: ["nvidia-device-plugin"]
