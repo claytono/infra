@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: netdata
 
+components:
+- ../components/authentik
+
 commonAnnotations:
   argoManaged: 'true'
 

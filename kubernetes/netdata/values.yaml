@@ -155,6 +155,7 @@ k8sState:
 ingress:
   enabled: true
   annotations:
+    ak-type: simple
     cert-manager.io/cluster-issuer: zerossl
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     gethomepage.dev/enabled: 'true'

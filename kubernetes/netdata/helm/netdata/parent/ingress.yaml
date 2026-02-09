@@ -11,6 +11,7 @@ metadata:
     release: netdata
     heritage: Helm
   annotations:
+    ak-type: simple
     cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Monitoring
