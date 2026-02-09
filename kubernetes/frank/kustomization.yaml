@@ -1,0 +1,35 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: frank
+
+components:
+- ../components/authentik
+
+resources:
+- namespace.yaml
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+- ingress-ui.yaml
+- externalsecret.yaml
+- pvc.yaml
+
+configMapGenerator:
+- name: frank-config
+  files:
+  - openclaw.json
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+commonAnnotations:
+  argoManaged: 'true'
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: frank
+    app.kubernetes.io/instance: frank
+  includeSelectors: true

@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: frank
+  namespace: frank
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - frank.k.oneill.net
+    secretName: frank-tls
+  rules:
+  - host: frank.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frank
+            port:
+              number: 18789
