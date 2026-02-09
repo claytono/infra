@@ -17,6 +17,9 @@
         "UNIFI_VERIFY_SSL": "false",
         "UNIFI_TOOL_MODE": "eager"
       }
+    },
+    "netdata": {
+      "url": "https://netdata-stream.k.oneill.net:19999/mcp"
     }
   }
 }

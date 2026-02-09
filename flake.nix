@@ -104,34 +104,61 @@
         };
       };
 
-      # mcp-cli for invoking MCP servers from CLI
+      # mcp-cli for invoking MCP servers from CLI (built from source)
       mkMcpCli = pkgs: let
-        version = "0.1.4";
-        sources = {
-          "aarch64-darwin" = {
-            url = "https://github.com/philschmid/mcp-cli/releases/download/v${version}/mcp-cli-darwin-arm64";
-            hash = "sha256-WNKFzfHbCgA2TGqHJ3XOJKUKW+kE4kdexlTQ/BYH2PY=";
-          };
-          "x86_64-linux" = {
-            url = "https://github.com/philschmid/mcp-cli/releases/download/v${version}/mcp-cli-linux-x64";
-            hash = "sha256-nPfQOEyp1wR/KgHsUILIL3M/epkEpwePZ8TiHOTiHCQ=";
-          };
+        version = "0.3.0-post";
+        rev = "d77672a1ce800ec3fec1f43829909badb2ffbd32";
+
+        src = pkgs.fetchFromGitHub {
+          owner = "philschmid";
+          repo = "mcp-cli";
+          inherit rev;
+          hash = "sha256-BlI81GumROJNHhav3H7bH9s1NfDYsEy3iwHowHYqfzc=";
         };
-        src = sources.${pkgs.stdenv.hostPlatform.system} or (throw "Unsupported system for mcp-cli");
+
+        # Fixed-output derivation: runs bun install with network access.
+        # Hash is platform-specific because bun install produces native binaries.
+        depsHashes = {
+          "aarch64-darwin" = "sha256-v4eOACZLTjpYNDn29XjRY3BdwAi2ab0P3QMHOcYOFAU=";
+          "x86_64-linux" = "sha256-BgCPeb8ZjO7SiJPkiAbWRi+bbsUdzzIwbBvnHoufviM=";
+        };
+
+        node_modules = pkgs.stdenv.mkDerivation {
+          pname = "mcp-cli-deps";
+          inherit version src;
+
+          nativeBuildInputs = [ pkgs.bun ];
+
+          buildPhase = ''
+            export HOME=$TMPDIR
+            bun install --frozen-lockfile
+          '';
+
+          installPhase = ''
+            mkdir -p $out
+            cp -r node_modules $out/node_modules
+          '';
+
+          outputHashAlgo = "sha256";
+          outputHashMode = "recursive";
+          outputHash = depsHashes.${pkgs.stdenv.hostPlatform.system};
+        };
+
       in pkgs.stdenv.mkDerivation {
         pname = "mcp-cli";
-        inherit version;
+        inherit version src;
 
-        src = pkgs.fetchurl {
-          inherit (src) url hash;
-        };
+        nativeBuildInputs = [ pkgs.bun ];
 
-        dontUnpack = true;
+        buildPhase = ''
+          export HOME=$TMPDIR
+          cp -r ${node_modules}/node_modules .
+          bun build --compile --minify src/index.ts --outfile dist/mcp-cli
+        '';
 
         installPhase = ''
           mkdir -p $out/bin
-          cp $src $out/bin/real.mcp-cli
-          chmod +x $out/bin/real.mcp-cli
+          cp dist/mcp-cli $out/bin/real.mcp-cli
           cat > $out/bin/mcp-cli <<'WRAPPER'
           #!/usr/bin/env bash
           exec "$(dirname "$0")/real.mcp-cli" "$@" 2>/dev/null
