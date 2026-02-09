@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: sidekiq
-        image: freikin/dawarich:0.37.3@sha256:efab2e677baf912f5cc68363ec26e648015fa2c703b4a0cf8e03418415e1ed0d
+        image: freikin/dawarich:1.0.1@sha256:ce2a337a1c2d521cf7d5265abe5abb1f9a645322e7184b6a20fd8ff59943a9e1
         command: [bundle, exec, sidekiq]
         args: []
         env:
