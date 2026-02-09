@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: netdata-tailscale
+  annotations:
+    tailscale.com/hostname: netdata
+    tailscale.com/tags: tag:netdata
+
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  ports:
+  - port: 19999
+    targetPort: http
+    protocol: TCP
+    name: streaming
+  selector:
+    app: netdata
+    release: netdata
+    role: parent
