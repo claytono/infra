@@ -159,6 +159,14 @@
 
           pythonEnv = mkPythonEnv pkgs;
 
+          # Replace dotnet-sdk with a stub to avoid building dotnet-vmr from
+          # source on aarch64-darwin. The upstream pre-commit package takes
+          # dotnet-sdk as a function argument for tests we don't run.
+          # https://github.com/NixOS/nixpkgs/issues/294088
+          pre-commit = pkgs.pre-commit.override {
+            dotnet-sdk = pkgs.emptyDirectory;
+          };
+
         in
         {
           default = pkgs.mkShell {
