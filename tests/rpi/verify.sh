@@ -10,10 +10,11 @@ set -euo pipefail
 SSH_HOST="${1:-localhost}"
 SSH_PORT="${2:-2222}"
 SSH_USER="root"
-SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -p $SSH_PORT"
+SSH_OPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -p "$SSH_PORT")
 
 ssh_cmd() {
-    ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "$@"
+    # shellcheck disable=SC2029 # commands are intentionally expanded locally
+    ssh "${SSH_OPTS[@]}" "$SSH_USER@$SSH_HOST" "$@"
 }
 
 echo "=== Verifying RPi configuration ==="
@@ -93,6 +94,10 @@ if [[ $FAILED -eq 0 ]]; then
     echo "All tests passed!"
     exit 0
 else
+    echo ""
+    echo "=== Diagnostic info ==="
+    ssh_cmd 'cloud-init status --long' 2>/dev/null || true
+    ssh_cmd 'tail -30 /var/log/cloud-init-output.log' 2>/dev/null || true
     echo ""
     echo "Some tests failed!"
     exit 1

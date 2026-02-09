@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     e2fsprogs \
     kpartx \
     dosfstools \
+    fdisk \
     openssh-client \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
