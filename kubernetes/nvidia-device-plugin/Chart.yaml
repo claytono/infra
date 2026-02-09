@@ -4,5 +4,5 @@ name: nvidia-device-plugin-meta
 version: 0.1.0
 dependencies:
 - name: nvidia-device-plugin
-  version: 0.18.0
+  version: 0.18.2
   repository: https://nvidia.github.io/k8s-device-plugin
