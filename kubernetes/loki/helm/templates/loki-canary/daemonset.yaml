@@ -37,7 +37,7 @@ spec:
         runAsUser: 10001
       containers:
         - name: loki-canary
-          image: docker.io/grafana/loki-canary:3.6.3
+          image: docker.io/grafana/loki-canary:3.6.4
           imagePullPolicy: IfNotPresent
           args:
             - -addr=loki-gateway.loki.svc.cluster.local.:80
