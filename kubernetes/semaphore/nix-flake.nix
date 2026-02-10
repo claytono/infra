@@ -38,6 +38,7 @@
           djangorestframework
           django-cors-headers
           dynaconf
+          pbr
           pygments
           requests
           whitenoise
