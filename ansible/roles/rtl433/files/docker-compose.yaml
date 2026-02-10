@@ -2,7 +2,7 @@ services:
   rtl_433:
     container_name: rtl_433
     # renovate: datasource=docker
-    image: hertzg/rtl_433:25.12@sha256:adfb6e639ff109f19390b95d244d7bc5474f8e8dd9cae288f76675c2b814c7e6
+    image: hertzg/rtl_433:25.12@sha256:164e5569be74566ab13804af8e80a6e0266a803a6806bbd90a0aca2ba4ed5ef1
     restart: unless-stopped
     devices:
       - /dev/bus/usb:/dev/bus/usb
