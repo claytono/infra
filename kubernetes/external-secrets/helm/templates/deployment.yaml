@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v1.2.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -22,7 +22,7 @@ spec:
       labels:
         app.kubernetes.io/name: external-secrets
         app.kubernetes.io/instance: external-secrets
-        app.kubernetes.io/version: "v1.2.1"
+        app.kubernetes.io/version: "v1.3.1"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: external-secrets
@@ -40,7 +40,7 @@ spec:
             runAsUser: 1000
             seccompProfile:
               type: RuntimeDefault
-          image: ghcr.io/external-secrets/external-secrets:v1.2.1
+          image: ghcr.io/external-secrets/external-secrets:v1.3.1
           imagePullPolicy: IfNotPresent
           args:
           - --concurrent=1

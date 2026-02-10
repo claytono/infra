@@ -9,7 +9,7 @@ metadata:
     
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v1.2.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -24,7 +24,7 @@ spec:
         
         app.kubernetes.io/name: external-secrets-webhook
         app.kubernetes.io/instance: external-secrets
-        app.kubernetes.io/version: "v1.2.1"
+        app.kubernetes.io/version: "v1.3.1"
         app.kubernetes.io/managed-by: Helm
     spec:
       hostNetwork: false
@@ -42,7 +42,7 @@ spec:
             runAsUser: 1000
             seccompProfile:
               type: RuntimeDefault
-          image: ghcr.io/external-secrets/external-secrets:v1.2.1
+          image: ghcr.io/external-secrets/external-secrets:v1.3.1
           imagePullPolicy: IfNotPresent
           args:
           - webhook
@@ -61,9 +61,12 @@ spec:
             - containerPort: 10250
               protocol: TCP
               name: webhook
+            - containerPort: 8081
+              protocol: TCP
+              name: ready
           readinessProbe:
             httpGet:
-              port: 8081
+              port: ready
               path: /readyz
             initialDelaySeconds: 20
             periodSeconds: 5
