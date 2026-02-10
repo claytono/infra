@@ -1,3 +1,0 @@
----
-netdata_parent: netdata.cow-banjo.ts.net
-netdata_streaming_skip_tls_verify: true
