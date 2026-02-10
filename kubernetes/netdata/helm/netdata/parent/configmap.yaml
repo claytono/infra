@@ -12,6 +12,22 @@ metadata:
     heritage: Helm
 data:
     
+  go.d: |
+        default_run: false
+        modules:
+          prometheus: true
+  go.d-prometheus: |
+        jobs:
+          - name: proxmox-cluster
+            url: http://prometheus-pve-exporter.o11y.svc:9221/pve?target=p1.oneill.net&cluster=1&node=0
+          - name: proxmox-p1
+            url: http://prometheus-pve-exporter.o11y.svc:9221/pve?target=p1.oneill.net&cluster=0&node=1
+          - name: proxmox-p2
+            url: http://prometheus-pve-exporter.o11y.svc:9221/pve?target=p2.oneill.net&cluster=0&node=1
+          - name: proxmox-p3
+            url: http://prometheus-pve-exporter.o11y.svc:9221/pve?target=p3.oneill.net&cluster=0&node=1
+          - name: proxmox-p4
+            url: http://prometheus-pve-exporter.o11y.svc:9221/pve?target=p4.oneill.net&cluster=0&node=1
   health: |
         SEND_EMAIL="NO"
         SEND_SLACK="YES"
