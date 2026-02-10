@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grafana
         app.kubernetes.io/version: "12.3.1"
       annotations:
-        checksum/config: 2badbe7d25db90caec2dc4deb9dccd5e133aa5844963dbdace6c34f35f08f0db
+        checksum/config: 838e10680832b3610ff4970112af1c952b8147baf2456224a65e06aa37bf7c75
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
         kubectl.kubernetes.io/default-container: grafana
         reloader.stakater.com/auto: "true"
@@ -72,6 +72,7 @@ spec:
             capabilities:
               drop:
               - ALL
+            privileged: false
             seccompProfile:
               type: RuntimeDefault
           volumeMounts:
