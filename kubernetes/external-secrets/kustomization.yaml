@@ -1,6 +1,7 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 namespace: external-secrets
 
 resources:
@@ -25,7 +26,9 @@ resources:
 - helm/templates/crds/vaultdynamicsecret.yaml
 - helm/templates/crds/webhook.yaml
 - helm/templates/crds/generatorstate.yaml
+- helm/templates/crds/cloudsmithaccesstoken.yaml
 - helm/templates/crds/clusterpushsecret.yaml
+- helm/templates/crds/sshkey.yaml
 - helm/templates/deployment.yaml
 - helm/templates/rbac.yaml
 - helm/templates/serviceaccount.yaml
