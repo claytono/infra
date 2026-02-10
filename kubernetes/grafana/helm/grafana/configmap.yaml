@@ -34,8 +34,6 @@ data:
     scopes = openid profile email groups
     token_url = https://auth.k.oneill.net/application/o/token/
     use_pkce = true
-    [grafana_net]
-    url = https://grafana.net
     [log]
     mode = console
     [paths]
