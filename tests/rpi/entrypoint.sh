@@ -21,21 +21,33 @@ qemu-img resize /work/disk.img 4G 2>/dev/null
 LOOP_DEV=$(losetup --find --show /work/disk.img)
 kpartx -av "$LOOP_DEV"
 
+cleanup() {
+    kpartx -d "$LOOP_DEV" 2>/dev/null || true
+    losetup -d "$LOOP_DEV" 2>/dev/null || true
+}
+trap cleanup EXIT
+
 # Wait for mapper devices to appear
 LOOP_NAME=$(basename "$LOOP_DEV")
 BOOT_PART="/dev/mapper/${LOOP_NAME}p1"
-for i in {1..10}; do
+for _ in {1..10}; do
     [[ -b "$BOOT_PART" ]] && break
     sleep 0.5
 done
 
 ROOT_PART="/dev/mapper/${LOOP_NAME}p2"
 
-cleanup() {
-    kpartx -d "$LOOP_DEV" 2>/dev/null || true
-    losetup -d "$LOOP_DEV" 2>/dev/null || true
-}
-trap cleanup EXIT
+# Grow root partition to fill available space, then resize filesystem
+echo "Growing root partition..."
+echo ", +" | sfdisk -N 2 "$LOOP_DEV" --no-reread
+kpartx -u "$LOOP_DEV"
+rc=0
+e2fsck -fy "$ROOT_PART" || rc=$?
+if (( rc > 1 )); then
+    echo "Error: e2fsck failed on $ROOT_PART with exit code $rc" >&2
+    exit "$rc"
+fi
+resize2fs "$ROOT_PART"
 
 # Mount boot partition and extract kernel/DTB
 mkdir -p /work/boot
