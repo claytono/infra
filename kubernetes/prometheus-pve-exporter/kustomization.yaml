@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: o11y
+
+namePrefix: prometheus-pve-
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- deployment.yaml
+- service.yaml
+- externalsecret.yaml
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: prometheus-pve-exporter
+    app.kubernetes.io/instance: prometheus-pve-exporter

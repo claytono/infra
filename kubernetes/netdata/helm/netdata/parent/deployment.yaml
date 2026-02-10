@@ -40,6 +40,7 @@ spec:
             sed "s/11111111-2222-3333-4444-555555555555/$NETDATA_STREAM_API_KEY/g" \
               /etc/netdata-tmpl/stream > /out/stream/stream.conf
             cp /etc/netdata-tmpl/netdata /out/netdata/netdata.conf
+            sed -i 's/go.d = no/go.d = yes/' /out/netdata/netdata.conf
             cat >> /out/netdata/netdata.conf <<'EOF'
             [web]
               ssl key = /etc/netdata/ssl/tls.key
@@ -104,6 +105,12 @@ spec:
           volumeMounts:
             - name: os-release
               mountPath: /host/etc/os-release
+            - name: configmap
+              mountPath: /etc/netdata/go.d.conf
+              subPath: go.d
+            - name: configmap
+              mountPath: /etc/netdata/go.d/prometheus.conf
+              subPath: go.d-prometheus
             - name: configmap
               mountPath: /etc/netdata/health_alarm_notify.conf
               subPath: health

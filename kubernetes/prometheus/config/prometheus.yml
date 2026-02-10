@@ -298,6 +298,43 @@ scrape_configs:
     action: replace
     target_label: kubernetes_pod_name
 
+- job_name: proxmox-cluster
+  scrape_interval: 60s
+  metrics_path: /pve
+  params:
+    cluster: ['1']
+    node: ['0']
+  static_configs:
+  - targets:
+    - p1.oneill.net
+  relabel_configs:
+  - source_labels: [__address__]
+    target_label: __param_target
+  - source_labels: [__param_target]
+    target_label: instance
+  - target_label: __address__
+    replacement: prometheus-pve-exporter.o11y.svc:9221
+
+- job_name: proxmox-nodes
+  scrape_interval: 60s
+  metrics_path: /pve
+  params:
+    cluster: ['0']
+    node: ['1']
+  static_configs:
+  - targets:
+    - p1.oneill.net
+    - p2.oneill.net
+    - p3.oneill.net
+    - p4.oneill.net
+  relabel_configs:
+  - source_labels: [__address__]
+    target_label: __param_target
+  - source_labels: [__param_target]
+    target_label: instance
+  - target_label: __address__
+    replacement: prometheus-pve-exporter.o11y.svc:9221
+
 - job_name: karakeep
   metrics_path: /api/metrics
   static_configs:

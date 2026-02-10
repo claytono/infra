@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: exporter
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-pve-exporter
+      app.kubernetes.io/instance: prometheus-pve-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prometheus-pve-exporter
+        app.kubernetes.io/instance: prometheus-pve-exporter
+      annotations:
+        reloader.stakater.com/auto: 'true'
+    spec:
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      containers:
+      - name: pve-exporter
+        image: ghcr.io/prometheus-pve/prometheus-pve-exporter:3.8.0@sha256:66e0c8558b23f06231ab55ab1afdef2d43ff24365bcf75d36adaef6d9f7497df
+        ports:
+        - containerPort: 9221
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        env:
+        - name: PVE_USER
+          value: pve-exporter@pve
+        - name: PVE_TOKEN_NAME
+          value: exporter
+        envFrom:
+        - secretRef:
+            name: prometheus-pve-exporter
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 101
+          capabilities:
+            drop: [ALL]
