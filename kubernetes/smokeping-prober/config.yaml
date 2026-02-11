@@ -16,12 +16,9 @@ targets:
   - p2.oneill.net
   - p3.oneill.net
   - p4.oneill.net
-  - p9.oneill.net
   - infra1.oneill.net
   - pantrypi.oneill.net
   - garagepi.oneill.net
-  - left-garage-door.oneill.net
-  - right-garage-door.oneill.net
   - fs2.oneill.net
   interval: 1s
   network: ip
