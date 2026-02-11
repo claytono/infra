@@ -16,6 +16,19 @@
     state: present
     autoremove: true
 
+- name: "Set system timezone"
+  ansible.builtin.file:
+    src: "/usr/share/zoneinfo/{{ timezone }}"
+    dest: /etc/localtime
+    state: link
+    force: true
+
+- name: "Write timezone to /etc/timezone"
+  ansible.builtin.copy:
+    content: "{{ timezone }}\n"
+    dest: /etc/timezone
+    mode: "0644"
+
 - name: "Check if Proxmox is installed"
   ansible.builtin.stat:
     path: /usr/bin/pvesh
