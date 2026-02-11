@@ -12,18 +12,21 @@ nut_ups:
     description: "UPS for Synology"
     extra: |
       serial = "CXXPV7000091"
+      pollonly
   - name: "ups2"
     driver: "usbhid-ups"
     device: auto
     description: "UPS for p1, p2, p3, p4"
     extra: |
       serial = "CXXPV7000092"
+      pollonly
   - name: "ups3"
     driver: "usbhid-ups"
     device: auto
     description: "UPS for network gear & infra1"
     extra: |
       serial = "CXXPX7007632"
+      pollonly
 
 nut_upsmon_extra: |
   SHUTDOWNCMD "/sbin/shutdown -h +0"
