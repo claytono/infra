@@ -15,6 +15,10 @@ rm -rf gyb gyb.tar.xz
 
 cd /data
 
+# Clear config dir in case of container restart (emptyDir persists, and
+# the renamed .cfg file from a previous run would cause find to return
+# two results, breaking the mv below).
+rm -rf /config/*
 cp -aL /config-source/* /config
 
 old_filename=$(find /config -name "*.cfg")
