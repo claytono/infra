@@ -23,6 +23,14 @@ spec:
         spec:
           hostname: rp-kube
           restartPolicy: OnFailure
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: resticprofile
+                    operator: Exists
+                topologyKey: kubernetes.io/hostname
           containers:
           - name: resticprofile
             command:

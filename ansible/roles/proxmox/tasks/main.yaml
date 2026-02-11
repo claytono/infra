@@ -18,6 +18,18 @@
       - proxmox_admin_password is defined
     fail_msg: "Missing required Proxmox API token or password variables. Check group_vars/proxmox.yaml"
 
+- name: "Disable KSM memory deduplication"
+  ansible.builtin.systemd:
+    name: ksmtuned
+    state: stopped
+    enabled: false
+  failed_when: false
+
+- name: "Disable KSM page scanning"
+  ansible.builtin.shell:
+    cmd: echo 0 > /sys/kernel/mm/ksm/run
+  changed_when: false
+
 - name: "Configure network interfaces"
   ansible.builtin.import_tasks: network.yaml
   when: proxmox_manage_network | default(false)
