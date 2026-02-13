@@ -1,9 +1,8 @@
 ---
-schedule: 17 7 * * *
-deschedulerPolicyAPIVersion: descheduler/v1alpha2
+schedule: 0 9 * * *  # 09:00 UTC = 4:00 AM EST / 5:00 AM EDT
 
 deschedulerPolicy:
-  maxNoOfPodsToEvictPerNode: 2
+  maxNoOfPodsToEvictPerNamespace: 1
   evictLocalStoragePods: true
   profiles:
   - name: default
@@ -17,28 +16,32 @@ deschedulerPolicy:
             operator: DoesNotExist
     - name: PodLifeTime
       args:
-        maxPodLifeTimeSeconds: 1209600
+        maxPodLifeTimeSeconds: 1209600  # 14 days
         states:
         - Running
-        # - name: LowNodeUtilization
-        #   args:
-        #     thresholds:
-        #       cpu: 20
-        #       memory: 20
-        #       pods: 20
-        #     targetThresholds:
-        #       cpu: 50
-        #       memory: 50
-        #       pods: 50
     - name: RemovePodsHavingTooManyRestarts
       args:
         podRestartThreshold: 10
         includingInitContainers: true
     plugins:
-        # balance:
-        #   enabled:
-        #     - LowNodeUtilization
       deschedule:
         enabled:
         - PodLifeTime
         - RemovePodsHavingTooManyRestarts
+  - name: frank-daily-restart
+    pluginConfig:
+    - name: DefaultEvictor
+      args:
+        evictLocalStoragePods: true
+        namespaces:
+          include:
+          - frank
+    - name: PodLifeTime
+      args:
+        maxPodLifeTimeSeconds: 86400  # 24 hours
+        states:
+        - Running
+    plugins:
+      deschedule:
+        enabled:
+        - PodLifeTime
