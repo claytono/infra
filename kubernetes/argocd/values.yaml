@@ -6,19 +6,15 @@ server:
     servicePortHttps: 443
     servicePortHttp: 80
   certificate:
-    enabled: true
-    domain: argocd.k.oneill.net
-    issuer:
-      kind: ClusterIssuer
-      name: letsencrypt
+    enabled: false
   ingress:
     enabled: true
     ingressClassName: nginx
     hostname: argocd.k.oneill.net
-    servicePort: https
+    servicePort: http
+    tls: true
     annotations:
-      nginx.ingress.kubernetes.io/ssl-passthrough: 'true'
-      nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+      cert-manager.io/cluster-issuer: letsencrypt
       gethomepage.dev/enabled: 'true'
       gethomepage.dev/name: Argo CD
       gethomepage.dev/description: GitOps Continuous Delivery
@@ -86,6 +82,7 @@ configs:
   notifications:
     argocdUrl: https://argocd.k.oneill.net
   params:
+    server.insecure: 'true'
     # Dex is configured to listen on plain HTTP 5556 via dex.config
     server.dex.server: http://argocd-dex-server:5556
     server.dex.server.strict.tls: 'false'
