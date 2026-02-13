@@ -15,7 +15,7 @@ data:
     apiVersion: "descheduler/v1alpha2"
     kind: "DeschedulerPolicy"
     evictLocalStoragePods: true
-    maxNoOfPodsToEvictPerNode: 2
+    maxNoOfPodsToEvictPerNamespace: 1
     profiles:
     - name: default
       pluginConfig:
@@ -40,3 +40,20 @@ data:
           enabled:
           - PodLifeTime
           - RemovePodsHavingTooManyRestarts
+    - name: frank-daily-restart
+      pluginConfig:
+      - args:
+          evictLocalStoragePods: true
+          namespaces:
+            include:
+            - frank
+        name: DefaultEvictor
+      - args:
+          maxPodLifeTimeSeconds: 86400
+          states:
+          - Running
+        name: PodLifeTime
+      plugins:
+        deschedule:
+          enabled:
+          - PodLifeTime
