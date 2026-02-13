@@ -15,13 +15,12 @@ metadata:
   annotations:
     ak-oidc-callback: "/api/dex/callback"
     ak-type: "oidc"
+    cert-manager.io/cluster-issuer: "letsencrypt"
     gethomepage.dev/description: "GitOps Continuous Delivery"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Home Lab"
     gethomepage.dev/icon: "mdi-git"
     gethomepage.dev/name: "Argo CD"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -34,4 +33,8 @@ spec:
               service:
                 name: argocd-server
                 port:
-                  number: 443
+                  number: 80
+  tls:
+    - hosts:
+      - argocd.k.oneill.net
+      secretName: argocd-server-tls

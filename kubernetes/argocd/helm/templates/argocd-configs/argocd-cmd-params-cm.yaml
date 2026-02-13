@@ -31,6 +31,7 @@ data:
   reposerver.log.level: info
   server.dex.server: http://argocd-dex-server:5556
   server.dex.server.strict.tls: "false"
+  server.insecure: "true"
   server.log.format: text
   server.log.level: info
   server.repo.server.strict.tls: "false"
