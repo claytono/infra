@@ -44,12 +44,12 @@ data:
       pluginConfig:
       - args:
           evictLocalStoragePods: true
-          namespaces:
-            include:
-            - frank
         name: DefaultEvictor
       - args:
           maxPodLifeTimeSeconds: 86400
+          namespaces:
+            include:
+            - frank
           states:
           - Running
         name: PodLifeTime
