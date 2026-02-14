@@ -25,6 +25,9 @@ resources:
 - helm/valkey/service-internal.yaml
 - helm/valkey/services.yaml
 - helm/valkey/statefulset.yaml
+# Traefik forward-auth middlewares
+- middleware-forward-auth-simple.yaml
+- middleware-forward-auth-basic.yaml
 
 commonAnnotations:
   argoManaged: 'true'

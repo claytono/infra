@@ -11,6 +11,7 @@ resources:
 - namespace.yaml
 - ara-postgres-cluster.yaml
 - ara-basic-auth-secret.yaml
+- middleware-basic-auth.yaml
 - ingress.yaml
 - helm/deployment.yaml
 - helm/extra-objects.yaml

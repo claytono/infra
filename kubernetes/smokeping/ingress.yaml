@@ -11,6 +11,7 @@ metadata:
     gethomepage.dev/name: Smokeping
     gethomepage.dev/group: Monitoring
     gethomepage.dev/icon: smokeping.png
+    traefik.ingress.kubernetes.io/router.middlewares: authentik-ak-forward-auth-simple@kubernetescrd
 
 spec:
   tls:
@@ -28,4 +29,3 @@ spec:
             name: smokeping
             port:
               number: 80
-  ingressClassName: nginx

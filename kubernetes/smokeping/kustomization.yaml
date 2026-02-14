@@ -4,9 +4,6 @@ kind: Kustomization
 
 namespace: default
 
-components:
-- ../components/authentik
-
 resources:
 - deploy.yaml
 - service.yaml
