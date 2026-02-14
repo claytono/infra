@@ -1,0 +1,52 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: traefik
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- certificate.yaml
+# CRDs
+- helm/crds/gateway-standard-install.yaml
+- helm/crds/hub.traefik.io_accesscontrolpolicies.yaml
+- helm/crds/hub.traefik.io_aiservices.yaml
+- helm/crds/hub.traefik.io_apiauths.yaml
+- helm/crds/hub.traefik.io_apibundles.yaml
+- helm/crds/hub.traefik.io_apicatalogitems.yaml
+- helm/crds/hub.traefik.io_apiplans.yaml
+- helm/crds/hub.traefik.io_apiportalauths.yaml
+- helm/crds/hub.traefik.io_apiportals.yaml
+- helm/crds/hub.traefik.io_apiratelimits.yaml
+- helm/crds/hub.traefik.io_apis.yaml
+- helm/crds/hub.traefik.io_apiversions.yaml
+- helm/crds/hub.traefik.io_managedapplications.yaml
+- helm/crds/hub.traefik.io_managedsubscriptions.yaml
+- helm/crds/traefik.io_ingressroutes.yaml
+- helm/crds/traefik.io_ingressroutetcps.yaml
+- helm/crds/traefik.io_ingressrouteudps.yaml
+- helm/crds/traefik.io_middlewares.yaml
+- helm/crds/traefik.io_middlewaretcps.yaml
+- helm/crds/traefik.io_serverstransports.yaml
+- helm/crds/traefik.io_serverstransporttcps.yaml
+- helm/crds/traefik.io_tlsoptions.yaml
+- helm/crds/traefik.io_tlsstores.yaml
+- helm/crds/traefik.io_traefikservices.yaml
+# Helm templates
+- helm/templates/rbac/serviceaccount.yaml
+- helm/templates/rbac/clusterrole.yaml
+- helm/templates/rbac/clusterrolebinding.yaml
+- helm/templates/deployment.yaml
+- helm/templates/ingressclass.yaml
+- helm/templates/ingressroute.yaml
+- helm/templates/poddisruptionbudget.yaml
+- helm/templates/service.yaml
+- helm/templates/service-metrics.yaml
+
+labels:
+
+- pairs:
+    app: traefik

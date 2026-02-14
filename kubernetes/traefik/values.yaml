@@ -1,0 +1,81 @@
+---
+deployment:
+  replicas: 2
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+updateStrategy:
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 0
+
+tolerations:
+- key: node-role.kubernetes.io/control-plane
+  operator: Exists
+  effect: NoSchedule
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+      topologyKey: kubernetes.io/hostname
+
+ingressClass:
+  name: traefik
+  isDefaultClass: true
+
+providers:
+  kubernetesCRD:
+    allowCrossNamespace: true
+    ingressClass: traefik
+  kubernetesIngress: {}
+
+ports:
+  web:
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+service:
+  spec:
+    loadBalancerIP: 172.19.74.34
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: traefik.k.oneill.net
+
+additionalArguments:
+- --accesslog
+- --accesslog.format=json
+
+metrics:
+  prometheus:
+    service:
+      enabled: true
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9100'
+
+ingressRoute:
+  dashboard:
+    enabled: true
+    entryPoints:
+    - websecure
+    matchRule: Host(`traefik.k.oneill.net`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    middlewares:
+    - name: ak-forward-auth-simple
+      namespace: authentik
+    tls:
+      secretName: traefik-dashboard-tls

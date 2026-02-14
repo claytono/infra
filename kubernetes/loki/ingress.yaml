@@ -6,12 +6,9 @@ metadata:
   name: loki
   annotations:
     cert-manager.io/cluster-issuer: zerossl
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: loki-basic-auth
-    nginx.ingress.kubernetes.io/auth-realm: Loki - Authentication Required
+    traefik.ingress.kubernetes.io/router.middlewares: loki-basic-auth@kubernetescrd
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - loki.k.oneill.net

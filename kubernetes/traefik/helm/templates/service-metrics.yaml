@@ -1,0 +1,25 @@
+---
+# Source: traefik/templates/service-metrics.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-metrics
+  namespace: traefik
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-traefik
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    prometheus.io/port: "9100"
+    prometheus.io/scrape: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-traefik
+  ports:
+  - port: 9100
+    name: metrics
+    targetPort: metrics
+    protocol: TCP

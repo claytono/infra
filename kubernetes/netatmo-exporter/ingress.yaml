@@ -8,7 +8,6 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - netatmo-exporter.k.oneill.net
