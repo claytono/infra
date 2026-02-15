@@ -33,11 +33,11 @@ deschedulerPolicy:
     - name: DefaultEvictor
       args:
         evictLocalStoragePods: true
+    - name: PodLifeTime
+      args:
         namespaces:
           include:
           - frank
-    - name: PodLifeTime
-      args:
         maxPodLifeTimeSeconds: 86400  # 24 hours
         states:
         - Running
