@@ -84,7 +84,6 @@ homekit:
     - light.garage_overhead_lights_8
     - light.office_floor_lamp_19
     - light.office_light_76
-    - light.office_sink_light
     - lock.front_door_lock
     - lock.garage_door_lock
     - sensor.garage_humidity
@@ -161,21 +160,6 @@ generic_hygrostat:
   wet_tolerance: 0
   min_cycle_duration:
     minutes: 20
-
-light:
-- platform: switch
-  name: Office Sink Light
-  entity_id: switch.office_sink
-- platform: switch
-  name: Office Closet Light
-  entity_id: switch.office_closet_relay
-- platform: group
-  name: Office lights
-  entities:
-  - light.office_floor_lamp
-  - light.basement_office_main_lights
-  - light.office_sink_light
-  - light.office_closet_light
 
 template:
 
