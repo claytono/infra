@@ -7,4 +7,4 @@ metadata:
   namespace: netdata
   annotations:
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: netdata-netdata-insecure@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serverstransport: netdata-netdata-tls@kubernetescrd

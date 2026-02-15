@@ -3,8 +3,8 @@ apiVersion: traefik.io/v1alpha1
 kind: ServersTransport
 
 metadata:
-  name: netdata-insecure
+  name: netdata-tls
   namespace: netdata
 
 spec:
-  insecureSkipVerify: true
+  serverName: netdata-stream.k.oneill.net
