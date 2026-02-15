@@ -135,7 +135,7 @@ resource "proxmox_virtual_environment_vm" "k2" {
   disk {
     interface    = "scsi0"
     datastore_id = "local-zfs"
-    size         = 100
+    size         = 150
     file_format  = "raw"
     iothread     = true
     discard      = "on"
@@ -193,7 +193,7 @@ resource "proxmox_virtual_environment_vm" "k3" {
   disk {
     interface    = "scsi0"
     datastore_id = "local-zfs"
-    size         = 100
+    size         = 150
     file_format  = "raw"
     iothread     = true
     discard      = "on"
@@ -244,7 +244,7 @@ resource "proxmox_virtual_environment_vm" "k4" {
   disk {
     interface    = "scsi0"
     datastore_id = "local-zfs"
-    size         = 100
+    size         = 150
     file_format  = "raw"
     iothread     = true
     discard      = "on"
