@@ -51,6 +51,16 @@ jobs:
           nix
           automerge
 
+    - name: Sync flake.lock to semaphore
+      if: steps.update-flake-lock.outputs.pull-request-number != ''
+      run: |
+        cp flake.lock kubernetes/semaphore/nix-flake.lock
+        git add kubernetes/semaphore/nix-flake.lock
+        if ! git diff --cached --quiet; then
+          git commit --amend --no-edit
+          git push --force-with-lease
+        fi
+
     - name: Enable automerge
       if: steps.update-flake-lock.outputs.pull-request-number != ''
       run: gh pr merge --auto --rebase "${{ steps.update-flake-lock.outputs.pull-request-number }}"
