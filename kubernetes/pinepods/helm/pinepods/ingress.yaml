@@ -17,10 +17,7 @@ metadata:
     gethomepage.dev/group: Media
     gethomepage.dev/icon: mdi-podcast
     gethomepage.dev/name: PinePods
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"
-    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
         - "pinepods.k.oneill.net"

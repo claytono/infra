@@ -24,6 +24,9 @@ patches:
       path: /metadata/annotations/nginx.ingress.kubernetes.io~1auth-snippet
       value: |
         proxy_set_header X-Forwarded-Host $http_host;
+    - op: add
+      path: /metadata/annotations/traefik.ingress.kubernetes.io~1router.middlewares
+      value: authentik-ak-forward-auth-simple@kubernetescrd
 
 - target:
     group: networking.k8s.io
@@ -52,6 +55,9 @@ patches:
       path: /metadata/annotations/nginx.ingress.kubernetes.io~1auth-snippet
       value: |
         proxy_set_header X-Forwarded-Host $http_host;
+    - op: add
+      path: /metadata/annotations/traefik.ingress.kubernetes.io~1router.middlewares
+      value: authentik-ak-forward-auth-basic@kubernetescrd
 
 - target:
     group: networking.k8s.io

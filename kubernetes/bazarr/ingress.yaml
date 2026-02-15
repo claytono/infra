@@ -32,4 +32,3 @@ spec:
             name: bazarr
             port:
               number: 6767
-  ingressClassName: nginx

@@ -25,4 +25,3 @@ spec:
             name: pushgateway
             port:
               number: 9091
-  ingressClassName: nginx

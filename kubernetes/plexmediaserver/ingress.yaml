@@ -28,4 +28,3 @@ spec:
             name: plexmediaserver
             port:
               number: 32400
-  ingressClassName: nginx

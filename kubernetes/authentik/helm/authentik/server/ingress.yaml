@@ -21,7 +21,6 @@ metadata:
     gethomepage.dev/name: Authentik
     gethomepage.dev/pod-selector: app.kubernetes.io/name=authentik,app.kubernetes.io/component=server
 spec:
-  ingressClassName: nginx
   rules:
     - host: "auth.k.oneill.net"
       http:

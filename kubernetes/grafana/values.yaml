@@ -39,7 +39,6 @@ envFromSecret: grafana-oidc
 # Ingress configuration
 ingress:
   enabled: true
-  ingressClassName: nginx
   annotations:
     ak-type: oidc
     ak-oidc-callback: /login/generic_oauth

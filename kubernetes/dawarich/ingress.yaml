@@ -16,7 +16,6 @@ metadata:
     ak-oidc-callback: /users/auth/openid_connect/callback
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - dawarich.k.oneill.net

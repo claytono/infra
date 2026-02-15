@@ -30,4 +30,3 @@ spec:
             name: bookshelf
             port:
               number: 8787
-  ingressClassName: nginx

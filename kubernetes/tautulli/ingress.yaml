@@ -32,4 +32,3 @@ spec:
             name: tautulli
             port:
               number: 8181
-  ingressClassName: nginx

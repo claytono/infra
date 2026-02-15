@@ -29,4 +29,3 @@ spec:
             name: qbittorrent
             port:
               number: 8080
-  ingressClassName: nginx

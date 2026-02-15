@@ -68,13 +68,17 @@ metrics:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9100'
 
+api:
+  insecure: true
+
 ingressRoute:
   dashboard:
     enabled: true
     entryPoints:
     - websecure
-    matchRule: Host(`traefik.k.oneill.net`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    matchRule: Host(`traefik.k.oneill.net`)
     middlewares:
+    - name: redirect-dashboard
     - name: ak-forward-auth-simple
       namespace: authentik
     tls:

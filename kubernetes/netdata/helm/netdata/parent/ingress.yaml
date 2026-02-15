@@ -17,11 +17,8 @@ metadata:
     gethomepage.dev/group: Monitoring
     gethomepage.dev/icon: netdata.png
     gethomepage.dev/name: Netdata
-    kubernetes.io/ingress.class: nginx
     kubernetes.io/tls-acme: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
       - netdata.k.oneill.net

@@ -10,6 +10,7 @@ commonAnnotations:
 resources:
 - namespace.yaml
 - certificate.yaml
+- middleware-redirect-dashboard.yaml
 # CRDs
 - helm/crds/gateway-standard-install.yaml
 - helm/crds/hub.traefik.io_accesscontrolpolicies.yaml

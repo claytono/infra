@@ -16,9 +16,7 @@ metadata:
     gethomepage.dev/group: Home Lab
     gethomepage.dev/icon: homebox.png
     gethomepage.dev/name: HomeBox
-    nginx.ingress.kubernetes.io/proxy-body-size: 500m
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
         - "homebox.k.oneill.net"

@@ -15,7 +15,6 @@ metadata:
     gethomepage.dev/icon: changedetection
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - changedetection.k.oneill.net

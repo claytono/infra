@@ -15,12 +15,13 @@ spec:
   entryPoints:
   - websecure
   routes:
-  - match: Host(`traefik.k.oneill.net`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+  - match: Host(`traefik.k.oneill.net`)
     kind: Rule
     services:
       - kind: TraefikService
         name: api@internal
     middlewares:
+      - name: redirect-dashboard
       - name: ak-forward-auth-simple
         namespace: authentik
   tls:

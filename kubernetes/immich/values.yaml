@@ -44,10 +44,8 @@ server:
   ingress:
     main:
       enabled: true
-      ingressClassName: nginx
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
-        nginx.ingress.kubernetes.io/proxy-body-size: '0'
         ak-type: oidc
         ak-oidc-callback: /auth/login
         ak-path-exclude: /api(/|$)

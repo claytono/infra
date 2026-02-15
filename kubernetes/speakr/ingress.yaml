@@ -7,7 +7,6 @@ metadata:
   namespace: speakr
   annotations:
     cert-manager.io/cluster-issuer: zerossl
-    nginx.ingress.kubernetes.io/proxy-body-size: '0'
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Speakr
     gethomepage.dev/description: Audio Transcription & Search
@@ -17,7 +16,6 @@ metadata:
     ak-oidc-callback: /auth/sso/callback
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - speakr.k.oneill.net

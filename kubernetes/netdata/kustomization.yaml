@@ -30,8 +30,10 @@ resources:
 - netdata-streaming-lb.yaml
 - tailscale-service.yaml
 - certificate-streaming.yaml
+- serverstransport.yaml
 
 patches:
+- path: patch-service-traefik.yaml
 - path: patch-child-stream-init.yaml
 - path: patch-k8s-state-stream-init.yaml
 

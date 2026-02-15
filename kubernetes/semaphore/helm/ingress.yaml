@@ -23,7 +23,6 @@ metadata:
     gethomepage.dev/pod-selector: app.kubernetes.io/name=semaphore
 
 spec:
-  ingressClassName: nginx
   tls:
     - secretName: semaphore-tls
       hosts:

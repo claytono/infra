@@ -18,7 +18,6 @@ metadata:
     ak-path-exclude: /api(/|$)
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - booklore.k.oneill.net

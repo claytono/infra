@@ -9,7 +9,6 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - frank.k.oneill.net

@@ -16,7 +16,6 @@ metadata:
     gethomepage.dev/icon: alertmanager.png
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - alertmanager.k.oneill.net

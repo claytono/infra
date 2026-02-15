@@ -19,7 +19,6 @@ dashboard:
       memory: 256Mi
   ingress:
     enabled: true
-    ingressClassName: nginx
     annotations:
       ak-type: simple
       cert-manager.io/cluster-issuer: letsencrypt

@@ -147,7 +147,9 @@ def build_app_info_from_ingress(ingress, file_path):
 
     # Get namespace: prefer ak-namespace annotation, then metadata.namespace, then default
     annotations = metadata.get("annotations", {}) or {}
-    namespace = annotations.get("ak-namespace") or metadata.get("namespace") or "default"
+    namespace = (
+        annotations.get("ak-namespace") or metadata.get("namespace") or "default"
+    )
 
     # Get external host from first rule
     rules = spec.get("rules", [])
@@ -453,8 +455,8 @@ def generate_outpost_file(app_infos, generated_dir):
     hcl = hcl.rstrip() + "\n"
     out_tf = generated_dir / "generated-outpost.tf"
     old = out_tf.read_text() if out_tf.exists() else ""
+    out_tf.write_text(hcl)
     if old != hcl:
-        out_tf.write_text(hcl)
         print(f"  ✓ generated-outpost.tf ({len(proxy_apps)} proxy providers) [CHANGED]")
         # remove legacy json
         legacy = generated_dir / "generated-outpost.tf.json"

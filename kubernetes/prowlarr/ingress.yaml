@@ -33,4 +33,3 @@ spec:
             name: prowlarr
             port:
               number: 9696
-  ingressClassName: nginx

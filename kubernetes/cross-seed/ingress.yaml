@@ -25,4 +25,3 @@ spec:
             name: cross-seed
             port:
               number: 2468
-  ingressClassName: nginx
