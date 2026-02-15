@@ -152,7 +152,6 @@ metadata:
     gethomepage.dev/icon: healthchecks.png
     gethomepage.dev/name: Healthchecks
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
         - "hc.k.oneill.net"

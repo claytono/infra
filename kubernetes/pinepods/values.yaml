@@ -2,10 +2,9 @@
 # Only override what differs from chart defaults
 
 ingress:
-  className: nginx
   annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints:
     cert-manager.io/cluster-issuer: zerossl
-    nginx.ingress.kubernetes.io/proxy-body-size: '0'
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: PinePods
     gethomepage.dev/description: Podcast Management

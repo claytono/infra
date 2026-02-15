@@ -16,7 +16,6 @@ metadata:
     gethomepage.dev/icon: home-assistant.png
     gethomepage.dev/name: Home Assistant
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
         - "hass.k.oneill.net"

@@ -30,4 +30,3 @@ spec:
             name: qui
             port:
               number: 7476
-  ingressClassName: nginx

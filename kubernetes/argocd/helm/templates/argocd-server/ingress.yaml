@@ -22,7 +22,6 @@ metadata:
     gethomepage.dev/icon: "mdi-git"
     gethomepage.dev/name: "Argo CD"
 spec:
-  ingressClassName: nginx
   rules:
     - host: argocd.k.oneill.net
       http:

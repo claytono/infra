@@ -10,7 +10,6 @@ metadata:
     cert-manager.io/cluster-issuer: zerossl
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - rclone-s3-velero.k.oneill.net

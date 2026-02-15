@@ -178,15 +178,13 @@ k8sState:
 ingress:
   enabled: true
   annotations:
+    kubernetes.io/ingress.class:
     ak-type: simple
     cert-manager.io/cluster-issuer: zerossl
-    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Netdata
     gethomepage.dev/group: Monitoring
     gethomepage.dev/icon: netdata.png
-  spec:
-    ingressClassName: nginx
   hosts:
   - netdata.k.oneill.net
   tls:

@@ -1,0 +1,10 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+
+metadata:
+  name: netdata-insecure
+  namespace: netdata
+
+spec:
+  insecureSkipVerify: true

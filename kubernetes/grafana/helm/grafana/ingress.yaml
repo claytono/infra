@@ -18,7 +18,6 @@ metadata:
     gethomepage.dev/icon: "grafana.png"
     gethomepage.dev/name: "Grafana"
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
       - grafana.k.oneill.net

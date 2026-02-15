@@ -28,4 +28,3 @@ spec:
             name: rreading-glasses
             port:
               number: 8788
-  ingressClassName: nginx

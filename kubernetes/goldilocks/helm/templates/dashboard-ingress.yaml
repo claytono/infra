@@ -20,7 +20,6 @@ metadata:
     gethomepage.dev/name: Goldilocks
     gethomepage.dev/pod-selector: app.kubernetes.io/name=goldilocks
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
         - "goldilocks.k.oneill.net"

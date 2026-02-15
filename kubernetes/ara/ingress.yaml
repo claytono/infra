@@ -8,12 +8,9 @@ metadata:
   namespace: ara
   annotations:
     cert-manager.io/cluster-issuer: zerossl
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: ara-basic-auth
-    nginx.ingress.kubernetes.io/auth-realm: ARA API - Authentication Required
+    traefik.ingress.kubernetes.io/router.middlewares: ara-basic-auth@kubernetescrd
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - ara.k.oneill.net
@@ -49,7 +46,6 @@ metadata:
     gethomepage.dev/pod-selector: app.kubernetes.io/name=ara
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - ara.k.oneill.net

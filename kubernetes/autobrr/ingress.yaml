@@ -32,4 +32,3 @@ spec:
             name: autobrr
             port:
               number: 7474
-  ingressClassName: nginx

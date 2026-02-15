@@ -25,7 +25,6 @@ general:
 
 ingress:
   enabled: true
-  className: nginx
   hosts:
   - host: semaphore.k.oneill.net
     paths:

@@ -15,7 +15,6 @@ metadata:
     gethomepage.dev/icon: qbittorrent.png
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - qbit-manage.k.oneill.net

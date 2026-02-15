@@ -14,7 +14,6 @@ metadata:
     gethomepage.dev/icon: prometheus.png
 
 spec:
-  ingressClassName: nginx
   tls:
   - hosts:
     - prometheus.k.oneill.net

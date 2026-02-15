@@ -9,7 +9,6 @@ server:
     enabled: false
   ingress:
     enabled: true
-    ingressClassName: nginx
     hostname: argocd.k.oneill.net
     servicePort: http
     tls: true

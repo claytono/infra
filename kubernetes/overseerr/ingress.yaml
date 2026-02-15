@@ -28,4 +28,3 @@ spec:
             name: overseerr
             port:
               number: 5055
-  ingressClassName: nginx

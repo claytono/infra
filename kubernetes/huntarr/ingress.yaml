@@ -29,4 +29,3 @@ spec:
             name: huntarr
             port:
               number: 9705
-  ingressClassName: nginx

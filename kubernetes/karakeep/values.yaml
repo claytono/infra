@@ -8,7 +8,6 @@ meilisearchMasterKey: bogus
 
 ingress:
   karakeep:
-    className: nginx
     hosts:
     - host: karakeep.k.oneill.net
       paths:
@@ -71,7 +70,7 @@ controllers:
 meilisearch:
   enabled: true
   environment:
-    MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE: "true"
+    MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE: 'true'
   auth:
     existingMasterKeySecret: karakeep-meilisearch
   persistence:

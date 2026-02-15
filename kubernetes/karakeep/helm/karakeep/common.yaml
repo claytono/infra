@@ -301,7 +301,6 @@ metadata:
     cert-manager.io/cluster-issuer: zerossl
   namespace: karakeep
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
         - "karakeep.k.oneill.net"

@@ -6,6 +6,30 @@ resource "authentik_outpost" "embedded" {
   name               = "authentik Embedded Outpost"
   type               = "proxy"
   service_connection = data.authentik_service_connection_kubernetes.local.id
+  config = jsonencode({
+    authentik_host                   = "https://auth.k.oneill.net"
+    authentik_host_insecure          = false
+    authentik_host_browser           = ""
+    log_level                        = "info"
+    object_naming_template           = "ak-outpost-%(name)s"
+    refresh_interval                 = "minutes=5"
+    container_image                  = null
+    docker_network                   = null
+    docker_map_ports                 = true
+    docker_labels                    = null
+    kubernetes_replicas              = 1
+    kubernetes_namespace             = "authentik"
+    kubernetes_ingress_annotations   = { "cert-manager.io/cluster-issuer" = "letsencrypt" }
+    kubernetes_ingress_secret_name   = "authentik-outpost-tls"
+    kubernetes_ingress_class_name    = "traefik"
+    kubernetes_ingress_path_type     = null
+    kubernetes_httproute_annotations = {}
+    kubernetes_httproute_parent_refs = []
+    kubernetes_service_type          = "ClusterIP"
+    kubernetes_disabled_components   = []
+    kubernetes_image_pull_secrets    = []
+    kubernetes_json_patches          = null
+  })
   protocol_providers = [
 {% for app in proxy_apps %}
     authentik_provider_proxy.{{ app }}.id,

@@ -9,7 +9,6 @@ metadata:
     ak-type: simple
 
 spec:
-  ingressClassName: nginx
   rules:
   - host: frank.k.oneill.net
     http:
