@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: qbittorrent
-        image: ghcr.io/linuxserver/qbittorrent:5.1.4@sha256:dfa75bc534ad4f36262f75b5c1d4c4f0ddd5e7ed5711ebc581c70920cce204ee
+        image: ghcr.io/linuxserver/qbittorrent:5.1.4@sha256:85eb27d2d09cd4cb748036a4c7f261321da516b6f88229176cf05a92ccd26815
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
