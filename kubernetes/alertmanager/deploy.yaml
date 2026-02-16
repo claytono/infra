@@ -20,33 +20,9 @@ spec:
         app.kubernetes.io/name: alertmanager
         app.kubernetes.io/instance: alertmanager
     spec:
-      initContainers:
-      - name: gomplate-config
-        image: hairyhenderson/gomplate:v4.3.3@sha256:55db623a1e3d620501fbf3ff01753cfde101d9b49fa5ff0132b4a8d0c246c16c
-        args:
-        - --file
-        - /etc/alertmanager/config.template.yaml
-        - --out
-        - /config/config.yaml
-        env:
-        - name: SMTP_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: alertmanager
-              key: SMTP_USERNAME
-        - name: SMTP_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: alertmanager
-              key: SMTP_PASSWORD
-        volumeMounts:
-        - name: config-template
-          mountPath: /etc/alertmanager
-        - name: alertmanager-config
-          mountPath: /config
       containers:
       - name: alertmanager
-        image: prom/alertmanager:v0.30.1@sha256:286ad8838533a5a01d89bd09643f43d2b68b65203123b5700e54a8f80ff9c1f4
+        image: prom/alertmanager:v0.31.0@sha256:cc54cc450174ada901b32eb2538de5fc70ee259a1ac551ed38023f2ca2ad00e3
         args:
         - --config.file=/config/config.yaml
         - --storage.path=/alertmanager
@@ -55,21 +31,25 @@ spec:
         - name: alertmanager
           containerPort: 9093
         volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: secrets
+          mountPath: /secrets
+          readOnly: true
         - name: templates
           mountPath: /etc/alertmanager-templates
-        - name: alertmanager-config
-          mountPath: /config
         - name: alertmanager-data
           mountPath: /alertmanager
       volumes:
-      - name: config-template
+      - name: config
         configMap:
           name: alertmanager
+      - name: secrets
+        secret:
+          secretName: alertmanager
       - name: templates
         configMap:
           name: alertmanager-templates
-      - name: alertmanager-config
-        emptyDir: {}
       - name: alertmanager-data
         persistentVolumeClaim:
           claimName: alertmanager-data

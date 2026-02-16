@@ -24,10 +24,13 @@ labels:
     app.kubernetes.io/instance: alertmanager
   includeSelectors: true
 
+generatorOptions:
+  disableNameSuffixHash: true
+
 configMapGenerator:
 - name: alertmanager
   files:
-  - config.template.yaml
+  - config.yaml
 - name: alertmanager-templates
   files:
   - templates/default.tmpl
