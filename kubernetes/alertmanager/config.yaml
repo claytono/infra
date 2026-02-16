@@ -3,11 +3,11 @@ global:
   # SMTP relay for mail notifications
   smtp_smarthost: smtp.k.oneill.net:587
   smtp_from: alertmanager@oneill.net
-  smtp_auth_username: '{{ .Env.SMTP_USERNAME }}'
-  smtp_auth_password: '{{ .Env.SMTP_PASSWORD }}'
+  smtp_auth_username: relay@oneill.net
+  smtp_auth_password_file: /secrets/SMTP_PASSWORD
   smtp_require_tls: true
 
-# # The directory from which notification templates are read.
+#  # The directory from which notification templates are read.
 templates:
 - /etc/alertmanager-templates/*.tmpl
 
@@ -39,6 +39,3 @@ receivers:
   email_configs:
   - to: clayton.oneill@gmail.com
     send_resolved: true
-  webhook_configs:
-    # admin view: https://webhook.site/#/49de981e-b39b-48b0-a889-d053cd0a025d
-  - url: https://webhook.site/49de981e-b39b-48b0-a889-d053cd0a025d
