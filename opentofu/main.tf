@@ -32,7 +32,7 @@ terraform {
     }
     openai = {
       source  = "registry.terraform.io/mkdev-me/openai"
-      version = "~> 1.1"
+      version = "~> 2.0"
     }
     unifi = {
       source  = "filipowm/unifi"
