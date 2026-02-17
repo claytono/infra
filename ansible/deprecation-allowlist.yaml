@@ -6,10 +6,5 @@
 #
 # Regenerate with: check-deprecations --generate <logfile>
 
-"INJECT_FACTS_AS_VARS default to `True` is deprecat":
-  - "TASK [oefenweb.postfix : configure mailname]"
-  - "TASK [oefenweb.postfix : facts | set | is_docker_guest]"
-  - "TASK [oefenweb.postfix : update configuration file]"
-
 "Importing 'to_native' from 'ansible.module_utils._":
   - "TASK [common : Configure sysctl for inotify]"
