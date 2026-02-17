@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: n8n
     app.kubernetes.io/instance: n8n
-    app.kubernetes.io/version: "1.112.0"
+    app.kubernetes.io/version: "1.116.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 4135c77c41065434b067b6628acfe11635d71db12d89ad78af3f154beffefd7f
+        checksum/config: a28769b93ea1e18dda5aa51658cc58ff9773bbb502ca27e9d2350d45e5c74a78
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: n8n
@@ -39,7 +39,7 @@ spec:
         - name: n8n
           securityContext:
             {}
-          image: "n8nio/n8n:1.112.0"
+          image: "n8nio/n8n:1.116.2"
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
@@ -84,6 +84,7 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /home/node/.n8n
+      terminationGracePeriodSeconds: 30
       volumes:
         - name: "data"
           persistentVolumeClaim:
