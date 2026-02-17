@@ -1,0 +1,349 @@
+#!/usr/bin/env python3
+"""Clean up stale iSCSI sessions left behind by democratic-csi.
+
+democratic-csi's NodeUnstageVolume has a bug (upstream
+https://github.com/democratic-csi/democratic-csi/issues/536) where iSCSI
+session cleanup is skipped when the target is deleted before the node can
+positively match a SCSI device to a session. This causes sessions and node
+database entries to accumulate indefinitely.
+
+This script identifies and cleans two types of stale entries:
+  1. Stale sessions: Internal iscsid Session State = REOPEN with SCSI disk
+     state = transport-offline (or no disk attached)
+  2. Orphan node DB entries: entries in the iSCSI node database with no
+     corresponding active session
+
+A grace period prevents cleanup of entries that are only transiently stale
+(e.g., during a NAS reboot). A NAS-outage guard skips all cleanup if zero
+sessions are healthy (to avoid mass cleanup during a full storage outage).
+"""
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+STATE_DIR = Path("/var/lib/iscsi-cleanup")
+STATE_FILE = STATE_DIR / "state.json"
+
+
+def parse_sessions(output):
+    """Parse iscsiadm -m session -P 3 output into session dicts."""
+    sessions = []
+    current = None
+
+    for line in output.splitlines():
+        # New target block
+        m = re.match(r"^Target:\s+(\S+)", line)
+        if m:
+            if current:
+                sessions.append(current)
+            current = {
+                "iqn": m.group(1),
+                "portal": None,
+                "session_state": None,
+                "disk_state": None,
+            }
+            continue
+
+        if current is None:
+            continue
+
+        stripped = line.strip()
+
+        if stripped.startswith("Persistent Portal:"):
+            # "fs2.oneill.net:3260,1" -> "fs2.oneill.net:3260"
+            portal = stripped.split(":", 1)[1].strip()
+            current["portal"] = re.sub(r",\d+$", "", portal)
+
+        elif stripped.startswith("Internal iscsid Session State:"):
+            current["session_state"] = stripped.split(":", 1)[1].strip()
+
+        elif stripped.startswith("Attached scsi disk"):
+            # "Attached scsi disk sdj\t\tState: transport-offline"
+            m = re.search(r"State:\s+(.+)", stripped)
+            if m:
+                current["disk_state"] = m.group(1).strip()
+
+    if current:
+        sessions.append(current)
+
+    return sessions
+
+
+def parse_node_db(output):
+    """Parse iscsiadm -m node output into list of (portal, iqn) tuples."""
+    entries = []
+    for line in output.strip().splitlines():
+        # "fs2.oneill.net:3260,4294967295 iqn.2000-01.com.synology:csi.xxx"
+        parts = line.split()
+        if len(parts) >= 2:
+            portal = re.sub(r",\d+$", "", parts[0])
+            entries.append((portal, parts[1]))
+    return entries
+
+
+def load_state():
+    """Load the state file, returning empty dict if missing/corrupt."""
+    try:
+        return json.loads(STATE_FILE.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def save_state(state):
+    """Save state to disk, creating directory if needed."""
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2) + "\n")
+
+
+def is_stale(session):
+    """Check if a session looks stale (REOPEN + offline/missing disk)."""
+    if session["session_state"] != "REOPEN":
+        return False
+    return session["disk_state"] is None or session["disk_state"] == "transport-offline"
+
+
+def is_healthy(session):
+    """Check if a session is healthy (not REOPEN and disk running)."""
+    return session["session_state"] != "REOPEN" and session["disk_state"] == "running"
+
+
+def run_iscsiadm(args):
+    """Run iscsiadm with the given arguments, returning (returncode, stdout, stderr)."""
+    result = subprocess.run(
+        ["iscsiadm"] + args,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode, result.stdout, result.stderr
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Clean up stale iSCSI sessions and orphan node DB entries",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Log candidates without cleaning",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Max entries to clean per run (default: unlimited)",
+    )
+    parser.add_argument(
+        "--grace-minutes",
+        type=int,
+        default=30,
+        help="Minutes an entry must be stale before cleanup (default: 30)",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="List each session/entry with its state",
+    )
+    args = parser.parse_args()
+
+    # Parse current sessions
+    rc, stdout, stderr = run_iscsiadm(["-m", "session", "-P", "3"])
+    if rc != 0 and "No active sessions" in stderr:
+        sessions = []
+    elif rc != 0:
+        print(f"Error running iscsiadm: {stderr.strip()}", file=sys.stderr)
+        sys.exit(1)
+    else:
+        sessions = parse_sessions(stdout)
+
+    # Parse node DB
+    rc, stdout, stderr = run_iscsiadm(["-m", "node"])
+    if rc == 0 and stdout.strip():
+        node_entries = parse_node_db(stdout)
+    else:
+        node_entries = []
+
+    if not sessions and not node_entries:
+        print("No active sessions or node DB entries")
+        return
+
+    # Classify sessions
+    healthy_count = sum(1 for s in sessions if is_healthy(s))
+    stale_sessions = [s for s in sessions if is_stale(s)]
+    other_sessions = [s for s in sessions if not is_healthy(s) and not is_stale(s)]
+
+    # Identify orphan node DB entries (no active session)
+    session_iqns = {s["iqn"] for s in sessions}
+    orphan_entries = [
+        (portal, iqn) for portal, iqn in node_entries if iqn not in session_iqns
+    ]
+
+    print(
+        f"Sessions: {len(sessions)} total, {healthy_count} healthy, {len(stale_sessions)} stale, {len(other_sessions)} other"
+    )
+    print(
+        f"Node DB: {len(node_entries)} total, {len(orphan_entries)} orphan (no active session)"
+    )
+
+    if args.verbose:
+        if healthy_count:
+            print("\nHealthy sessions:")
+            for s in sorted(sessions, key=lambda s: s["iqn"]):
+                if is_healthy(s):
+                    print(
+                        f"  {s['iqn']} (session={s['session_state']}, disk={s['disk_state']})"
+                    )
+        if stale_sessions:
+            print("\nStale sessions:")
+            for s in sorted(stale_sessions, key=lambda s: s["iqn"]):
+                print(
+                    f"  {s['iqn']} (session={s['session_state']}, disk={s['disk_state']})"
+                )
+        if other_sessions:
+            print("\nOther sessions (neither healthy nor stale):")
+            for s in sorted(other_sessions, key=lambda s: s["iqn"]):
+                print(
+                    f"  {s['iqn']} (session={s['session_state']}, disk={s['disk_state']})"
+                )
+        if orphan_entries:
+            print("\nOrphan node DB entries (no active session):")
+            for portal, iqn in sorted(orphan_entries, key=lambda x: x[1]):
+                print(f"  {iqn} (portal={portal})")
+
+    # NAS-outage guard: skip cleanup if no healthy sessions exist
+    if healthy_count == 0 and (stale_sessions or orphan_entries):
+        print("No healthy sessions found -- possible NAS outage, skipping cleanup")
+        return
+
+    # Load state and apply grace period
+    state = load_state()
+    now = datetime.now()
+    grace = timedelta(minutes=args.grace_minutes)
+    total_cleaned = 0
+
+    # --- Stale session cleanup ---
+    if stale_sessions:
+        candidates = []
+        for session in stale_sessions:
+            iqn = session["iqn"]
+
+            if iqn not in state:
+                state[iqn] = {
+                    "first_seen": now.isoformat(),
+                    "portal": session["portal"],
+                }
+                continue
+
+            first_seen = datetime.fromisoformat(state[iqn]["first_seen"])
+            if now - first_seen < grace:
+                continue
+
+            candidates.append(session)
+
+        candidates.sort(key=lambda s: s["iqn"])
+        to_process = candidates if args.limit is None else candidates[: args.limit]
+
+        print(
+            f"\nStale sessions past grace: {len(candidates)}, will process: {len(to_process)} (limit: {args.limit or 'none'})"
+        )
+
+        for session in to_process:
+            iqn = session["iqn"]
+            portal = session["portal"]
+
+            if args.dry_run:
+                print(f"  Would clean: {iqn} (portal={portal})")
+                continue
+
+            rc, _, stderr = run_iscsiadm(
+                ["-m", "node", "-T", iqn, "-p", portal, "--logout"]
+            )
+            if rc != 0:
+                print(f"  Logout failed (expected): {iqn}: {stderr.strip()}")
+
+            rc, _, stderr = run_iscsiadm(
+                ["-m", "node", "-T", iqn, "-p", portal, "-o", "delete"]
+            )
+            if rc != 0:
+                print(f"  Delete failed: {iqn}: {stderr.strip()}", file=sys.stderr)
+                continue
+
+            state.pop(iqn, None)
+            total_cleaned += 1
+            print(f"  Cleaned: {iqn}")
+
+        if not args.dry_run:
+            print(f"Cleaned {total_cleaned} stale sessions")
+
+    # --- Orphan node DB cleanup ---
+    if orphan_entries:
+        orphan_candidates = []
+        for portal, iqn in orphan_entries:
+            state_key = f"orphan:{iqn}"
+
+            if state_key not in state:
+                state[state_key] = {
+                    "first_seen": now.isoformat(),
+                    "portal": portal,
+                }
+                continue
+
+            first_seen = datetime.fromisoformat(state[state_key]["first_seen"])
+            if now - first_seen < grace:
+                continue
+
+            orphan_candidates.append((portal, iqn))
+
+        orphan_candidates.sort(key=lambda x: x[1])
+        if args.limit is None:
+            orphan_to_process = orphan_candidates
+        else:
+            remaining_limit = max(0, args.limit - total_cleaned)
+            orphan_to_process = orphan_candidates[:remaining_limit]
+
+        print(
+            f"\nOrphan entries past grace: {len(orphan_candidates)}, will process: {len(orphan_to_process)}"
+        )
+
+        orphan_cleaned = 0
+        for portal, iqn in orphan_to_process:
+            if args.dry_run:
+                print(f"  Would delete orphan: {iqn} (portal={portal})")
+                continue
+
+            rc, _, stderr = run_iscsiadm(
+                ["-m", "node", "-T", iqn, "-p", portal, "-o", "delete"]
+            )
+            if rc != 0:
+                print(
+                    f"  Orphan delete failed: {iqn}: {stderr.strip()}", file=sys.stderr
+                )
+                continue
+
+            state.pop(f"orphan:{iqn}", None)
+            orphan_cleaned += 1
+            total_cleaned += 1
+            print(f"  Deleted orphan: {iqn}")
+
+        if not args.dry_run:
+            print(f"Deleted {orphan_cleaned} orphan node DB entries")
+
+    # Save state (skip in dry-run)
+    if not args.dry_run:
+        # Prune state entries for IQNs that no longer exist anywhere
+        all_known_iqns = session_iqns | {iqn for _, iqn in node_entries}
+        pruned = [k for k in state if k.removeprefix("orphan:") not in all_known_iqns]
+        for k in pruned:
+            del state[k]
+        if pruned:
+            print(f"Pruned {len(pruned)} entries from state file")
+
+        save_state(state)
+
+
+if __name__ == "__main__":
+    main()

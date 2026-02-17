@@ -1,0 +1,7 @@
+[Unit]
+Description=Clean up stale iSCSI sessions and orphan node DB entries
+After=iscsid.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/iscsi-session-cleanup
