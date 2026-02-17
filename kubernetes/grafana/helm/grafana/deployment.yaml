@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
-    app.kubernetes.io/version: "12.3.1"
+    app.kubernetes.io/version: "12.3.3"
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -23,7 +23,7 @@ spec:
       labels:
         app.kubernetes.io/name: grafana
         app.kubernetes.io/instance: grafana
-        app.kubernetes.io/version: "12.3.1"
+        app.kubernetes.io/version: "12.3.3"
       annotations:
         checksum/config: 838e10680832b3610ff4970112af1c952b8147baf2456224a65e06aa37bf7c75
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
@@ -41,7 +41,7 @@ spec:
         runAsUser: 472
       initContainers:
         - name: init-chown-data
-          image: "docker.io/library/busybox:1.31.1"
+          image: "docker.io/library/busybox:1.37.0"
           imagePullPolicy: IfNotPresent
           securityContext:
             capabilities:
@@ -65,7 +65,7 @@ spec:
       enableServiceLinks: true
       containers:
         - name: grafana
-          image: "docker.io/grafana/grafana:12.3.1"
+          image: "docker.io/grafana/grafana:12.3.3"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false

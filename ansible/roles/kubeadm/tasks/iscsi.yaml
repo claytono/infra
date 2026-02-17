@@ -62,3 +62,36 @@
     name: iscsi-cleanup-on-boot.service
     enabled: true
     daemon_reload: true
+
+- name: "Deploy iSCSI session cleanup script"
+  ansible.builtin.copy:
+    src: iscsi-session-cleanup
+    dest: /usr/local/sbin/iscsi-session-cleanup
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: "Deploy iSCSI session cleanup service"
+  ansible.builtin.copy:
+    src: iscsi-session-cleanup.service
+    dest: /etc/systemd/system/iscsi-session-cleanup.service
+    mode: "0644"
+    owner: root
+    group: root
+  notify: "Reload systemd"
+
+- name: "Deploy iSCSI session cleanup timer"
+  ansible.builtin.copy:
+    src: iscsi-session-cleanup.timer
+    dest: /etc/systemd/system/iscsi-session-cleanup.timer
+    mode: "0644"
+    owner: root
+    group: root
+  notify: "Reload systemd"
+
+- name: "Enable iSCSI session cleanup timer"
+  ansible.builtin.systemd:
+    name: iscsi-session-cleanup.timer
+    enabled: true
+    state: started
+    daemon_reload: true

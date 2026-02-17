@@ -7,7 +7,7 @@ roles:
   - src: anxs.generic-users
     version: v1.2.0
   - name: oefenweb.postfix
-    version: "v3.8.1"
+    version: "v3.8.2"
   - name: geerlingguy.node_exporter
     version: "2.2.0"
   - src: michaelrigart.interfaces
