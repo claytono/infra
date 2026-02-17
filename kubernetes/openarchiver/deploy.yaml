@@ -47,8 +47,8 @@ spec:
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: openarchiver-secrets
-              key: redis-password
+              name: openarchiver-valkey-config
+              key: valkey-password
         ports:
         - name: web
           containerPort: 3000

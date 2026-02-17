@@ -11,13 +11,22 @@ resources:
 - externalsecret.yaml
 - configmap.yaml
 - pvc.yaml
-- valkey-service.yaml
-- valkey-statefulset.yaml
+- helm/valkey/pvc.yaml
+- helm/valkey/scripts.yaml
+- helm/valkey/service-internal.yaml
+- helm/valkey/services.yaml
+- helm/valkey/statefulset.yaml
 - meilisearch-service.yaml
 - meilisearch-statefulset.yaml
 - service.yaml
 - deploy.yaml
 - ingress.yaml
+
+patches:
+- path: patch-valkey-secret-mount.yaml
+  target:
+    kind: Deployment
+    name: valkey
 
 commonAnnotations:
   argoManaged: 'true'

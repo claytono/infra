@@ -15,7 +15,7 @@ data:
   STORAGE_TYPE: local
   STORAGE_LOCAL_ROOT_PATH: /var/data/open-archiver
   BODY_SIZE_LIMIT: 100M
-  REDIS_HOST: openarchiver-valkey
+  REDIS_HOST: valkey
   REDIS_PORT: '6379'
   REDIS_TLS_ENABLED: 'false'
   MEILI_HOST: http://openarchiver-meilisearch:7700
