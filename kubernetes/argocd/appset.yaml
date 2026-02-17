@@ -38,5 +38,5 @@ spec:
       syncPolicy:
         syncOptions:
         - CreateNamespace=true
-        - ServerSideApply={{ if or (eq (index .path.segments 1) "external-secrets") (eq (index .path.segments 1) "cloudnative-pg") }}true{{
+        - ServerSideApply={{ if or (eq (index .path.segments 1) "external-secrets") (eq (index .path.segments 1) "cloudnative-pg") (eq (index .path.segments 1) "argocd") }}true{{
           else }}false{{ end }}

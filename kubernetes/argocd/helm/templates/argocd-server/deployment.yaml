@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.2.6"
+    app.kubernetes.io/version: "v3.3.0"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -28,14 +28,14 @@ spec:
         app.kubernetes.io/component: server
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.2.6"
+        app.kubernetes.io/version: "v3.3.0"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-server
       automountServiceAccountToken: true
       containers:
       - name: server
-        image: quay.io/argoproj/argocd:v3.2.6
+        image: quay.io/argoproj/argocd:v3.3.0
         imagePullPolicy: IfNotPresent
         args:
         - /usr/local/bin/argocd-server
