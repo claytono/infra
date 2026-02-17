@@ -1,6 +1,14 @@
 ---
 ip_forwarding_enabled: true
 
+# WORKAROUND: Override runc version to get security fixes (CVE-2025-31133,
+# CVE-2025-52565, CVE-2025-52881) while the githubixx.runc 0.8.0+1.4.0 role
+# has a packaging bug that prevents ansible-galaxy installation.
+# Tracking: https://github.com/claytono/infra/issues/1483
+# Upstream: https://github.com/githubixx/ansible-role-runc/issues/17
+# REMOVE THIS when upstream is fixed and the role is updated to 0.8.0+1.4.0.
+runc_version: "1.4.0"
+
 kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
