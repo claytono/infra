@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: "server"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/part-of: "authentik"
-    app.kubernetes.io/version: "2025.12.1"
+    app.kubernetes.io/version: "2025.12.3"
 spec:
   type: ClusterIP
   ports:
