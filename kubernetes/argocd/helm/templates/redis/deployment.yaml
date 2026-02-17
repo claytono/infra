@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: redis
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.2.6"
+    app.kubernetes.io/version: "v3.3.0"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -26,7 +26,7 @@ spec:
         app.kubernetes.io/component: redis
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.2.6"
+        app.kubernetes.io/version: "v3.3.0"
     spec:
       securityContext:
         runAsNonRoot: true
@@ -38,7 +38,7 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: redis
-        image: ecr-public.aws.com/docker/library/redis:8.2.2-alpine
+        image: ecr-public.aws.com/docker/library/redis:8.2.3-alpine
         imagePullPolicy: IfNotPresent
         args:
         - --save
