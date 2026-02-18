@@ -102,7 +102,7 @@ provider "github" {
 }
 
 provider "openai" {
-  api_key = local.openai_api_key
+  admin_key = local.openai_api_key
 }
 
 provider "unifi" {
