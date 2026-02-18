@@ -32,7 +32,7 @@ terraform {
     }
     openai = {
       source  = "registry.terraform.io/mkdev-me/openai"
-      version = "~> 1.1"
+      version = "~> 2.0"
     }
     unifi = {
       source  = "filipowm/unifi"
@@ -102,7 +102,7 @@ provider "github" {
 }
 
 provider "openai" {
-  api_key = local.openai_api_key
+  admin_key = local.openai_api_key
 }
 
 provider "unifi" {
