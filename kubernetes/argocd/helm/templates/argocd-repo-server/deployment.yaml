@@ -360,7 +360,7 @@ spec:
         - sh
         - '-c'
         args:
-        - /bin/cp --update=none /usr/local/bin/argocd /var/run/argocd/argocd && /bin/ln -s /var/run/argocd/argocd /var/run/argocd/argocd-cmp-server
+        - /bin/cp --update=none /usr/local/bin/argocd /var/run/argocd/argocd && /bin/ln -sf /var/run/argocd/argocd /var/run/argocd/argocd-cmp-server
         image: quay.io/argoproj/argocd:v3.3.0
         imagePullPolicy: IfNotPresent
         name: copyutil
