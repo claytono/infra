@@ -18,3 +18,9 @@ storage:
 
 # Use existing secret auth.conf file for authentication
 extraSecretValkeyConfigs: dawarich-valkey-config
+
+livenessProbe:
+  enabled: false
+
+readinessProbe:
+  enabled: false
