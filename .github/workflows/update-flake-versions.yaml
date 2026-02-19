@@ -30,7 +30,7 @@ jobs:
 
     - name: Update flake-versions.yaml
       run: |
-        ./scripts/gen-flake-versions --comment-file /tmp/comment.md
+        nix develop --command ./scripts/gen-flake-versions --comment-file /tmp/comment.md
 
         if git diff --quiet flake-versions.yaml; then
           echo "No version changes"

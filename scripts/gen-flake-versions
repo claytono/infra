@@ -13,9 +13,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = REPO_ROOT / "flake-versions.yaml"
-HEADER = "---\n# Auto-generated from flake.lock — do not edit\n# Regenerate with: scripts/gen-flake-versions\n"
+COMMENTS = (
+    "# Auto-generated from flake.lock — do not edit\n"
+    "# Regenerate with: scripts/gen-flake-versions\n"
+)
 
 
 def get_system() -> str:
@@ -29,7 +34,7 @@ def get_system() -> str:
     return result.stdout.strip()
 
 
-def get_versions(system: str) -> dict[str, str]:
+def get_nix_versions(system: str) -> dict[str, str]:
     nix_apply = """ps: map (p: {
         name = p.pname or (builtins.parseDrvName p.name).name;
         version = p.version or (builtins.parseDrvName p.name).version;
@@ -59,21 +64,15 @@ def get_versions(system: str) -> dict[str, str]:
 
 
 def render_yaml(versions: dict[str, str]) -> str:
-    lines = [HEADER]
-    for name, version in versions.items():
-        lines.append(f"{name}: {version}")
-    lines.append("")  # trailing newline
-    return "\n".join(lines)
+    body = yaml.dump(versions, default_flow_style=False, sort_keys=True)
+    return f"---\n{COMMENTS}\n{body}"
 
 
-def parse_yaml(content: str) -> dict[str, str]:
-    versions = {}
-    for line in content.splitlines():
-        if line.startswith("#") or line.startswith("---") or not line.strip():
-            continue
-        name, _, value = line.partition(": ")
-        versions[name] = value.strip('"')
-    return versions
+def load_versions(path: Path) -> dict[str, str]:
+    data = yaml.safe_load(path.read_text())
+    if not data:
+        return {}
+    return {k: str(v) for k, v in data.items()}
 
 
 def diff_table(old: dict[str, str], new: dict[str, str]) -> str:
@@ -113,7 +112,7 @@ def main():
     args = parser.parse_args()
 
     system = get_system()
-    versions = get_versions(system)
+    versions = get_nix_versions(system)
     new_content = render_yaml(versions)
 
     if args.check:
@@ -131,7 +130,7 @@ def main():
         old_content = OUTPUT.read_text()
         if old_content == new_content:
             sys.exit(0)
-        old_versions = parse_yaml(old_content)
+        old_versions = load_versions(OUTPUT)
         table = diff_table(old_versions, versions)
         if table and args.comment_file:
             args.comment_file.write_text(table + "\n")
