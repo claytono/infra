@@ -24,7 +24,7 @@ spec:
         runAsUser: 1000
       containers:
       - name: meilisearch
-        image: docker.io/getmeili/meilisearch:v1.34.1@sha256:ed207d965b25fe533b39f367f13ce26abff22152acfbf7ab28b1a8c565f22e72
+        image: docker.io/getmeili/meilisearch:v1.35.0@sha256:348ba1c1f61101130304370a9522cc5405e6906b64a426dc2fcd5c428a516a98
         imagePullPolicy: IfNotPresent
         env:
         - name: MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE
