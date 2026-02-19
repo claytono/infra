@@ -22,29 +22,6 @@ resource "terraform_data" "validate_default_project" {
   }
 }
 
-# Service account for GitHub Actions in the default project
-# This automatically creates an API key that can be used by the renovate-chart-analysis workflow
-resource "openai_project_service_account" "github_actions" {
-  project_id = local.default_project.id
-  name       = "github-actions-chart-analysis"
-}
-
-# Store the API key in 1Password
-resource "onepassword_item" "openai_github_actions" {
-  vault    = data.onepassword_vault.infra.uuid
-  title    = "openai-github-actions"
-  category = "password"
-
-  password = openai_project_service_account.github_actions.api_key_value
-}
-
-# Store the API key in GitHub Actions secrets
-resource "github_actions_secret" "openai_api_key" {
-  repository      = "infra"
-  secret_name     = "OPENAI_API_KEY"
-  plaintext_value = openai_project_service_account.github_actions.api_key_value
-}
-
 # Service account for karakeep application
 resource "openai_project_service_account" "karakeep" {
   project_id = local.default_project.id
