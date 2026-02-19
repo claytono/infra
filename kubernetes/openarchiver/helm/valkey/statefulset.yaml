@@ -83,28 +83,6 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 30
             successThreshold: 1
-            periodSeconds: 10              
-          livenessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - valkey-cli ping
-            initialDelaySeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
-            periodSeconds: 10
-          readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - valkey-cli ping
-            initialDelaySeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
             periodSeconds: 10
           command:
             - valkey-server

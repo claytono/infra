@@ -20,3 +20,9 @@ storage:
 
 # Use existing secret auth.conf file for authentication
 extraSecretValkeyConfigs: n8n-valkey-config
+
+livenessProbe:
+  enabled: false
+
+readinessProbe:
+  enabled: false
