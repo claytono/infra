@@ -55,6 +55,10 @@ valkey:
   primary:
     persistence:
       enabled: false
+    livenessProbe:
+      enabled: false
+    readinessProbe:
+      enabled: false
 
 # Disable backend (podcast search API) and podpeople (host/guest DB)
 # These are publicly available at search.pinepods.online and people.pinepods.online

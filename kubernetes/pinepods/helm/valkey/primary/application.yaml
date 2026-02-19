@@ -96,29 +96,6 @@ spec:
           ports:
             - name: redis
               containerPort: 6379
-          livenessProbe:
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            # One second longer than command timeout should prevent generation of zombie processes.
-            timeoutSeconds: 6
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - sh
-                - -c
-                - /health/ping_liveness_local.sh 5
-          readinessProbe:
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            timeoutSeconds: 2
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - sh
-                - -c
-                - /health/ping_readiness_local.sh 1
           resources:
             limits:
               cpu: 150m

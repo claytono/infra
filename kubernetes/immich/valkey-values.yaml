@@ -12,3 +12,9 @@ extraSecretValkeyConfigs: immich-valkey-config
 
 storage:
   persistentVolumeClaimName: immich-valkey
+
+livenessProbe:
+  enabled: false
+
+readinessProbe:
+  enabled: false
