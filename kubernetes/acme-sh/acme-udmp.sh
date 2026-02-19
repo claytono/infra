@@ -38,14 +38,8 @@ if ! /usr/local/bin/acme.sh --info -d udmp.oneill.net | grep "^Le_DeployHook=" >
   export DEPLOY_SSH_FULLCHAIN="/data/unifi-core/config/unifi-core.crt"
   export DEPLOY_SSH_KEYFILE="/data/unifi-core/config/unifi-core.key"
 
-  # Remote command following unifi hook logic: backup originals and restart service
-  export DEPLOY_SSH_REMOTE_CMD="
-cd /data/unifi-core/config/;
-[ -f unifi-core.crt ] && [ ! -f unifi-core_original.crt ] && cp unifi-core.crt unifi-core_original.crt;
-[ -f unifi-core.key ] && [ ! -f unifi-core_original.key ] && cp unifi-core.key unifi-core_original.key;
-chmod 600 unifi-core.key;
-chown root:root unifi-core.*;
-systemctl restart unifi-core"
+  # Single-line: acme.sh cannot persist multi-line values in domain.conf
+  export DEPLOY_SSH_REMOTE_CMD="cd /data/unifi-core/config/; [ -f unifi-core.crt ] && [ ! -f unifi-core_original.crt ] && cp unifi-core.crt unifi-core_original.crt; [ -f unifi-core.key ] && [ ! -f unifi-core_original.key ] && cp unifi-core.key unifi-core_original.key; chmod 600 unifi-core.key; chown root:root unifi-core.*; systemctl restart unifi-core"
   export DEPLOY_SSH_MULTI_CALL="yes"
 
   # Deploy certificate via SSH
