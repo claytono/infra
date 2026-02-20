@@ -13,6 +13,8 @@ ansible/super-admin.conf
 ansible/.ansible
 .galaxy_install_info
 ansible/galaxy/**/*.png
+ansible/galaxy/**/FILES.json
+ansible/galaxy/**/MANIFEST.json
 
 # OpenTofu/Terraform
 *.tfstate
