@@ -6,6 +6,25 @@
     name: "{{ hostname_short }}"
   when: hostname_persist_hostname
 
+- name: Check if cloud-init is present
+  ansible.builtin.stat:
+    path: /etc/cloud/cloud.cfg
+  register: hostname_cloud_init_cfg
+
+- name: Ensure cloud-init config directory exists
+  ansible.builtin.file:
+    path: /etc/cloud/cloud.cfg.d
+    state: directory
+    mode: "0755"
+  when: hostname_cloud_init_cfg.stat.exists
+
+- name: Disable cloud-init /etc/hosts management
+  ansible.builtin.copy:
+    dest: /etc/cloud/cloud.cfg.d/99-hostname.cfg
+    content: "manage_etc_hosts: false\n"
+    mode: "0644"
+  when: hostname_cloud_init_cfg.stat.exists
+
 - name: Configure /etc/hosts
   ansible.builtin.template:
     src: hosts.j2
