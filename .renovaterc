@@ -346,6 +346,16 @@
       "description": "Auto-merge digest updates for CI/test Dockerfiles"
     },
     {
+      "description": "OpenClaw: no stabilization delay, updates via weekly schedule",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/openclaw/openclaw"
+      ],
+      "minimumReleaseAge": "0 days"
+    },
+    {
       "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
       "allowedVersions": "/^(11\\.8|11\\.4|10\\.11|10\\.6)\\./",
       "matchDatasources": [

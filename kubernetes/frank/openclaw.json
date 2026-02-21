@@ -14,10 +14,10 @@
     "slack": {
       "enabled": true,
       "dm": {
-        "enabled": true,
-        "policy": "allowlist",
-        "allowFrom": ["U1DPF8U75"]
-      }
+        "enabled": true
+      },
+      "dmPolicy": "allowlist",
+      "allowFrom": ["U1DPF8U75"]
     }
   },
   "tools": {
