@@ -18,3 +18,13 @@ labels:
 
 - pairs:
     app: descheduler
+
+patches:
+
+- target:
+    kind: CronJob
+    name: descheduler
+  patch: |-
+    - op: add
+      path: /spec/timeZone
+      value: America/New_York

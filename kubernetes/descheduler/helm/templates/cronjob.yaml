@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/version: "0.34.0"
     app.kubernetes.io/managed-by: Helm
 spec:
-  schedule: "0 9 * * *"
+  schedule: "0 4 * * *"
   concurrencyPolicy: "Forbid"
   jobTemplate:
     spec:
@@ -19,7 +19,7 @@ spec:
         metadata:
           name: descheduler
           annotations:
-            checksum/config: 6958dc9d3b881ec2f90d2d19a251962b87bbb9b19a3f22fd5768cd04cda28291
+            checksum/config: f5838096aa4d3edc5a3b0728c076592f1ad67111607e9ddd98fe6706f3de910c
           labels:
             app.kubernetes.io/name: descheduler
             app.kubernetes.io/instance: descheduler

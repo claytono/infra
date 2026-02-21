@@ -1,9 +1,13 @@
 ---
-schedule: 0 9 * * *  # 09:00 UTC = 4:00 AM EST / 5:00 AM EDT
+schedule: 0 4 * * *
 
 deschedulerPolicy:
   maxNoOfPodsToEvictPerNamespace: 1
   evictLocalStoragePods: true
+  metricsProviders:
+  - source: Prometheus
+    prometheus:
+      url: http://prometheus.default.svc.cluster.local:9090
   profiles:
   - name: default
     pluginConfig:
@@ -45,3 +49,40 @@ deschedulerPolicy:
       deschedule:
         enabled:
         - PodLifeTime
+  - name: node-utilization
+    pluginConfig:
+    - name: DefaultEvictor
+      args:
+        evictLocalStoragePods: true
+        labelSelector:
+          matchExpressions:
+          - key: job-name
+            operator: DoesNotExist
+    - name: LowNodeUtilization
+      args:
+        metricsUtilization:
+          source: Prometheus
+          prometheus:
+            query: >-
+              max without(job)(
+                label_replace(
+                  1 - avg(rate(node_cpu_seconds_total{mode="idle"}[6h])) by (instance),
+                  "instance", "$1", "instance", "(.*)\\.oneill\\.net:.*"
+                )
+                or
+                label_replace(
+                  1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes,
+                  "instance", "$1", "instance", "(.*)\\.oneill\\.net:.*"
+                )
+              )
+        useDeviationThresholds: true
+        thresholds:
+          MetricResource: 15
+        targetThresholds:
+          MetricResource: 5
+        evictionLimits:
+          node: 10
+    plugins:
+      balance:
+        enabled:
+        - LowNodeUtilization
