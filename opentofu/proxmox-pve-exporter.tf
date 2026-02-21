@@ -5,13 +5,12 @@ resource "proxmox_virtual_environment_user" "pve_exporter" {
   user_id = "pve-exporter@pve"
   comment = "Prometheus PVE exporter - managed by OpenTofu"
   enabled = true
-}
 
-resource "proxmox_virtual_environment_acl" "pve_exporter" {
-  path      = "/"
-  role_id   = "PVEAuditor"
-  user_id   = proxmox_virtual_environment_user.pve_exporter.user_id
-  propagate = true
+  acl {
+    path      = "/"
+    role_id   = "PVEAuditor"
+    propagate = true
+  }
 }
 
 resource "proxmox_virtual_environment_user_token" "pve_exporter" {
