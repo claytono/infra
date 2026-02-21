@@ -19,3 +19,8 @@ output "cloudflare_fnord_net_zone_id" {
   description = "Cloudflare zone ID for fnord.net"
   value       = cloudflare_zone.fnord_net.id
 }
+
+output "cloudflare_fnord_net_nameservers" {
+  description = "Cloudflare nameservers for fnord.net"
+  value       = cloudflare_zone.fnord_net.name_servers
+}

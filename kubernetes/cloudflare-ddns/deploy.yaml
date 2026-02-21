@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: cloudflare-ddns
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudflare-ddns
+      app.kubernetes.io/instance: cloudflare-ddns
+  template:
+    metadata:
+      name: cloudflare-ddns
+      labels:
+        app.kubernetes.io/name: cloudflare-ddns
+        app.kubernetes.io/instance: cloudflare-ddns
+    spec:
+      containers:
+      - name: cloudflare-ddns
+        image: docker.io/favonia/cloudflare-ddns:1.15.1@sha256:a4e2089b3531eec8c9328c7a9a586f80e8d67dcd94856e0b596b7896e1de3f62
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
+        env:
+        - name: CLOUDFLARE_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-ddns
+              key: CLOUDFLARE_API_TOKEN
+        - name: DOMAINS
+          value: luser.fnord.net
