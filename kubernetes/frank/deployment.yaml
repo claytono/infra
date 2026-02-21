@@ -30,7 +30,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: frank
-        image: alpine/openclaw:2026.2.6-3@sha256:0ecbdbda258bc82eb3ab7f142dcfbbb2f309f21583489c0eb6a68a6debed1310
+        image: ghcr.io/openclaw/openclaw:2026.2.21@sha256:ce271192cd70250d16fc5911903d9953467a40faf8b34e87cbd042e6b49b6036
         command:
         - node
         - dist/index.js
