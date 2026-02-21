@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cloudflare-ddns
+
+resources:
+- namespace.yaml
+- deploy.yaml
+- externalsecret.yaml
+
+commonAnnotations:
+  argoManaged: 'true'
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: cloudflare-ddns
+    app.kubernetes.io/instance: cloudflare-ddns
+  includeSelectors: true
