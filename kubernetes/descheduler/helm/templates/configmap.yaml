@@ -16,6 +16,10 @@ data:
     kind: "DeschedulerPolicy"
     evictLocalStoragePods: true
     maxNoOfPodsToEvictPerNamespace: 1
+    metricsProviders:
+    - prometheus:
+        url: http://prometheus.default.svc.cluster.local:9090
+      source: Prometheus
     profiles:
     - name: default
       pluginConfig:
@@ -57,3 +61,40 @@ data:
         deschedule:
           enabled:
           - PodLifeTime
+    - name: node-utilization
+      pluginConfig:
+      - args:
+          evictLocalStoragePods: true
+          labelSelector:
+            matchExpressions:
+            - key: job-name
+              operator: DoesNotExist
+        name: DefaultEvictor
+      - args:
+          evictionLimits:
+            node: 10
+          metricsUtilization:
+            prometheus:
+              query: |-
+                max without(job)(
+                  label_replace(
+                    1 - avg(rate(node_cpu_seconds_total{mode="idle"}[6h])) by (instance),
+                    "instance", "$1", "instance", "(.*)\\.oneill\\.net:.*"
+                  )
+                  or
+                  label_replace(
+                    1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes,
+                    "instance", "$1", "instance", "(.*)\\.oneill\\.net:.*"
+                  )
+                )
+            source: Prometheus
+          targetThresholds:
+            MetricResource: 5
+          thresholds:
+            MetricResource: 15
+          useDeviationThresholds: true
+        name: LowNodeUtilization
+      plugins:
+        balance:
+          enabled:
+          - LowNodeUtilization
