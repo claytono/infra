@@ -14,3 +14,8 @@ output "fnord_net_zone_id" {
   description = "AWS Route53 hosted zone ID for fnord.net"
   value       = aws_route53_zone.fnord_net.zone_id
 }
+
+output "cloudflare_fnord_net_zone_id" {
+  description = "Cloudflare zone ID for fnord.net"
+  value       = cloudflare_zone.fnord_net.id
+}

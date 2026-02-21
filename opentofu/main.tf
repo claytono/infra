@@ -58,6 +58,10 @@ terraform {
       source  = "CruGlobal/semaphoreui"
       version = "~> 1.4"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.0"
+    }
   }
 
   backend "s3" {
@@ -121,10 +125,15 @@ provider "proxmox" {
   }
 }
 
+provider "cloudflare" {
+  api_token = local.cloudflare_api_token
+}
+
 module "dns" {
   source                     = "./modules/dns"
   infrastructure_hosts       = local.infrastructure_hosts
   infrastructure_ipv6_prefix = local.infrastructure_ipv6_prefix
+  cloudflare_account_id      = local.cloudflare_account_id
 }
 
 # Authentik provider configuration via 1Password (see locals in secrets.tf)

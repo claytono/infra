@@ -166,3 +166,20 @@ data "onepassword_item" "claude_code_oauth_token" {
   vault = data.onepassword_vault.infra.uuid
   title = "claude-code-api-token"
 }
+
+# Cloudflare credentials from 1Password (for DNS management)
+data "onepassword_item" "cloudflare_opentofu" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "cloudflare-opentofu"
+}
+
+locals {
+  cloudflare_fields = {
+    for f in flatten([
+      for sec in data.onepassword_item.cloudflare_opentofu.section : sec.field
+    ]) : f.label => f.value
+  }
+
+  cloudflare_api_token  = local.cloudflare_fields["api_token"]
+  cloudflare_account_id = local.cloudflare_fields["account_id"]
+}
