@@ -17,7 +17,9 @@
         "enabled": true
       },
       "dmPolicy": "allowlist",
-      "allowFrom": ["U1DPF8U75"]
+      "groupPolicy": "open",
+      "requireMention": false,
+      "allowFrom": ["U08060TS9"]
     }
   },
   "tools": {

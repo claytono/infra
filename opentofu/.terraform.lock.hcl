@@ -78,6 +78,54 @@ provider "registry.opentofu.org/bpg/proxmox" {
   ]
 }
 
+provider "registry.opentofu.org/change-engine/slack-app" {
+  version     = "0.1.2"
+  constraints = "~> 0.1"
+  hashes = [
+    "h1:YC9RVh30LjUcYG5L6Gp94DLq5SCLVjO2OuDcdfjKlj8=",
+    "h1:wynoTv5zRDWVdnfqDHl7YUFdMSakR2bPeWlOKdrUKyg=",
+    "zh:0ad37ffe159a731d02b62b2c1218f4fd62b638c62dd85280a96f818689164caf",
+    "zh:0e926c6cdfe9c4bf41281bb1eb089b2ca927d9b9b18282b0580abda3bdeb7f1a",
+    "zh:194b9a34ef73fd77860f7e03253257dfd467e0bc0bded5bec9811820e25a1f66",
+    "zh:197df48588a0437fd5b8432482963e65001610b0c9fda2b53f769aaae39ea142",
+    "zh:2046f92451f20cdf11ad4ad8f051d7ce3769a227d9a32768b580f2ccebc75baf",
+    "zh:39a9710f0d758f0e158e689ce1d0a3dc56057922fac173f9c5a6be1926b34f83",
+    "zh:72b4f43a84023ccb33ab5b2a002c2b06b181d18023ef3cb04730c4645c60594b",
+    "zh:7b163e8eea395697d132e22eb58965f6c55b2b8eaf12d3d48704ff8c3a3f018b",
+    "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
+    "zh:98eb44b25fee20f74c2bac627ad9e316e506336794f8b2e5deba1f96748c744f",
+    "zh:a09e5b2e7ae8a7d8e97e0e6db0592f234472250e11b0c502dbfe4ccb25c2ad36",
+    "zh:b6d2b37a1b8946195e30a14a4226adea14106543aa761010b9a34e477fe91613",
+    "zh:c13dd76a801ad5170f9b29a20d019ae0cb13ba5758f7159f0d2057a6dc845a88",
+    "zh:c28176a0541dc8e3500e1a9211e910e39666e028e9efbddc4b1706a7fd8b46f3",
+    "zh:faeae25ce67386bf4f4ac2113b3d23501b3fdc8d31db1208ea444e77a01760a4",
+  ]
+}
+
+provider "registry.opentofu.org/change-engine/slack-token" {
+  version     = "0.1.4"
+  constraints = "~> 0.1"
+  hashes = [
+    "h1:SCnkhMUsgxRqy4kZSnH4JZL+WcMgVezBXMu2Ob3StbA=",
+    "h1:gvWL410TMXGct3tO8MIwokLiYPkSDEGRRiT4rN3cNLk=",
+    "zh:0751cd004f82d14408cf4686c90de0253faf20543e6c7d713220baf7b0934936",
+    "zh:16a5c3925795beb0a09227d5dfa708613c393a9f051144bf816259b44ba84001",
+    "zh:36bf3ca1872ec5acc3e03d296596ab5ff5b34115110dac9c2baf51cfe39c07ed",
+    "zh:42f5ba1b769aa38848540db048abe7812595457f062239505d67effed713ab1a",
+    "zh:4badb13016c638f1b07645460f6c0fbce331fbee996db84ab4243891c770111f",
+    "zh:4bbe549fa7bac0e423dca3b5c7ba2c35deb630655d797a15b1f71e240d938700",
+    "zh:62b1ecfd63895ede344b0b549a8e33d3e3ef47cc12dc66dded58202012b87af9",
+    "zh:868d795dd9c1d0d0e500c8613a7e6a767338bce0c4ad87d68c5fdd93e82cf581",
+    "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
+    "zh:9339626f1a4a81fcfe6575a758e67ced7ef009e0d9638addc244103996a5b03c",
+    "zh:93b588cbba414f9877159e3118027a8069ff3cb4ac2cd3d19e2b6ec901693d01",
+    "zh:be5559fdf200787386aaff788928c09e8badb41f5f9852e03d5e6a8ee854b7f2",
+    "zh:e8be7bd03ae076e417feb263a7712ef11f377e4f226b98d654c91bcdef70604f",
+    "zh:ec84eeefff4e93864bd19647171a9937ae388db784e57fceef38d00c3c08f694",
+    "zh:f513e4356db4c580c9f01cb0d3b5a7ca69ef3d8cd1a0aa1569bc8099b1fe9785",
+  ]
+}
+
 provider "registry.opentofu.org/cloudflare/cloudflare" {
   version     = "5.17.0"
   constraints = "~> 5.0"
