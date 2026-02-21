@@ -48,3 +48,23 @@ resource "aws_route53_record" "flux_aaaa" {
   ttl     = 300
   records = [vultr_instance.flux.v6_main_ip]
 }
+
+# Cloudflare DNS records for flux
+resource "cloudflare_dns_record" "flux_a" {
+  zone_id = module.dns.cloudflare_fnord_net_zone_id
+  name    = "flux.fnord.net"
+  type    = "A"
+  content = vultr_instance.flux.main_ip
+  ttl     = 300
+}
+
+resource "cloudflare_dns_record" "flux_aaaa" {
+  zone_id = module.dns.cloudflare_fnord_net_zone_id
+  name    = "flux.fnord.net"
+  type    = "AAAA"
+  # Normalize IPv6 by stripping leading zeros; Cloudflare's API does this
+  # and the provider doesn't account for it, causing perpetual drift.
+  # https://github.com/cloudflare/terraform-provider-cloudflare/issues/3354
+  content = replace(vultr_instance.flux.v6_main_ip, "/\\b0+([0-9a-fA-F]+)/", "$1")
+  ttl     = 300
+}

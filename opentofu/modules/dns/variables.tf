@@ -16,3 +16,8 @@ variable "infrastructure_ipv6_prefix" {
   description = "IPv6 /64 prefix for infrastructure hosts"
   type        = string
 }
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID for zone management"
+  type        = string
+}
