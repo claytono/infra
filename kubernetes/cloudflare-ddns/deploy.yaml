@@ -22,11 +22,16 @@ spec:
         app.kubernetes.io/name: cloudflare-ddns
         app.kubernetes.io/instance: cloudflare-ddns
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: cloudflare-ddns
         image: docker.io/favonia/cloudflare-ddns:1.15.1@sha256:a4e2089b3531eec8c9328c7a9a586f80e8d67dcd94856e0b596b7896e1de3f62
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 1000
           seccompProfile:
@@ -41,4 +46,4 @@ spec:
               name: cloudflare-ddns
               key: CLOUDFLARE_API_TOKEN
         - name: DOMAINS
-          value: luser.fnord.net
+          value: luser.fnord.net,luser.oneill.net
