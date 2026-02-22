@@ -4,10 +4,10 @@ data "cloudflare_account_api_token_permission_groups_list" "dns_write" {
   name       = "DNS Write"
 }
 
-# Scoped Cloudflare API token for DDNS updates to fnord.net only
-resource "cloudflare_account_token" "ddns_fnord" {
+# Scoped Cloudflare API token for DDNS updates to fnord.net and oneill.net
+resource "cloudflare_account_token" "ddns" {
   account_id = local.cloudflare_account_id
-  name       = "cloudflare-ddns-fnord"
+  name       = "cloudflare-ddns"
 
   policies = [{
     effect = "allow"
@@ -15,7 +15,8 @@ resource "cloudflare_account_token" "ddns_fnord" {
       id = data.cloudflare_account_api_token_permission_groups_list.dns_write.result[0].id
     }]
     resources = jsonencode({
-      "com.cloudflare.api.account.zone.${module.dns.cloudflare_fnord_net_zone_id}" = "*"
+      "com.cloudflare.api.account.zone.${module.dns.cloudflare_fnord_net_zone_id}"  = "*"
+      "com.cloudflare.api.account.zone.${module.dns.cloudflare_oneill_net_zone_id}" = "*"
     })
   }]
 }
@@ -26,7 +27,7 @@ resource "onepassword_item" "cloudflare_ddns" {
   title    = "cloudflare-ddns"
   category = "secure_note"
 
-  note_value = "Cloudflare API token for DDNS updates to fnord.net. Managed by OpenTofu - do not edit manually."
+  note_value = "Cloudflare API token for DDNS updates to fnord.net and oneill.net. Managed by OpenTofu - do not edit manually."
 
   section {
     label = "credentials"
@@ -34,7 +35,7 @@ resource "onepassword_item" "cloudflare_ddns" {
     field {
       label = "CLOUDFLARE_API_TOKEN"
       type  = "CONCEALED"
-      value = cloudflare_account_token.ddns_fnord.value
+      value = cloudflare_account_token.ddns.value
     }
   }
 }
