@@ -21,7 +21,7 @@ automation:
       {{ now().day == 1 and now().month in [3, 6, 9, 12] }}
   action:
   # Charger 1
-  - service: notify.future_planning_committee
+  - service: notify.clayton
     data:
       message: 🔋⚡ EGO Charger 1 started
   - service: switch.turn_on
@@ -44,7 +44,7 @@ automation:
     - service: switch.turn_off
       target:
         entity_id: switch.ego_power_1
-    - service: notify.future_planning_committee
+    - service: notify.clayton
       data:
         message: 🔋ℹ️ EGO Charger 1 - already charged or no battery
     else:
@@ -64,16 +64,16 @@ automation:
       - condition: template
         value_template: '{{ wait.trigger is none }}'
       then:
-      - service: notify.future_planning_committee
+      - service: notify.clayton
         data:
           message: 🔋⚠️ EGO Charger 1 timed out after 4 hours
       else:
-      - service: notify.future_planning_committee
+      - service: notify.clayton
         data:
           message: 🔋✅ EGO Charger 1 complete
 
   # Charger 2
-  - service: notify.future_planning_committee
+  - service: notify.clayton
     data:
       message: 🔋⚡ EGO Charger 2 started
   - service: switch.turn_on
@@ -96,7 +96,7 @@ automation:
     - service: switch.turn_off
       target:
         entity_id: switch.ego_power_2
-    - service: notify.future_planning_committee
+    - service: notify.clayton
       data:
         message: 🔋ℹ️ EGO Charger 2 - already charged or no battery
     else:
@@ -116,15 +116,15 @@ automation:
       - condition: template
         value_template: '{{ wait.trigger is none }}'
       then:
-      - service: notify.future_planning_committee
+      - service: notify.clayton
         data:
           message: 🔋⚠️ EGO Charger 2 timed out after 4 hours
       else:
-      - service: notify.future_planning_committee
+      - service: notify.clayton
         data:
           message: 🔋✅ EGO Charger 2 complete
 
-  - service: notify.future_planning_committee
+  - service: notify.clayton
     data:
       message: ℹ️ EGO charger maintenance cycle finished
   mode: single

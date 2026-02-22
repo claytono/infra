@@ -624,7 +624,7 @@ alert:
     state: 'on'
     repeat: 10
     notifiers:
-    - future_planning_committee
+    - clayton
     - call_me
   freezer_door_sensor_offline:
     name: Freezer sensor is offline
@@ -633,7 +633,7 @@ alert:
     repeat: 10
     skip_first: true
     notifiers:
-    - future_planning_committee
+    - clayton
     - call_me
 
 # Text to speech

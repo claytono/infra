@@ -35,7 +35,7 @@ alert:
     state: 'on'
     repeat: 240
     notifiers:
-    - future_planning_committee
+    - clayton
 
   basement_hallway_humidifier_not_running:
     name: 🚰 Basement hallway humidifier is on but not drawing power. Check water level.
@@ -44,4 +44,4 @@ alert:
     state: 'on'
     repeat: 240
     notifiers:
-    - future_planning_committee
+    - clayton
