@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: byparr
+
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: byparr
+      app.kubernetes.io/instance: byparr
+  template:
+    metadata:
+      name: byparr
+      labels:
+        app.kubernetes.io/name: byparr
+        app.kubernetes.io/instance: byparr
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: byparr
+        image: ghcr.io/thephaseless/byparr:2.1.0@sha256:01a46a2865d9a6db5eb8ead04ec0dd33b8fbe233e8565ae70b50d4cc0af4cfb0
+        ports:
+        - name: http
+          containerPort: 8191
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: home
+          mountPath: /home/ubuntu
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: home
+        emptyDir:
+          sizeLimit: 2Gi
