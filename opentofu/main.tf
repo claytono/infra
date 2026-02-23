@@ -62,14 +62,6 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 5.0"
     }
-    slack-token = {
-      source  = "change-engine/slack-token"
-      version = "~> 0.1"
-    }
-    slack-app = {
-      source  = "change-engine/slack-app"
-      version = "~> 0.1"
-    }
   }
 
   backend "s3" {
@@ -135,10 +127,6 @@ provider "proxmox" {
 
 provider "cloudflare" {
   api_token = local.cloudflare_api_token
-}
-
-provider "slack-app" {
-  token = slack-token_refresh.clayton.token
 }
 
 module "dns" {

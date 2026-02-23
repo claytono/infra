@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REFRESH_TOKEN="${SLACK_REFRESH_TOKEN:?SLACK_REFRESH_TOKEN not set}"
+
+RESPONSE=$(printf '%s' "$REFRESH_TOKEN" | curl -s --fail-with-body --max-time 30 \
+  -X POST "https://slack.com/api/tooling.tokens.rotate" \
+  --data-urlencode "refresh_token@-")
+
+OK=$(echo "$RESPONSE" | jq -r '.ok')
+if [ "$OK" != "true" ]; then
+  echo "Error rotating token: $(echo "$RESPONSE" | jq -r '.error')" >&2
+  exit 1
+fi
+
+CONFIG_TOKEN=$(echo "$RESPONSE" | jq -r '.token')
+[ "$CONFIG_TOKEN" = "null" ] && { echo "Error: missing .token in response" >&2; exit 1; }
+NEW_REFRESH=$(echo "$RESPONSE" | jq -r '.refresh_token')
+[ "$NEW_REFRESH" = "null" ] && { echo "Error: missing .refresh_token in response" >&2; exit 1; }
+EXPIRES_AT=$(echo "$RESPONSE" | jq -r '.exp')
+[ "$EXPIRES_AT" = "null" ] && { echo "Error: missing .exp in response" >&2; exit 1; }
+
+op item get "slack-config-tokens" --vault infra --format json | \
+  jq --arg at "$CONFIG_TOKEN" --arg rt "$NEW_REFRESH" --arg exp "$EXPIRES_AT" '
+    .fields |= map(
+      if .label == "access-token" then .value = $at
+      elif .label == "refresh-token" then .value = $rt
+      elif .label == "expires-at" then .value = $exp
+      else . end
+    )' | op item edit "slack-config-tokens" --vault infra >/dev/null
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"${BASEDIR}/bootstrap-secrets" --apply direnv
+
+echo "Token refreshed. Run: direnv reload"
