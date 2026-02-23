@@ -48,3 +48,16 @@ resource "github_actions_variable" "infra_semaphore_template" {
   variable_name = "SEMAPHORE_TEMPLATE"
   value         = module.semaphore.template_name
 }
+
+# Website-Hugo repository secrets (Cloudflare Pages deployment)
+resource "github_actions_secret" "website_hugo_cf_api_token" {
+  repository      = "website-hugo"
+  secret_name     = "CLOUDFLARE_API_TOKEN"
+  plaintext_value = cloudflare_account_token.pages_deploy.value
+}
+
+resource "github_actions_secret" "website_hugo_cf_account_id" {
+  repository      = "website-hugo"
+  secret_name     = "CLOUDFLARE_ACCOUNT_ID"
+  plaintext_value = local.cloudflare_account_id
+}

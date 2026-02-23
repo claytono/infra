@@ -82,23 +82,6 @@ resource "aws_route53_record" "dkim_fm3" {
   records = ["fm3.oneill.net.dkim.fmhosted.com"]
 }
 
-# AWS Certificate Manager (ACM) SSL certificate validation records
-# These DNS records prove domain ownership for automatic SSL certificate provisioning
-resource "aws_route53_record" "acm_validation" {
-  zone_id = aws_route53_zone.oneill_net.zone_id
-  name    = "_aab5ac87821783e4e8f7de6297024cbf.oneill.net"
-  type    = "CNAME"
-  ttl     = 300
-  records = ["_1a2c7c1f07a03bf47cb635883858422f.lblqlwmygg.acm-validations.aws."]
-}
-
-resource "aws_route53_record" "www_acm_validation" {
-  zone_id = aws_route53_zone.oneill_net.zone_id
-  name    = "_60263719a5bd132a7a8af2a903116405.www.oneill.net"
-  type    = "CNAME"
-  ttl     = 300
-  records = ["_d7fef7f4941ad7aa5ae1136c4cd91060.lblqlwmygg.acm-validations.aws."]
-}
 
 # Other services and subdomains
 resource "aws_route53_record" "atproto" {
@@ -114,7 +97,7 @@ resource "aws_route53_record" "clayton" {
   name    = "clayton.oneill.net"
   type    = "CNAME"
   ttl     = 3600
-  records = ["claytono.github.io."]
+  records = ["oneill-website.pages.dev."]
 }
 
 resource "aws_route53_record" "k_subdomain_ns" {
@@ -302,20 +285,24 @@ resource "cloudflare_zone" "oneill_net" {
   name = "oneill.net"
 }
 
-# CloudFront distribution CNAMEs (apex uses Cloudflare CNAME flattening)
+# Redirect-only domains: proxied placeholder so Cloudflare redirect rules
+# apply at the edge. 192.0.2.1 is RFC 5737 (documentation/example use) —
+# Cloudflare intercepts before reaching it.
 resource "cloudflare_dns_record" "oneill_a" {
   zone_id = cloudflare_zone.oneill_net.id
   name    = "oneill.net"
-  type    = "CNAME"
-  content = "d330vtujw3sx24.cloudfront.net"
+  type    = "A"
+  content = "192.0.2.1"
+  proxied = true
   ttl     = 1
 }
 
 resource "cloudflare_dns_record" "www" {
   zone_id = cloudflare_zone.oneill_net.id
   name    = "www.oneill.net"
-  type    = "CNAME"
-  content = "d330vtujw3sx24.cloudfront.net"
+  type    = "A"
+  content = "192.0.2.1"
+  proxied = true
   ttl     = 1
 }
 
@@ -390,22 +377,6 @@ resource "cloudflare_dns_record" "dkim_fm3" {
   ttl     = 3600
 }
 
-# ACM SSL certificate validation CNAMEs
-resource "cloudflare_dns_record" "acm_validation" {
-  zone_id = cloudflare_zone.oneill_net.id
-  name    = "_aab5ac87821783e4e8f7de6297024cbf.oneill.net"
-  type    = "CNAME"
-  content = "_1a2c7c1f07a03bf47cb635883858422f.lblqlwmygg.acm-validations.aws"
-  ttl     = 1
-}
-
-resource "cloudflare_dns_record" "www_acm_validation" {
-  zone_id = cloudflare_zone.oneill_net.id
-  name    = "_60263719a5bd132a7a8af2a903116405.www.oneill.net"
-  type    = "CNAME"
-  content = "_d7fef7f4941ad7aa5ae1136c4cd91060.lblqlwmygg.acm-validations.aws"
-  ttl     = 1
-}
 
 # Bluesky AT Protocol verification
 resource "cloudflare_dns_record" "atproto" {
@@ -416,13 +387,14 @@ resource "cloudflare_dns_record" "atproto" {
   ttl     = 1
 }
 
-# GitHub Pages CNAME
+# Cloudflare Pages custom domain
 resource "cloudflare_dns_record" "clayton" {
   zone_id = cloudflare_zone.oneill_net.id
   name    = "clayton.oneill.net"
   type    = "CNAME"
-  content = "claytono.github.io"
-  ttl     = 3600
+  content = "oneill-website.pages.dev"
+  proxied = true
+  ttl     = 1
 }
 
 # Proxmox auto-installer URL discovery
@@ -532,4 +504,26 @@ resource "cloudflare_dns_record" "thread" {
   type    = "CNAME"
   content = "pantrypi.oneill.net"
   ttl     = 1
+}
+
+# Redirect oneill.net and www.oneill.net to clayton.oneill.net
+resource "cloudflare_ruleset" "oneill_redirects" {
+  zone_id     = cloudflare_zone.oneill_net.id
+  name        = "oneill.net redirects"
+  kind        = "zone"
+  phase       = "http_request_dynamic_redirect"
+  description = "Redirect oneill.net and www.oneill.net to clayton.oneill.net"
+  rules = [{
+    ref         = "redirect_to_clayton"
+    description = "Redirect apex and www to clayton.oneill.net"
+    expression  = "(http.host eq \"oneill.net\") or (http.host eq \"www.oneill.net\")"
+    action      = "redirect"
+    action_parameters = {
+      from_value = {
+        status_code           = 301
+        target_url            = { expression = "concat(\"https://clayton.oneill.net\", http.request.uri.path)" }
+        preserve_query_string = true
+      }
+    }
+  }]
 }
