@@ -13,6 +13,7 @@
   "channels": {
     "slack": {
       "enabled": true,
+      "replyToMode": "all",
       "dm": {
         "enabled": true
       },
