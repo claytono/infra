@@ -19,6 +19,13 @@ containerd_config: |
   imports = ["/etc/containerd/conf.d/*.toml"]
   version = 3
   [plugins]
+    # Registry mirror config for spegel (p2p image distribution)
+    # discard_unpacked_layers must be false so layers remain available
+    # for spegel to serve to peer nodes
+    [plugins.'io.containerd.cri.v1.images']
+      discard_unpacked_layers = false
+      [plugins.'io.containerd.cri.v1.images'.registry]
+        config_path = "/etc/containerd/certs.d"
     [plugins.'io.containerd.cri.v1.runtime']
       [plugins.'io.containerd.cri.v1.runtime'.containerd]
         default_runtime_name = 'runc'
