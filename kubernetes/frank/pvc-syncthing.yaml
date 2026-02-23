@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: frank-syncthing-config
+  labels:
+    velero.io/backup: 'true'
+
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: synology-iscsi
+  resources:
+    requests:
+      storage: 1Gi
