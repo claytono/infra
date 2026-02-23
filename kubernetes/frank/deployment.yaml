@@ -28,6 +28,61 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+      initContainers:
+      - name: syncthing
+        image: syncthing/syncthing:2.0.14@sha256:6d2ab058383b533e045cf2c32fc4c6bbe87c612c92bc2aca9f552fb099b2e123
+        restartPolicy: Always
+        env:
+        - name: STNODEFAULTFOLDER
+          value: 'true'
+        ports:
+        - containerPort: 22000
+          name: sync
+          protocol: TCP
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: data
+          mountPath: /var/syncthing/sync/frank
+        - name: syncthing-config
+          mountPath: /var/syncthing/config
+      - name: www
+        image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:a910beae3813e2cdf6fe490695f0276d7c4329bec8e92e23c5fd7727207733af
+        restartPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: www
+          protocol: TCP
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/nginx/html
+          subPath: workspace/www
+          readOnly: true
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+        - name: nginx-tmp
+          mountPath: /tmp
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
       containers:
       - name: frank
         image: ghcr.io/openclaw/openclaw:2026.2.21@sha256:ce271192cd70250d16fc5911903d9953467a40faf8b34e87cbd042e6b49b6036
@@ -116,3 +171,15 @@ spec:
       - name: browser-home
         emptyDir:
           sizeLimit: 1Gi
+      - name: syncthing-config
+        persistentVolumeClaim:
+          claimName: frank-syncthing-config
+      - name: nginx-config
+        configMap:
+          name: frank-nginx-config
+      - name: nginx-tmp
+        emptyDir:
+          sizeLimit: 64Mi
+      - name: nginx-cache
+        emptyDir:
+          sizeLimit: 64Mi

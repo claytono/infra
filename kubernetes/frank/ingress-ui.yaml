@@ -10,7 +10,7 @@ metadata:
 
 spec:
   rules:
-  - host: frank.k.oneill.net
+  - host: frank-gateway.k.oneill.net
     http:
       paths:
       - path: /ui

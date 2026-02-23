@@ -11,15 +11,24 @@ resources:
 - namespace.yaml
 - deployment.yaml
 - service.yaml
+- service-syncthing.yaml
+- service-syncthing-gui.yaml
+- service-www.yaml
 - ingress.yaml
 - ingress-ui.yaml
+- ingress-www.yaml
+- ingress-syncthing.yaml
 - externalsecret.yaml
 - pvc.yaml
+- pvc-syncthing.yaml
 
 configMapGenerator:
 - name: frank-config
   files:
   - openclaw.json
+- name: frank-nginx-config
+  files:
+  - nginx.conf
 
 generatorOptions:
   disableNameSuffixHash: true

@@ -3,24 +3,25 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: frank
+  name: frank-syncthing
   namespace: frank
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
+    ak-type: simple
 
 spec:
   tls:
   - hosts:
-    - frank-gateway.k.oneill.net
-    secretName: frank-gateway-tls
+    - frank-syncthing.k.oneill.net
+    secretName: frank-syncthing-tls
   rules:
-  - host: frank-gateway.k.oneill.net
+  - host: frank-syncthing.k.oneill.net
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: frank
+            name: frank-syncthing-gui
             port:
-              number: 18789
+              number: 8384
