@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ -z "${SLACK_APP_TOKEN:-}" ] || [ -z "${SLACK_TOKEN_EXPIRES_AT:-}" ]; then
+  echo "Error: Slack token env vars not set. Run: bootstrap-secrets --apply direnv && direnv reload" >&2
+  exit 1
+fi
+
+NOW=$(date +%s)
+if [ "$NOW" -ge "$SLACK_TOKEN_EXPIRES_AT" ]; then
+  echo "Slack config token expired. Run: scripts/slack-token-refresh && direnv reload" >&2
+  exit 1
+fi
+
+cd "$(dirname "$0")/../opentofu/slack"
+exec tofu "$@"

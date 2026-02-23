@@ -24,3 +24,15 @@ instead of re-running.
 ```bash
 tofu plan -no-color > /tmp/tofu-plan-output.txt 2>&1
 ```
+
+## Slack Apps
+
+Slack app manifests are managed in a separate tofu root at `opentofu/slack/`.
+Always use the wrapper script:
+
+```bash
+scripts/tofu-slack plan
+scripts/tofu-slack apply
+```
+
+See `.claude/rules/opentofu/slack.md` for details.

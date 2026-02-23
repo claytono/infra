@@ -1,5 +1,3 @@
-resource "slack-token_refresh" "clayton" {}
-
 resource "slack-app_manifest" "frank" {
   manifest = jsonencode({
     display_information = {
@@ -12,6 +10,7 @@ resource "slack-app_manifest" "frank" {
         assistant_description = "Frank"
       }
       app_home = {
+        home_tab_enabled               = false
         messages_tab_enabled           = true
         messages_tab_read_only_enabled = false
       }
@@ -66,6 +65,34 @@ resource "slack-app_manifest" "frank" {
       }
       org_deploy_enabled     = false
       socket_mode_enabled    = true
+      token_rotation_enabled = false
+    }
+  })
+}
+
+resource "slack-app_manifest" "home" {
+  manifest = jsonencode({
+    display_information = {
+      name        = "Home"
+      description = "Home notifications"
+    }
+    features = {
+      bot_user = {
+        display_name  = "Home"
+        always_online = false
+      }
+    }
+    oauth_config = {
+      scopes = {
+        bot = [
+          "chat:write",
+          "incoming-webhook",
+        ]
+      }
+    }
+    settings = {
+      org_deploy_enabled     = false
+      socket_mode_enabled    = false
       token_rotation_enabled = false
     }
   })
