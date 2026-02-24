@@ -1,0 +1,16 @@
+---
+general:
+  log_level: VERBOSE
+  timer: 60
+
+job_defaults:
+  max_concurrent_searches: 1
+
+jobs:
+  search_unmet_cutoff:
+  search_missing:
+
+instances:
+  radarr:
+  - base_url: http://radarr.default.svc.cluster.local:7878
+    api_key: !ENV RADARR_API_KEY

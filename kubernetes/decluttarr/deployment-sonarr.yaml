@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: decluttarr-sonarr
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: decluttarr
+      app.kubernetes.io/instance: decluttarr-sonarr
+  template:
+    metadata:
+      name: decluttarr-sonarr
+      labels:
+        app.kubernetes.io/name: decluttarr
+        app.kubernetes.io/instance: decluttarr-sonarr
+      annotations:
+        reloader.stakater.com/auto: 'true'
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: decluttarr
+        image: ghcr.io/manimatter/decluttarr:v2.0.0@sha256:1e93192e9477cb01591de2ddac12d503662e2659792448e811b74bdb58e07ae4
+        envFrom:
+        - secretRef:
+            name: decluttarr
+        volumeMounts:
+        - name: config
+          mountPath: /app/config/config.yaml
+          subPath: config-sonarr.yaml
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: decluttarr-config
