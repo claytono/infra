@@ -1,0 +1,16 @@
+---
+general:
+  log_level: VERBOSE
+  timer: 60
+
+job_defaults:
+  max_concurrent_searches: 5
+
+jobs:
+  search_unmet_cutoff:
+  search_missing:
+
+instances:
+  sonarr:
+  - base_url: http://sonarr.default.svc.cluster.local:8989
+    api_key: !ENV SONARR_API_KEY

@@ -52,3 +52,6 @@ tools/recyclarr/data/settings.yml
 
 
 # Tools - Managarr (nothing to ignore - config.yml is committed)
+
+# Environment files (secrets)
+*.env
