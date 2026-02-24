@@ -14,34 +14,34 @@ configured in `.mcp_servers.json`.
 **Find entities:**
 
 ```bash
-mcp-cli hass/search_entities_tool '{"query":"temperature"}'
-mcp-cli hass/list_entities '{"domain":"light"}'
+mcp-cli call hass/search_entities_tool '{"query":"temperature"}'
+mcp-cli call hass/list_entities '{"domain":"light"}'
 ```
 
 **Get entity state:**
 
 ```bash
-mcp-cli hass/get_entity '{"entity_id":"sensor.office_temperature"}'
-mcp-cli hass/get_entity '{"entity_id":"light.kitchen", "detailed":true}'
+mcp-cli call hass/get_entity '{"entity_id":"sensor.office_temperature"}'
+mcp-cli call hass/get_entity '{"entity_id":"light.kitchen", "detailed":true}'
 ```
 
 **Check history:**
 
 ```bash
-mcp-cli hass/get_history '{"entity_id":"climate.office", "hours":24}'
+mcp-cli call hass/get_history '{"entity_id":"climate.office", "hours":24}'
 ```
 
 **Debug issues:**
 
 ```bash
-mcp-cli hass/get_error_log '{}'
-mcp-cli hass/list_automations '{}'
+mcp-cli call hass/get_error_log '{}'
+mcp-cli call hass/list_automations '{}'
 ```
 
 **System overview:**
 
 ```bash
-mcp-cli hass/system_overview '{}'
+mcp-cli call hass/system_overview '{}'
 ```
 
 ### Available Tools

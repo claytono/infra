@@ -12,22 +12,22 @@ external systems like GitHub, filesystems, databases, and APIs.
 
 ## Commands
 
-| Command                            | Output                          |
-| ---------------------------------- | ------------------------------- |
-| `mcp-cli`                          | List all servers and tool names |
-| `mcp-cli <server>`                 | Show tools with parameters      |
-| `mcp-cli <server>/<tool>`          | Get tool JSON schema            |
-| `mcp-cli <server>/<tool> '<json>'` | Call tool with arguments        |
-| `mcp-cli grep "<glob>"`            | Search tools by name            |
+| Command                                 | Output                          |
+| --------------------------------------- | ------------------------------- |
+| `mcp-cli`                               | List all servers and tool names |
+| `mcp-cli info <server>`                 | Show tools with parameters      |
+| `mcp-cli info <server>/<tool>`          | Get tool JSON schema            |
+| `mcp-cli call <server>/<tool> '<json>'` | Call tool with arguments        |
+| `mcp-cli grep "<glob>"`                 | Search tools by name            |
 
-**Add `-d` to include descriptions** (e.g., `mcp-cli filesystem -d`)
+**Add `-d` to include descriptions** (e.g., `mcp-cli info filesystem -d`)
 
 ## Workflow
 
 1. **Discover**: `mcp-cli` → see available servers and tools
-2. **Explore**: `mcp-cli <server>` → see tools with parameters
-3. **Inspect**: `mcp-cli <server>/<tool>` → get full JSON input schema
-4. **Execute**: `mcp-cli <server>/<tool> '<json>'` → run with arguments
+2. **Explore**: `mcp-cli info <server>` → see tools with parameters
+3. **Inspect**: `mcp-cli info <server>/<tool>` → get full JSON input schema
+4. **Execute**: `mcp-cli call <server>/<tool> '<json>'` → run with arguments
 
 ## Examples
 
@@ -36,42 +36,34 @@ external systems like GitHub, filesystems, databases, and APIs.
 mcp-cli
 
 # See all tools with parameters
-mcp-cli filesystem
+mcp-cli info filesystem
 
 # With descriptions (more verbose)
-mcp-cli filesystem -d
+mcp-cli info filesystem -d
 
 # Get JSON schema for specific tool
-mcp-cli filesystem/read_file
+mcp-cli info filesystem/read_file
 
 # Call the tool
-mcp-cli filesystem/read_file '{"path": "./README.md"}'
+mcp-cli call filesystem/read_file '{"path": "./README.md"}'
 
 # Search for tools
 mcp-cli grep "*file*"
 
-# JSON output for parsing
-mcp-cli filesystem/read_file '{"path": "./README.md"}' --json
-
-# Complex JSON with quotes (use '-' for stdin input)
-mcp-cli server/tool - <<EOF
+# Complex JSON with quotes (use stdin)
+mcp-cli call server/tool <<EOF
 {"content": "Text with 'quotes' inside"}
 EOF
 
 # Or pipe from a file/command
-cat args.json | mcp-cli server/tool -
-
-# Complex Command chaining with xargs and jq
-mcp-cli filesystem/search_files '{"path": "src/", "pattern": "*.ts"}' --json | jq -r '.content[0].text' | head -1 | xargs -I {} sh -c 'mcp-cli filesystem/read_file "{\"path\": \"{}\"}"'
+cat args.json | mcp-cli call server/tool
 ```
 
 ## Options
 
-| Flag         | Purpose                   |
-| ------------ | ------------------------- |
-| `-j, --json` | JSON output for scripting |
-| `-r, --raw`  | Raw text content          |
-| `-d`         | Include descriptions      |
+| Flag | Purpose              |
+| ---- | -------------------- |
+| `-d` | Include descriptions |
 
 ## Exit Codes
 

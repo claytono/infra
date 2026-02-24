@@ -13,16 +13,19 @@ Running in **eager mode** - all 242 tools are registered directly as MCP tools.
 mcp-cli
 
 # Show unifi server tools
-mcp-cli unifi
+mcp-cli info unifi
 
 # Show tool schema
-mcp-cli unifi/list_firewall_rule
+mcp-cli info unifi/list_firewall_rule
+
+# Search for tools by pattern
+mcp-cli grep "*firewall*"
 
 # Call tool
-mcp-cli unifi/list_device '{}'
+mcp-cli call unifi/list_device '{}'
 
 # Get firewall rule details
-mcp-cli unifi/get_firewall_rule '{"id": "rule-id-here"}'
+mcp-cli call unifi/get_firewall_rule '{"id": "rule-id-here"}'
 ```
 
 ## Available Tool Categories
