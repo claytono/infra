@@ -21,6 +21,7 @@ resources:
 - externalsecret.yaml
 - pvc.yaml
 - pvc-syncthing.yaml
+- postgres.yaml
 
 configMapGenerator:
 - name: frank-config
@@ -29,6 +30,9 @@ configMapGenerator:
 - name: frank-nginx-config
   files:
   - nginx.conf
+- name: frank-api-entrypoint
+  files:
+  - api-entrypoint.sh
 
 generatorOptions:
   disableNameSuffixHash: true

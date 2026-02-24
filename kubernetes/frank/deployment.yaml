@@ -83,6 +83,45 @@ spec:
           mountPath: /tmp
         - name: nginx-cache
           mountPath: /var/cache/nginx
+      - name: api
+        image: oven/bun:1.3.9-alpine@sha256:9028ee7a60a04777190f0c3129ce49c73384d3fc918f3e5c75f5af188e431981
+        restartPolicy: Always
+        command: [/bin/sh, /etc/api/api-entrypoint.sh]
+        ports:
+        - containerPort: 3001
+          name: api
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: frank-db-app
+              key: uri
+        - name: PORT
+          value: '3001'
+        - name: BUN_INSTALL_CACHE_DIR
+          value: /tmp
+        - name: BUN_RUNTIME_TRANSPILER_CACHE_PATH
+          value: /tmp/bun-cache
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: data
+          mountPath: /home/node/.openclaw
+          readOnly: false
+        - name: api-tmp
+          mountPath: /tmp
+        - name: api-entrypoint
+          mountPath: /etc/api
+          readOnly: true
       containers:
       - name: frank
         image: ghcr.io/openclaw/openclaw:2026.2.22@sha256:51c3fe85913545ca6c15c0fe2447230167ed1d329a07088f67d2a1612541b64b
@@ -111,10 +150,6 @@ spec:
           readOnlyRootFilesystem: true
           seccompProfile:
             type: RuntimeDefault
-        resources:
-          limits:
-            cpu: '1'
-            memory: 4Gi
         volumeMounts:
         - name: config
           mountPath: /home/node/.openclaw/openclaw.json
@@ -146,10 +181,6 @@ spec:
           readOnlyRootFilesystem: true
           seccompProfile:
             type: RuntimeDefault
-        resources:
-          limits:
-            cpu: '1'
-            memory: 2Gi
         volumeMounts:
         - name: browser-tmp
           mountPath: /tmp
@@ -181,5 +212,11 @@ spec:
         emptyDir:
           sizeLimit: 64Mi
       - name: nginx-cache
+        emptyDir:
+          sizeLimit: 64Mi
+      - name: api-entrypoint
+        configMap:
+          name: frank-api-entrypoint
+      - name: api-tmp
         emptyDir:
           sizeLimit: 64Mi
