@@ -42,7 +42,6 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.goldilocks.id,
     authentik_provider_proxy.healthchecks.id,
     authentik_provider_proxy.homepage.id,
-    authentik_provider_proxy.huntarr.id,
     authentik_provider_proxy.netdata.id,
     authentik_provider_proxy.prometheus.id,
     authentik_provider_proxy.prowlarr.id,
