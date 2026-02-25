@@ -7,7 +7,8 @@
     },
 
     "controlUi": {
-      "allowInsecureAuth": true
+      "allowInsecureAuth": true,
+      "allowedOrigins": ["https://frank-gateway.k.oneill.net"]
     }
   },
   "channels": {
