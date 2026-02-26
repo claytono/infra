@@ -22,8 +22,7 @@ resource "aws_iam_policy" "ddns_route53" {
           "route53:ListResourceRecordSets"
         ]
         Resource = [
-          "arn:aws:route53:::hostedzone/${module.dns.oneill_net_zone_id}",
-          "arn:aws:route53:::hostedzone/${module.dns.fnord_net_zone_id}"
+          "arn:aws:route53:::hostedzone/${module.dns.oneill_net_zone_id}"
         ]
       }
     ]
@@ -62,12 +61,6 @@ resource "onepassword_item" "ddns_route53_aws" {
       label = "ONEILL_NET_ZONE_ID"
       type  = "STRING"
       value = module.dns.oneill_net_zone_id
-    }
-
-    field {
-      label = "FNORD_NET_ZONE_ID"
-      type  = "STRING"
-      value = module.dns.fnord_net_zone_id
     }
   }
 }

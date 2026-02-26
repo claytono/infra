@@ -28,27 +28,6 @@ resource "vultr_reverse_ipv6" "flux" {
   reverse     = "flux.fnord.net"
 }
 
-data "aws_route53_zone" "fnord_net" {
-  name         = "fnord.net."
-  private_zone = false
-}
-
-resource "aws_route53_record" "flux_a" {
-  zone_id = data.aws_route53_zone.fnord_net.zone_id
-  name    = "flux.fnord.net"
-  type    = "A"
-  ttl     = 300
-  records = [vultr_instance.flux.main_ip]
-}
-
-resource "aws_route53_record" "flux_aaaa" {
-  zone_id = data.aws_route53_zone.fnord_net.zone_id
-  name    = "flux.fnord.net"
-  type    = "AAAA"
-  ttl     = 300
-  records = [vultr_instance.flux.v6_main_ip]
-}
-
 # Cloudflare DNS records for flux
 resource "cloudflare_dns_record" "flux_a" {
   zone_id = module.dns.cloudflare_fnord_net_zone_id
