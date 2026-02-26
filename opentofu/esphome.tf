@@ -14,12 +14,12 @@ resource "unifi_user" "esphome_hosts" {
   local_dns_record = each.value.hostname
 }
 
-resource "aws_route53_record" "esphome_hosts" {
+resource "cloudflare_dns_record" "esphome_hosts" {
   for_each = local.esphome_hosts
 
-  zone_id = module.dns.oneill_net_zone_id
+  zone_id = module.dns.cloudflare_oneill_net_zone_id
   name    = each.value.hostname
   type    = "A"
-  ttl     = 300
-  records = [each.value.ip]
+  content = each.value.ip
+  ttl     = 1
 }
