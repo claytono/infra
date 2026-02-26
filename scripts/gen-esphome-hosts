@@ -299,7 +299,7 @@ def main():
     if args.plan or args.apply:
         targets = [
             "-target=unifi_user.esphome_hosts",
-            "-target=aws_route53_record.esphome_hosts",
+            "-target=cloudflare_dns_record.esphome_hosts",
         ]
         cmd = ["tofu", "plan" if args.plan else "apply"]
         if args.apply:

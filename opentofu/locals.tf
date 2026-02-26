@@ -3,13 +3,13 @@
 # infrastructure_hosts defines all infrastructure machines with static IPs.
 # This data structure is consumed by both:
 # - unifi_user resources (DHCP reservations with internal DNS)
-# - aws_route53_record resources (public DNS A records)
+# - cloudflare_dns_record resources (public DNS A records)
 #
-# This ensures UniFi DHCP and Route53 DNS stay automatically in sync.
+# This ensures UniFi DHCP and Cloudflare DNS stay automatically in sync.
 # To add a new host, simply add an entry here and run `opentofu apply`.
 #
 # Optional fields:
-# - public_dns (default: true) - set to false to skip public Route53 record
+# - public_dns (default: true) - set to false to skip public DNS record
 # - enable_ipv6 (default: true) - set to false to skip AAAA record creation
 #
 # Proxmox VE hosts IP plan: 172.19.74.4x (p1=.41, p2=.42, p3=.43, etc.)
