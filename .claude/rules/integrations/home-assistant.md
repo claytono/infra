@@ -58,6 +58,28 @@ mcp-cli call hass/system_overview '{}'
 | `get_error_log`        | HA error log                 |
 | `call_service_tool`    | Call any HA service          |
 
+## REST API (Direct Access)
+
+`$HASS_BEARER_TOKEN` is available in the environment (loaded from 1Password via
+`.secrets.tmpl` / `.envrc`). Use it for operations not covered by mcp-cli, such
+as creating automations:
+
+```bash
+# Create/update a UI automation
+curl -s -X POST \
+  -H "Authorization: Bearer $HASS_BEARER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ ... }' \
+  https://hass.k.oneill.net/api/config/automation/config/<automation_id>
+
+# Reload automations after creating/updating
+curl -s -X POST \
+  -H "Authorization: Bearer $HASS_BEARER_TOKEN" \
+  https://hass.k.oneill.net/api/services/automation/reload
+```
+
+API base URL: `https://hass.k.oneill.net/api/`
+
 ## Prometheus Metrics (Alternative)
 
 Script: `kubernetes/hass/get-prom-metrics`
