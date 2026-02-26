@@ -4,12 +4,6 @@ output "k_oneill_net_nameservers" {
   value       = aws_route53_zone.k_oneill_net.name_servers
 }
 
-# Export zone IDs for use in IAM policies
-output "oneill_net_zone_id" {
-  description = "AWS Route53 hosted zone ID for oneill.net"
-  value       = aws_route53_zone.oneill_net.zone_id
-}
-
 output "cloudflare_fnord_net_zone_id" {
   description = "Cloudflare zone ID for fnord.net"
   value       = cloudflare_zone.fnord_net.id
