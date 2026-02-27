@@ -22,13 +22,16 @@ spec:
                 - ALL
               readOnlyRootFilesystem: false
             env:
-            - name: AWS_ACCESS_KEY_ID
-              value: AKIAJKAXEQX5E3OWSFHQ
-            - name: AWS_SECRET_ACCESS_KEY
+            - name: CF_Token
               valueFrom:
                 secretKeyRef:
                   name: acme-sh-credentials
-                  key: aws-secret-access-key
+                  key: CF_Token
+            - name: CF_Zone_ID
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: CF_Zone_ID
             # ZeroSSL EAB credentials
             - name: ACME_EAB_KID
               value: 6S0Z-BQZ9KWpl7UzJlR54A

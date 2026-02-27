@@ -22,15 +22,17 @@ spec:
                 - ALL
               readOnlyRootFilesystem: false
             env:
-                # AWS Route53 credentials (same as cert-manager)
-            - name: AWS_ACCESS_KEY_ID
-              value: AKIAJKAXEQX5E3OWSFHQ
-            - name: AWS_SECRET_ACCESS_KEY
+            - name: CF_Token
               valueFrom:
                 secretKeyRef:
                   name: acme-sh-credentials
-                  key: aws-secret-access-key
-                # ZeroSSL EAB credentials
+                  key: CF_Token
+            - name: CF_Zone_ID
+              valueFrom:
+                secretKeyRef:
+                  name: acme-sh-credentials
+                  key: CF_Zone_ID
+            # ZeroSSL EAB credentials
             - name: ACME_EAB_KID
               value: 6S0Z-BQZ9KWpl7UzJlR54A
             - name: ACME_EAB_HMAC_KEY
@@ -38,7 +40,7 @@ spec:
                 secretKeyRef:
                   name: acme-sh-credentials
                   key: zerossl-eab-secret
-                # UDM Pro hostname (SSH key auth used for deployment)
+            # UDM Pro hostname (SSH key auth used for deployment)
             - name: UDMP_Hostname
               value: udmp.oneill.net
             volumeMounts:
