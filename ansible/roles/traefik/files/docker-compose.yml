@@ -34,9 +34,9 @@ services:
       # Automatic HTTP to HTTPS redirect
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      # Let's Encrypt certificate resolver with Route53 DNS challenge
+      # Let's Encrypt certificate resolver with Cloudflare DNS challenge
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=route53"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=admin@oneill.net"
       - "--certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json"
     networks:
