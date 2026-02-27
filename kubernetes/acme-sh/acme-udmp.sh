@@ -14,7 +14,7 @@ echo "Ensuring account is registered with ZeroSSL..."
 echo "Checking certificate status..."
 if ! /usr/local/bin/acme.sh --info -d udmp.oneill.net | grep "^Le_" > /dev/null; then
   echo "Certificate does not exist, issuing new certificate..."
-  if ! /usr/local/bin/acme.sh --issue --dns dns_aws -d udmp.oneill.net -d router.oneill.net -k 2048; then
+  if ! /usr/local/bin/acme.sh --issue --dns dns_cf -d udmp.oneill.net -d router.oneill.net -k 2048; then
     echo "Certificate issuance failed"
     exit 1
   fi

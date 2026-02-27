@@ -14,7 +14,7 @@ echo "Ensuring account is registered with ZeroSSL..."
 echo "Checking certificate status..."
 if ! /usr/local/bin/acme.sh --info -d fs2.oneill.net | grep "^Le_" > /dev/null; then
   echo "Certificate does not exist, issuing new certificate..."
-  if ! /usr/local/bin/acme.sh --issue --dns dns_aws -d fs2.oneill.net; then
+  if ! /usr/local/bin/acme.sh --issue --dns dns_cf -d fs2.oneill.net; then
     echo "Certificate issuance failed"
     exit 1
   fi
