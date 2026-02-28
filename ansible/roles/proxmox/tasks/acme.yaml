@@ -6,10 +6,10 @@
     update_cache: true
     cache_valid_time: 3600
 
-- name: "Deploy AWS Route53 credentials for ACME"
+- name: "Deploy Cloudflare credentials for ACME"
   ansible.builtin.template:
-    src: aws-credentials.j2
-    dest: /root/.aws-route53-credentials
+    src: cloudflare-credentials.j2
+    dest: /root/.cloudflare-credentials
     owner: root
     group: root
     mode: "0600"
@@ -40,13 +40,13 @@
   register: proxmox_acme_plugin_list
   changed_when: false
 
-- name: "Check if Route53 DNS plugin exists"
+- name: "Check if Cloudflare DNS plugin exists"
   ansible.builtin.set_fact:
     proxmox_acme_plugin_exists: "{{ proxmox_acme_plugin_name in (proxmox_acme_plugin_list.stdout | from_json | map(attribute='plugin') | list) }}"
 
-- name: "Add Route53 DNS plugin for ACME"
+- name: "Add Cloudflare DNS plugin for ACME"
   ansible.builtin.command:
-    cmd: pvenode acme plugin add dns {{ proxmox_acme_plugin_name }} --api aws --data /root/.aws-route53-credentials
+    cmd: pvenode acme plugin add dns {{ proxmox_acme_plugin_name }} --api cf --data /root/.cloudflare-credentials
   when: not proxmox_acme_plugin_exists
   run_once: true
 
