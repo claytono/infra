@@ -37,7 +37,7 @@ proxmox_admin_password: !vault |
 # ACME / Let's Encrypt configuration
 proxmox_acme_email: "clayton@oneill.net"
 proxmox_acme_account_name: "default"
-proxmox_acme_plugin_name: "route53"
+proxmox_acme_plugin_name: "cloudflare"
 
 # Use real IP in /etc/hosts (required for Proxmox clustering)
 hostname_hosts_ip: "real"
