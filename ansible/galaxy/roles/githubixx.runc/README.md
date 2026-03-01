@@ -1,5 +1,5 @@
 <!--
-Copyright (C) 2021-2025 Robert Wimmer
+Copyright (C) 2021-2026 Robert Wimmer
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
@@ -14,6 +14,19 @@ Ansible role to install [runc](https://github.com/opencontainers/runc). `runc` i
 See full [CHANGELOG](https://github.com/githubixx/ansible-role-runc/blob/master/CHANGELOG.md)
 
 **Recent changes:**
+
+## 0.8.1+1.4.0
+
+- **OTHER**
+  - remove `.ansible` directory and add it to `.gitignore`
+
+- **MOLECULE**
+  - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
+
+## 0.8.0+1.4.0
+
+- **UPDATE**
+  - update runc to `1.4.0`
 
 ## 0.7.1+1.3.2
 
@@ -57,14 +70,14 @@ See full [CHANGELOG](https://github.com/githubixx/ansible-role-runc/blob/master/
 roles:
   - name: githubixx.runc
     src: https://github.com/githubixx/ansible-role-runc.git
-    version: 0.7.1+1.3.2
+    version: 0.8.1+1.4.0
 ```
 
 ## Role Variables
 
 ```yaml
 # runc version to install
-runc_version: "1.3.2"
+runc_version: "1.4.0"
 
 # Where to install "runc" binaries.
 runc_bin_directory: "/usr/local/sbin"
