@@ -199,18 +199,15 @@ resource "onepassword_item" "tailscale_github_actions" {
 # us to set use_with_exit_node parameter for split DNS nameservers.
 #
 # Split DNS configuration:
-# 1. k.oneill.net → AWS Route53 (for Kubernetes ingresses)
-#    - Uses AWS Route53 nameservers with use_with_exit_node=true
-#    - Works when using exit nodes (especially flux)
-# 2. oneill.net → Local DNS (for infrastructure hosts and other local services)
-#    - Uses local DNS server (172.19.74.1) with use_with_exit_node=true
-#    - Router DNS is not listening on Tailscale interface, so exit node/subnet routes
-#      must be disabled on the router to avoid routing conflicts
+# 1. k.oneill.net → Cloudflare authoritative NS (for Kubernetes ingresses)
+#    - Direct resolution avoids backhauling to UDMP when traveling
+# 2. oneill.net → UDMP via Tailscale IP (for infrastructure hosts and local services)
+#    - Includes local-only records not in Cloudflare
 
-# Resolve k.oneill.net nameserver hostnames to IP addresses
+# Resolve Cloudflare nameserver hostnames to IP addresses for k.oneill.net split DNS
 # Tailscale requires IP addresses, not hostnames
-data "dns_a_record_set" "k_oneill_net_ns" {
-  for_each = toset(module.dns.k_oneill_net_nameservers)
+data "dns_a_record_set" "cloudflare_oneill_net_ns" {
+  for_each = toset(module.dns.cloudflare_oneill_net_nameservers)
   host     = each.value
 }
 
@@ -242,15 +239,20 @@ resource "tailscale_dns_configuration" "main" {
   }
 
   # Split DNS for k.oneill.net subdomain (Kubernetes ingresses)
-  # Uses AWS Route53 nameservers resolved to IP addresses
+  #
+  # Routes queries directly to Cloudflare authoritative nameservers rather than
+  # backhauling to the UDMP. Without this entry, Tailscale's longest-suffix
+  # matching would route *.k.oneill.net queries to the UDMP via the oneill.net
+  # entry. Unlike oneill.net (which needs the UDMP for local-only records not
+  # in Cloudflare), all k.oneill.net records are in Cloudflare and can be
+  # resolved directly — avoiding unnecessary backhaul when traveling.
   dynamic "split_dns" {
-    for_each = [1] # Create exactly one split_dns block
+    for_each = [1]
     content {
       domain = "k.oneill.net"
 
-      # Create a nameserver block for each resolved Route53 nameserver IP
       dynamic "nameservers" {
-        for_each = data.dns_a_record_set.k_oneill_net_ns
+        for_each = data.dns_a_record_set.cloudflare_oneill_net_ns
         content {
           address            = nameservers.value.addrs[0]
           use_with_exit_node = true

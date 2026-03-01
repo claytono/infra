@@ -2,10 +2,6 @@ terraform {
   required_version = ">= 1.0"
 
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.0"
-    }
     vultr = {
       source  = "vultr/vultr"
       version = "~> 2.15"
@@ -75,16 +71,6 @@ terraform {
 # 1Password provider configuration
 provider "onepassword" {
   account = "6GO3NBF2PRCY3NAW6SN2CG6I2U"
-}
-
-provider "aws" {
-  region = "us-west-2"
-
-  default_tags {
-    tags = {
-      ManagedBy = "opentofu"
-    }
-  }
 }
 
 provider "vultr" {

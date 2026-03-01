@@ -137,16 +137,6 @@ resource "cloudflare_dns_record" "router" {
   ttl     = 3600
 }
 
-# k.oneill.net NS delegation (stays on Route53, managed by external-dns)
-resource "cloudflare_dns_record" "k_subdomain_ns" {
-  for_each = toset(aws_route53_zone.k_oneill_net.name_servers)
-  zone_id  = cloudflare_zone.oneill_net.id
-  name     = "k.oneill.net"
-  type     = "NS"
-  content  = each.value
-  ttl      = 3600
-}
-
 # Infrastructure hosts - automatically synced with UniFi DHCP reservations
 # Host definitions are in ../../locals.tf (infrastructure_hosts) and shared
 # with unifi_user resources to ensure DNS and DHCP stay automatically in sync.

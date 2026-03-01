@@ -1,6 +1,0 @@
----
-ler53_route_53_domain: oneill.net
-ler53_cert_common_name: gasherbrum.oneill.net
-ler53_service_handlers:
-  - name: nginx
-    state: restarted
