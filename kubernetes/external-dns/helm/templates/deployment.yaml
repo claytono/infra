@@ -46,29 +46,24 @@ spec:
           image: registry.k8s.io/external-dns/external-dns:v0.20.0
           imagePullPolicy: IfNotPresent
           env:
-            - name: AWS_ACCESS_KEY_ID
+            - name: CF_API_TOKEN
               valueFrom:
                 secretKeyRef:
-                  key: AWS_ACCESS_KEY_ID
-                  name: external-dns-aws-creds
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: AWS_SECRET_ACCESS_KEY
-                  name: external-dns-aws-creds
-            - name: AWS_DEFAULT_REGION
-              value: us-east-1
+                  key: CF_API_TOKEN
+                  name: external-dns-cloudflare-creds
           args:
             - --log-level=info
             - --log-format=text
             - --interval=1m
+            - --events
             - --source=service
             - --source=ingress
             - --policy=sync
             - --registry=txt
+            - --txt-owner-id=external-dns
             - --txt-prefix=extdns-
-            - --domain-filter=k.oneill.net.
-            - --provider=aws
+            - --domain-filter=oneill.net
+            - --provider=cloudflare
           ports:
             - name: http
               protocol: TCP

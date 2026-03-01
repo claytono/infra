@@ -13,9 +13,7 @@ spec:
       name: issuer-account-key
     solvers:
     - dns01:
-        route53:
-          region: us-east-1
-          accessKeyID: AKIAJKAXEQX5E3OWSFHQ
-          secretAccessKeySecretRef:
+        cloudflare:
+          apiTokenSecretRef:
             name: cert-manager
-            key: aws-secret-access-key
+            key: cloudflare-api-token

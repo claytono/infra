@@ -1,18 +1,16 @@
 ---
+provider:
+  name: cloudflare
+
 policy: sync
 txtPrefix: extdns-
+txtOwnerId: external-dns
+triggerLoopOnEvent: true
 domainFilters:
-- k.oneill.net.
+- oneill.net
 env:
-- name: AWS_ACCESS_KEY_ID
+- name: CF_API_TOKEN
   valueFrom:
     secretKeyRef:
-      name: external-dns-aws-creds
-      key: AWS_ACCESS_KEY_ID
-- name: AWS_SECRET_ACCESS_KEY
-  valueFrom:
-    secretKeyRef:
-      name: external-dns-aws-creds
-      key: AWS_SECRET_ACCESS_KEY
-- name: AWS_DEFAULT_REGION
-  value: us-east-1
+      name: external-dns-cloudflare-creds
+      key: CF_API_TOKEN
