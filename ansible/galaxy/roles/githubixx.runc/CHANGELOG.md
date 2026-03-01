@@ -1,9 +1,25 @@
 <!--
-Copyright (C) 2021-2025 Robert Wimmer
+Copyright (C) 2021-2026 Robert Wimmer
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
 # Changelog
+
+## 0.8.1+1.4.0
+
+- **OTHER**
+  - remove `.ansible` directory and add it to `.gitignore`
+
+- **MOLECULE**
+  - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
+
+## 0.8.0+1.4.0
+
+- **Breaking**
+  - `meta/main.yml`: Change `min_ansible_version` to `2.15`. Ansible `2.9` is end-of-life (EOL).
+
+- **UPDATE**
+  - update runc to `1.4.0`
 
 ## 0.7.1+1.3.2
 
