@@ -7,7 +7,7 @@ age: 1.3.1
 ansible-lint: 25.8.2
 awscli2: 2.33.2
 curl: 8.18.0
-go-unifi-mcp: db6abc822c57651b0567e53740a0793603009dea
+go-unifi-mcp: 81f93d3cb9c35ff1882245e161b40eb7a2ff4036
 jq: 1.8.1
 kopia: 0.22.3
 kubecolor: 0.5.3
@@ -27,7 +27,7 @@ python3: 3.13.12-env
 rclone: 1.73.1
 skopeo: 1.22.0
 tflint: 0.61.0
-uv: 0.10.4
+uv: 0.10.6
 velero: 1.17.2
 yamlfix: 1.19.1
 yq-go: 4.52.4
