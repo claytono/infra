@@ -1,6 +1,6 @@
 ---
 # renovate: datasource=docker
-matter_otbr_image: "openthread/border-router:latest@sha256:41d5431493d072d06c489225f4eef35fa47b4561a7c4ef184da5f6b5d9678b36"
+matter_otbr_image: "openthread/border-router:latest@sha256:fc3183bbf2d2f1b965ad5791765cb1bafbd1fb292f2a5c0c1b33cad27d88ff3d"
 # renovate: datasource=docker
 matter_server_image: "ghcr.io/home-assistant-libs/python-matter-server:8.1.0@sha256:170aa093ce91c76cde4cc390918307590f0f5558fcec93f913af3cb019e6562a"
 
