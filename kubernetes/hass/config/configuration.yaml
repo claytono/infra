@@ -33,6 +33,9 @@ rest_command:
   set_vrroom_input:
     url: http://vrroom-37.oneill.net/cmd?insel={{ input }}
     method: GET
+  reboot_vrroom:
+    url: http://vrroom-37.oneill.net/cmd?reboot=1
+    method: GET
 
 # Enables prometheus exporter
 prometheus:
