@@ -160,7 +160,7 @@ spec:
         - name: tmp
           mountPath: /tmp
       - name: browser
-        image: zenika/alpine-chrome:latest@sha256:54a0e0cbe20d30f6f36485ff23a22985022cddaf6172789f82ae2d7457daa63a
+        image: zenika/alpine-chrome:latest@sha256:9e026b03e4a555bb37ad236dee9c8da9fb5449ab3c672447e21bf80a77ee437f
         args:
         - --no-sandbox
         - --disable-gpu
