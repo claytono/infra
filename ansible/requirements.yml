@@ -26,7 +26,7 @@ roles:
 collections:
   - name: https://github.com/artis3n/ansible-collection-tailscale.git
     type: git
-    version: v1.2.0
+    version: v1.2.1
   - name: community.proxmox
     source: https://github.com/ansible-collections/community.proxmox.git
     type: git
