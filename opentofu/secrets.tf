@@ -4,7 +4,7 @@ data "onepassword_vault" "infra" {
 }
 
 # Vultr API credentials from 1Password
-data "onepassword_item" "vultr_api" {
+ephemeral "onepassword_item" "vultr_api" {
   vault = data.onepassword_vault.infra.uuid
   title = "Vultr API"
 }
@@ -22,7 +22,7 @@ data "onepassword_item" "tailscale_opentofu" {
 }
 
 # GitHub credentials from 1Password (for managing repository secrets)
-data "onepassword_item" "github_opentofu" {
+ephemeral "onepassword_item" "github_opentofu" {
   vault = data.onepassword_vault.infra.uuid
   title = "github-opentofu"
 }
@@ -40,43 +40,43 @@ data "onepassword_item" "cachix_auth_token" {
 }
 
 # OpenAI admin API key from 1Password (for managing API keys)
-data "onepassword_item" "openai_admin_api" {
+ephemeral "onepassword_item" "openai_admin_api" {
   vault = data.onepassword_vault.infra.uuid
   title = "terraform-openai-admin-key"
 }
 
 # Clean field mapping for B2 credentials
 locals {
-  b2_fields = {
-    for f in flatten([
-      for sec in data.onepassword_item.terraform_b2.section : sec.field
-    ]) : f.label => f.value
-  }
+  b2_fields = merge([
+    for _, sec in data.onepassword_item.terraform_b2.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
 }
 
 # Local values for easier reference
 locals {
-  vultr_api_key = data.onepassword_item.vultr_api.password
+  vultr_api_key = ephemeral.onepassword_item.vultr_api.password
 
   # B2 credentials using clean field mapping
   b2_application_key_id = local.b2_fields["RCLONE_CONFIG_B2_ACCOUNT"]
   b2_application_key    = local.b2_fields["RCLONE_CONFIG_B2_KEY"]
 
   # Tailscale OpenTofu credentials for policy and OAuth client management
-  tailscale_fields = {
-    for f in flatten([
-      for sec in data.onepassword_item.tailscale_opentofu.section : sec.field
-    ]) : f.label => f.value
-  }
+  tailscale_fields = merge([
+    for _, sec in data.onepassword_item.tailscale_opentofu.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
 
   tailscale_client_id     = local.tailscale_fields["client_id"]
   tailscale_client_secret = local.tailscale_fields["client_secret"]
 
   # GitHub token for managing repository secrets
-  github_token = data.onepassword_item.github_opentofu.password
+  github_token = ephemeral.onepassword_item.github_opentofu.password
 
   # OpenAI admin API key for managing API keys
-  openai_api_key = data.onepassword_item.openai_admin_api.password
+  openai_api_key = ephemeral.onepassword_item.openai_admin_api.password
 }
 
 # Authentik credentials from 1Password (used to configure provider)
@@ -86,35 +86,35 @@ data "onepassword_item" "ak_tool" {
 }
 
 locals {
-  ak_tool_fields = {
-    for f in flatten([
-      for sec in data.onepassword_item.ak_tool.section : sec.field
-    ]) : f.label => f.value
-  }
+  ak_tool_fields = merge([
+    for _, sec in data.onepassword_item.ak_tool.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
 
   authentik_url   = local.ak_tool_fields["base_url"]
   authentik_token = local.ak_tool_fields["api_token"]
 }
 
 # Unifi credentials from 1Password (used to configure provider for DHCP reservations)
-data "onepassword_item" "unifi_terraform" {
+ephemeral "onepassword_item" "unifi_terraform" {
   vault = data.onepassword_vault.infra.uuid
   title = "unifi-opentofu-api-key"
 }
 
 locals {
-  unifi_api_key = data.onepassword_item.unifi_terraform.password
+  unifi_api_key = ephemeral.onepassword_item.unifi_terraform.password
   unifi_api_url = "https://udmp.oneill.net"
 }
 
 # Proxmox credentials from 1Password (used to configure provider for VM management)
-data "onepassword_item" "proxmox_opentofu" {
+ephemeral "onepassword_item" "proxmox_opentofu" {
   vault = data.onepassword_vault.infra.uuid
   title = "proxmox-opentofu"
 }
 
 locals {
-  proxmox_api_token = "${data.onepassword_item.proxmox_opentofu.username}=${data.onepassword_item.proxmox_opentofu.credential}"
+  proxmox_api_token = "${ephemeral.onepassword_item.proxmox_opentofu.username}=${ephemeral.onepassword_item.proxmox_opentofu.credential}"
 }
 
 # Healthchecks API keys from 1Password (cloud and self-hosted instances)
@@ -129,16 +129,16 @@ data "onepassword_item" "healthchecks_selfhosted" {
 }
 
 locals {
-  healthchecks_cloud_fields = {
-    for f in flatten([
-      for sec in data.onepassword_item.healthchecks_cloud.section : sec.field
-    ]) : f.label => f.value
-  }
-  healthchecks_selfhosted_fields = {
-    for f in flatten([
-      for sec in data.onepassword_item.healthchecks_selfhosted.section : sec.field
-    ]) : f.label => f.value
-  }
+  healthchecks_cloud_fields = merge([
+    for _, sec in data.onepassword_item.healthchecks_cloud.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
+  healthchecks_selfhosted_fields = merge([
+    for _, sec in data.onepassword_item.healthchecks_selfhosted.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
 
   healthchecks_cloud_api_key      = local.healthchecks_cloud_fields["API_KEY"]
   healthchecks_selfhosted_api_key = local.healthchecks_selfhosted_fields["api-key"]
@@ -174,11 +174,11 @@ data "onepassword_item" "cloudflare_opentofu" {
 }
 
 locals {
-  cloudflare_fields = {
-    for f in flatten([
-      for sec in data.onepassword_item.cloudflare_opentofu.section : sec.field
-    ]) : f.label => f.value
-  }
+  cloudflare_fields = merge([
+    for _, sec in data.onepassword_item.cloudflare_opentofu.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
 
   cloudflare_api_token  = local.cloudflare_fields["api_token"]
   cloudflare_account_id = local.cloudflare_fields["account_id"]
