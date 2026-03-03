@@ -23,14 +23,14 @@ classifiers = [
 ]
 requires-python = "~=3.14.2"
 dependencies = [
-    "ansible~=13.2.0",
+    "ansible~=13.3.0",
 ]
 
 [dependency-groups]
 dev = [
     "ansible-creator>=25.12.0",
-    "ansible-lint~=25.11.0",
-    "molecule~=25.11.0",
+    "ansible-lint~=26.1.1",
+    "molecule~=25.12.0",
     "molecule-plugins[docker]~=25.8.12",
     "pre-commit>=4.3.0",
 ]
