@@ -69,3 +69,16 @@
   - service: button.press  # Sleep PC via Harmony SSH button
     target:
       entity_id: button.szamar_sleep_windows
+
+- alias: Reboot VRRoom When Starting PC Activity
+  id: reboot_vrroom_on_pc_wake
+  trigger:
+  - platform: state
+    entity_id: remote.harmony_hub
+    attribute: current_activity
+    to: Watch PC
+    not_from:
+    - unknown
+    - unavailable
+  action:
+  - service: rest_command.reboot_vrroom
