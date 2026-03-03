@@ -1,0 +1,260 @@
+---
+# Basement entertainment center: Harmony Hub, HDFury VRRoom, Szamar (Windows PC)
+
+input_select:
+  hdfury_vrroom_source:
+    name: HDFury VRRoom Source
+    options:
+    - Apple TV
+    - PS5
+    - Xbox Series X
+    - Windows PC
+    - Unknown
+    icon: mdi:video-input-hdmi
+
+rest_command:
+  set_vrroom_input:
+    url: http://vrroom-37.oneill.net/cmd?insel={{ input }}
+    method: GET
+  reboot_vrroom:
+    url: http://vrroom-37.oneill.net/cmd?reboot=1
+    method: GET
+
+# Rolling 2-minute minimum of PC power draw.
+# Used by the "Reboot VRRoom When Starting PC Activity" automation
+# to distinguish a real wake-from-sleep (~1.5W) from a Harmony
+# hub twitch while the PC is already awake (200W+).
+sensor:
+- platform: statistics
+  name: Szamar Power Min 2m
+  entity_id: sensor.szamar_power_power
+  state_characteristic: value_min
+  max_age:
+    minutes: 2
+
+- platform: rest
+  name: HDFury VRRoom Status
+  resource: http://vrroom-37.oneill.net/ssi/infopage.ssi
+  value_template: '{{ value_json.portseltx0}}'
+  json_attributes:
+  - portseltx0
+  - RX0
+  - RX1
+  - TX0
+  - TX1
+  - AUD0
+  - AUD1
+  - AUDOUT
+  - SINK0
+  - SINK1
+  scan_interval: 00:01
+
+template:
+
+# Harmony Hub activity switches
+- switch:
+  - name: Basement TV
+    unique_id: basement_tv
+    state: "{{ not is_state_attr('remote.harmony_hub', 'current_activity', 'power_off') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Watch Apple TV
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Apple TV
+    unique_id: appletv
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch Apple TV') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Watch Apple TV
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: XBox
+    unique_id: xbox
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Xbox') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Play Xbox
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Playstation
+    unique_id: playstation
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play PS5') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Play PS5
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Nintendo Switch
+    unique_id: nintendo_switch
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Nintendo Switch') }}"
+    turn_on:
+      service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Play Nintendo Switch
+    turn_off:
+      service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+  - name: Windows PC
+    unique_id: windows_pc
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch PC') }}"
+    turn_on:
+    - service: button.press
+      target:
+        entity_id: button.wake_on_lan_szamar
+    - service: remote.turn_on
+      data:
+        entity_id: remote.harmony_hub
+        activity: Watch PC
+    turn_off:
+    - service: remote.turn_off
+      data:
+        entity_id: remote.harmony_hub
+
+- sensor:
+  - name: Harmony Expected VRRoom Input
+    unique_id: harmony_vrroom_input
+    state: >-
+      {% set mapping = {
+        "Watch Apple TV": 0,
+        "Play PS5": 1,
+        "Play Xbox": 2,
+        "Watch PC": 3
+      } %}
+      {{ mapping.get(state_attr('remote.harmony_hub', 'current_activity'), -1) }}
+
+  - name: HDFury VRRoom Source
+    unique_id: hdfury_vrroom_source
+    state: >-
+      {% set status = states('sensor.hdfury_vrroom_status') | float(-1) %}
+      {% if status == 0 %}
+      Apple TV
+      {% elif status == 1 %}
+      PS5
+      {% elif status == 2 %}
+      Xbox Series X
+      {% elif status == 3 %}
+      Windows PC
+      {% else %}
+      Unknown
+      {% endif %}
+
+automation:
+
+- alias: Change HDFury VRRoom Source
+  id: change_hdfury_vrroom_source
+  trigger:
+  - platform: state
+    entity_id: input_select.hdfury_vrroom_source
+    not_from:
+    - unknown
+    - unavailable
+  action:
+  - service: rest_command.set_vrroom_input
+    data:
+      input: >
+        {% if is_state("input_select.hdfury_vrroom_source", "Apple TV") %}
+        0
+        {% elif is_state("input_select.hdfury_vrroom_source", "PS5") %}
+        1
+        {% elif is_state("input_select.hdfury_vrroom_source", "Xbox Series X") %}
+        2
+        {% elif is_state("input_select.hdfury_vrroom_source", "Windows PC") %}
+        3
+        {% else %}
+        -1
+        {% endif %}
+
+  - delay:
+      seconds: 2  # Allow time for change to take effect
+
+  - service: homeassistant.update_entity
+    target:
+      entity_id: sensor.hdfury_vrroom_status
+
+- alias: Sync VRRoom Source Selector
+  trigger:
+  - platform: state
+    entity_id: sensor.hdfury_vrroom_source
+    not_from:
+    - unknown
+    - unavailable
+  action:
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.hdfury_vrroom_source
+    data:
+      option: "{{ states('sensor.hdfury_vrroom_source') }}"
+
+- alias: Force VRRoom to Follow Harmony Activity
+  id: force_vrroom_follow_harmony
+  trigger:
+  - platform: state
+    entity_id: sensor.hdfury_vrroom_source
+    not_from:
+    - unknown
+    - unavailable
+    for:
+      seconds: 1  # Wait to confirm it's not intentional
+  condition:
+  - condition: template
+    value_template: "{{ states('sensor.hdfury_vrroom_status') | int(-1) != states('sensor.harmony_expected_vrroom_input') | int(-1) }}"
+  action:
+  - condition: template
+    value_template: "{{ states('sensor.harmony_expected_vrroom_input') | int != -1 }}"  # Do nothing if input is unknown
+  - service: rest_command.set_vrroom_input
+    data:
+      input: "{{ states('sensor.harmony_expected_vrroom_input') }}"
+
+- alias: Sleep Windows PC When Stopping PC Activity
+  id: sleep_windows_pc_when_stopping_pc_activity
+  trigger:
+  - platform: state
+    entity_id: remote.harmony_hub
+    not_from:
+    - unknown
+    - unavailable
+  condition:
+  - condition: template
+    value_template: >-
+      {{ state_attr('remote.harmony_hub', 'last_activity') == 'Watch PC' and
+          state_attr('remote.harmony_hub', 'current_activity') != 'Watch PC' }}
+  action:
+  - service: button.press  # Sleep PC via Harmony SSH button
+    target:
+      entity_id: button.szamar_sleep_windows
+
+- alias: Reboot VRRoom When Starting PC Activity
+  id: reboot_vrroom_on_pc_wake
+  trigger:
+  - platform: state
+    entity_id: remote.harmony_hub
+    attribute: current_activity
+    to: Watch PC
+    not_from:
+    - unknown
+    - unavailable
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.szamar_power_min_2m
+    below: 50  # PC draws ~1.5W sleeping, 200W+ awake
+  action:
+  - service: rest_command.reboot_vrroom

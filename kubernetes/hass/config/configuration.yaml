@@ -19,24 +19,6 @@ config:
 recorder:
   db_url: !env_var DB_URL
 
-input_select:
-  hdfury_vrroom_source:
-    name: HDFury VRRoom Source
-    options:
-    - Apple TV
-    - PS5
-    - Xbox Series X
-    - Windows PC
-    icon: mdi:video-input-hdmi
-
-rest_command:
-  set_vrroom_input:
-    url: http://vrroom-37.oneill.net/cmd?insel={{ input }}
-    method: GET
-  reboot_vrroom:
-    url: http://vrroom-37.oneill.net/cmd?reboot=1
-    method: GET
-
 # Enables prometheus exporter
 prometheus:
   namespace: hass
@@ -195,83 +177,7 @@ template:
       target:
         entity_id: button.opengarage_right_door_opengarage_right_door_trigger
 
-# Harmony Hub activity switches
 - switch:
-  - name: Basement TV
-    unique_id: basement_tv
-    state: "{{ not is_state_attr('remote.harmony_hub', 'current_activity', 'power_off') }}"
-    turn_on:
-      service: remote.turn_on
-      data:
-        entity_id: remote.harmony_hub
-        activity: Watch Apple TV
-    turn_off:
-      service: remote.turn_off
-      data:
-        entity_id: remote.harmony_hub
-  - name: Apple TV
-    unique_id: appletv
-    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch Apple TV') }}"
-    turn_on:
-      service: remote.turn_on
-      data:
-        entity_id: remote.harmony_hub
-        activity: Watch Apple TV
-    turn_off:
-      service: remote.turn_off
-      data:
-        entity_id: remote.harmony_hub
-  - name: XBox
-    unique_id: xbox
-    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Xbox') }}"
-    turn_on:
-      service: remote.turn_on
-      data:
-        entity_id: remote.harmony_hub
-        activity: Play Xbox
-    turn_off:
-      service: remote.turn_off
-      data:
-        entity_id: remote.harmony_hub
-  - name: Playstation
-    unique_id: playstation
-    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play PS5') }}"
-    turn_on:
-      service: remote.turn_on
-      data:
-        entity_id: remote.harmony_hub
-        activity: Play PS5
-    turn_off:
-      service: remote.turn_off
-      data:
-        entity_id: remote.harmony_hub
-  - name: Nintendo Switch
-    unique_id: nintendo_switch
-    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Play Nintendo Switch') }}"
-    turn_on:
-      service: remote.turn_on
-      data:
-        entity_id: remote.harmony_hub
-        activity: Play Nintendo Switch
-    turn_off:
-      service: remote.turn_off
-      data:
-        entity_id: remote.harmony_hub
-  - name: Windows PC
-    unique_id: windows_pc
-    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch PC') }}"
-    turn_on:
-    - service: button.press
-      target:
-        entity_id: button.wake_on_lan_szamar
-    - service: remote.turn_on
-      data:
-        entity_id: remote.harmony_hub
-        activity: Watch PC
-    turn_off:
-    - service: remote.turn_off
-      data:
-        entity_id: remote.harmony_hub
   - name: Basement Humidifiers
     unique_id: basement_humidifiers
     state: "{{ is_state('switch.rec_room_humidifier', 'on') or is_state('switch.basement_hallway_humidifier', 'on') }}"
@@ -402,33 +308,6 @@ template:
     state: "{{ state_attr('air_quality.office_node_pro_air_quality', 'pm2_5_sensor_life') | default(0) }}"
     unit_of_measurement: ug/m3
 
-  - name: Harmony Expected VRRoom Input
-    unique_id: harmony_vrroom_input
-    state: >-
-      {% set mapping = {
-        "Watch Apple TV": 0,
-        "Play PS5": 1,
-        "Play Xbox": 2,
-        "Watch PC": 3
-      } %}
-      {{ mapping.get(state_attr('remote.harmony_hub', 'current_activity'), -1) }}
-
-  - name: HDFury VRRoom Source
-    unique_id: hdfury_vrroom_source
-    state: >-
-      {% set status = states('sensor.hdfury_vrroom_status') | float(-1) %}
-      {% if status == 0 %}
-      Apple TV
-      {% elif status == 1 %}
-      PS5
-      {% elif status == 2 %}
-      Xbox Series X
-      {% elif status == 3 %}
-      Windows PC
-      {% else %}
-      Unknown
-      {% endif %}
-
   # Plant moisture sensors (calibrated)
   - name: Plant A Soil Moisture
     unique_id: plant_sensor_a_d1f5_moisture_calibrated
@@ -556,25 +435,6 @@ input_number:
     <<: *moisture_base
     name: Plant D Moisture Max
     initial: 52
-
-# REST sensors
-sensor:
-- platform: rest
-  name: HDFury VRRoom Status
-  resource: http://vrroom-37.oneill.net/ssi/infopage.ssi
-  value_template: '{{ value_json.portseltx0}}'
-  json_attributes:
-  - portseltx0
-  - RX0
-  - RX1
-  - TX0
-  - TX1
-  - AUD0
-  - AUD1
-  - AUDOUT
-  - SINK0
-  - SINK1
-  scan_interval: 00:01
 
 alert:
   basement_sump_water:
