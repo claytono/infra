@@ -4,6 +4,9 @@
   trigger:
   - platform: state
     entity_id: input_select.hdfury_vrroom_source
+    not_from:
+    - unknown
+    - unavailable
   action:
   - service: rest_command.set_vrroom_input
     data:
@@ -31,6 +34,9 @@
   trigger:
   - platform: state
     entity_id: sensor.hdfury_vrroom_source
+    not_from:
+    - unknown
+    - unavailable
   action:
   - service: input_select.select_option
     target:
@@ -43,6 +49,9 @@
   trigger:
   - platform: state
     entity_id: sensor.hdfury_vrroom_source
+    not_from:
+    - unknown
+    - unavailable
     for:
       seconds: 1  # Wait to confirm it's not intentional
   condition:
@@ -60,6 +69,9 @@
   trigger:
   - platform: state
     entity_id: remote.harmony_hub
+    not_from:
+    - unknown
+    - unavailable
   condition:
   - condition: template
     value_template: >-
