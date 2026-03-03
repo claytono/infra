@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 1.11"
 
   required_providers {
     vultr = {
@@ -8,7 +8,7 @@ terraform {
     }
     onepassword = {
       source  = "1Password/onepassword"
-      version = "~> 2.1"
+      version = "~> 3.0"
     }
     b2 = {
       source  = "Backblaze/b2"
@@ -70,7 +70,7 @@ terraform {
 
 # 1Password provider configuration
 provider "onepassword" {
-  account = "6GO3NBF2PRCY3NAW6SN2CG6I2U"
+  account = "J36SBUL77BAMRE5UZO4LPXITRM"
 }
 
 provider "vultr" {
