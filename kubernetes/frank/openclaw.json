@@ -12,6 +12,17 @@
     }
   },
   "channels": {
+    "telegram": {
+      "enabled": true,
+      "streaming": true,
+      "groupPolicy": "allowlist",
+      "groupAllowFrom": ["8673299463"],
+      "groups": {
+        "*": {
+          "requireMention": false
+        }
+      }
+    },
     "slack": {
       "enabled": true,
       "replyToMode": "all",
