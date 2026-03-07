@@ -1,0 +1,19 @@
+---
+obj:
+  id: dock_${item_name}
+  width: SIZE_CONTENT
+  height: SIZE_CONTENT
+  styles: style_transparent
+  hidden: true
+  layout:
+    type: flex
+    flex_flow: COLUMN
+    flex_align_cross: CENTER
+  widgets:
+  - label:
+      text: ${title}
+      styles: style_dock_label
+  - label:
+      id: dock_${item_name}_value
+      text: ''
+      styles: style_dock_value

@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+"""Generate weather background images and upload to server.
+
+Requires environment variables:
+  GEMINI_API_KEY - Google Gemini API key for image generation
+
+Usage:
+  generate                     # Generate all missing images
+  generate --all               # Regenerate all images
+  generate sunny-day rainy-day # Regenerate specific images
+  generate --upload            # Upload images to luser via rsync
+  generate --list              # List all image names
+"""
+
+import json
+import base64
+import urllib.error
+import urllib.request
+import subprocess
+import sys
+import os
+import time
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGE_DIR = os.path.join(SCRIPT_DIR, "images")
+UPLOAD_DEST = "luser.oneill.net:/fs1/photos/weather-backgrounds/"
+
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent"
+
+PREAMBLE = (
+    "Generate an image in 17:10 wide landscape aspect ratio. Photorealistic "
+    "photograph. Clean uncluttered composition — no text, no people. "
+    "Realistic photographic lighting similar to Apple iOS weather app "
+    "backgrounds. Not illustrated, not cartoonish, not painterly. "
+)
+
+IMAGES = {
+    # Clear
+    "sunny-day": "Bright clear blue sky over a landscape, warm golden sunlight, barely any clouds, vibrant and cheerful. Do not show the sun directly.",
+    "clear-night": "Deep navy-indigo sky filled with stars, no clouds, subtle moonlight glow.",
+    # Partly cloudy
+    "partlycloudy-day": "Blue sky with scattered clouds covering about half the sky, sunlight between gaps.",
+    "partlycloudy-night": "Dark blue sky with scattered clouds, moon visible between gaps, stars peeking through.",
+    # Cloudy
+    "cloudy-day": "Overcast daytime sky with layered gray clouds at different altitudes, visible texture and depth in the cloud cover, diffused daylight. Clearly daytime but muted and subdued. Tall dark evergreen trees rising into the left side and center of the frame, darker tones especially in the lower-left portion of the image.",
+    "cloudy-night": "Dark overcast night sky with layered clouds at different altitudes, subtle variation in grays and dark blues, faint ambient glow between layers.",
+    # Fog
+    "fog-day": "Daytime foggy atmosphere, hazy landscape-level mist with visible depth, trees faintly visible through the haze, soft warm diffused sunlight, atmospheric perspective.",
+    "fog-night": "Nighttime fog with visible depth and layers, faint lights diffusing through the mist creating halos, moody blue-gray atmosphere.",
+    # Rain
+    "rainy-day": "Medium-dark gray sky with visible rain streaks falling diagonally, clearly daytime but moody, the rain is prominent, darker tones especially in the lower portion of the image.",
+    "rainy-night": "Prominent rain streaks against near-black sky, faintly lit by ambient light.",
+    # Heavy rain
+    "pouring-day": "Thick heavy sheets of rain dominating the frame against a dark gray daytime sky, intense downpour, clearly daytime with diffused daylight visible through the rain, not nighttime.",
+    "pouring-night": "Torrential rain sheets against black sky, rain is the dominant visual element.",
+    # Thunderstorm
+    "lightning-day": "Daytime thunderstorm, sky is gray but clearly daylight, bright lightning bolt cutting across the frame.",
+    "lightning-night": "Vivid lightning bolt illuminating the sky, the bolt and its glow dominate the frame.",
+    "lightning-rainy-day": "Daytime thunderstorm with rain, gray but clearly daylight sky, lightning bolt with rain streaks visible in the flash, both prominent.",
+    "lightning-rainy-night": "Lightning illuminating falling rain against black sky.",
+    # Snow
+    "snowy-day": "Falling snowflakes dominating the image at various sizes and depths, medium gray overcast sky behind, gentle and quiet, darker tones especially in the lower portion of the image.",
+    "snowy-night": "Dark winter night landscape with snowflakes falling, lit by soft ambient glow, calm and quiet, similar composition to other landscape weather scenes.",
+    # Sleet
+    "snowy-rainy-day": "Gray daytime sky over a landscape, white snowflakes and rain drops falling together, sleet, both clearly visible as white streaks and drops against the gray sky.",
+    "snowy-rainy-night": "Dark sky with a mix of white snowflakes and rain drops falling, lit by ambient glow, both snow and rain clearly distinguishable.",
+    # Wind
+    "windy-day": "Blue sky with dramatic long-exposure style cloud streaks racing horizontally across the entire frame, extreme motion blur conveying powerful wind.",
+    "windy-night": "Dark blue night sky with dramatic long-exposure cloud streaks racing horizontally, moon smeared by motion, extreme motion blur.",
+    "windy-variant-day": "Gray overcast sky with extreme horizontal motion blur across the entire cloud layer, turbulent and fast-moving, long-exposure wind effect.",
+    "windy-variant-night": "Dark overcast sky with extreme horizontal motion blur, faint moonlight streaked across fast-moving clouds.",
+    # Hail
+    "hail-day": "Daytime sky with visible white hailstones falling, greenish-gray clouds above, the hailstones are the focal point, clearly daylight.",
+    "hail-night": "Dark sky with white hailstones falling, lit by ambient light, the hailstones are clearly visible against the dark background.",
+    # Exceptional
+    "exceptional-day": "Massive tornado made entirely of yellow rubber ducks spiraling upward against blue sky, whimsical and chaotic.",
+    "exceptional-night": "Massive tornado of yellow rubber ducks spiraling upward, illuminated by moonlight, whimsical.",
+}
+
+
+def generate_image(name, api_key):
+    """Generate a single weather background image."""
+    prompt = PREAMBLE + IMAGES[name]
+
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "responseModalities": ["image", "text"],
+        },
+    }
+
+    req = urllib.request.Request(
+        f"{GEMINI_URL}?key={api_key}",
+        data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        data = json.loads(resp.read())
+
+    for candidate in data.get("candidates", []):
+        for part in candidate.get("content", {}).get("parts", []):
+            if "inlineData" in part:
+                img_data = base64.b64decode(part["inlineData"]["data"])
+                raw_path = os.path.join(IMAGE_DIR, f"{name}-raw.png")
+                tmp_path = os.path.join(IMAGE_DIR, f"{name}.tmp.png")
+                final_path = os.path.join(IMAGE_DIR, f"{name}.png")
+                with open(raw_path, "wb") as f:
+                    f.write(img_data)
+                try:
+                    subprocess.run(
+                        ["sips", "-z", "600", "1024", raw_path, "--out", tmp_path],
+                        capture_output=True,
+                        check=True,
+                    )
+                    subprocess.run(
+                        ["ect", "-9", "--allfilters", tmp_path],
+                        capture_output=True,
+                        check=True,
+                    )
+                    os.replace(tmp_path, final_path)
+                    return final_path
+                finally:
+                    for p in [raw_path, tmp_path]:
+                        if os.path.exists(p):
+                            os.remove(p)
+
+    # Check for safety/content filter blocks
+    feedback = data.get("promptFeedback", {})
+    block_reason = feedback.get("blockReason", "")
+    candidates = data.get("candidates", [])
+    finish_reason = candidates[0].get("finishReason", "") if candidates else ""
+    if block_reason:
+        raise RuntimeError(f"Blocked by safety filter: {block_reason}")
+    if finish_reason and finish_reason != "STOP":
+        raise RuntimeError(f"Generation failed: finishReason={finish_reason}")
+    raise RuntimeError(f"No image returned for {name}")
+
+
+def upload():
+    """Upload images to server via rsync."""
+    pngs = sorted(f for f in os.listdir(IMAGE_DIR) if f.endswith(".png"))
+    if not pngs:
+        print("No images to upload")
+        sys.exit(1)
+
+    print(f"Uploading {len(pngs)} images to {UPLOAD_DEST}")
+    try:
+        subprocess.run(
+            [
+                "rsync",
+                "-avP",
+                "--include=*.png",
+                "--exclude=*",
+                IMAGE_DIR + "/",
+                UPLOAD_DEST,
+            ],
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        print("Upload failed")
+        sys.exit(1)
+
+
+def main():
+    os.makedirs(IMAGE_DIR, exist_ok=True)
+
+    args = sys.argv[1:]
+
+    if "--list" in args:
+        for name in sorted(IMAGES):
+            print(name)
+        return
+
+    if "--upload" in args:
+        upload()
+        return
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("Error: GEMINI_API_KEY environment variable required")
+        sys.exit(1)
+
+    regen_all = "--all" in args
+    specific = [a for a in args if not a.startswith("-")]
+
+    if specific:
+        # Validate names
+        for name in specific:
+            if name not in IMAGES:
+                print(f"Error: unknown image '{name}'")
+                print(f"Valid names: {', '.join(sorted(IMAGES))}")
+                sys.exit(1)
+        targets = specific
+    elif regen_all:
+        targets = list(IMAGES)
+    else:
+        # Only generate missing images
+        targets = [
+            name
+            for name in IMAGES
+            if not os.path.exists(os.path.join(IMAGE_DIR, f"{name}.png"))
+        ]
+        if not targets:
+            print("All images exist. Use --all to regenerate or specify names.")
+            return
+
+    generated = 0
+    errors = 0
+
+    for name in targets:
+        print(
+            f"Generating {name} ({generated + 1}/{len(targets)})...",
+            end=" ",
+            flush=True,
+        )
+        try:
+            path = generate_image(name, api_key)
+            size = os.path.getsize(path)
+            print(f"OK ({size} bytes)")
+            generated += 1
+        except urllib.error.HTTPError as e:
+            print(f"ERROR: HTTP {e.code} - {e.reason}")
+            errors += 1
+            if e.code in (429, 503):
+                print("  Rate limited, waiting 30s...")
+                time.sleep(30)
+        except urllib.error.URLError as e:
+            print(f"ERROR: Network - {e.reason}")
+            errors += 1
+        except Exception as e:
+            print(f"ERROR: {e}")
+            errors += 1
+        time.sleep(2)
+
+    print(f"\nDone! Generated: {generated}, Errors: {errors}")
+    if errors:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

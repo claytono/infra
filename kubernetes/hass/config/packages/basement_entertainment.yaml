@@ -55,7 +55,9 @@ template:
 - switch:
   - name: Basement TV
     unique_id: basement_tv
-    state: "{{ not is_state_attr('remote.harmony_hub', 'current_activity', 'power_off') }}"
+    state: >-
+      {{ state_attr('remote.harmony_hub', 'current_activity')
+        not in ['power_off', 'unknown', 'unavailable', none] }}
     turn_on:
       service: remote.turn_on
       data:

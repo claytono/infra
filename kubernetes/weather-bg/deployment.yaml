@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: weather-bg
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: weather-bg
+      app.kubernetes.io/instance: weather-bg
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: weather-bg
+        app.kubernetes.io/instance: weather-bg
+      annotations:
+        reloader.stakater.com/auto: 'true'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: nginx
+        image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:e93571f3d08325964770168617743bcce2d308255ded81e38172fb1803407e74
+        ports:
+        - containerPort: 8080
+          name: http
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: images
+          mountPath: /usr/share/nginx/html
+          readOnly: true
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+        - name: nginx-tmp
+          mountPath: /tmp
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+      volumes:
+      - name: images
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/photos/weather-backgrounds
+      - name: nginx-config
+        configMap:
+          name: weather-bg-nginx-config
+      - name: nginx-tmp
+        emptyDir:
+          sizeLimit: 64Mi
+      - name: nginx-cache
+        emptyDir:
+          sizeLimit: 64Mi

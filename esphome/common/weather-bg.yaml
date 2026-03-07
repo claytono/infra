@@ -1,0 +1,138 @@
+---
+# Weather background A/B double-buffering package.
+# Requires substitutions: weather_bg_base, weather_bg_width, weather_bg_height,
+#   weather_entity_id, sun_entity_id
+# Cross-references LVGL widget: bg_image (must be defined in main config)
+
+online_image:
+- url: ${weather_bg_base}/sunny-day.png
+  id: weather_bg_a
+  format: png
+  resize: ${weather_bg_width}x${weather_bg_height}
+  type: RGB565
+  byte_order: LITTLE_ENDIAN
+  on_download_finished:
+  - lambda: id(bg_slot_a_active) = true;
+  - lvgl.image.update:
+      id: bg_image
+      src: weather_bg_a
+  on_error:
+  - lambda: id(current_bg_url) = "";
+  - logger.log: Failed to download weather background
+- url: ${weather_bg_base}/sunny-day.png
+  id: weather_bg_b
+  format: png
+  resize: ${weather_bg_width}x${weather_bg_height}
+  type: RGB565
+  byte_order: LITTLE_ENDIAN
+  on_download_finished:
+  - lambda: id(bg_slot_a_active) = false;
+  - lvgl.image.update:
+      id: bg_image
+      src: weather_bg_b
+  on_error:
+  - lambda: id(current_bg_url) = "";
+  - logger.log: Failed to download weather background
+
+select:
+- platform: template
+  name: Background Override
+  id: bg_override
+  icon: mdi:image
+  optimistic: true
+  options:
+  - auto
+  - sunny-day
+  - clear-night
+  - partlycloudy-day
+  - partlycloudy-night
+  - cloudy-day
+  - cloudy-night
+  - fog-day
+  - fog-night
+  - rainy-day
+  - rainy-night
+  - pouring-day
+  - pouring-night
+  - lightning-day
+  - lightning-night
+  - lightning-rainy-day
+  - lightning-rainy-night
+  - snowy-day
+  - snowy-night
+  - snowy-rainy-day
+  - snowy-rainy-night
+  - windy-day
+  - windy-night
+  - windy-variant-day
+  - windy-variant-night
+  - hail-day
+  - hail-night
+  - exceptional-day
+  - exceptional-night
+  on_value:
+  - script.execute: update_background
+
+text_sensor:
+- platform: homeassistant
+  entity_id: ${weather_entity_id}
+  id: weather_condition
+  on_value:
+  - script.execute: update_background
+- platform: homeassistant
+  entity_id: ${sun_entity_id}
+  id: sun_state
+  on_value:
+  - script.execute: update_background
+
+globals:
+- id: current_bg_url
+  type: std::string
+- id: bg_slot_a_active
+  type: bool
+  initial_value: 'true'
+
+script:
+- id: update_background
+  then:
+  - if:
+      condition:
+        lambda: |-
+          std::string url;
+          auto override = id(bg_override).current_option();
+          if (override != "auto") {
+            url = str_sprintf("${weather_bg_base}/%s.png", override.c_str());
+          } else {
+            auto condition = id(weather_condition).state;
+            auto sun = id(sun_state).state;
+            if (condition.empty() || sun.empty()) return false;
+            if (condition == "unavailable" || condition == "unknown") return false;
+            if (sun == "unavailable" || sun == "unknown") return false;
+            std::string filename;
+            if (condition == "sunny") {
+              filename = "sunny-day";
+            } else if (condition == "clear-night") {
+              filename = "clear-night";
+            } else {
+              std::string suffix = (sun == "above_horizon") ? "day" : "night";
+              filename = condition + "-" + suffix;
+            }
+            url = str_sprintf("${weather_bg_base}/%s.png", filename.c_str());
+          }
+          if (url == id(current_bg_url)) return false;
+          id(current_bg_url) = url;
+          return true;
+      then:
+      - if:
+          condition:
+            lambda: return id(bg_slot_a_active);
+          then:
+          - online_image.set_url:
+              id: weather_bg_b
+              url: !lambda return id(current_bg_url);
+              update: true
+          else:
+          - online_image.set_url:
+              id: weather_bg_a
+              url: !lambda return id(current_bg_url);
+              update: true

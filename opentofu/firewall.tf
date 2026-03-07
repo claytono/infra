@@ -56,6 +56,21 @@ resource "unifi_firewall_rule" "iot_allow_mqtt_tls" {
   state_new = true
 }
 
+# Allow basement clock → K8s ingress for weather backgrounds
+resource "unifi_firewall_rule" "iot_allow_basement_clock_ingress" {
+  name       = "Allow Basement Clock to K8s Ingress"
+  action     = "accept"
+  ruleset    = "LAN_IN"
+  rule_index = 20050
+
+  protocol    = "tcp"
+  src_address = "172.20.6.10"
+  dst_address = "172.19.74.34"
+  dst_port    = "443"
+
+  state_new = true
+}
+
 # Allow IoT → DMZ (IoT is more trusted than DMZ)
 resource "unifi_firewall_rule" "iot_allow_to_dmz" {
   name       = "Allow IoT to DMZ"

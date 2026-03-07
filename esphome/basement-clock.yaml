@@ -1,0 +1,425 @@
+---
+substitutions:
+  devicename: basement-clock
+  device_id: basement_clock
+  human_devicename: Basement Clock
+  icon: mdi:clock-digital
+  mac: B4:3A:45:9B:BE:9C
+  ip: 172.20.6.10
+  icon_volume_high: 󰕾
+  weather_bg_base: https://weather-bg.k.oneill.net
+  weather_bg_width: '1024'
+  weather_bg_height: '600'
+  weather_entity_id: weather.kiad_daynight
+  sun_entity_id: sun.sun
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  web: !include common/web.yaml
+  device_class: !include common/device-classes/crowpanel-p4-10.yaml
+  weather_bg: !include common/weather-bg.yaml
+
+http_request:
+
+font:
+- file: fonts/Roboto-Bold.ttf
+  id: clock_font
+  size: 220
+  bpp: 4
+  glyphs: '0123456789: APM-'
+- file: fonts/Roboto-Light.ttf
+  id: temp_font
+  size: 110
+  bpp: 4
+  glyphs: '0123456789°- '
+- file: fonts/Roboto-Regular.ttf
+  id: dock_label_font
+  size: 20
+  bpp: 4
+  glyphs: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ '
+- file: fonts/Roboto-Bold.ttf
+  id: dock_value_font
+  size: 65
+  bpp: 4
+  glyphs: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/%: -'
+
+- file:
+    type: web
+    url: https://github.com/Templarian/MaterialDesign-Webfont/raw/master/fonts/materialdesignicons-webfont.ttf
+  id: dock_icon_font
+  size: 60
+  bpp: 4
+  glyphs:
+  - ${icon_volume_high}
+
+switch:
+- platform: template
+  name: Color Test
+  id: color_test
+  icon: mdi:palette
+  optimistic: true
+  restore_mode: ALWAYS_OFF
+  on_turn_on:
+  - lvgl.obj.update:
+      id: swatch_row
+      hidden: false
+  on_turn_off:
+  - lvgl.obj.update:
+      id: swatch_row
+      hidden: true
+
+sensor:
+- platform: homeassistant
+  entity_id: ${weather_entity_id}
+  attribute: temperature
+  id: outdoor_temp
+  on_value:
+  - script.execute: update_display
+- platform: homeassistant
+  entity_id: light.rec_room_floor_lamp
+  attribute: brightness
+  id: floor_lamp_brightness
+  on_value:
+  - script.execute: update_backlight
+
+binary_sensor:
+- platform: homeassistant
+  entity_id: binary_sensor.basement_clock_show_progress
+  id: dock_progress_visible
+  on_state:
+  - script.execute: update_dock
+- platform: homeassistant
+  entity_id: binary_sensor.basement_clock_show_volume
+  id: dock_volume_visible
+  on_state:
+  - script.execute: update_dock
+- platform: homeassistant
+  entity_id: binary_sensor.basement_clock_show_pc_power
+  id: dock_pc_power_visible
+  on_state:
+  - script.execute: update_dock
+- platform: homeassistant
+  entity_id: light.rec_room_floor_lamp
+  id: floor_lamp_on
+  on_state:
+  - script.execute: update_backlight
+
+text_sensor:
+- platform: homeassistant
+  entity_id: sensor.basement_clock_progress
+  id: dock_progress_text
+  on_value:
+  - script.execute: update_dock
+- platform: homeassistant
+  entity_id: sensor.basement_clock_remaining
+  id: dock_remaining_text
+  on_value:
+  - script.execute: update_dock
+- platform: homeassistant
+  entity_id: sensor.basement_clock_volume
+  id: dock_volume_text
+  on_value:
+  - script.execute: update_dock
+- platform: homeassistant
+  entity_id: sensor.basement_clock_pc_power
+  id: dock_pc_power_text
+  on_value:
+  - script.execute: update_dock
+
+lvgl:
+  buffer_size: 25%
+  byte_order: little_endian
+  style_definitions:
+  - id: style_transparent
+    bg_opa: TRANSP
+    border_width: 0
+    pad_all: 0
+  - id: style_outline_clock
+    text_font: clock_font
+    text_color: 0x000000
+  - id: style_outline_temp
+    text_font: temp_font
+    text_color: 0x000000
+  - id: style_fg_clock
+    text_font: clock_font
+    text_color: 0xFFFFFF
+  - id: style_fg_temp
+    text_font: temp_font
+    text_color: 0xFFFFFF
+  - id: style_dock_label
+    text_font: dock_label_font
+    text_color: 0xFFFFFF
+  - id: style_dock_value
+    text_font: dock_value_font
+    text_color: 0xFFFFFF
+  - id: style_swatch
+    width: 60
+    height: 60
+    border_width: 0
+    radius: 0
+  pages:
+  - id: main_page
+    bg_color: 0x000000
+    widgets:
+    # Background image (weather_bg_a defined in weather-bg package)
+    - image:
+        id: bg_image
+        src: weather_bg_a
+        x: 0
+        y: 0
+        width: 1024
+        height: 600
+    # Text shadow — 4-ring gaussian approximation, cardinal offsets
+    # Ring 1: ±2px at 70%
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '26', y: '-16', opa: 70%,
+        id_clock: outline_clock_r1e, id_temp: outline_temp_r1e}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '22', y: '-16', opa: 70%,
+        id_clock: outline_clock_r1w, id_temp: outline_temp_r1w}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-14', opa: 70%,
+        id_clock: outline_clock_r1s, id_temp: outline_temp_r1s}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-18', opa: 70%,
+        id_clock: outline_clock_r1n, id_temp: outline_temp_r1n}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '29', y: '-16', opa: 40%,
+        id_clock: outline_clock_r2e, id_temp: outline_temp_r2e}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '19', y: '-16', opa: 40%,
+        id_clock: outline_clock_r2w, id_temp: outline_temp_r2w}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-11', opa: 40%,
+        id_clock: outline_clock_r2s, id_temp: outline_temp_r2s}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-21', opa: 40%,
+        id_clock: outline_clock_r2n, id_temp: outline_temp_r2n}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '33', y: '-16', opa: 20%,
+        id_clock: outline_clock_r3e, id_temp: outline_temp_r3e}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '15', y: '-16', opa: 20%,
+        id_clock: outline_clock_r3w, id_temp: outline_temp_r3w}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-7', opa: 20%,
+        id_clock: outline_clock_r3s, id_temp: outline_temp_r3s}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-25', opa: 20%,
+        id_clock: outline_clock_r3n, id_temp: outline_temp_r3n}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '38', y: '-16', opa: 9%,
+        id_clock: outline_clock_r4e, id_temp: outline_temp_r4e}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '10', y: '-16', opa: 9%,
+        id_clock: outline_clock_r4w, id_temp: outline_temp_r4w}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-2', opa: 9%,
+        id_clock: outline_clock_r4s, id_temp: outline_temp_r4s}}
+    - !include {file: common/lvgl/outline-block.yaml, vars: {x: '24', y: '-30', opa: 9%,
+        id_clock: outline_clock_r4n, id_temp: outline_temp_r4n}}
+    # Foreground text — bottom-left anchored
+    - obj:
+        id: text_group
+        align: BOTTOM_LEFT
+        x: 24
+        y: -16
+        width: SIZE_CONTENT
+        height: SIZE_CONTENT
+        styles: style_transparent
+        layout:
+          type: flex
+          flex_flow: COLUMN
+        widgets:
+        - label:
+            id: clock_label
+            text: --:--
+            styles: style_fg_clock
+        - label:
+            id: temp_label
+            text: --°
+            styles: style_fg_temp
+    # Color test swatches — flex row, toggled via Color Test switch
+    - obj:
+        id: swatch_row
+        align: TOP_MID
+        y: 10
+        width: SIZE_CONTENT
+        height: SIZE_CONTENT
+        styles: style_transparent
+        hidden: true
+        layout:
+          type: flex
+          flex_flow: ROW
+          pad_column: 10
+        widgets:
+        - obj: {styles: style_swatch, bg_color: 0xFF0000}
+        - obj: {styles: style_swatch, bg_color: 0x00FF00}
+        - obj: {styles: style_swatch, bg_color: 0x0000FF}
+        - obj: {styles: style_swatch, bg_color: 0xFFFFFF}
+        - obj: {styles: style_swatch, bg_color: 0xFFFF00}
+        - obj: {styles: style_swatch, bg_color: 0xFF00FF}
+        - obj: {styles: style_swatch, bg_color: 0x00FFFF}
+    # Frosted glass dock — right side, vertically centered
+    - obj:
+        id: dock
+        align: RIGHT_MID
+        x: -20
+        width: SIZE_CONTENT
+        height: SIZE_CONTENT
+        bg_color: 0x000000
+        bg_opa: 45%
+        radius: 25
+        pad_left: 35
+        pad_right: 35
+        pad_top: 35
+        pad_bottom: 35
+        border_width: 0
+        hidden: true
+        layout:
+          type: flex
+          flex_flow: COLUMN
+          flex_align_main: CENTER
+          flex_align_cross: CENTER
+        widgets:
+        - !include {file: common/lvgl/dock-item.yaml, vars: {item_name: progress,
+            title: PROGRESS}}
+        - !include {file: common/lvgl/dock-item.yaml, vars: {item_name: remaining,
+            title: REMAINING}}
+        - obj:
+            id: dock_divider
+            width: 75
+            height: 1
+            bg_color: 0xFFFFFF
+            bg_opa: 20%
+            border_width: 0
+            pad_all: 0
+            hidden: true
+        - obj:
+            id: dock_volume
+            width: SIZE_CONTENT
+            height: SIZE_CONTENT
+            styles: style_transparent
+            hidden: true
+            layout:
+              type: flex
+              flex_flow: COLUMN
+              flex_align_cross: CENTER
+            widgets:
+            - label:
+                text: VOLUME
+                styles: style_dock_label
+            - obj:
+                width: SIZE_CONTENT
+                height: SIZE_CONTENT
+                styles: style_transparent
+                layout:
+                  type: flex
+                  flex_flow: ROW
+                  flex_align_cross: CENTER
+                  flex_align_track: CENTER
+                widgets:
+                - label:
+                    id: dock_volume_value
+                    text: ''
+                    styles: style_dock_value
+                - label:
+                    id: dock_volume_icon
+                    text: ${icon_volume_high}
+                    text_font: dock_icon_font
+                    text_color: 0xFFFFFF
+        - !include {file: common/lvgl/dock-item.yaml, vars: {item_name: pc_power,
+            title: PC POWER}}
+
+time:
+- id: !extend homeassistant_time
+  on_time_sync:
+  - script.execute: update_display
+  - script.execute: update_background
+  on_time:
+  - seconds: 0
+    then:
+    - script.execute: update_display
+  - seconds: 0
+    minutes: /15
+    then:
+    - script.execute: update_background
+
+globals:
+- id: clock_text
+  type: std::string
+  initial_value: '"--:--"'
+- id: temp_text
+  type: std::string
+  initial_value: '"--\xC2\xB0"'
+
+script:
+- id: update_display
+  then:
+  - lambda: |-
+      auto time = id(homeassistant_time).now();
+      if (time.is_valid()) {
+        int hour = time.hour % 12;
+        if (hour == 0) hour = 12;
+        id(clock_text) = str_sprintf("%d:%02d", hour, time.minute);
+      } else {
+        id(clock_text) = "--:--";
+      }
+      auto temp = id(outdoor_temp).state;
+      id(temp_text) = std::isnan(temp) ? "--°" : str_sprintf("%.0f°", temp);
+  - lvgl.label.update:
+      id: [clock_label, outline_clock_r1e, outline_clock_r1w, outline_clock_r1s, outline_clock_r1n,
+        outline_clock_r2e, outline_clock_r2w, outline_clock_r2s, outline_clock_r2n,
+        outline_clock_r3e, outline_clock_r3w, outline_clock_r3s, outline_clock_r3n,
+        outline_clock_r4e, outline_clock_r4w, outline_clock_r4s, outline_clock_r4n]
+      text: !lambda 'return id(clock_text);'
+  - lvgl.label.update:
+      id: [temp_label, outline_temp_r1e, outline_temp_r1w, outline_temp_r1s, outline_temp_r1n,
+        outline_temp_r2e, outline_temp_r2w, outline_temp_r2s, outline_temp_r2n, outline_temp_r3e,
+        outline_temp_r3w, outline_temp_r3s, outline_temp_r3n, outline_temp_r4e, outline_temp_r4w,
+        outline_temp_r4s, outline_temp_r4n]
+      text: !lambda 'return id(temp_text);'
+- id: update_dock
+  mode: restart
+  then:
+  - lambda: |-
+      struct DockItem {
+        lv_obj_t *container;
+        lv_obj_t *value_label;
+        esphome::binary_sensor::BinarySensor *visibility;
+        esphome::text_sensor::TextSensor *text;
+      };
+      DockItem items[] = {
+        {id(dock_progress), id(dock_progress_value), id(dock_progress_visible), id(dock_progress_text)},
+        {id(dock_remaining), id(dock_remaining_value), id(dock_progress_visible), id(dock_remaining_text)},
+        {id(dock_volume), id(dock_volume_value), id(dock_volume_visible), id(dock_volume_text)},
+        {id(dock_pc_power), id(dock_pc_power_value), id(dock_pc_power_visible), id(dock_pc_power_text)},
+      };
+      for (auto &item : items) {
+        if (item.visibility->state) {
+          lv_label_set_text(item.value_label, item.text->state.c_str());
+          lv_obj_clear_flag(item.container, LV_OBJ_FLAG_HIDDEN);
+        } else {
+          lv_obj_add_flag(item.container, LV_OBJ_FLAG_HIDDEN);
+        }
+      }
+      // Divider: visible when progress AND extra group both have items
+      bool has_progress = id(dock_progress_visible).state;
+      bool has_extra = id(dock_volume_visible).state || id(dock_pc_power_visible).state;
+      if (has_progress && has_extra) {
+        lv_obj_clear_flag(id(dock_divider), LV_OBJ_FLAG_HIDDEN);
+      } else {
+        lv_obj_add_flag(id(dock_divider), LV_OBJ_FLAG_HIDDEN);
+      }
+      // Dock container: visible if any item is visible
+      if (has_progress || has_extra) {
+        lv_obj_clear_flag(id(dock), LV_OBJ_FLAG_HIDDEN);
+      } else {
+        lv_obj_add_flag(id(dock), LV_OBJ_FLAG_HIDDEN);
+      }
+- id: update_backlight
+  mode: restart
+  then:
+  - if:
+      condition:
+        binary_sensor.is_on: floor_lamp_on
+      then:
+      - light.turn_on:
+          id: lcdbacklight
+          brightness: !lambda 'return id(floor_lamp_brightness).state / 255.0;'
+      - lvgl.obj.update:
+          id: bg_image
+          hidden: false
+      else:
+      - light.turn_on:
+          id: lcdbacklight
+          brightness: 25%
+      - lvgl.obj.update:
+          id: bg_image
+          hidden: true
