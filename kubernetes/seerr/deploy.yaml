@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: seerr
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seerr
+      app.kubernetes.io/name: seerr
+      app.kubernetes.io/instance: seerr
+  template:
+    metadata:
+      labels:
+        app: seerr
+        app.kubernetes.io/name: seerr
+        app.kubernetes.io/instance: seerr
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: seerr
+        image: ghcr.io/seerr-team/seerr:v3.1.0@sha256:b35ba0461c4a1033d117ac1e5968fd4cbe777899e4cbfbdeaf3d10a42a0eb7e9
+        ports:
+        - containerPort: 5055
+        volumeMounts:
+        - mountPath: /app/config
+          name: config
+        env:
+        - name: TZ
+          value: EST5EDT
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: seerr-config
