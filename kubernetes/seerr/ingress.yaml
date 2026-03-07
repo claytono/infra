@@ -3,28 +3,28 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: overseerr
+  name: seerr
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
-    gethomepage.dev/name: Overseerr
+    gethomepage.dev/name: Seerr
     gethomepage.dev/description: Request Manager
     gethomepage.dev/group: Media
-    gethomepage.dev/icon: overseerr.png
+    gethomepage.dev/icon: seerr.png
 
 spec:
   tls:
   - hosts:
-    - overseerr.k.oneill.net
-    secretName: overseerr-tls
+    - seerr.k.oneill.net
+    secretName: seerr-tls
   rules:
-  - host: overseerr.k.oneill.net
+  - host: seerr.k.oneill.net
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: overseerr
+            name: seerr
             port:
               number: 5055

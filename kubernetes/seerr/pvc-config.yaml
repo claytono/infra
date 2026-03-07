@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 
 metadata:
-  name: overseerr-config
+  name: seerr-config
   labels:
     velero.io/backup: 'true'
 
