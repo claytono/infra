@@ -1,0 +1,82 @@
+---
+# Basement clock dock: volume and media progress for the ESPHome display
+#
+# ESPHome subscribes to:
+#   binary_sensor.basement_clock_show_volume
+#   binary_sensor.basement_clock_show_progress
+#   sensor.basement_clock_volume
+#   sensor.basement_clock_progress
+#   sensor.basement_clock_remaining
+#   binary_sensor.basement_clock_show_pc_power
+#   sensor.basement_clock_pc_power
+
+template:
+
+# Volume: reactive templates, update whenever source entities change
+- binary_sensor:
+  - name: Basement Clock Show Volume
+    unique_id: basement_clock_show_volume
+    state: >-
+      {{ states('select.harmony_hub_activities')
+        not in ['power_off', 'unknown', 'unavailable'] }}
+  - name: Basement Clock Show PC Power
+    unique_id: basement_clock_show_pc_power
+    state: "{{ is_state_attr('remote.harmony_hub', 'current_activity', 'Watch PC') }}"
+  sensor:
+  - name: Basement Clock Volume
+    unique_id: basement_clock_volume
+    state: >-
+      {% set vol = state_attr('media_player.ht_a9_2', 'volume_level') %}
+      {% if vol is not none %}{{ (vol * 100) | round(0) | int }}%{% else %}--%{% endif
+      %}
+  - name: Basement Clock PC Power
+    unique_id: basement_clock_pc_power
+    state: >-
+      {% set val = states('sensor.szamar_power_power') %}
+      {% if val not in ['unavailable', 'unknown'] %}{{ val | round(0) | int }}W{%
+      else %}N/A{% endif %}
+
+# Progress: trigger-based templates, poll every 10s for real-time position.
+# Uses Apple TV (media_player.rec_room) for playback state from any app.
+- trigger:
+  - platform: time_pattern
+    seconds: /10
+  - platform: state
+    entity_id: media_player.rec_room
+  variables:
+    is_active: "{{ states('media_player.rec_room') in ['playing', 'paused'] }}"
+    dur: >-
+      {{ state_attr('media_player.rec_room', 'media_duration')
+        | default(0) | int }}
+    pos: >-
+      {% set p = state_attr('media_player.rec_room', 'media_position')
+        | default(0) | int %}
+      {{ [p, dur] | min if dur > 0 else p }}
+    rem: '{{ [dur - pos, 0] | max }}'
+  binary_sensor:
+  - name: Basement Clock Show Progress
+    unique_id: basement_clock_show_progress
+    state: '{{ is_active }}'
+  sensor:
+  - name: Basement Clock Progress
+    unique_id: basement_clock_progress
+    state: >-
+      {% if is_active %}
+        {% if dur >= 3600 %}
+      {{ '%d:%02d' | format(pos // 3600, (pos % 3600) // 60) }}/{{
+        '%d:%02d' | format(dur // 3600, (dur % 3600) // 60) }}
+        {% elif dur > 0 %}
+      {{ '%d:%02d' | format(pos // 60, pos % 60) }}/{{
+        '%d:%02d' | format(dur // 60, dur % 60) }}
+        {% else %}--:--{% endif %}
+      {% endif %}
+  - name: Basement Clock Remaining
+    unique_id: basement_clock_remaining
+    state: >-
+      {% if is_active %}
+        {% if rem >= 3600 %}
+      {{ rem // 3600 }}h{{ '%02d' | format((rem % 3600) // 60) }}m
+        {% elif rem > 0 %}
+      {{ rem // 60 }} min
+        {% else %}--:--{% endif %}
+      {% endif %}

@@ -13,6 +13,7 @@ configMapGenerator:
   - configuration.yaml=configuration.yaml
   - input_boolean.yaml=input_boolean.yaml
   - input_select.yaml=input_select.yaml
+  - packages__basement_clock.yaml=packages/basement_clock.yaml
   - packages__basement_entertainment.yaml=packages/basement_entertainment.yaml
   - packages__basement_humidifier_alert.yaml=packages/basement_humidifier_alert.yaml
   - packages__birdfy.yaml=packages/birdfy.yaml

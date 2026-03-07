@@ -1,0 +1,21 @@
+---
+obj:
+  align: BOTTOM_LEFT
+  x: ${x}
+  y: ${y}
+  width: SIZE_CONTENT
+  height: SIZE_CONTENT
+  styles: style_transparent
+  opa: ${opa}
+  layout:
+    type: flex
+    flex_flow: COLUMN
+  widgets:
+  - label:
+      id: ${id_clock}
+      text: --:--
+      styles: style_outline_clock
+  - label:
+      id: ${id_temp}
+      text: --°
+      styles: style_outline_temp
