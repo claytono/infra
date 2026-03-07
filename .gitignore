@@ -24,6 +24,7 @@ ansible/galaxy/**/MANIFEST.json
 backend.tf
 
 # Kubernetes
+tools/weather-bg/images/
 kubernetes/hass/configmap.yaml
 kubernetes/hass/config-check/
 kubernetes/resticprofile/.cache
