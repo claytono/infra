@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: weather-bg
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+
+spec:
+  tls:
+  - hosts:
+    - weather-bg.k.oneill.net
+    secretName: weather-bg-tls
+  rules:
+  - host: weather-bg.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: weather-bg
+            port:
+              number: 8080

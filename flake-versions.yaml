@@ -7,6 +7,7 @@ age: 1.3.1
 ansible-lint: 25.8.2
 awscli2: 2.33.2
 curl: 8.18.0
+efficient-compression-tool: 0.9.5
 go-unifi-mcp: 81f93d3cb9c35ff1882245e161b40eb7a2ff4036
 jq: 1.8.1
 kopia: 0.22.3

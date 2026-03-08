@@ -6,6 +6,12 @@
 
 locals {
   esphome_hosts = {
+    basement-clock = {
+      mac      = "B4:3A:45:9B:BE:9C"
+      ip       = "172.20.6.10"
+      hostname = "basement-clock.oneill.net"
+      note     = "ESPHome: Basement Clock"
+    }
     bedjet = {
       mac      = "24:0A:C4:C0:69:E8"
       ip       = "172.20.7.111"

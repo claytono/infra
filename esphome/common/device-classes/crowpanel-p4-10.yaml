@@ -1,0 +1,147 @@
+---
+# Elecrow CrowPanel Advanced 10.1" ESP32-P4 (1024x600)
+# EK79007 display driver, GT911 touch, ESP32-C6 WiFi coprocessor
+esphome:
+  name: ${devicename}
+  min_version: 2026.1.0
+  on_boot:
+    priority: 600
+    then:
+    - output.turn_on: backlight_power
+  platformio_options:
+    board_build.flash_mode: qio
+    board_build.psram_type: opi
+    build_flags: -DBOARD_HAS_PSRAM
+
+psram:
+  mode: hex
+  speed: 200MHz
+
+esp32:
+  variant: esp32p4
+  flash_size: 16MB
+  cpu_frequency: 360MHz
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_IDF_EXPERIMENTAL_FEATURES: y
+      CONFIG_ESPTOOLPY_FLASHMODE_QIO: y
+      CONFIG_ESPTOOLPY_FLASHFREQ_80M: y
+      CONFIG_ESPTOOLPY_FLASHSIZE_16MB: y
+      CONFIG_ESP32P4_DATA_CACHE_64KB: y
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+      CONFIG_SPIRAM_RODATA: y
+      # ESP32-C6 WiFi coprocessor via SDIO
+      CONFIG_ESP_HOSTED_ENABLED: y
+      CONFIG_ESP_HOSTED_PRIV_SDIO_OPTION: y
+      CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET: esp32c6
+      CONFIG_ESP_HOSTED_SDIO_RESET_ACTIVE_HIGH: y
+      CONFIG_ESP_HOSTED_SDIO_SLOT_1: y
+      CONFIG_ESP_HOSTED_SDIO_1_BIT_BUS: y
+      CONFIG_ESP_HOSTED_SDIO_CLOCK_FREQ_KHZ: '40000'
+      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_CLK_SLOT_1: '18'
+      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_CMD_SLOT_1: '19'
+      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D0_SLOT_1: '14'
+      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D1_4BIT_BUS_SLOT_1: '15'
+      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D2_4BIT_BUS_SLOT_1: '16'
+      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D3_4BIT_BUS_SLOT_1: '17'
+      CONFIG_ESP_HOSTED_SDIO_GPIO_RESET_SLAVE: '32'
+
+esp32_hosted:
+  variant: ESP32C6
+  reset_pin: 32
+  cmd_pin: 19
+  clk_pin: 18
+  d0_pin: 14
+  d1_pin: 15
+  d2_pin: 16
+  d3_pin: 17
+  active_high: true
+
+external_components:
+
+- source:
+    type: local
+    path: local_components
+  components: [httpd_header_fix]
+
+# Override web_server_idf's hardcoded 1024-byte header limit
+httpd_header_fix:
+
+esp_ldo:
+- channel: 3
+  voltage: 2.5V
+- channel: 4
+  voltage: 2.5V
+
+logger:
+  hardware_uart: UART0
+
+i2c:
+  sda: GPIO45
+  scl: GPIO46
+  id: bus_a
+  frequency: 400kHz
+
+output:
+- platform: gpio
+  id: backlight_power
+  pin: GPIO29
+- platform: ledc
+  id: backlight_pwm
+  pin: GPIO31
+  frequency: 30000Hz
+
+light:
+- platform: monochromatic
+  output: backlight_pwm
+  id: lcdbacklight
+  name: LCD Backlight
+  icon: mdi:wall-sconce-flat-outline
+  disabled_by_default: true
+  restore_mode: ALWAYS_ON
+  default_transition_length: 0ms
+
+lvgl:
+
+display:
+- platform: mipi_dsi
+  model: CUSTOM
+  id: crowpanel_display
+  update_interval: never
+  dimensions:
+    width: 1024
+    height: 600
+  lanes: 2
+  lane_bit_rate: 1000Mbps
+  pclk_frequency: 51MHz
+  color_order: rgb
+  hsync_back_porch: 160
+  hsync_pulse_width: 70
+  hsync_front_porch: 160
+  vsync_back_porch: 23
+  vsync_pulse_width: 1
+  vsync_front_porch: 12
+  init_sequence:
+  - [0xB2, 0x10]
+  - [0x80, 0x8B]
+  - [0x81, 0x78]
+  - [0x82, 0x84]
+  - [0x83, 0x88]
+  - [0x84, 0xA8]
+  - [0x85, 0xE3]
+  - [0x86, 0x88]
+  - delay 120ms
+  - [0x29]
+
+touchscreen:
+  platform: gt911
+  id: crowpanel_touch
+  interrupt_pin: GPIO42
+  reset_pin: GPIO40
+
+update:
+- platform: esp32_hosted
+  type: http
+  name: C6 Coprocessor Update
+  source: https://esphome.github.io/esp-hosted-firmware/manifest/esp32c6.json
