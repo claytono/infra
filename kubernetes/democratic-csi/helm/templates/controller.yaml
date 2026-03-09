@@ -143,7 +143,7 @@ spec:
               apiVersion: v1
               fieldPath: metadata.name
       - name: csi-driver
-        image: "docker.io/democraticcsi/democratic-csi:v1.9.0"
+        image: "docker.io/democraticcsi/democratic-csi:v1.9.5@sha256:fc3b7d7ed3a616714139525075312758e23a5d425ffb539ad12c9bd20fb6001f"
         args:
         - --csi-version=1.5.0
         - --csi-name=org.democratic-csi.synology-iscsi
