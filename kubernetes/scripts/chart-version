@@ -60,10 +60,20 @@ helm_template() {
 
   helm template "$release" "${chart_args[@]}" "$@"
 
-  # Auto-remove helm.sh/chart labels to reduce diff noise on upgrades
+  # Post-process rendered output
   if [[ -n "$output_dir" && -d "$output_dir" ]]; then
     remove_helm_chart_labels "$output_dir"
+    replace_nonbreaking_spaces "$output_dir"
   fi
+}
+
+# Replace non-breaking spaces (U+00A0) with regular spaces in rendered YAML files
+# Some upstream charts contain NBSPs that trigger Renovate's hidden Unicode warning
+replace_nonbreaking_spaces() {
+  local dir="$1"
+  find "$dir" \( -name '*.yaml' -o -name '*.yml' \) -type f | while read -r file; do
+    sed $'s/\xC2\xA0/ /g' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+  done
 }
 
 # Remove helm.sh/chart labels from rendered YAML files

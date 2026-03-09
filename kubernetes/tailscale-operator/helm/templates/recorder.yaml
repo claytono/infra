@@ -981,7 +981,7 @@ spec:
                                   x-kubernetes-list-type: atomic
                         annotations:
                           description: |-
-                            Annotations that will be added to Recorder Pods. Any annotations
+                            Annotations that will be added to Recorder Pods. Any annotations
                             specified here will be merged with the default annotations applied to
                             the Pod by the operator.
                             https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/#syntax-and-character-set
