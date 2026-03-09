@@ -41,7 +41,7 @@ spec:
       hostPID: false
       containers:
       - name: csi-driver
-        image: "docker.io/democraticcsi/democratic-csi:v1.9.0"
+        image: "docker.io/democraticcsi/democratic-csi:v1.9.0@sha256:cc0b51dd9eda5762e5ca5707e8c233e3fa47d2d870aa92f9ba6acacd37679b58"
         args:
         - --csi-version=1.5.0
         - --csi-name=org.democratic-csi.synology-iscsi
@@ -111,7 +111,7 @@ spec:
         - name: extra-ca-certs
           mountPath: /tmp/certs
       - name: csi-proxy
-        image: "ghcr.io/democratic-csi/csi-grpc-proxy:v0.5.7"
+        image: "ghcr.io/democratic-csi/csi-grpc-proxy:v0.5.7@sha256:0240d0fba3cedd598036766b1865e88aa2eac9c16822df03d5d912a81128ebb6"
         env:
         - name: BIND_TO
           value: "unix:///csi-data/csi.sock"
@@ -121,7 +121,7 @@ spec:
         - mountPath: /csi-data
           name: socket-dir
       - name: driver-registrar
-        image: "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.9.0"
+        image: "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.9.0@sha256:cd21e19cd8bbd5bc56f1b4f1398a436e7897da2995d6d036c9729be3f4e456e6"
         args:
         - --v=5
         - --csi-address=/csi-data/csi.sock
@@ -149,7 +149,7 @@ spec:
           mountPath: /var/lib/kubelet
 
       - name: cleanup
-        image: "docker.io/busybox:1.37.0"
+        image: "docker.io/busybox:1.37.0@sha256:b3255e7dfbcd10cb367af0d409747d511aeb66dfac98cf30e97e87e4207dd76f"
         command:
           - "/bin/sh"
           - "-c"

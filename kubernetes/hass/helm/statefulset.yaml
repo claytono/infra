@@ -33,7 +33,7 @@ spec:
         - name: home-assistant
           securityContext:
             {}
-          image: "ghcr.io/home-assistant/home-assistant:2026.2.2"
+          image: "ghcr.io/home-assistant/home-assistant:2026.2.2@sha256:3e2dff545c46e91f4ab2b21597016011d76d0de58bc8eaf51d75e841f337bf88"
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_URL

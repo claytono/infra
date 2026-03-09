@@ -35,7 +35,7 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: server
-        image: quay.io/argoproj/argocd:v3.3.0
+        image: quay.io/argoproj/argocd:v3.3.0@sha256:ed0740273790e58154816104c1e1b41fb308a9c516ade3d0f195fa56f1840cca
         imagePullPolicy: IfNotPresent
         args:
         - /usr/local/bin/argocd-server

@@ -31,7 +31,7 @@ spec:
       serviceAccountName: alloy
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.13.0
+          image: docker.io/grafana/alloy:v1.13.0@sha256:6616111d70b3c75d5aa177e0584a523403eaba0eb3b177cb387302c2206d5221
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -66,7 +66,7 @@ spec:
               mountPath: /var/log
               readOnly: true
         - name: config-reloader
-          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0
+          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0@sha256:959d47672fbff2776a04ec62b8afcec89e8c036af84dc5fade50019dab212746
           args:
             - --watched-dir=/etc/alloy
             - --reload-url=http://localhost:12345/-/reload

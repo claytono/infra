@@ -38,7 +38,7 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: redis
-        image: ecr-public.aws.com/docker/library/redis:8.2.3-alpine
+        image: ecr-public.aws.com/docker/library/redis:8.2.3-alpine@sha256:08ad0b1d280850169a790dba1393ff7a90aef951fc19632cf4d3ce4f78e679ba
         imagePullPolicy: IfNotPresent
         args:
         - --save

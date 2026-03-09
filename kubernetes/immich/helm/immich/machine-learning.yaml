@@ -120,7 +120,7 @@ spec:
           envFrom:
           - secretRef:
               name: immich-secrets
-          image: ghcr.io/immich-app/immich-machine-learning:v2.3.1-cuda
+          image: ghcr.io/immich-app/immich-machine-learning:v2.3.1-cuda@sha256:723c82610d713bc9bc15d90d8426f96915c2cbd634ef5bec1bf45a098d82d81d
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3

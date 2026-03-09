@@ -34,7 +34,7 @@ spec:
       hostNetwork: true
       initContainers:
         - name: init-persistence
-          image: "alpine:latest"
+          image: "alpine:latest@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659"
           resources:
             requests:
               cpu: 10m
@@ -51,7 +51,7 @@ spec:
             '
       containers:
         - name: netdata
-          image: "netdata/netdata:v2.9.0"
+          image: "netdata/netdata:v2.9.0@sha256:4cbe33f6fc317a7f5c453c8b4997316e4e320a7abd8cc921cecba98f2a5cbcf5"
           imagePullPolicy: Always
           env:
             - name: MY_POD_NAME

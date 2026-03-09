@@ -42,7 +42,7 @@ spec:
             runAsUser: 1000
             seccompProfile:
               type: RuntimeDefault
-          image: ghcr.io/external-secrets/external-secrets:v2.0.1
+          image: ghcr.io/external-secrets/external-secrets:v2.0.1@sha256:e4ca217803202017da604dc2e7627d37c32ed57bd70e34585dbcd39b065ea23f
           imagePullPolicy: IfNotPresent
           args:
           - webhook

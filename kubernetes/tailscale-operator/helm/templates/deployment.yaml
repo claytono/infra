@@ -27,7 +27,7 @@ spec:
             secretName: operator-oauth
       containers:
         - name: operator
-          image: tailscale/k8s-operator:v1.94.2
+          image: tailscale/k8s-operator:v1.94.2@sha256:7956bd50dca9dc804b98720df94d112b54af85449ed0bf8cc7fad0346b225067
           imagePullPolicy: Always
           env:
             - name: OPERATOR_INITIAL_TAGS

@@ -40,7 +40,7 @@ spec:
       containers:
       # https://github.com/kubernetes-csi/external-attacher
       - name: external-attacher
-        image: "registry.k8s.io/sig-storage/csi-attacher:v4.4.0"
+        image: "registry.k8s.io/sig-storage/csi-attacher:v4.4.0@sha256:dbded4ebe299973e31d0ef55815eb07a990fc67872b14900a8e69232acae4f2d"
         args:
         - --v=5
         - --leader-election
@@ -53,7 +53,7 @@ spec:
           name: socket-dir
       # https://github.com/kubernetes-csi/external-provisioner
       - name: external-provisioner
-        image: "registry.k8s.io/sig-storage/csi-provisioner:v3.6.0"
+        image: "registry.k8s.io/sig-storage/csi-provisioner:v3.6.0@sha256:6de50bacfd72627ffe4209e3db8ad7391d04ea6fb741bf51feab6c5dcfd80002"
         args:
         - --v=5
         - --leader-election
@@ -83,7 +83,7 @@ spec:
               fieldPath: metadata.name
       # https://github.com/kubernetes-csi/external-resizer
       - name: external-resizer
-        image: "registry.k8s.io/sig-storage/csi-resizer:v1.9.0"
+        image: "registry.k8s.io/sig-storage/csi-resizer:v1.9.0@sha256:f1f352df97874442624fcef23eab04aa038f66cb0e361212f6ec09e92998184d"
         args:
         - --v=5
         - --leader-election
@@ -115,7 +115,7 @@ spec:
       #  - https://github.com/rook/rook/issues/4178
       #  - https://github.com/kubernetes-csi/external-snapshotter/issues/147#issuecomment-513664310
       - name: external-snapshotter
-        image: "registry.k8s.io/sig-storage/csi-snapshotter:v8.2.1"
+        image: "registry.k8s.io/sig-storage/csi-snapshotter:v8.2.1@sha256:5f4bb469fec51147ce157329dab598c758da1b018bad6dad26f0ff469326d769"
         args:
         - --v=5
         - --leader-election
@@ -143,7 +143,7 @@ spec:
               apiVersion: v1
               fieldPath: metadata.name
       - name: csi-driver
-        image: "docker.io/democraticcsi/democratic-csi:v1.9.0"
+        image: "docker.io/democraticcsi/democratic-csi:v1.9.0@sha256:cc0b51dd9eda5762e5ca5707e8c233e3fa47d2d870aa92f9ba6acacd37679b58"
         args:
         - --csi-version=1.5.0
         - --csi-name=org.democratic-csi.synology-iscsi
@@ -173,7 +173,7 @@ spec:
         - name: extra-ca-certs
           mountPath: /tmp/certs
       - name: csi-proxy
-        image: "ghcr.io/democratic-csi/csi-grpc-proxy:v0.5.7"
+        image: "ghcr.io/democratic-csi/csi-grpc-proxy:v0.5.7@sha256:0240d0fba3cedd598036766b1865e88aa2eac9c16822df03d5d912a81128ebb6"
         env:
         - name: BIND_TO
           value: "unix:///csi-data/csi.sock"

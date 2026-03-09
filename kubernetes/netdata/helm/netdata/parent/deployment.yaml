@@ -60,7 +60,7 @@ spec:
             name: netdata-conf
       containers:
         - name: netdata
-          image: "netdata/netdata:v2.9.0"
+          image: "netdata/netdata:v2.9.0@sha256:4cbe33f6fc317a7f5c453c8b4997316e4e320a7abd8cc921cecba98f2a5cbcf5"
           imagePullPolicy: Always
           env:
             - name: MY_POD_NAME

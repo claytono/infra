@@ -39,7 +39,7 @@ spec:
               drop:
               - ALL
             readOnlyRootFilesystem: true
-          image: registry.k8s.io/autoscaling/vpa-admission-controller:1.4.1
+          image: registry.k8s.io/autoscaling/vpa-admission-controller:1.4.1@sha256:71d817780aa98743ddadbd2d1cd4a3b4a785651b89677abe50a176d1771eddf9
           imagePullPolicy: Always
           args:
             - --register-webhook=false

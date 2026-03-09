@@ -168,7 +168,7 @@ spec:
       initContainers:
         # Copies the initial config files with the right permissions to the shared volume.
         - name: cp-frr-files
-          image: quay.io/frrouting/frr:10.4.1
+          image: quay.io/frrouting/frr:10.4.1@sha256:97a281a1473cae1f762ceab87cbcc53a2e102053877421e8b4606422aae45442
           securityContext:
             runAsUser: 100
             runAsGroup: 101
@@ -180,14 +180,14 @@ spec:
               mountPath: /etc/frr
         # Copies the reloader to the shared volume between the speaker and reloader.
         - name: cp-reloader
-          image: quay.io/metallb/speaker:v0.15.3
+          image: quay.io/metallb/speaker:v0.15.3@sha256:c6a5b25b2e1fba610a57b2db4bb8141d7c133569d561a8cc29e38ca5113efbc4
           command: ["/cp-tool","/frr-reloader.sh","/etc/frr_reloader/frr-reloader.sh"]
           volumeMounts:
             - name: reloader
               mountPath: /etc/frr_reloader
         # Copies the metrics exporter
         - name: cp-metrics
-          image: quay.io/metallb/speaker:v0.15.3
+          image: quay.io/metallb/speaker:v0.15.3@sha256:c6a5b25b2e1fba610a57b2db4bb8141d7c133569d561a8cc29e38ca5113efbc4
           command: ["/cp-tool","/frr-metrics","/etc/frr_metrics/frr-metrics"]
           volumeMounts:
             - name: metrics
@@ -195,7 +195,7 @@ spec:
       shareProcessNamespace: true
       containers:
       - name: speaker
-        image: quay.io/metallb/speaker:v0.15.3
+        image: quay.io/metallb/speaker:v0.15.3@sha256:c6a5b25b2e1fba610a57b2db4bb8141d7c133569d561a8cc29e38ca5113efbc4
         args:
         - --port=7472
         - --log-level=info
@@ -281,7 +281,7 @@ spec:
             - NET_RAW
             - SYS_ADMIN
             - NET_BIND_SERVICE
-        image: quay.io/frrouting/frr:10.4.1
+        image: quay.io/frrouting/frr:10.4.1@sha256:97a281a1473cae1f762ceab87cbcc53a2e102053877421e8b4606422aae45442
         env:
           - name: TINI_SUBREAPER
             value: "true"
@@ -324,7 +324,7 @@ spec:
           failureThreshold: 30
           periodSeconds: 5
       - name: reloader
-        image: quay.io/frrouting/frr:10.4.1
+        image: quay.io/frrouting/frr:10.4.1@sha256:97a281a1473cae1f762ceab87cbcc53a2e102053877421e8b4606422aae45442
         securityContext:
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
@@ -339,7 +339,7 @@ spec:
           - name: frr-log
             mountPath: /var/log/frr
       - name: frr-metrics
-        image: quay.io/frrouting/frr:10.4.1
+        image: quay.io/frrouting/frr:10.4.1@sha256:97a281a1473cae1f762ceab87cbcc53a2e102053877421e8b4606422aae45442
         securityContext:
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false

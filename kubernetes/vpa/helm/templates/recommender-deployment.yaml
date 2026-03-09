@@ -39,7 +39,7 @@ spec:
               drop:
               - ALL
             readOnlyRootFilesystem: true
-          image: registry.k8s.io/autoscaling/vpa-recommender:1.4.1
+          image: registry.k8s.io/autoscaling/vpa-recommender:1.4.1@sha256:40b6d76e8526806c4f3bc33e725c015ddd7fa339bedf55986a7bed93947c865d
           imagePullPolicy: Always
           args:
             - --pod-recommendation-min-cpu-millicores=15

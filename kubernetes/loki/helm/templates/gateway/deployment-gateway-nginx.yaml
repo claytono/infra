@@ -40,7 +40,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: nginx
-          image: docker.io/nginxinc/nginx-unprivileged:1.29-alpine
+          image: docker.io/nginxinc/nginx-unprivileged:1.29-alpine@sha256:aec540f08f99df3c830549d5dd7bfaf63e01cbbb499e37400c5af9f8e8554e9f
           imagePullPolicy: IfNotPresent
           ports:
             - name: http-metrics

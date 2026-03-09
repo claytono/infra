@@ -43,7 +43,7 @@ spec:
         version: v1.4.13
     spec:
       containers:
-      - image: "ghcr.io/stakater/reloader:v1.4.13"
+      - image: "ghcr.io/stakater/reloader:v1.4.13@sha256:ff26b605c94d8b7b430986b70b02739349e526f6d5f3581462046ffda4d91a5b"
         imagePullPolicy: IfNotPresent
         name: reloader
         env:

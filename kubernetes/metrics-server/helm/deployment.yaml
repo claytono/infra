@@ -36,7 +36,7 @@ spec:
             runAsUser: 1000
             seccompProfile:
               type: RuntimeDefault
-          image: registry.k8s.io/metrics-server/metrics-server:v0.8.0
+          image: registry.k8s.io/metrics-server/metrics-server:v0.8.0@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2
           imagePullPolicy: IfNotPresent
           args:
             - --secure-port=10250

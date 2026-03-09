@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: pinepods
-          image: "madeofpendletonwool/pinepods:latest"
+          image: "madeofpendletonwool/pinepods:latest@sha256:ee412e52e59b6c49f4f852c41db82e9a258563ddc2e31d7c6e7ef824b8abcb70"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

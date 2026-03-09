@@ -39,7 +39,7 @@ spec:
               drop:
               - ALL
             readOnlyRootFilesystem: true
-          image: registry.k8s.io/autoscaling/vpa-updater:1.4.1
+          image: registry.k8s.io/autoscaling/vpa-updater:1.4.1@sha256:8ebf269779c1849ce745c0758d46bb85eb5143d5d896dc903378f6ed2f075d90
           imagePullPolicy: Always
           args:
             - --eviction-rate-burst=1
