@@ -22,7 +22,7 @@ spec:
         fsGroup: 10001
       containers:
       - name: booklore
-        image: booklore/booklore:v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
+        image: booklore/booklore:v2.1.0@sha256:a669c3b0e3c93a5630f12e85ce479d55568903ed2529bdb8ef7c64d9c742fc1b
         ports:
         - containerPort: 6060
           name: http
@@ -30,7 +30,7 @@ spec:
         - name: BOOKLORE_PORT
           value: '6060'
         - name: DATABASE_URL
-          value: jdbc:mariadb://mariadb.booklore.svc.cluster.local:3306/booklore
+          value: jdbc:mariadb://mariadb.booklore.svc.cluster.local:3306/booklore?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
         - name: DATABASE_USERNAME
           value: booklore
         - name: DATABASE_PASSWORD
@@ -44,8 +44,6 @@ spec:
           value: '10001'
         - name: GROUP_ID
           value: '10001'
-        - name: SWAGGER_ENABLED
-          value: 'true'
         volumeMounts:
         - name: data
           mountPath: /app/data
