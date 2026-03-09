@@ -7,8 +7,7 @@
     "on monday"
   ],
   "ignorePaths": [
-    "ansible/galaxy/**",
-    "kubernetes/**/helm/**"
+    "ansible/galaxy/**"
   ],
   "rebaseWhen": "behind-base-branch",
   "minimumReleaseAge": "14 days",
@@ -30,6 +29,7 @@
       "/kubernetes/.+\\.yaml$/"
     ],
     "ignorePaths": [
+      "kubernetes/**/helm/**",
       "kubernetes/restic/cronjobs/**"
     ]
   },
