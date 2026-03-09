@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: changedetection
-        image: dgtlmoon/changedetection.io:0.53.3@sha256:8647583c05edcd980feafc0646d75a6ceae19c23f906f35448451ebb5a2c694a
+        image: dgtlmoon/changedetection.io:0.53.7@sha256:7e30093a5ed0db774e26a4762229995b6331fbdebf75f51408cbd1275afd0d0e
         ports:
         - name: changedetection
           containerPort: 5000
