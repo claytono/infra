@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: velero-encrypt
-        image: rclone/rclone:1.73.0@sha256:9f59fda717a48aced38d7f27e9ec8fd9992b5651e7a03897bebf204d3a9197d6
+        image: rclone/rclone:1.73.2@sha256:8a17d9b5cd5ce71bbb42e49e92ee83575d7fb03f6233d949d328e9d029b9376d
         command:
         - /scripts/start.sh
         - serve
