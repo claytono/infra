@@ -39,7 +39,7 @@ spec:
         - name: n8n
           securityContext:
             {}
-          image: "n8nio/n8n:1.116.2"
+          image: "n8nio/n8n:1.123.21@sha256:a81f2118f96dfaa93accb92dc39a19b0fe538c8c1ab486e8afb39d8275160bcb"
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
