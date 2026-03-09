@@ -124,7 +124,7 @@ spec:
           readOnly: true
       containers:
       - name: frank
-        image: ghcr.io/openclaw/openclaw:2026.2.23@sha256:6346f1c619147790cae8df965f770855b3fa175c319080910bcbf7235a84a5d0
+        image: ghcr.io/openclaw/openclaw:2026.3.8@sha256:7b1294f6aa2eb05b2070cc614743f79212313fc294e5de221ada8a2969ea52f6
         command:
         - node
         - dist/index.js
