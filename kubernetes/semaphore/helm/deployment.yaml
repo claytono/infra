@@ -43,7 +43,7 @@ spec:
 
       containers:
         - name: semaphore
-          image: semaphoreui/semaphore:v2.16.47
+          image: semaphoreui/semaphore:v2.17.14@sha256:a10d001b3dbabd30b68b8a38976f05e5405f72a960aabf26dd3f5bbe03221f38
           imagePullPolicy: IfNotPresent
 
           env:
