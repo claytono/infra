@@ -38,7 +38,7 @@ spec:
       terminationGracePeriodSeconds: 3600
       containers:
         - name: velero
-          image: "velero/velero:v1.17.1"
+          image: "velero/velero:v1.17.2@sha256:9eb627afb0462e67e5462f521699d5542d05588f067cadec01d2f7e5505be991"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http-monitoring
