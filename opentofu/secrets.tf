@@ -183,3 +183,19 @@ locals {
   cloudflare_api_token  = local.cloudflare_fields["api_token"]
   cloudflare_account_id = local.cloudflare_fields["account_id"]
 }
+
+# Cloudflare Access email allowlist from 1Password (keeps addresses out of git)
+data "onepassword_item" "cloudflare_access_seerr" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "cloudflare-access-seerr"
+}
+
+locals {
+  cloudflare_access_seerr_fields = merge([
+    for _, sec in data.onepassword_item.cloudflare_access_seerr.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
+
+  seerr_access_emails = split(",", local.cloudflare_access_seerr_fields["allowed_emails"])
+}
