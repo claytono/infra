@@ -7,6 +7,7 @@ namespace: default
 resources:
 
 - homebox-postgres-cluster.yaml
+- externalsecret-oidc.yaml
 
   # HomeBox resources
 - helm/homebox/deployment.yaml
@@ -19,23 +20,41 @@ resources:
 commonAnnotations:
   argoManaged: 'true'
 
+images:
+- name: sysadminsmedia/homebox
+  newTag: 0.24.2@sha256:532e0428d922fdea2441b31c1eb5b4018e5f1b2684273bee06dba102db576f30
+
 patches:
 
 - target:
     kind: Deployment
     name: homebox
   patch: |-
-    - op: add
-      path: /spec/template/spec/containers/0/env
-      value: []
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: HBOX_DATABASE_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: homebox-postgres-app
-            key: password
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: homebox
+    spec:
+      template:
+        spec:
+          containers:
+          - name: homebox
+            env:
+            - name: HBOX_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: homebox-postgres-app
+                  key: password
+            - name: HBOX_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: homebox-oidc
+                  key: HBOX_OIDC_CLIENT_ID
+            - name: HBOX_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: homebox-oidc
+                  key: HBOX_OIDC_CLIENT_SECRET
 
 # Add labels for metrics
 labels:
