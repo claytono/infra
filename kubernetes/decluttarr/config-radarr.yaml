@@ -9,6 +9,9 @@ job_defaults:
 jobs:
   search_unmet_cutoff:
   search_missing:
+  remove_failed_imports:
+  remove_failed_downloads:
+  remove_stalled:
 
 instances:
   radarr:
