@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/version: "0.21.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
+    ak-oidc-callback: /api/v1/users/login/oidc/callback
+    ak-type: oidc
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: Inventory and Organization System
     gethomepage.dev/enabled: "true"

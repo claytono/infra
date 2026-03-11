@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 0ec8b33b18b21dd857c89bfa93092da22e9875cdf3382ad71d5b2b50293308fe
+        checksum/secret: 0a7763abd5775abb8a4147b9d39193bbb96a759173e1f525bc76f26a38352b92
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: homebox
