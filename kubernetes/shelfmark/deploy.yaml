@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: shelfmark
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shelfmark
+  template:
+    metadata:
+      labels:
+        app: shelfmark
+    spec:
+      containers:
+      - name: shelfmark
+        image: ghcr.io/calibrain/shelfmark:v1.2.0@sha256:8140f9513f89d8617871316cf8778e4a3d71957ca290a0e59d58caf3ccbb24d7
+        ports:
+        - containerPort: 8084
+          name: http
+        env:
+        - name: PUID
+          value: '10001'
+        - name: PGID
+          value: '10001'
+        - name: TZ
+          value: EST5EDT
+        - name: AUTH_METHOD
+          value: oidc
+        - name: OIDC_DISCOVERY_URL
+          value: https://auth.k.oneill.net/application/o/shelfmark/.well-known/openid-configuration
+        - name: OIDC_AUTO_REDIRECT
+          value: 'true'
+        - name: OIDC_AUTO_PROVISION
+          value: 'true'
+        - name: OIDC_ADMIN_GROUP
+          value: authentik Admins
+        - name: OIDC_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: shelfmark-oidc
+              key: OIDC_CLIENT_ID
+        - name: OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: shelfmark-oidc
+              key: OIDC_CLIENT_SECRET
+        volumeMounts:
+        - mountPath: /config
+          name: config
+        - mountPath: /books
+          name: booklore-ingest
+        - mountPath: /downloads
+          name: downloads
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: shelfmark-config
+      - name: booklore-ingest
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads/booklore-ingestion
+      - name: downloads
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads
