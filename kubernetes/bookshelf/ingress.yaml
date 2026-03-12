@@ -11,7 +11,7 @@ metadata:
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Bookshelf
     gethomepage.dev/description: Book Manager
-    gethomepage.dev/group: Media
+    gethomepage.dev/group: Media Automation
     gethomepage.dev/icon: readarr.png
 
 spec:

@@ -9,7 +9,7 @@ metadata:
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Mesh Central
     gethomepage.dev/description: AMT/vPro management
-    gethomepage.dev/group: Home Lab
+    gethomepage.dev/group: AMT Management
     gethomepage.dev/icon: meshcentral.png
 
 spec:

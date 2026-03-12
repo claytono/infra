@@ -31,7 +31,7 @@ ingress:
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: HomeBox
     gethomepage.dev/description: Inventory and Organization System
-    gethomepage.dev/group: Home Lab
+    gethomepage.dev/group: Productivity
     gethomepage.dev/icon: homebox.png
   hosts:
   - host: homebox.k.oneill.net

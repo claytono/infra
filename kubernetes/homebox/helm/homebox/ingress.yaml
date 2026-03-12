@@ -15,7 +15,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: Inventory and Organization System
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/group: Home Lab
+    gethomepage.dev/group: Productivity
     gethomepage.dev/icon: homebox.png
     gethomepage.dev/name: HomeBox
 spec:

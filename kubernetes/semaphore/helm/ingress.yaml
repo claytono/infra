@@ -17,7 +17,7 @@ metadata:
     cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/description: Ansible & OpenTofu UI
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/group: Home Lab
+    gethomepage.dev/group: Infrastructure
     gethomepage.dev/icon: semaphore.png
     gethomepage.dev/name: Semaphore
     gethomepage.dev/pod-selector: app.kubernetes.io/name=semaphore

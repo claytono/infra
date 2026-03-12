@@ -299,6 +299,11 @@ metadata:
     ak-oidc-callback: /api/auth/callback/custom
     ak-type: oidc
     cert-manager.io/cluster-issuer: zerossl
+    gethomepage.dev/description: Bookmark Manager
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Productivity
+    gethomepage.dev/icon: mdi-bookmark-multiple
+    gethomepage.dev/name: Karakeep
   namespace: karakeep
 spec:
   tls:

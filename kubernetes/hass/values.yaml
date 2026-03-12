@@ -15,8 +15,9 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Home Assistant
-    gethomepage.dev/group: Miscellaneous
+    gethomepage.dev/group: Smart Home
     gethomepage.dev/icon: home-assistant.png
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=hass
   hosts:
   - host: hass.k.oneill.net
     paths:

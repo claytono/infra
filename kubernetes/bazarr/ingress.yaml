@@ -12,7 +12,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Bazarr
-    gethomepage.dev/group: Media Tools
+    gethomepage.dev/group: Media Automation
     gethomepage.dev/icon: bazarr.png
     gethomepage.dev/description: Subtitle Downloader
 

@@ -41,9 +41,9 @@ metadata:
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: ARA
     gethomepage.dev/description: Ansible Run Analysis
-    gethomepage.dev/group: Home Lab
+    gethomepage.dev/group: Infrastructure
     gethomepage.dev/icon: ansible.png
-    gethomepage.dev/pod-selector: app.kubernetes.io/name=ara
+    gethomepage.dev/pod-selector: app=ara
 
 spec:
   tls:

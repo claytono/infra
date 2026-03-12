@@ -24,6 +24,11 @@ ingress:
       cert-manager.io/cluster-issuer: zerossl
       ak-type: oidc
       ak-oidc-callback: /api/auth/callback/custom
+      gethomepage.dev/enabled: 'true'
+      gethomepage.dev/name: Karakeep
+      gethomepage.dev/description: Bookmark Manager
+      gethomepage.dev/group: Productivity
+      gethomepage.dev/icon: mdi-bookmark-multiple
 
 persistence:
   data:

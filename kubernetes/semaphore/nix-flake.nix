@@ -206,6 +206,7 @@
               pythonEnv
               awscli2
               curl
+              efficient-compression-tool
               jq
               kubernetes-helm
               kopia

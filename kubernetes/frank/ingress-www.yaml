@@ -8,6 +8,12 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     ak-type: simple
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Frank
+    gethomepage.dev/description: Personal Assistant
+    gethomepage.dev/group: Productivity
+    gethomepage.dev/icon: mdi-cash-multiple
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=frank
 
 spec:
   tls:

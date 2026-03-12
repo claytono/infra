@@ -11,7 +11,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: qBit Manage
-    gethomepage.dev/group: Downloaders
+    gethomepage.dev/group: Downloads
     gethomepage.dev/icon: qbittorrent.png
 
 spec:
