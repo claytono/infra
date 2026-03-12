@@ -16,7 +16,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: Identity Provider & SSO
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/group: Home Lab
+    gethomepage.dev/group: Infrastructure
     gethomepage.dev/icon: authentik.png
     gethomepage.dev/name: Authentik
     gethomepage.dev/pod-selector: app.kubernetes.io/name=authentik,app.kubernetes.io/component=server

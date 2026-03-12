@@ -6,11 +6,7 @@ metadata:
   name: rreading-glasses
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
-    gethomepage.dev/enabled: 'true'
-    gethomepage.dev/name: Reading Glasses
-    gethomepage.dev/description: Metadata Service for Bookshelf
-    gethomepage.dev/group: Media
-    gethomepage.dev/icon: readarr.png
+    gethomepage.dev/enabled: 'false'
 
 spec:
   tls:

@@ -10,7 +10,7 @@ metadata:
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Dawarich
     gethomepage.dev/description: Location History Tracking
-    gethomepage.dev/group: Personal
+    gethomepage.dev/group: Productivity
     gethomepage.dev/icon: dawarich.png
     ak-type: oidc
     ak-oidc-callback: /users/auth/openid_connect/callback

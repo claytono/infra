@@ -13,7 +13,7 @@ metadata:
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: autobrr
     gethomepage.dev/description: IRC Torrent Watcher
-    gethomepage.dev/group: Media Tools
+    gethomepage.dev/group: Downloads
     gethomepage.dev/icon: autobrr.png
 
 spec:

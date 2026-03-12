@@ -1,5 +1,5 @@
 ---
-- Miscellaneous:
+- Smart Home:
   - NUT WebGUI:
       href: https://nut.oneill.net
       description: UPS Monitoring
@@ -10,8 +10,44 @@
   - Zigbee2MQTT:
       href: https://zigbee2mqtt.oneill.net/
       icon: mdi-zigbee
+  - Matter Server:
+      href: https://matter.oneill.net/
+      description: Matter/Thread Bridge
+      icon: mdi-home-automation
+  - Thread/OTBR:
+      href: https://thread.oneill.net/
+      description: OpenThread Border Router
+      icon: mdi-access-point-network
 
-- Home Lab:
+- Server Power:
+  - Infra1:
+      href: http://infra1-power.oneill.net
+      icon: mdi-flash
+  - P1:
+      href: http://p1-power.oneill.net
+      icon: mdi-flash
+  - P2:
+      href: http://p2-power.oneill.net
+      icon: mdi-flash
+  - P3:
+      href: http://p3-power.oneill.net
+      icon: mdi-flash
+  - P4:
+      href: http://p4-power.oneill.net
+      icon: mdi-flash
+
+- AMT Management:
+  - P2:
+      href: http://p2-amt.oneill.net:16992
+      icon: mdi-chip
+  - P3:
+      href: http://p3-amt.oneill.net:16992
+      icon: mdi-chip
+  - P4:
+      href: http://p4-amt.oneill.net:16992
+      icon: mdi-chip
+
+- Infrastructure:
   - Proxmox:
       href: https://pve.oneill.net
       description: Proxmox Cluster

@@ -1,7 +1,34 @@
 ---
 layout:
   Media:
+    tab: Home
     style: row
     columns: 4
-  Media Tools: {}
-  Miscellaneous: {}
+  Media Automation:
+    tab: Home
+    style: row
+    columns: 4
+  Productivity:
+    tab: Home
+    style: row
+    columns: 4
+  Downloads:
+    tab: Home
+  Smart Home:
+    tab: Home
+  Monitoring:
+    tab: Admin
+    style: row
+    columns: 4
+  Infrastructure:
+    tab: Admin
+    style: row
+    columns: 4
+  AMT Management:
+    tab: Admin
+    style: row
+    columns: 5
+  Server Power:
+    tab: Admin
+    style: row
+    columns: 5

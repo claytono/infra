@@ -154,6 +154,7 @@ metadata:
     gethomepage.dev/group: Media
     gethomepage.dev/icon: immich.png
     gethomepage.dev/name: Immich
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=server
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
   namespace: immich
 spec:

@@ -14,7 +14,7 @@ metadata:
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Prowlarr
     gethomepage.dev/description: Indexer Manager
-    gethomepage.dev/group: Media Tools
+    gethomepage.dev/group: Media Automation
     gethomepage.dev/icon: prowlarr.png
 
 spec:

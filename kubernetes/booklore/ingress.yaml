@@ -12,6 +12,7 @@ metadata:
     gethomepage.dev/description: Book Library Manager
     gethomepage.dev/group: Media
     gethomepage.dev/icon: mdi-bookshelf
+    gethomepage.dev/pod-selector: app=booklore
     ak-type: oidc
     ak-oidc-callback: /oauth2-callback
     ak-oidc-client-type: public

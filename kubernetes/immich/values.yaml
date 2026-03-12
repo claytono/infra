@@ -57,6 +57,7 @@ server:
         gethomepage.dev/description: Photo & Video Backup
         gethomepage.dev/group: Media
         gethomepage.dev/icon: immich.png
+        gethomepage.dev/pod-selector: app.kubernetes.io/name=server
       hosts:
       - host: immich.k.oneill.net
         paths:
