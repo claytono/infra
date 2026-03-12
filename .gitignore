@@ -45,7 +45,9 @@ tools/recyclarr/data/configs/
 tools/recyclarr/data/includes/
 tools/recyclarr/data/logs/
 tools/recyclarr/data/repositories/
+tools/recyclarr/data/resources/
 tools/recyclarr/data/settings.yml
+tools/recyclarr/data/state/
 
 # Beads (JSONL committed only to beads-sync branch)
 .beads/issues.jsonl

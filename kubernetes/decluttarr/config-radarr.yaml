@@ -1,7 +1,9 @@
 ---
 general:
   log_level: VERBOSE
-  timer: 60
+  timer: 10
+  private_tracker_handling: obsolete_tag
+  obsolete_tag: obsolete
 
 job_defaults:
   max_concurrent_searches: 1
@@ -12,6 +14,13 @@ jobs:
   remove_failed_imports:
   remove_failed_downloads:
   remove_stalled:
+  remove_slow:
+
+download_clients:
+  qbittorrent:
+  - base_url: http://qbittorrent.default.svc.cluster.local:8080
+    username: admin
+    password: !ENV QBITTORRENT_PASSWORD
 
 instances:
   radarr:
