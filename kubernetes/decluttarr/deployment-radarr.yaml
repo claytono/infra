@@ -26,6 +26,9 @@ spec:
       containers:
       - name: decluttarr
         image: ghcr.io/manimatter/decluttarr:v2.0.0@sha256:1e93192e9477cb01591de2ddac12d503662e2659792448e811b74bdb58e07ae4
+        env:
+        - name: TZ
+          value: America/New_York
         envFrom:
         - secretRef:
             name: decluttarr
