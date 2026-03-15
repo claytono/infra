@@ -13,7 +13,7 @@ jq: 1.8.1
 kopia: 0.22.3
 kubecolor: 0.5.3
 kubeconform: 0.7.0
-kubectl: 1.35.0
+kubectl: 1.35.2
 kubernetes-helm: 3.19.1
 kustomize: 5.8.1
 kyverno: 1.16.2
