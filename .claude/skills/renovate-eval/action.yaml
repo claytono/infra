@@ -1,0 +1,88 @@
+---
+name: Renovate PR Evaluation
+description: Evaluate Renovate PRs with AI-powered analysis and audit loop
+
+inputs:
+  pr_number:
+    description: PR number to evaluate
+    required: true
+  mode:
+    description: "'dry-run' or 'post'"
+    required: false
+    default: dry-run
+  context:
+    description: "'local' or 'ci'"
+    required: false
+    default: ci
+  evaluator_model:
+    description: Model for evaluator
+    required: false
+    default: opus
+  auditor_model:
+    description: Model for auditor
+    required: false
+    default: sonnet
+  ci_timeout:
+    description: CI wait timeout in seconds
+    required: false
+    default: '300'
+  instructions:
+    description: Additional instructions for the evaluator
+    required: false
+    default: ''
+  anthropic_api_key:
+    description: Anthropic API key (use this OR claude_code_oauth_token)
+    required: false
+    default: ''
+  claude_code_oauth_token:
+    description: Claude Code OAuth token (use this OR anthropic_api_key)
+    required: false
+    default: ''
+  github_token:
+    description: GitHub token for gh CLI
+    required: true
+
+runs:
+  using: composite
+  steps:
+  - name: Setup Node
+    uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+    with:
+      node-version: '20'
+
+  - name: Install Claude CLI
+    shell: bash
+    run: npm install -g @anthropic-ai/claude-code
+
+  - name: Run evaluation
+    id: evaluate
+    shell: bash
+    env:
+      GH_TOKEN: ${{ inputs.github_token }}
+      ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs.claude_code_oauth_token }}
+      EVAL_INSTRUCTIONS: ${{ inputs.instructions }}
+    run: |
+      ARGS=(
+        --pr "${{ inputs.pr_number }}"
+        --"${{ inputs.mode }}"
+        --context "${{ inputs.context }}"
+        --evaluator-model "${{ inputs.evaluator_model }}"
+        --auditor-model "${{ inputs.auditor_model }}"
+        --ci-timeout "${{ inputs.ci_timeout }}"
+        --keep-artifacts
+      )
+      if [[ -n "$EVAL_INSTRUCTIONS" ]]; then
+        ARGS+=(--instructions "$EVAL_INSTRUCTIONS")
+      fi
+      OUTPUT=$("${{ github.action_path }}/evaluate.sh" "${ARGS[@]}" 2>&1 | tee /dev/stderr)
+      ARTIFACT_PATH=$(echo "$OUTPUT" | grep "^Artifacts:" | tail -1 | sed 's/Artifacts: //')
+      echo "artifact_path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
+
+  - name: Upload artifacts
+    uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6
+    if: always()
+    with:
+      name: renovate-eval-${{ inputs.pr_number }}
+      path: ${{ steps.evaluate.outputs.artifact_path || '/tmp/renovate-eval-*' }}
+      if-no-files-found: warn
