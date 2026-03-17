@@ -1,0 +1,97 @@
+---
+name: Renovate PR Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR number to evaluate (or 'all' for all unevaluated)
+        required: true
+        type: string
+      dry_run:
+        description: Evaluate but don't post/label
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: Re-evaluate already-evaluated PRs
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  collect-prs:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.get-prs.outputs.matrix }}
+      has_prs: ${{ steps.get-prs.outputs.has_prs }}
+    steps:
+    - name: Get PRs
+      id: get-prs
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ "${{ inputs.pr_number }}" != "all" ]; then
+          MATRIX=$(jq -cn --arg pr "${{ inputs.pr_number }}" \
+            '{pr: [($pr | tonumber)]}')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "has_prs=true" >> "$GITHUB_OUTPUT"
+        else
+          PRS=$(gh pr list --repo "${{ github.repository }}" \
+            --author "app/renovate" --state open \
+            --json number,labels --limit 100)
+          FILTERED=$(echo "$PRS" | jq -c --argjson force "${{ inputs.force }}" '{pr: [
+            .[] | select(
+              ([.labels[].name] | index("automerge") | not) and
+              (if $force then true
+               else ([.labels[].name] | index("renovate:evaluated") | not) end)
+            ) | .number
+          ]}')
+          COUNT=$(echo "$FILTERED" | jq '.pr | length')
+          echo "matrix=$FILTERED" >> "$GITHUB_OUTPUT"
+          echo "has_prs=$([ "$COUNT" -gt 0 ] && echo true || echo false)" \
+            >> "$GITHUB_OUTPUT"
+        fi
+
+  evaluate-pr:
+    name: 'Evaluate PR #${{ matrix.pr }}'
+    needs: collect-prs
+    if: needs.collect-prs.outputs.has_prs == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.collect-prs.outputs.matrix) }}
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+
+    # Repo-specific tooling
+    - name: Install Nix
+      uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934  # v31
+      with:
+        github_access_token: ${{ github.token }}
+
+    - name: Setup Cachix
+      uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1  # v16
+      with:
+        name: claytono
+        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+    - name: Setup Nix environment
+      run: |
+        eval "$(nix print-dev-env)"
+        echo "PATH=$PATH" >> "$GITHUB_ENV"
+
+    - name: Evaluate
+      uses: ./.claude/skills/renovate-eval
+      with:
+        pr_number: ${{ matrix.pr }}
+        mode: ${{ inputs.dry_run && 'dry-run' || 'post' }}
+        context: ci
+        claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        github_token: ${{ github.token }}
