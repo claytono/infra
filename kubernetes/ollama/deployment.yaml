@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: ollama
+  namespace: ollama
+  labels:
+    app.kubernetes.io/name: ollama
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ollama
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ollama
+    spec:
+      runtimeClassName: nvidia
+      priorityClassName: gpu-priority
+      containers:
+      - name: ollama
+        image: ollama/ollama:0.18.1@sha256:5949ec041e62b28f92d5ff1d7c34080ec67efd73ad24a523e2ff558a24f33072
+        env:
+        - name: OLLAMA_CONTEXT_LENGTH
+          value: '8192'
+        ports:
+        - name: http
+          containerPort: 11434
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: models
+          mountPath: /root/.ollama
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: ollama-models

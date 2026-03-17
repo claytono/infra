@@ -52,6 +52,13 @@
       "sandbox": {
         "mode": "off",
         "workspaceAccess": "rw"
+      },
+      "memorySearch": {
+        "provider": "ollama",
+        "model": "snowflake-arctic-embed2",
+        "remote": {
+          "baseUrl": "http://ollama.ollama.svc.cluster.local:11434"
+        }
       }
     }
   }
