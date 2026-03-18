@@ -13,7 +13,7 @@
   "minimumReleaseAge": "14 days",
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
-  "internalChecksFilter": "strict",
+  "internalChecksFilter": "flexible",
   "semanticCommits": "disabled",
   "addLabels": [
     "renovate"
