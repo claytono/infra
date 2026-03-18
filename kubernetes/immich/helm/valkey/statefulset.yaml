@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: valkey
     app.kubernetes.io/instance: immich-valkey
-    app.kubernetes.io/version: "9.0.2"
+    app.kubernetes.io/version: "9.0.3"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -21,7 +21,7 @@ spec:
     metadata:
       annotations:
         checksum/customconfig: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-        checksum/scripts: 2b58effcbc7ce2c99e50bb1dfeddee05bed633bf0ee70abdbd29b981322eea5a
+        checksum/scripts: 2e9ca27160f191bcf324379e01d4d2b124fa526b98b6ccaf2e43373937a8ecf0
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: valkey
