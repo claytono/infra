@@ -311,12 +311,20 @@ elif [[ "$MODE" == "post" ]]; then
         gh pr comment "$PR_NUMBER" --body-file "$ARTIFACT_DIR/comment-body.md"
     fi
 
-    # Apply labels (remove old risk labels first, then add new ones)
-    gh pr edit "$PR_NUMBER" \
-        --remove-label "renovate:safe" --remove-label "renovate:caution" \
-        --remove-label "renovate:breaking" --remove-label "renovate:risk" \
-        2>/dev/null || true
-    gh pr edit "$PR_NUMBER" --add-label "$LABEL" --add-label "renovate:evaluated"
+    # Apply labels (only remove old risk labels that differ from the new one)
+    CURRENT_LABELS=$(gh pr view "$PR_NUMBER" --json labels --jq '[.labels[].name] | join(",")' 2>/dev/null || echo "")
+    REMOVE_ARGS=()
+    for old_label in renovate:safe renovate:caution renovate:breaking renovate:risk; do
+        if [[ "$old_label" != "$LABEL" && "$CURRENT_LABELS" == *"$old_label"* ]]; then
+            REMOVE_ARGS+=(--remove-label "$old_label")
+        fi
+    done
+    ADD_ARGS=()
+    [[ "$CURRENT_LABELS" != *"$LABEL"* ]] && ADD_ARGS+=(--add-label "$LABEL")
+    [[ "$CURRENT_LABELS" != *"renovate:evaluated"* ]] && ADD_ARGS+=(--add-label "renovate:evaluated")
+    if [[ ${#REMOVE_ARGS[@]} -gt 0 || ${#ADD_ARGS[@]} -gt 0 ]]; then
+        gh pr edit "$PR_NUMBER" "${REMOVE_ARGS[@]}" "${ADD_ARGS[@]}"
+    fi
 
     echo "Posted comment and applied labels: $LABEL, renovate:evaluated"
 fi

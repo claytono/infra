@@ -26,12 +26,22 @@
 
 - Helm values: `kubernetes/[app]/values.yaml`, `Chart.yaml`
 - K8s raw manifests: `kubernetes/[app]/*.yaml`
+- Kustomize overlays: `kubernetes/[app]/kustomization.yaml`
 - Rendered Helm templates: `kubernetes/[app]/helm/` (read-only reference)
 - Ansible defaults: `ansible/roles/[role]/defaults/main.yaml` (or `main.yml`)
 - Ansible inventory: `ansible/inventory/`
 - Look for: enabled features, sidecar containers (Redis is common), integrations
-  (ingress, Prometheus monitoring, Authentik SSO/OIDC), persistence (Longhorn),
-  env vars, resource limits, External Secrets pulling from 1Password
+  (ingress, Prometheus monitoring, Authentik SSO/OIDC), persistence, env vars,
+  resource limits, External Secrets pulling from 1Password
+
+**IMPORTANT: Kustomize image overrides.** Many apps use kustomize to pin the
+container image independently of the Helm chart default. Check
+`kubernetes/[app]/kustomization.yaml` for `images:` entries. When a kustomize
+image override exists and the PR does NOT change it, the deployed app version is
+NOT changing — only the chart scaffolding (templates, labels, defaults) is
+updating. In this case, focus your report on chart-level changes. Do not
+describe app-level features, fixes, or CVEs for versions the user already has or
+versions that won't be deployed by this PR.
 
 ## Notes
 
