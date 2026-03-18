@@ -64,6 +64,11 @@ controllers:
           INFERENCE_MAX_OUTPUT_TOKENS: '4096'
           INFERENCE_ENABLE_AUTO_SUMMARIZATION: 'true'
           INFERENCE_NUM_WORKERS: '3'
+          INFERENCE_TEXT_MODEL: gpt-5-mini
+          INFERENCE_USE_MAX_COMPLETION_TOKENS: 'true'
+          OLLAMA_BASE_URL: http://ollama.ollama.svc.cluster.local:11434
+          EMBEDDING_TEXT_MODEL: snowflake-arctic-embed2
+          SEARCH_NUM_WORKERS: '3'
         envFrom:
         - secretRef:
             name: karakeep
