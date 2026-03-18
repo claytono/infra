@@ -80,11 +80,18 @@ your own independent research:
    Every "check X yourself" or "verify by running Y" in your report is a failure
    — you should have run Y and reported the result.
 
-5. **Check dependency interactions:** If related or bundled dependencies
+5. **Evaluate the change, not the current state.** Your verdict reflects the
+   risk introduced by _this PR_, not pre-existing risk in the deployment. If the
+   PR doesn't change what's actually deployed (e.g., the image is pinned
+   elsewhere and the pin isn't changing), the PR is safe regardless of existing
+   vulnerabilities. You may note pre-existing issues as context, but they must
+   not drive the verdict or label.
+
+6. **Check dependency interactions:** If related or bundled dependencies
    changed, assess version compatibility. If a bundled dependency is NOT
    changing, explicitly state that.
 
-6. **Forward-looking analysis:** Because of Renovate's `minimumReleaseAge`
+7. **Forward-looking analysis:** Because of Renovate's `minimumReleaseAge`
    delay, the proposed version may not be the latest. Check for newer releases
    beyond the one in this PR:
 
@@ -94,11 +101,14 @@ your own independent research:
    - If the proposed version has known issues fixed in a later release, this
      should influence the verdict toward `renovate:risk`
 
-7. **Security analysis:** Search for CVEs affecting the version range:
+8. **Security analysis:** Search for CVEs affecting the version range:
    - Check GitHub Security Advisories for the upstream repo
    - Check the upstream repo's security policy and advisories
    - For any CVE found: include the CVE ID, CVSS score, and whether the user is
      affected based on their configuration
+   - Only CVEs introduced or resolved by this change should influence the
+     verdict. Pre-existing vulnerabilities (present before and after this PR)
+     may be noted as context but do not make the change itself risky
 
 ## Output
 
