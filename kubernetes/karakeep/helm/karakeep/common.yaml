@@ -229,6 +229,8 @@ spec:
             value: /data
           - name: DISABLE_PASSWORD_AUTH
             value: "true"
+          - name: EMBEDDING_TEXT_MODEL
+            value: snowflake-arctic-embed2
           - name: INFERENCE_CONTEXT_LENGTH
             value: "16384"
           - name: INFERENCE_ENABLE_AUTO_SUMMARIZATION
@@ -237,6 +239,10 @@ spec:
             value: "4096"
           - name: INFERENCE_NUM_WORKERS
             value: "3"
+          - name: INFERENCE_TEXT_MODEL
+            value: gpt-5-mini
+          - name: INFERENCE_USE_MAX_COMPLETION_TOKENS
+            value: "true"
           - name: MEILI_ADDR
             value: http://karakeep-meilisearch:7700
           - name: NEXTAUTH_URL
@@ -245,6 +251,10 @@ spec:
             value: Authentik
           - name: OAUTH_WELLKNOWN_URL
             value: https://auth.k.oneill.net/application/o/karakeep/.well-known/openid-configuration
+          - name: OLLAMA_BASE_URL
+            value: http://ollama.ollama.svc.cluster.local:11434
+          - name: SEARCH_NUM_WORKERS
+            value: "3"
           envFrom:
           - secretRef:
               name: karakeep
