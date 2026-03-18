@@ -154,6 +154,17 @@
   ],
   "packageRules": [
     {
+      "description": "Group helm chart and kustomize image updates per Kubernetes service",
+      "groupName": "kubernetes {{{parentDir}}}",
+      "matchFileNames": [
+        "kubernetes/**"
+      ],
+      "matchManagers": [
+        "helmv3",
+        "kustomize"
+      ]
+    },
+    {
       "matchUpdateTypes": [
         "lockFileMaintenance"
       ],
