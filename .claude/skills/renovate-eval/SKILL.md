@@ -15,19 +15,32 @@ description:
 
 ## PR Selection
 
-**If user specified a PR number:** Go to Evaluate or Present mode for that PR.
-
-**Otherwise:** Run this script to get the JSON list of open Renovate PRs:
+**Always run init first.** This detects environment capabilities and lists PRs:
 
 ```bash
 SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/renovate-eval"
-"$SCRIPT_DIR/scripts/list-renovate-prs.sh"
+"$SCRIPT_DIR/scripts/init.sh"
 ```
 
-The script outputs a JSON array. **IMPORTANT:** Bash tool output is collapsed in
-the UI and the user cannot see it. You MUST format the JSON into a readable
-table and print it as regular text output. Sort evaluated PRs first, then
-unevaluated:
+The script outputs a JSON object:
+
+```json
+{
+  "repo_root": "/path/to/repo",
+  "plannotator_available": true,
+  "repo_config": "/path/to/repo/.claude/renovate-eval.md",
+  "prs": [...]
+}
+```
+
+Store `plannotator_available` and `repo_config` for later use. If `repo_config`
+is non-null, read it for custom actions and repo context.
+
+**If user specified a PR number:** Go to Evaluate or Present mode for that PR.
+
+**Otherwise:** Format the `prs` array into a readable table. **IMPORTANT:** Bash
+tool output is collapsed in the UI and the user cannot see it. You MUST print
+the table as regular text output. Sort evaluated PRs first, then unevaluated:
 
 ```text
 | #  | PR    | Title                            | Status              |
@@ -55,8 +68,10 @@ EVAL_COMMENT=$(gh pr view "$PR" --json comments --jq '
   | sort_by(.createdAt) | last | .body')
 ```
 
-If non-empty, display the existing report (strip the HTML comment sentinel line)
-and show the Actions Menu. This is "present mode."
+If non-empty, display the existing report **VERBATIM** (strip only the HTML
+comment sentinel line). Do NOT summarize, edit, or rephrase any part of the
+report. Print it exactly as written, then show the Actions Menu. This is
+"present mode."
 
 If empty, proceed to "evaluate mode."
 
@@ -103,6 +118,7 @@ CI_STATUS=$(echo "$META" | jq -r '.ci_status // "unknown"')
 **Default conditional actions:**
 
 - **Fix CI** — only if `CI_STATUS` is `"failing"`
+- **View in Plannotator** — only if `plannotator_available` is `true`
 
 **Then add any actions from `$REPO_ROOT/.claude/renovate-eval.md`.**
 
@@ -119,6 +135,38 @@ Print all actions as a numbered list. Wait for user selection.
 - **Fix CI**: Investigate the CI failure and attempt to fix it.
 - **Re-evaluate**: Run `evaluate.sh --pr $PR --post --context local` to
   regenerate and post updated evaluation.
+- **View in Plannotator**: Open the evaluation report in plannotator's
+  annotation UI. The LLM must NOT write report content to files — use shell
+  commands to keep content out of the LLM's hands.
+
+  **Present mode** — fetch the comment directly from GitHub to a temp file:
+
+  ```bash
+  REPORT_DIR="${TMPDIR:-/tmp}/renovate-eval"
+  mkdir -p -m 0700 "$REPORT_DIR"
+  gh pr view "$PR" --json comments --jq '
+    .comments
+    | map(select(.body | contains("<!-- renovate-eval-skill:")))
+    | sort_by(.createdAt) | last | .body' | \
+    sed '/<!-- renovate-eval-skill:/d' > "$REPORT_DIR/PR-${PR}.md"
+  chmod 0600 "$REPORT_DIR/PR-${PR}.md"
+  plannotator annotate "$REPORT_DIR/PR-${PR}.md"
+  ```
+
+  **Evaluate mode** — use the report file persisted by evaluate.sh. Extract the
+  path from the `Report:` line in evaluate.sh output:
+
+  ```bash
+  plannotator annotate "$REPORT_PATH"
+  ```
+
+  In evaluate mode, only show this action if evaluate.sh printed a `Report:`
+  line (meaning the report was generated successfully).
+
+  The command blocks until the user submits. If stdout is empty (user closed
+  browser without annotating), return to the Actions Menu with no action. If
+  non-empty, parse the structured markdown feedback and respond to each
+  annotation. Then show the Actions Menu again.
 
 ## Multi-PR Flow
 
