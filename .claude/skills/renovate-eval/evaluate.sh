@@ -284,22 +284,39 @@ elif [[ "$MODE" == "post" ]]; then
         gh label create "$name" --color "$color" 2>/dev/null || true
     done
 
+    # Find existing comment and extract eval_count
+    EXISTING_COMMENT=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
+        --paginate --jq '
+        [.[] | select(.body | contains("<!-- renovate-eval-skill:"))] | last |
+        {id, body}' 2>/dev/null || echo "{}")
+    COMMENT_ID=$(echo "$EXISTING_COMMENT" | jq -r '.id // empty' 2>/dev/null || echo "")
+    EXISTING_BODY=$(echo "$EXISTING_COMMENT" | jq -r '.body // empty' 2>/dev/null || echo "")
+
+    # Extract eval_count from existing sentinel
+    PREV_EVAL_COUNT=0
+    if [[ -n "$EXISTING_BODY" ]]; then
+        PREV_EVAL_COUNT=$(echo "$EXISTING_BODY" | \
+            grep -o '<!-- renovate-eval-skill:{[^}]*}' | \
+            sed 's/<!-- renovate-eval-skill://' | \
+            jq -r '.eval_count // 0' 2>/dev/null || echo 0)
+    fi
+
+    if [[ "${EVAL_TRIGGER:-manual}" == "manual" ]]; then
+        EVAL_COUNT=1
+    else
+        EVAL_COUNT=$((PREV_EVAL_COUNT + 1))
+    fi
+
     # Construct comment body with metadata sentinel
     LABEL=$(jq -r '.label' "$ARTIFACT_DIR/eval-meta.json")
     CONFIDENCE=$(jq -r '.confidence' "$ARTIFACT_DIR/eval-meta.json")
     CI=$(jq -r '.ci_status' "$ARTIFACT_DIR/eval-meta.json")
     FINAL_ROUND=$((ROUND - 1))
     {
-        echo "<!-- renovate-eval-skill:{\"version\":1,\"label\":\"$LABEL\",\"confidence\":\"$CONFIDENCE\",\"rounds\":$FINAL_ROUND,\"ci_status\":\"$CI\"} -->"
+        echo "<!-- renovate-eval-skill:{\"version\":2,\"label\":\"$LABEL\",\"confidence\":\"$CONFIDENCE\",\"rounds\":$FINAL_ROUND,\"ci_status\":\"$CI\",\"eval_count\":$EVAL_COUNT} -->"
         echo ""
         cat "$ARTIFACT_DIR/eval-report.md"
     } > "$ARTIFACT_DIR/comment-body.md"
-
-    # Find existing comment (REST numeric IDs via gh api with pagination)
-    COMMENT_ID=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
-        --paginate --jq '
-        [.[] | select(.body | contains("<!-- renovate-eval-skill:"))] | last | .id' \
-        2>/dev/null || echo "")
 
     # Create or update comment
     if [[ -n "$COMMENT_ID" && "$COMMENT_ID" != "null" ]]; then

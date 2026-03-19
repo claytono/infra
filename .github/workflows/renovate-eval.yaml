@@ -2,6 +2,8 @@
 name: Renovate PR Evaluation
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -13,64 +15,131 @@ on:
         required: false
         type: boolean
         default: false
-      force:
-        description: Re-evaluate already-evaluated PRs
-        required: false
-        type: boolean
-        default: false
+
+concurrency:
+  group: renovate-eval-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  collect-prs:
+  gate:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      issues: write
     outputs:
-      matrix: ${{ steps.get-prs.outputs.matrix }}
-      has_prs: ${{ steps.get-prs.outputs.has_prs }}
+      should_evaluate: ${{ steps.check.outputs.should_evaluate }}
+      matrix: ${{ steps.check.outputs.matrix }}
+      trigger: ${{ steps.check.outputs.trigger }}
     steps:
-    - name: Get PRs
-      id: get-prs
+    - name: Check evaluation eligibility
+      id: check
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        if [ "${{ inputs.pr_number }}" != "all" ]; then
-          MATRIX=$(jq -cn --arg pr "${{ inputs.pr_number }}" \
-            '{pr: [($pr | tonumber)]}')
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+
+          # Only evaluate Renovate PRs
+          if [[ "$PR_AUTHOR" != "renovate[bot]" ]]; then
+            echo "Skipping: PR author is $PR_AUTHOR, not renovate[bot]"
+            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Skip automerge PRs
+          LABELS=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" \
+            --json labels --jq '[.labels[].name] | join(",")')
+          if [[ ",$LABELS," == *",automerge,"* ]]; then
+            echo "Skipping: PR has automerge label"
+            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Check eval_count from existing comment sentinel
+          REPO_NWO="${{ github.repository }}"
+          SENTINEL=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
+            --paginate --jq '
+            [.[] | select(.body | contains("<!-- renovate-eval-skill:"))
+            ] | last | .body' 2>/dev/null || echo "")
+
+          EVAL_COUNT=0
+          if [[ -n "$SENTINEL" ]]; then
+            EVAL_COUNT=$(echo "$SENTINEL" | \
+              grep -o '<!-- renovate-eval-skill:{[^}]*}' | \
+              sed 's/<!-- renovate-eval-skill://' | \
+              jq -r '.eval_count // 0' 2>/dev/null || echo 0)
+          fi
+
+          if [[ "$EVAL_COUNT" -ge 3 ]]; then
+            echo "Eval count is $EVAL_COUNT (>= 3), posting limit notice"
+            COMMENT_ID=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
+              --paginate --jq '
+              [.[] | select(.body | contains("<!-- renovate-eval-skill:"))
+              ] | last | .id' 2>/dev/null || echo "")
+            if [[ -n "$COMMENT_ID" && "$COMMENT_ID" != "null" ]]; then
+              EXISTING_BODY=$(gh api "repos/$REPO_NWO/issues/comments/$COMMENT_ID" \
+                --jq '.body')
+              if [[ "$EXISTING_BODY" != *"Automatic evaluation limit reached"* ]]; then
+                NEW_BODY=$(printf '%s\n\n---\n\n> ℹ️ **Automatic evaluation limit reached (%s/3).** Re-trigger the workflow manually to re-evaluate, or delete this comment to start fresh.' \
+                  "$EXISTING_BODY" "$EVAL_COUNT")
+                gh api --method PATCH "repos/$REPO_NWO/issues/comments/$COMMENT_ID" \
+                  -f body="$NEW_BODY"
+              fi
+            fi
+            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_evaluate=true" >> "$GITHUB_OUTPUT"
+          MATRIX=$(jq -cn --arg pr "$PR_NUMBER" '{pr: [($pr | tonumber)]}')
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
-          echo "has_prs=true" >> "$GITHUB_OUTPUT"
+          echo "trigger=auto" >> "$GITHUB_OUTPUT"
+
         else
-          PRS=$(gh pr list --repo "${{ github.repository }}" \
-            --author "app/renovate" --state open \
-            --json number,labels --limit 100)
-          FILTERED=$(echo "$PRS" | jq -c --argjson force "${{ inputs.force }}" '{pr: [
-            .[] | select(
-              ([.labels[].name] | index("automerge") | not) and
-              (if $force then true
-               else ([.labels[].name] | index("renovate:evaluated") | not) end)
-            ) | .number
-          ]}')
-          COUNT=$(echo "$FILTERED" | jq '.pr | length')
-          echo "matrix=$FILTERED" >> "$GITHUB_OUTPUT"
-          echo "has_prs=$([ "$COUNT" -gt 0 ] && echo true || echo false)" \
-            >> "$GITHUB_OUTPUT"
+          # workflow_dispatch
+          if [ "${{ inputs.pr_number }}" != "all" ]; then
+            MATRIX=$(jq -cn --arg pr "${{ inputs.pr_number }}" \
+              '{pr: [($pr | tonumber)]}')
+            echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+            echo "should_evaluate=true" >> "$GITHUB_OUTPUT"
+          else
+            PRS=$(gh pr list --repo "${{ github.repository }}" \
+              --author "app/renovate" --state open \
+              --json number,labels --limit 100)
+            FILTERED=$(echo "$PRS" | jq -c '{pr: [
+              .[] | select(
+                ([.labels[].name] | index("automerge") | not) and
+                ([.labels[].name] | index("renovate:evaluated") | not)
+              ) | .number
+            ]}')
+            COUNT=$(echo "$FILTERED" | jq '.pr | length')
+            echo "matrix=$FILTERED" >> "$GITHUB_OUTPUT"
+            echo "should_evaluate=$([ "$COUNT" -gt 0 ] && echo true || echo false)" \
+              >> "$GITHUB_OUTPUT"
+          fi
+          echo "trigger=manual" >> "$GITHUB_OUTPUT"
         fi
 
   evaluate-pr:
     name: 'Evaluate PR #${{ matrix.pr }}'
-    needs: collect-prs
-    if: needs.collect-prs.outputs.has_prs == 'true'
+    needs: gate
+    if: needs.gate.outputs.should_evaluate == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 1
-      matrix: ${{ fromJson(needs.collect-prs.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.gate.outputs.matrix) }}
     permissions:
       contents: read
       pull-requests: write
       issues: write
+      checks: read
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
-    # Repo-specific tooling
+    # Set up Nix BEFORE waiting so eval starts immediately when checks complete
     - name: Install Nix
       uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934  # v31
       with:
@@ -87,8 +156,37 @@ jobs:
         eval "$(nix print-dev-env)"
         echo "PATH=$PATH" >> "$GITHUB_ENV"
 
+    # Wait for all other checks to complete (auto trigger only)
+    - name: Wait for other checks
+      if: needs.gate.outputs.trigger == 'auto'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        PR_NUMBER="${{ matrix.pr }}"
+        OUR_WORKFLOW="Renovate PR Evaluation"
+        INTERVAL=10
+
+        echo "Waiting for other PR checks to complete..."
+        while true; do
+          PENDING=$(gh pr checks "$PR_NUMBER" \
+            --json name,state,workflow 2>/dev/null | \
+            jq -r --arg ours "$OUR_WORKFLOW" '
+              [.[] | select(.workflow != $ours and .state != "COMPLETED")]
+              | length' || echo 1)
+
+          if [[ "$PENDING" -eq 0 ]]; then
+            echo "All other checks complete"
+            break
+          fi
+
+          echo "Still waiting on $PENDING check(s)..."
+          sleep "$INTERVAL"
+        done
+
     - name: Evaluate
       uses: ./.claude/skills/renovate-eval
+      env:
+        EVAL_TRIGGER: ${{ needs.gate.outputs.trigger }}
       with:
         pr_number: ${{ matrix.pr }}
         mode: ${{ inputs.dry_run && 'dry-run' || 'post' }}
