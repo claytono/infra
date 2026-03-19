@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.27.0
+    app.kubernetes.io/version: 0.31.0
   namespace: karakeep
 stringData:
   MEILI_MASTER_KEY: 'bogus'
@@ -22,7 +22,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.27.0
+    app.kubernetes.io/version: 0.31.0
   namespace: karakeep
 spec:
   accessModes:
@@ -41,7 +41,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep-chrome
-    app.kubernetes.io/version: 0.27.0
+    app.kubernetes.io/version: 0.31.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -65,7 +65,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep
-    app.kubernetes.io/version: 0.27.0
+    app.kubernetes.io/version: 0.31.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -89,7 +89,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.27.0
+    app.kubernetes.io/version: 0.31.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -179,7 +179,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.27.0
+    app.kubernetes.io/version: 0.31.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -247,6 +247,8 @@ spec:
             value: http://karakeep-meilisearch:7700
           - name: NEXTAUTH_URL
             value: https://karakeep.k.oneill.net
+          - name: OAUTH_AUTO_REDIRECT
+            value: "true"
           - name: OAUTH_PROVIDER_NAME
             value: Authentik
           - name: OAUTH_WELLKNOWN_URL
@@ -262,7 +264,7 @@ spec:
               name: karakeep-meilisearch
           - secretRef:
               name: karakeep-oidc
-          image: ghcr.io/karakeep-app/karakeep:0.27.0
+          image: ghcr.io/karakeep-app/karakeep:0.31.0
           livenessProbe:
             failureThreshold: 3
             initialDelaySeconds: 10
@@ -304,7 +306,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.27.0
+    app.kubernetes.io/version: 0.31.0
   annotations:
     ak-oidc-callback: /api/auth/callback/custom
     ak-type: oidc

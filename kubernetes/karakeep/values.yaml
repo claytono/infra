@@ -57,6 +57,7 @@ controllers:
           OAUTH_WELLKNOWN_URL: https://auth.k.oneill.net/application/o/karakeep/.well-known/openid-configuration
           OAUTH_PROVIDER_NAME: Authentik
           DISABLE_PASSWORD_AUTH: 'true'
+          OAUTH_AUTO_REDIRECT: 'true'
           CRAWLER_FULL_PAGE_ARCHIVE: 'true'
           CRAWLER_STORE_PDF: 'true'
           CRAWLER_NUM_WORKERS: '3'

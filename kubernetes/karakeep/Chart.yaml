@@ -7,5 +7,5 @@ type: application
 
 dependencies:
 - name: karakeep
-  version: 0.27.0
+  version: 0.31.0
   repository: https://karakeep-app.github.io/helm-charts
