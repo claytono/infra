@@ -30,6 +30,7 @@ jobs:
       should_evaluate: ${{ steps.check.outputs.should_evaluate }}
       matrix: ${{ steps.check.outputs.matrix }}
       trigger: ${{ steps.check.outputs.trigger }}
+      fingerprint: ${{ steps.check.outputs.fingerprint }}
     steps:
     - name: Check evaluation eligibility
       id: check
@@ -56,19 +57,29 @@ jobs:
             exit 0
           fi
 
-          # Check eval_count from existing comment sentinel
+          # Compute PR fingerprint (hash of added/removed lines only)
+          FINGERPRINT=$(gh pr diff "$PR_NUMBER" --repo "${{ github.repository }}" | \
+            grep '^[+-]' | grep -v '^[+-][+-][+-]' | \
+            shasum -a 256 | cut -d' ' -f1)
+          echo "PR fingerprint: $FINGERPRINT"
+
+          # Check sentinel from existing comment
           REPO_NWO="${{ github.repository }}"
-          SENTINEL=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
+          SENTINEL_JSON=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
             --paginate --jq '
             [.[] | select(.body | contains("<!-- renovate-eval-skill:"))
-            ] | last | .body' 2>/dev/null || echo "")
+            ] | last | .body' 2>/dev/null | \
+            grep -o '<!-- renovate-eval-skill:{[^}]*}' | \
+            sed 's/<!-- renovate-eval-skill://' || echo "{}")
 
-          EVAL_COUNT=0
-          if [[ -n "$SENTINEL" ]]; then
-            EVAL_COUNT=$(echo "$SENTINEL" | \
-              grep -o '<!-- renovate-eval-skill:{[^}]*}' | \
-              sed 's/<!-- renovate-eval-skill://' | \
-              jq -r '.eval_count // 0' 2>/dev/null || echo 0)
+          EVAL_COUNT=$(echo "$SENTINEL_JSON" | jq -r '.eval_count // 0' 2>/dev/null || echo 0)
+          PREV_FINGERPRINT=$(echo "$SENTINEL_JSON" | jq -r '.fingerprint // empty' 2>/dev/null || echo "")
+
+          # Skip if fingerprint matches (PR content unchanged since last eval)
+          if [[ -n "$PREV_FINGERPRINT" && "$FINGERPRINT" == "$PREV_FINGERPRINT" ]]; then
+            echo "Skipping: PR content unchanged since last evaluation"
+            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           if [[ "$EVAL_COUNT" -ge 3 ]]; then
@@ -95,6 +106,7 @@ jobs:
           MATRIX=$(jq -cn --arg pr "$PR_NUMBER" '{pr: [($pr | tonumber)]}')
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
           echo "trigger=auto" >> "$GITHUB_OUTPUT"
+          echo "fingerprint=$FINGERPRINT" >> "$GITHUB_OUTPUT"
 
         else
           # workflow_dispatch
@@ -187,6 +199,7 @@ jobs:
       uses: ./.claude/skills/renovate-eval
       env:
         EVAL_TRIGGER: ${{ needs.gate.outputs.trigger }}
+        EVAL_FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
       with:
         pr_number: ${{ matrix.pr }}
         mode: ${{ inputs.dry_run && 'dry-run' || 'post' }}
