@@ -307,13 +307,20 @@ elif [[ "$MODE" == "post" ]]; then
         EVAL_COUNT=$((PREV_EVAL_COUNT + 1))
     fi
 
+    # Compute fingerprint if not provided by gate job
+    if [[ -z "${EVAL_FINGERPRINT:-}" ]]; then
+        EVAL_FINGERPRINT=$(gh pr diff "$PR_NUMBER" | \
+            grep '^[+-]' | grep -v '^[+-][+-][+-]' | \
+            shasum -a 256 | cut -d' ' -f1)
+    fi
+
     # Construct comment body with metadata sentinel
     LABEL=$(jq -r '.label' "$ARTIFACT_DIR/eval-meta.json")
     CONFIDENCE=$(jq -r '.confidence' "$ARTIFACT_DIR/eval-meta.json")
     CI=$(jq -r '.ci_status' "$ARTIFACT_DIR/eval-meta.json")
     FINAL_ROUND=$((ROUND - 1))
     {
-        echo "<!-- renovate-eval-skill:{\"version\":2,\"label\":\"$LABEL\",\"confidence\":\"$CONFIDENCE\",\"rounds\":$FINAL_ROUND,\"ci_status\":\"$CI\",\"eval_count\":$EVAL_COUNT} -->"
+        echo "<!-- renovate-eval-skill:{\"version\":3,\"label\":\"$LABEL\",\"confidence\":\"$CONFIDENCE\",\"rounds\":$FINAL_ROUND,\"ci_status\":\"$CI\",\"eval_count\":$EVAL_COUNT,\"fingerprint\":\"$EVAL_FINGERPRINT\"} -->"
         echo ""
         cat "$ARTIFACT_DIR/eval-report.md"
     } > "$ARTIFACT_DIR/comment-body.md"
