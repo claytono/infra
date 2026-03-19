@@ -2,8 +2,9 @@
 name: Renovate PR Evaluation
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  # TODO: Add pull_request trigger after manual testing
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -169,9 +170,9 @@ jobs:
         echo "Waiting for other PR checks to complete..."
         while true; do
           PENDING=$(gh pr checks "$PR_NUMBER" \
-            --json name,state,workflow 2>/dev/null | \
+            --json bucket,workflow 2>/dev/null | \
             jq -r --arg ours "$OUR_WORKFLOW" '
-              [.[] | select(.workflow != $ours and .state != "COMPLETED")]
+              [.[] | select(.workflow != $ours and .bucket == "pending")]
               | length' || echo 1)
 
           if [[ "$PENDING" -eq 0 ]]; then
