@@ -86,6 +86,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 ARTIFACT_DIR=$(mktemp -d "${TMPDIR:-/tmp}/renovate-eval-${PR_NUMBER}.XXXXXX")
+REPORT_DIR="${TMPDIR:-/tmp}/renovate-eval"
 
 cleanup_artifacts() {
     if [[ "$KEEP_ARTIFACTS" == "false" && -d "$ARTIFACT_DIR" ]]; then
@@ -351,6 +352,17 @@ elif [[ "$MODE" == "post" ]]; then
     fi
 
     echo "Posted comment and applied labels: $LABEL, renovate:evaluated"
+fi
+
+# Persist report for skill/plannotator use
+if [[ -f "$ARTIFACT_DIR/eval-report.md" ]]; then
+    if mkdir -p "$REPORT_DIR" \
+        && chmod 0700 "$REPORT_DIR" \
+        && install -m 0600 "$ARTIFACT_DIR/eval-report.md" "$REPORT_DIR/PR-${PR_NUMBER}.md"; then
+        echo "Report: $REPORT_DIR/PR-${PR_NUMBER}.md"
+    else
+        echo "WARNING: failed to persist report at $REPORT_DIR/PR-${PR_NUMBER}.md" >&2
+    fi
 fi
 
 echo ""
