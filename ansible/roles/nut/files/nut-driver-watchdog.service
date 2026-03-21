@@ -1,0 +1,7 @@
+[Unit]
+Description=Restart NUT drivers with orphaned sockets (workaround for upstream #2484)
+After=nut-driver.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/nut-driver-watchdog
