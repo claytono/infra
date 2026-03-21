@@ -39,9 +39,29 @@ load_report_data() {
 }
 
 run_round_one() {
+    # Prompt ordering follows Anthropic guidance: role first, then reference
+    # material and data, then task instructions last.
+    # The auditor.md file has a --- separator between the role preamble and the
+    # audit instructions. We inline the preamble at the top and emit the
+    # instructions at the bottom via sed.
     cat <<AUDIT_PROMPT | claude -p --model "$MODEL" --permission-mode bypassPermissions --tools "" \
         --output-format json > "$OUTPUT_JSON"
-$(cat "$SCRIPT_DIR/prompts/auditor.md")
+$(sed '/^---$/q' "$SCRIPT_DIR/prompts/auditor.md")
+
+## Evaluator Rubric
+
+The evaluator was given the following instructions. This is the authoritative
+reference for what rules the evaluator should have followed.
+
+$(cat "$SCRIPT_DIR/prompts/evaluator.md")
+
+---
+
+## Report Format Specification
+
+The evaluator was told to follow this report format.
+
+$(cat "$SCRIPT_DIR/prompts/report-format.md")
 
 ---
 
@@ -53,11 +73,13 @@ $REPORT
 
 ## Evaluator Evidence
 
-The evaluator provided the following evidence log documenting commands run,
-config files read, and reasoning for risk assessments. Use this to verify
-claims made in the report.
-
 $EVIDENCE
+
+---
+
+## Audit Instructions
+
+$(sed '1,/^---$/d' "$SCRIPT_DIR/prompts/auditor.md")
 AUDIT_PROMPT
 }
 
