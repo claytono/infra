@@ -1,0 +1,7 @@
+{
+  "label": "renovate:safe",
+  "confidence": "high",
+  "packages": ["traefik"],
+  "sources_used": ["changelog", "ci"],
+  "ci_status": "passing"
+}
