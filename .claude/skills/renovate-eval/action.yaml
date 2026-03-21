@@ -78,6 +78,9 @@ runs:
       OUTPUT=$("${{ github.action_path }}/evaluate.sh" "${ARGS[@]}" 2>&1 | tee /dev/stderr)
       ARTIFACT_PATH=$(echo "$OUTPUT" | grep "^Artifacts:" | tail -1 | sed 's/Artifacts: //')
       echo "artifact_path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
+      if [[ -n "$ARTIFACT_PATH" && -f "$ARTIFACT_PATH/result.json" ]]; then
+        echo "result_json=$ARTIFACT_PATH/result.json" >> "$GITHUB_OUTPUT"
+      fi
 
   - name: Upload artifacts
     uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7

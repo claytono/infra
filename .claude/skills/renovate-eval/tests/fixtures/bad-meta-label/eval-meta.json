@@ -1,0 +1,7 @@
+{
+  "label": "renovate:yolo",
+  "confidence": "high",
+  "packages": ["traefik"],
+  "sources_used": ["changelog"],
+  "ci_status": "passing"
+}
