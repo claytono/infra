@@ -22,14 +22,18 @@
   ansible.builtin.command:
     cmd: udevadm control --reload-rules
   changed_when: false
-  when: nut_ups | length > 0
+  when:
+    - nut_enabled | default(false) | bool
+    - nut_ups | selectattr('driver', 'equalto', 'usbhid-ups') | list | length > 0
   tags: nut
 
 - name: Trigger udev for USB UPS devices
   ansible.builtin.command:
     cmd: udevadm trigger --subsystem-match=usb
   changed_when: false
-  when: nut_ups | length > 0
+  when:
+    - nut_enabled | default(false) | bool
+    - nut_ups | selectattr('driver', 'equalto', 'usbhid-ups') | list | length > 0
   tags: nut
 
 - name: Install NUT email notification script (if email is set)
@@ -66,6 +70,48 @@
 - name: Include webgui tasks if enabled
   ansible.builtin.include_tasks: webgui.yaml
   when: nut_webgui_enabled | default(false) | bool
+  tags: nut
+
+# Workaround for NUT upstream bug #2484: usbhid-ups drivers busy-loop when a
+# client disconnects and leaves an orphaned socket. Fixed in NUT 2.8.3+ but
+# Debian trixie ships 2.8.1-5. Remove when Debian ships >= 2.8.3.
+# Tracking issue: https://github.com/claytono/infra/issues/1727
+- name: Install NUT driver watchdog script
+  ansible.builtin.copy:
+    src: nut-driver-watchdog
+    dest: /usr/local/sbin/nut-driver-watchdog
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - nut_enabled | default(false) | bool
+    - nut_ups | selectattr('driver', 'equalto', 'usbhid-ups') | list | length > 0
+  tags: nut
+
+- name: Install NUT driver watchdog systemd units
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - nut-driver-watchdog.service
+    - nut-driver-watchdog.timer
+  when:
+    - nut_enabled | default(false) | bool
+    - nut_ups | selectattr('driver', 'equalto', 'usbhid-ups') | list | length > 0
+  tags: nut
+
+- name: Enable NUT driver watchdog timer
+  ansible.builtin.systemd:
+    name: nut-driver-watchdog.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when:
+    - nut_enabled | default(false) | bool
+    - nut_ups | selectattr('driver', 'equalto', 'usbhid-ups') | list | length > 0
   tags: nut
 
 - name: Stop nut services if disabled

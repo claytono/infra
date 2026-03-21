@@ -1,0 +1,28 @@
+#!/bin/bash
+# Workaround for NUT upstream bug #2484: usbhid-ups drivers enter a tight
+# select()/read() loop when a client disconnects and leaves an orphaned socket.
+# Fixed in NUT 2.8.3+ but Debian trixie ships 2.8.1-5.
+#
+# Detection: orphaned sockets show as ESTAB with peer "* 0" in ss output.
+# Fix: restart the affected driver, which clears the dead socket.
+
+set -euo pipefail
+
+# Find usbhid-ups sockets with dead peers (peer inode = 0)
+orphans=$(ss -xp 2>/dev/null | grep 'usbhid-ups' | grep '\* 0' || true)
+
+if [[ -z "$orphans" ]]; then
+    exit 0
+fi
+
+# Extract unique driver names from socket paths like /run/nut/usbhid-ups-<name>
+ups_names=$(echo "$orphans" | sed -n 's#.*/run/nut/usbhid-ups-\([^[:space:]]*\).*#\1#p' | sort -u)
+
+while IFS= read -r ups_name; do
+    if [[ -n "$ups_name" ]]; then
+        logger -t nut-driver-watchdog "Orphaned socket detected for driver '$ups_name', restarting nut-driver@${ups_name}"
+        if ! systemctl restart "nut-driver@${ups_name}"; then
+            logger -t nut-driver-watchdog -p daemon.err "Failed to restart nut-driver@${ups_name}"
+        fi
+    fi
+done <<< "$ups_names"

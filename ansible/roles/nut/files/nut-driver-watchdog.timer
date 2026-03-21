@@ -1,0 +1,9 @@
+[Unit]
+Description=Check for NUT driver busy-loop (workaround for upstream #2484)
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target
