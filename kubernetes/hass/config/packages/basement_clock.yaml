@@ -50,8 +50,13 @@ template:
         | default(0) | int }}
     pos: >-
       {% set p = state_attr('media_player.rec_room', 'media_position')
-        | default(0) | int %}
-      {{ [p, dur] | min if dur > 0 else p }}
+        | default(0) | float %}
+      {% set updated = state_attr('media_player.rec_room',
+        'media_position_updated_at') %}
+      {% if updated and states('media_player.rec_room') == 'playing' %}
+        {% set p = p + (now() - updated).total_seconds() %}
+      {% endif %}
+      {{ [p | int, dur] | min if dur > 0 else p | int }}
     rem: '{{ [dur - pos, 0] | max }}'
   binary_sensor:
   - name: Basement Clock Show Progress
