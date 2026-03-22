@@ -1,3 +1,3 @@
 ---
 dependencies:
-  - role: geerlingguy.docker
+  - role: docker

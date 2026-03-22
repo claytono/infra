@@ -64,7 +64,10 @@ p4
 infra1
 
 [docker]
+infra1
 luser
+pantrypi
+garagepi
 
 [rtl433]
 pantrypi

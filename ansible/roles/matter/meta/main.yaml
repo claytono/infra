@@ -1,4 +1,4 @@
 ---
 dependencies:
-  - role: geerlingguy.docker
+  - role: docker
   - role: traefik
