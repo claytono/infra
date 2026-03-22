@@ -128,6 +128,27 @@ child:
   # Init container added via kustomize patch (patch-child-stream-init.yaml)
 
   configs:
+    kubelet:
+      enabled: true
+      path: /etc/netdata/go.d/k8s_kubelet.conf
+      data: |
+        update_every: 5
+        autodetection_retry: 0
+        jobs:
+          - name: local
+            url: http://127.0.0.1:10255/metrics
+          - name: local
+            url: https://localhost:10250/metrics
+            tls_skip_verify: true
+    kubeproxy:
+      enabled: true
+      path: /etc/netdata/go.d/k8s_kubeproxy.conf
+      data: |
+        update_every: 5
+        autodetection_retry: 0
+        jobs:
+          - name: local
+            url: http://127.0.0.1:10249/metrics
     stream:
       path: /etc/netdata/stream.conf.tmpl
       data: |

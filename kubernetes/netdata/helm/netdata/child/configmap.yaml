@@ -17,16 +17,16 @@ data:
           pulsar: no
           prometheus: yes
   kubelet: |
-        update_every: 1
+        update_every: 5
         autodetection_retry: 0
         jobs:
           - name: local
             url: http://127.0.0.1:10255/metrics
           - name: local
             url: https://localhost:10250/metrics
-            tls_skip_verify: yes
+            tls_skip_verify: true
   kubeproxy: |
-        update_every: 1
+        update_every: 5
         autodetection_retry: 0
         jobs:
           - name: local

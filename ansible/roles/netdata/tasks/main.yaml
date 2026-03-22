@@ -39,6 +39,33 @@
     mode: "0640"
   notify: Restart netdata
 
+- name: Ensure netdata go.d config directory exists
+  ansible.builtin.file:
+    path: /etc/netdata/go.d
+    state: directory
+    owner: root
+    group: netdata
+    mode: "0755"
+  when: "'docker' in group_names"
+
+- name: Deploy netdata Docker collector config
+  ansible.builtin.copy:
+    content: |
+      # Managed by Ansible - do not edit
+      # Reduce polling from default 1s to 5s to lower dockerd/containerd CPU
+      jobs:
+        - name: local
+          address: 'unix:///var/run/docker.sock'
+          timeout: 2
+          collect_container_size: no
+          update_every: 5
+    dest: /etc/netdata/go.d/docker.conf
+    owner: root
+    group: netdata
+    mode: "0644"
+  when: "'docker' in group_names"
+  notify: Restart netdata
+
 - name: "Enable and start Netdata service"
   ansible.builtin.service:
     name: netdata

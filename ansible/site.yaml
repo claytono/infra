@@ -154,7 +154,7 @@
 - name: Docker
   hosts: docker
   roles:
-    - role: geerlingguy.docker
+    - role: docker
       tags: docker
 
 - name: Tailscale
@@ -216,3 +216,11 @@
     - role: netdata
       when: "netdata_enabled | default(false)"
       tags: netdata
+
+- name: Docker host maintenance
+  hosts: docker
+  tasks:
+    - name: Run Docker maintenance tasks
+      ansible.builtin.include_role:
+        name: docker
+        tasks_from: maintenance
