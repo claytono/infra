@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: hortusfox
+  namespace: hortusfox
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hortusfox
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: 'true'
+      labels:
+        app.kubernetes.io/name: hortusfox
+    spec:
+      containers:
+      - name: hortusfox
+        image: ghcr.io/danielbrendel/hortusfox-web:v5.7@sha256:8c286b6656920071c4c10142203566b5305702806117d01a66be6ba66d27a104
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        - name: APP_ADMIN_EMAIL
+          value: clayton@oneill.net
+        - name: APP_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-password
+        - name: APP_TIMEZONE
+          value: America/New_York
+        - name: DB_HOST
+          value: mariadb.hortusfox.svc.cluster.local
+        - name: DB_PORT
+          value: '3306'
+        - name: DB_DATABASE
+          value: hortusfox
+        - name: DB_USERNAME
+          value: hortusfox
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secrets
+              key: user-password
+        - name: DB_CHARSET
+          value: utf8mb4
+        - name: APP_CRON_PW
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: cronpw
+        - name: SMTP_FROMNAME
+          value: HortusFox
+        - name: SMTP_FROMADDRESS
+          value: hortusfox@oneill.net
+        - name: SMTP_HOST
+          value: smtp.k.oneill.net
+        - name: SMTP_PORT
+          value: '587'
+        - name: SMTP_USERNAME
+          value: relay@oneill.net
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: smtp-secrets
+              key: smtp-password
+        - name: SMTP_ENCRYPTION
+          value: tls
+        - name: PROXY_ENABLE
+          value: 'true'
+        - name: PROXY_HEADER_EMAIL
+          value: X-authentik-email
+        - name: PROXY_HEADER_USERNAME
+          value: X-authentik-username
+        - name: PROXY_AUTO_SIGNUP
+          value: 'true'
+        - name: PROXY_OVERWRITE_VALUES
+          value: 'true'
+        volumeMounts:
+        - name: data
+          mountPath: /var/www/html/public/images
+          subPath: images
+        - name: data
+          mountPath: /var/www/html/storage/logs
+          subPath: logs
+        - name: data
+          mountPath: /var/www/html/storage/backup
+          subPath: backup
+        - name: data
+          mountPath: /var/www/html/public/themes
+          subPath: themes
+        - name: data
+          mountPath: /var/www/html/storage/migrate
+          subPath: migrate
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: hortusfox-data
