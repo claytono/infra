@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: hortusfox
+  namespace: hortusfox
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: HortusFox
+    gethomepage.dev/description: Plant Management
+    gethomepage.dev/group: Productivity
+    gethomepage.dev/icon: mdi-flower
+    ak-type: simple
+    ak-path-exclude: /(api|cronjob)(/|$)
+    traefik.ingress.kubernetes.io/router.middlewares: authentik-ak-forward-auth-simple@kubernetescrd
+
+spec:
+  tls:
+  - hosts:
+    - hortusfox.k.oneill.net
+    secretName: hortusfox-tls
+  rules:
+  - host: hortusfox.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hortusfox
+            port:
+              number: 80

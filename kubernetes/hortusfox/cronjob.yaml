@@ -1,0 +1,55 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: hortusfox-tasks
+  namespace: hortusfox
+
+spec:
+  schedule: 0 */4 * * *
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: cronjobs
+            image: curlimages/curl:8.12.1@sha256:94e9e444bcba979c2ea12e27ae39bee4cd10bc7041a472c4727a558e213744e6
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            env:
+            - name: CRONPW
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: cronpw
+            command:
+            - /bin/sh
+            - -c
+            - |-
+              BASE="http://hortusfox.hortusfox.svc.cluster.local"
+              failed=0
+              for path in \
+                /cronjob/tasks/overdue \
+                /cronjob/tasks/tomorrow \
+                /cronjob/tasks/recurring \
+                /cronjob/calendar/reminder \
+                /cronjob/backup/auto; do
+                echo "Running $path"
+                if ! curl -sf --connect-timeout 5 --max-time 30 "${BASE}${path}?cronpw=${CRONPW}"; then
+                  echo "FAILED: $path"
+                  failed=1
+                fi
+              done
+              exit "$failed"
