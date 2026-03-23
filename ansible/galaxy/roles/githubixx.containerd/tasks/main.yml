@@ -1,5 +1,5 @@
 ---
-# Copyright (C) 2021-2025 Robert Wimmer
+# Copyright (C) 2021-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 - name: Include variables depending on flavor
@@ -65,15 +65,82 @@
     - containerd-install
     - containerd-config
 
+- name: Compute containerd import globs
+  ansible.builtin.set_fact:
+    containerd__config_import_globs: >-
+      {{
+        (containerd_config_imports | default([]) | map(attribute='glob') | list)
+        if (containerd_config_imports is sequence and (containerd_config_imports | length > 0) and (containerd_config_imports[0] is mapping))
+        else (containerd_config_imports | default([]) | list)
+      }}
+  tags:
+    - containerd-install
+    - containerd-config
+
+- name: Define newline helper for config rendering
+  ansible.builtin.set_fact:
+    # YAML double-quoted "\n" becomes a real newline character.
+    containerd__nl: "\n"
+  tags:
+    - containerd-install
+    - containerd-config
+
+- name: Render containerd config (optionally inject imports)
+  ansible.builtin.set_fact:
+    containerd__config_rendered: >-
+      {{
+        containerd_config
+        if (
+          (containerd__config_import_globs | length == 0)
+          or (containerd_config is regex('(?m)^\s*imports\s*='))
+        )
+        else (
+          (containerd_config.splitlines()[:1] | join(containerd__nl))
+          ~ containerd__nl
+          ~ 'imports = [' ~ (containerd__config_import_globs | map('to_json') | join(', ')) ~ ']'
+          ~ containerd__nl
+          ~ (containerd_config.splitlines()[1:] | join(containerd__nl))
+          ~ containerd__nl
+        )
+      }}
+  tags:
+    - containerd-install
+    - containerd-config
+
 - name: Create containerd configuration file
   ansible.builtin.copy:
-    content: "{{ containerd_config }}"
+    content: "{{ containerd__config_rendered }}"
     dest: "{{ containerd_config_directory }}/config.toml"
     owner: root
     group: root
     mode: "0644"
   notify:
     - Restart containerd
+  tags:
+    - containerd-install
+    - containerd-config
+
+
+- name: Manage containerd drop-in config directories and files
+  ansible.builtin.include_tasks: manage_import.yml
+  when:
+    - containerd_config_imports is sequence
+    - containerd_config_imports | length > 0
+    - containerd_config_imports[0] is mapping
+  loop: "{{ containerd_config_imports | default([]) }}"
+  loop_control:
+    loop_var: containerd__import
+    label: "{{ containerd__import.glob }}"
+  tags:
+    - containerd-install
+    - containerd-config
+
+- name: Validate containerd configuration (main + imports)
+  when: containerd_validate_config | bool
+  ansible.builtin.command:
+    cmd: "{{ containerd_binary_directory }}/containerd --config {{ containerd_config_directory }}/config.toml config dump"
+  register: containerd__config_dump
+  changed_when: false
   tags:
     - containerd-install
     - containerd-config

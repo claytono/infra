@@ -1,5 +1,5 @@
 ---
-# Copyright (C) 2021-2025 Robert Wimmer
+# Copyright (C) 2021-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 dependency:
@@ -36,6 +36,18 @@ platforms:
         network_name: private_network
         type: static
         ip: 172.16.10.30
+  - name: test-cd-ubuntu2404-conf-d
+    box: alvistack/ubuntu-24.04
+    memory: 2048
+    cpus: 2
+    groups:
+      - ubuntu
+      - confd
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 172.16.10.40
   - name: test-cd-arch-base
     box: generic/arch
     memory: 2048
@@ -46,7 +58,7 @@ platforms:
       - auto_config: true
         network_name: private_network
         type: static
-        ip: 172.16.10.40
+        ip: 172.16.10.50
 
 provisioner:
   name: ansible
@@ -60,6 +72,14 @@ provisioner:
       all:
         containerd_tmp_directory: "/opt/tmp/containerd"
         containerd_binary_directory: "/usr/local/sbin"
+      test-cd-ubuntu2404-conf-d:
+        containerd_validate_config: true
+        containerd_config_imports:
+          - glob: "/etc/containerd/conf.d/*.toml"
+            configs:
+              10-molecule.toml: |
+                # Simple, non-critical override to prove imports work
+                plugins."io.containerd.cri.v1.runtime".max_container_log_line_size = 32768
 
 scenario:
   name: default

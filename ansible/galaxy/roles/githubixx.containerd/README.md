@@ -1,5 +1,5 @@
 <!--
-Copyright (C) 2021-2025 Robert Wimmer
+Copyright (C) 2021-2026 Robert Wimmer
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
@@ -14,6 +14,20 @@ Ansible role to install [containerd](https://github.com/containerd/containerd). 
 See full [CHANGELOG](https://github.com/githubixx/ansible-role-containerd/blob/master/CHANGELOG.md)
 
 **Recent changes:**
+
+## 0.17.0+2.2.1
+
+- **BREAKING**
+  - CNI `bin_dir` in CRI runtime config is deprecated (`plugins.'io.containerd.cri.v1.runtime'.cni.bin_dir`) and will be removed in containerd `v2.3`. It was replaced with `bin_dirs` in the same section which supports a list of directories. So, `plugins.'io.containerd.cri.v1.runtime'.cni.bin_dir = '/opt/cni/bin'` was changed to `plugins.'io.containerd.cri.v1.runtime'.cni.bin_dirs = ['/opt/cni/bin']` in `containerd_config` variable.
+
+- **UPDATE**
+  - update `containerd` to `v2.2.1`
+
+- **FEATURE**
+  - support `conf.d` include in the [default config](https://github.com/containerd/containerd/pull/12323)
+
+- **MOLECULE**
+  - add test for `conf.d` include feature
 
 ## 0.16.0+2.1.4
 
@@ -67,7 +81,7 @@ See full [CHANGELOG](https://github.com/githubixx/ansible-role-containerd/blob/m
 roles:
   - name: githubixx.containerd
     src: https://github.com/githubixx/ansible-role-containerd.git
-    version: 0.16.0+2.1.4
+    version: 0.17.0+2.2.1
 ```
 
 ## Role Variables
@@ -77,7 +91,7 @@ roles:
 containerd_flavor: "base"
 
 # containerd version to install
-containerd_version: "2.1.4"
+containerd_version: "2.2.1"
 
 # Directory where to store "containerd" binaries
 containerd_binary_directory: "/usr/local/bin"
@@ -159,8 +173,51 @@ containerd_config: |
               BinaryName = '/usr/local/sbin/runc'
               SystemdCgroup = true
       [plugins.'io.containerd.cri.v1.runtime'.cni]
-        bin_dir = '/opt/cni/bin'
+        bin_dirs = ['/opt/cni/bin']
         conf_dir = '/etc/cni/net.d'
+
+# Optional: containerd config drop-ins via `imports` (containerd >= v2.2.0)
+#
+# If you set `containerd_config_imports`, the role will:
+# - add `imports = [ ... ]` to the generated `config.toml` (unless your
+#   `containerd_config` already contains an `imports = ...` line)
+# - optionally create the referenced directories and manage `.toml` drop-in files
+#   defined under `configs`.
+#
+# Example 1: Enable imports and manage a few drop-in files in `/etc/containerd/conf.d`
+#
+# containerd_config_imports:
+#   - glob: "/etc/containerd/conf.d/*.toml"
+#     configs:
+#       10-nvidia.toml: |
+#         # Example override (use dotted keys to avoid table re-definition issues)
+#         disabled_plugins = []
+#
+#       20-cni.toml: |
+#         plugins.'io.containerd.cri.v1.runtime'.cni.bin_dirs = ['/opt/cni/bin']
+#         plugins.'io.containerd.cri.v1.runtime'.cni.conf_dir = '/etc/cni/net.d'
+#
+# Example 2: Import additional directories but manage files elsewhere
+#
+# containerd_config_imports:
+#   - glob: "/etc/containerd/conf.d/*.toml"
+#   - glob: "/etc/containerd/conf2.d/*.toml"
+#
+# Example 3: Override an existing default setting via a drop-in
+# (here: switch SystemdCgroup to false)
+#
+# containerd_config_imports:
+#   - glob: "/etc/containerd/conf.d/*.toml"
+#     configs:
+#       10-runc-options.toml: |
+#         plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options.SystemdCgroup = false
+#
+# Variable definition (default: disabled)
+containerd_config_imports: []
+
+# Validate the combined config (main config + imported drop-ins).
+# Uses: `containerd --config <path> config dump`. If invalid, the play fails.
+containerd_validate_config: false
 ```
 
 ## Dependencies
@@ -184,7 +241,7 @@ More examples are available in the [Molecule tests](https://github.com/githubixx
 
 ## Testing
 
-This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-containerd/tree/master/molecule/kvm).
+This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is in [molecule/kvm](https://github.com/githubixx/ansible-role-containerd/tree/master/molecule/kvm).
 
 Afterwards molecule can be executed:
 
