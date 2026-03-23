@@ -86,8 +86,10 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 ```
 
 The script prints the report to stdout and the artifact directory path on the
-last line (`Artifacts: /path/to/dir`). Read the report from the Bash output and
-show the Actions Menu.
+last line (`Artifacts: /path/to/dir`). Display the report **VERBATIM** — do NOT
+summarize, condense, paraphrase, or omit any section of the report, regardless
+of how many PRs have been evaluated in this session. Print it exactly as the
+script output it. Then show the Actions Menu.
 
 ## Actions Menu
 
@@ -172,3 +174,11 @@ Print all actions as a numbered list. Wait for user selection.
 
 When evaluating 'all', process each PR sequentially: evaluate, show report and
 actions menu, handle user selection, then move to next PR.
+
+**IMPORTANT:** When the user asks to evaluate a different PR within the same
+session (e.g., "do the next one", "evaluate #1704", or selecting another PR),
+you MUST re-invoke this skill using the Skill tool. Do not continue from memory
+— the skill instructions must be freshly loaded for each PR to ensure reports
+are displayed verbatim. For these within-session re-invocations, skip the init
+step and reuse the PR list already in context unless the user explicitly asks to
+refresh it. On a new session, still run init first.
