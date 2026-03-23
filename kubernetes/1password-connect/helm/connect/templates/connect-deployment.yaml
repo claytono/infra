@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: connect
     app.kubernetes.io/name: connect
     app.kubernetes.io/instance: connect
-    app.kubernetes.io/version: "1.8.1"
+    app.kubernetes.io/version: "1.8.2"
     app.kubernetes.io/managed-by: Helm
   annotations:
     reloader.stakater.com/auto: "true"
@@ -22,7 +22,7 @@ spec:
     metadata:
       labels:
         app: onepassword-connect
-        version: "1.8.1"
+        version: "1.8.2"
         app.kubernetes.io/component: connect
     spec:
       securityContext:
@@ -46,7 +46,7 @@ spec:
         []
       containers:
         - name: connect-api
-          image: 1password/connect-api:1.8.1
+          image: 1password/connect-api:1.8.2
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -93,7 +93,7 @@ spec:
               mountPath: /home/opuser/.op/1password-credentials.json
               subPath: 1password-credentials.json
         - name: connect-sync
-          image: 1password/connect-sync:1.8.1
+          image: 1password/connect-sync:1.8.2
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
