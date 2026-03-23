@@ -170,21 +170,27 @@ provider "registry.opentofu.org/goauthentik/authentik" {
 }
 
 provider "registry.opentofu.org/hashicorp/dns" {
-  version     = "3.4.3"
+  version     = "3.5.0"
   constraints = "~> 3.4"
   hashes = [
-    "h1:5rNTdN+8ASjCwmAWsKrB1sBMJ0oMAOU6AcUS0+Zsp34=",
-    "h1:mxw8X448NmQbdaINTQqIlociGQnPruNM3iuekNHgFQI=",
-    "zh:1e2b7a78c1ca570860ec1dbe81834cc3015b6ceee98e8a231111704ea0ca44ad",
-    "zh:1eaa3eb2a08ce40880edeba23ff8f5b09c5df403724e8f32e886ee99e6a72b7b",
-    "zh:33157dc9e4146fa459598d63cf0ed1120d9568272449b5097268d01de6be3884",
-    "zh:3e1d98aa57fab96fd12ba44b077826a8d0722beb9c12306219d9d7ce87ba547a",
-    "zh:71a3722011be02e28dbd10b5831cdbb79deb85484fc937d66fe2f64899b021a6",
-    "zh:8fa38bac4590544fda877dddf699e1d80d52fef81655c4a18c97ab34799922b7",
-    "zh:961f973ff1baab5950d4315aec03d0fc3c54cf64ef58cf58590fb3cb29aa742e",
-    "zh:b01e570c054f58f73a01aa937a1c36443d4036a12edf5ca444356552f0cf137e",
-    "zh:e2ecc873327978ab3b704ccb7a9746835d62e78aa51152565047b5e3d705e7d5",
-    "zh:edb22e5a20db138c5f862e29ec0e84722f35e04deba93df3c8639cf6abae48a5",
+    "h1:KlKq/OCPCE6/iyDWbnHgaugV+/B5S4rHksU2OXtUrQA=",
+    "h1:MS8E0aQOcktKmcfohgiPnkgO0GMdvYOn2pg0EZzlVZk=",
+    "h1:QkNhivL1QGIqXirQaTKdFC8d5AiFdxeKNdFQgENecdc=",
+    "h1:RcHmYbgk0W17/IevxLQnMSYEMD9HVJAXiGcIwhTRg+s=",
+    "h1:YnoBgDn958gLCImfMpy3Oo6wu86lVWPN5cBljrOlUis=",
+    "h1:YsNy/Y7y0mXAhpWL55rRODWvYUxXFwlo8sgbaHCk4Hg=",
+    "h1:dsM7MR3i8adq0SHEEXhwbma8OAI+7FQMqmNHywW5+gA=",
+    "h1:lkEYmYWVFbGDsI1ZCCvjpWsLlzSrbh8btQZgAHkGJXY=",
+    "h1:tnHPEgC2cVqnMuljrz/uhA8IThi4kIeiMZbj7LpXYp0=",
+    "zh:0c4f3167fe374efd27f0289ba8113b33b2339d7d94e7427af0015646d6b85b1a",
+    "zh:141ac916d52dc3f933b9e1741abec8262519910c1bf915a9c203625a885d5926",
+    "zh:19870eac8728e1b69232ada026c3d127516bf1557c6c54c6eaad1b4b29277b24",
+    "zh:28a370b21d956a41a64a95f984f402a6c125735ae2219b3f1b8cf615639e348b",
+    "zh:7868f9d14316c123fd8672c5bcf732a9b2dfe8fea3a17397b18a38e3107d6edc",
+    "zh:bf38e0360ce23bf5425dadb6eca682ab165d67f587d27ef1c1f445a2dc70216d",
+    "zh:c702c602f74df335522f3ae37c4910aa52c73f0ea54f04ee519281035014a864",
+    "zh:cd4c562f68e18a36ff7c430a4aac6cc6886f8040d6fab9fef6afbb2ab980dca8",
+    "zh:d2ff919f8056becdc083158e8af0aaf12cbcf7bdc7ef806db5ee894c71b6b163",
   ]
 }
 
