@@ -202,6 +202,7 @@
             packages = with pkgs; [
               act
               age
+              bats
               ansible-lint
               pythonEnv
               awscli2
