@@ -19,7 +19,7 @@ roles:
     name: ntd.nut
     version: "1.7.2"
   - src: geerlingguy.docker
-    version: "7.9.0"
+    version: "8.0.0"
   - src: boutetnico.fail2ban
     version: "3.0.0"
 
