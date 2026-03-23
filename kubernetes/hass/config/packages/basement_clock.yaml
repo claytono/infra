@@ -47,10 +47,10 @@ template:
     is_active: "{{ states('media_player.rec_room') in ['playing', 'paused'] }}"
     dur: >-
       {{ state_attr('media_player.rec_room', 'media_duration')
-        | default(0) | int }}
+        | int(0) }}
     pos: >-
       {% set p = state_attr('media_player.rec_room', 'media_position')
-        | default(0) | float %}
+        | float(0) %}
       {% set updated = state_attr('media_player.rec_room',
         'media_position_updated_at') %}
       {% if updated and states('media_player.rec_room') == 'playing' %}
