@@ -164,6 +164,16 @@
       ]
     },
     {
+      "description": "Group curl image updates across services",
+      "groupName": "curlimages/curl",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "curlimages/curl"
+      ]
+    },
+    {
       "matchUpdateTypes": [
         "lockFileMaintenance"
       ],
