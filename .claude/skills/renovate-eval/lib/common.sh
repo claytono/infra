@@ -37,7 +37,7 @@ require_tools() {
 
 require_gh_auth() {
     if [[ -n "${GH_TOKEN:-}" ]] || [[ -n "${GITHUB_TOKEN:-}" ]]; then
-        if gh api /user &>/dev/null; then
+        if gh repo view &>/dev/null; then
             return 0
         fi
         log_error "GH_TOKEN/GITHUB_TOKEN is set but invalid or lacks required scopes"
