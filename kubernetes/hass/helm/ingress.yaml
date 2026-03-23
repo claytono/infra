@@ -4,10 +4,11 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hass-home-assistant
+  namespace: hass
   labels:
     app.kubernetes.io/name: home-assistant
     app.kubernetes.io/instance: hass
-    app.kubernetes.io/version: "2026.2.3"
+    app.kubernetes.io/version: "2026.3.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
