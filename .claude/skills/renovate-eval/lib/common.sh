@@ -36,8 +36,15 @@ require_tools() {
 }
 
 require_gh_auth() {
+    if [[ -n "${GH_TOKEN:-}" ]] || [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        if gh api /user &>/dev/null; then
+            return 0
+        fi
+        log_error "GH_TOKEN/GITHUB_TOKEN is set but invalid or lacks required scopes"
+        return 1
+    fi
     if ! gh auth status &>/dev/null; then
-        log_error "Not authenticated with GitHub. Run 'gh auth login'"
+        log_error "Not authenticated with GitHub. Run 'gh auth login' or set GH_TOKEN/GITHUB_TOKEN"
         return 1
     fi
 }
