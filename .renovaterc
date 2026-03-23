@@ -154,6 +154,16 @@
   ],
   "packageRules": [
     {
+      "description": "Group meilisearch updates across services",
+      "groupName": "meilisearch",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "getmeili/meilisearch"
+      ]
+    },
+    {
       "matchUpdateTypes": [
         "lockFileMaintenance"
       ],
