@@ -180,10 +180,17 @@ jobs:
 
         echo "Waiting for other PR checks to complete..."
         while true; do
+          # Only wait on GitHub Actions workflows (non-empty .workflow).
+          # External status checks (e.g. renovate/stability-days) have an
+          # empty .workflow and can stay pending indefinitely.
           PENDING=$(gh pr checks "$PR_NUMBER" \
             --json bucket,workflow 2>/dev/null | \
             jq -r --arg ours "$OUR_WORKFLOW" '
-              [.[] | select(.workflow != $ours and .bucket == "pending")]
+              [.[] | select(
+                (.workflow // "") != "" and
+                (.workflow // "") != $ours and
+                .bucket == "pending"
+              )]
               | length' || echo 1)
 
           if [[ "$PENDING" -eq 0 ]]; then
