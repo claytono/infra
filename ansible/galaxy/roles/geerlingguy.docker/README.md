@@ -103,12 +103,11 @@ You can change `docker_apt_gpg_key` to a different url if you are behind a firew
 
 ```yaml
 docker_yum_repo_url: "{{ docker_repo_url }}/{{ 'fedora' if ansible_facts.distribution == 'Fedora' else 'rhel' if ansible_facts.distribution == 'RedHat' else 'centos' }}/docker-{{ docker_edition }}.repo"
-docker_yum_repo_enable_nightly: '0'
 docker_yum_repo_enable_test: '0'
 docker_yum_gpg_key: "{{ docker_repo_url }}/{{ 'fedora' if ansible_facts.distribution == 'Fedora' else 'rhel' if ansible_facts.distribution == 'RedHat' else 'centos' }}/gpg"
 ```
 
-(Used only for RedHat/CentOS.) You can enable the Nightly or Test repo by setting the respective vars to `1`.
+(Used only for RedHat/CentOS.) You can enable the Test repo by setting the respective vars to `1`.
 
 You can change `docker_yum_gpg_key` to a different url if you are behind a firewall or provide a trustworthy mirror.
 Usually in combination with changing `docker_yum_repository` as well.

@@ -95,5 +95,6 @@ qemu-system-aarch64 \
     -append "rw console=ttyAMA1,115200 root=/dev/mmcblk0p2 rootdelay=1 dwc_otg.lpm_enable=0 dwc_otg.fiq_fsm_enable=0" \
     -device usb-net,netdev=net0 \
     -netdev user,id=net0,hostfwd=tcp::22-:22 \
+    -rtc base=utc,clock=host \
     -nographic \
     -no-reboot 2>&1 | monitor_boot

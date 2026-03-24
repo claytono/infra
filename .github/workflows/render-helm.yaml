@@ -29,7 +29,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.ref || github.ref }}
 
     - name: Check for Kubernetes/Helm-related changes
-      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
       id: changes
       with:
         filters: |
@@ -47,7 +47,7 @@ jobs:
 
     - name: Setup Cachix
       if: steps.changes.outputs.need-render-helm == 'true'
-      uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1  # v16
+      uses: cachix/cachix-action@1eb2ef646ac0255473d23a5907ad7b04ce94065c  # v17
       with:
         name: claytono
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}

@@ -13,7 +13,7 @@
   "minimumReleaseAge": "14 days",
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
-  "internalChecksFilter": "flexible",
+  "internalChecksFilter": "strict",
   "semanticCommits": "disabled",
   "addLabels": [
     "renovate"
@@ -154,14 +154,23 @@
   ],
   "packageRules": [
     {
-      "description": "Group helm chart and kustomize image updates per Kubernetes service",
-      "groupName": "kubernetes {{{replace 'kubernetes/([^/]+).*' '$1' packageFileDir}}}",
-      "matchFileNames": [
-        "kubernetes/**"
+      "description": "Group meilisearch updates across services",
+      "groupName": "meilisearch",
+      "matchDatasources": [
+        "docker"
       ],
-      "matchManagers": [
-        "helmv3",
-        "kustomize"
+      "matchPackageNames": [
+        "getmeili/meilisearch"
+      ]
+    },
+    {
+      "description": "Group curl image updates across services",
+      "groupName": "curlimages/curl",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "curlimages/curl"
       ]
     },
     {

@@ -24,6 +24,7 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: read
       issues: write
     outputs:
@@ -32,6 +33,12 @@ jobs:
       trigger: ${{ steps.check.outputs.trigger }}
       fingerprint: ${{ steps.check.outputs.fingerprint }}
     steps:
+    - name: Checkout
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
+
     - name: Check evaluation eligibility
       id: check
       env:
@@ -57,9 +64,11 @@ jobs:
             exit 0
           fi
 
-          # Compute PR fingerprint (hash of added/removed lines only)
-          FINGERPRINT=$(gh pr diff "$PR_NUMBER" --repo "${{ github.repository }}" | \
-            grep '^[+-]' | grep -v '^[+-][+-][+-]' | \
+          # Compute PR fingerprint using local git diff
+          # (avoids gh pr diff which fails on large PRs with HTTP 406)
+          BASE_REF="${{ github.event.pull_request.base.ref }}"
+          FINGERPRINT=$(git diff --no-ext-diff "origin/$BASE_REF"...HEAD | \
+            { grep '^[+-]' || true; } | { grep -v '^[+-][+-][+-]' || true; } | \
             shasum -a 256 | cut -d' ' -f1)
           echo "PR fingerprint: $FINGERPRINT"
 
@@ -150,6 +159,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
 
     # Set up Nix BEFORE waiting so eval starts immediately when checks complete
     - name: Install Nix
@@ -158,7 +170,7 @@ jobs:
         github_access_token: ${{ github.token }}
 
     - name: Setup Cachix
-      uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1  # v16
+      uses: cachix/cachix-action@1eb2ef646ac0255473d23a5907ad7b04ce94065c  # v17
       with:
         name: claytono
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
@@ -180,10 +192,17 @@ jobs:
 
         echo "Waiting for other PR checks to complete..."
         while true; do
+          # Only wait on GitHub Actions workflows (non-empty .workflow).
+          # External status checks (e.g. renovate/stability-days) have an
+          # empty .workflow and can stay pending indefinitely.
           PENDING=$(gh pr checks "$PR_NUMBER" \
             --json bucket,workflow 2>/dev/null | \
             jq -r --arg ours "$OUR_WORKFLOW" '
-              [.[] | select(.workflow != $ours and .bucket == "pending")]
+              [.[] | select(
+                (.workflow // "") != "" and
+                (.workflow // "") != $ours and
+                .bucket == "pending"
+              )]
               | length' || echo 1)
 
           if [[ "$PENDING" -eq 0 ]]; then

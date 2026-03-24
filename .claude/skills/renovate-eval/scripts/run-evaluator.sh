@@ -64,7 +64,8 @@ You are running in **$CONTEXT** mode.
 ## Data Files
 
 Read these files for your research:
-- **PR data:** $ARTIFACT_DIR/pr-data.md
+- **PR data:** $ARTIFACT_DIR/pr-data.md (metadata, file list with change counts — read this first)
+- **Full diff:** $ARTIFACT_DIR/pr-diff.patch (read selectively based on file list — skip large vendored/generated sections)
 - **CI status:** $ARTIFACT_DIR/ci-status.md
 - **Report format spec:** $SCRIPT_DIR/prompts/report-format.md
 $([[ -f "$REPO_CONTEXT_FILE" ]] && echo "- **Repo context:** $REPO_CONTEXT_FILE")

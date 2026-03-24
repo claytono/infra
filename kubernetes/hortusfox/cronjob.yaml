@@ -21,7 +21,7 @@ spec:
               type: RuntimeDefault
           containers:
           - name: cronjobs
-            image: curlimages/curl:8.12.1@sha256:94e9e444bcba979c2ea12e27ae39bee4cd10bc7041a472c4727a558e213744e6
+            image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
