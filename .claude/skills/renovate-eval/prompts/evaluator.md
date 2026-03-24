@@ -40,8 +40,21 @@ Do NOT rely on the Renovate PR body for analysis -- it lacks context on the
 local environment and may not reflect relevant changes in dependencies. Perform
 your own independent research:
 
-1. **Identify what's changing:** Read the PR diff and files changed. Determine
-   what packages are updating and what the version deltas are.
+1. **Identify what's changing:** Read pr-data.md first for metadata, file list
+   with per-file change counts, and PR body. The full diff is in a separate
+   pr-diff.patch file. The file list includes `[LNNN]` markers showing where
+   each file's diff starts in the patch — use these with offset/limit to jump
+   directly to specific files rather than reading the entire patch.
+
+   **What you MUST review:** Every non-vendored, non-generated changed file.
+   This includes requirements/lock files, local config, version pins, and any
+   project-owned source code.
+
+   **Vendored/generated files** (e.g., vendored dependencies, rendered
+   templates, auto-generated code, bundled third-party libraries): use your
+   judgment. Review them when the upstream changelog indicates breaking changes
+   or when you need to verify a specific claim, but don't read them
+   exhaustively.
 
 2. **Fetch upstream information:**
 
