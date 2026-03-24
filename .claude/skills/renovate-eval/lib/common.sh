@@ -2,8 +2,9 @@
 # Shared library for renovate-eval scripts
 # Source this file; do not execute directly.
 #
-# IMPORTANT: All output goes to stderr. This library must NEVER write to
-# stdout, as some callers pipe stdout to claude -p via heredoc.
+# IMPORTANT: Top-level code in this library must not write to stdout, as
+# some callers pipe stdout to claude -p via heredoc. Functions may use
+# stdout for return values when documented.
 
 # --- Logging ---
 # All log functions write to stderr only.
@@ -70,6 +71,50 @@ validate_confidence() {
         [[ "$confidence" == "$valid" ]] && return 0
     done
     return 1
+}
+
+# --- Diff utilities ---
+
+# run_diff PR_NUMBER OUTPUT_FILE
+# Writes the PR diff to OUTPUT_FILE. Tries gh pr diff first (no local side
+# effects), falls back to local git diff --no-ext-diff if the API fails
+# (e.g. HTTP 406 on large PRs).
+run_diff() {
+    local pr_number="$1" output_file="$2"
+
+    if gh pr diff "$pr_number" > "$output_file" 2>/dev/null; then
+        return 0
+    fi
+
+    log_warn "gh pr diff failed, falling back to local git diff"
+    local base_ref head_ref
+    base_ref=$(gh pr view "$pr_number" --json baseRefName -q .baseRefName)
+    head_ref=$(gh pr view "$pr_number" --json headRefName -q .headRefName)
+
+    if ! git remote update; then
+        log_error "Failed to update remote refs"
+        return 1
+    fi
+    if ! git diff --no-ext-diff "origin/${base_ref}...origin/${head_ref}" > "$output_file"; then
+        log_error "git diff failed for origin/${base_ref}...origin/${head_ref}"
+        return 1
+    fi
+}
+
+# compute_fingerprint FILE
+# Computes a SHA-256 fingerprint of the added/removed lines in a diff file.
+# Prints the hash to stdout. Returns 1 if the file doesn't exist.
+compute_fingerprint() {
+    local file="$1"
+
+    if [[ ! -f "$file" ]]; then
+        log_error "Cannot compute fingerprint: $file does not exist"
+        return 1
+    fi
+
+    { grep '^[+-]' "$file" || true; } | \
+        { grep -v '^[+-][+-][+-]' || true; } | \
+        shasum -a 256 | cut -d' ' -f1
 }
 
 # --- Sentinel utilities ---

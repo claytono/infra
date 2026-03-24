@@ -9,7 +9,7 @@ awscli2: 2.33.2
 bats: 1.12.0
 curl: 8.18.0
 efficient-compression-tool: 0.9.5
-go-unifi-mcp: 9f640025dcc7aa677c9e9d0568f08169147a769f
+go-unifi-mcp: 8b20bf2274d91b7a63cf76b1246bf7f7f9201280
 jq: 1.8.1
 kopia: 0.22.3
 kubecolor: 0.5.3
@@ -21,7 +21,7 @@ kyverno: 1.16.2
 logcli: 3.6.4
 mcp-cli: 0.3.0-post
 mosquitto: 2.0.22
-nodejs: 24.13.0
+nodejs: 24.14.0
 opentofu: 1.11.5
 pluto: 5.22.7
 pre-commit: 4.5.1
@@ -29,7 +29,7 @@ python3: 3.13.12-env
 rclone: 1.73.2
 skopeo: 1.22.0
 tflint: 0.61.0
-uv: 0.10.10
+uv: 0.10.12
 velero: 1.17.2
 yamlfix: 1.19.1
 yq-go: 4.52.4
