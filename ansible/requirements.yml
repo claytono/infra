@@ -30,4 +30,4 @@ collections:
   - name: community.proxmox
     source: https://github.com/ansible-collections/community.proxmox.git
     type: git
-    version: "1.5.0"
+    version: "1.6.0"
