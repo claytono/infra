@@ -118,7 +118,7 @@ print_header() {
 collect_data() {
     echo "--- Fetching PR data ---"
     if ! "$SCRIPT_DIR/scripts/fetch-pr-data.sh" --pr "$PR_NUMBER" \
-        > "$ARTIFACT_DIR/pr-data.md"; then
+        --output-dir "$ARTIFACT_DIR"; then
         log_error "Failed to fetch PR data — cannot proceed without it"
         return 1
     fi
@@ -341,9 +341,7 @@ post_results() {
 
     # Compute fingerprint if not provided by gate job
     if [[ -z "${EVAL_FINGERPRINT:-}" ]]; then
-        EVAL_FINGERPRINT=$(gh pr diff "$PR_NUMBER" | \
-            grep '^[+-]' | grep -v '^[+-][+-][+-]' | \
-            shasum -a 256 | cut -d' ' -f1)
+        EVAL_FINGERPRINT=$(compute_fingerprint "$ARTIFACT_DIR/pr-diff.patch")
     fi
 
     # Construct comment body with metadata sentinel

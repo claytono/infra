@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fetch all PR data for Renovate PR evaluation
-# Usage: fetch-pr-data.sh [--pr NUMBER]
+# Usage: fetch-pr-data.sh --output-dir DIR [--pr NUMBER]
 
 set -euo pipefail
 
@@ -10,6 +10,7 @@ source "$_FPD_DIR/../lib/common.sh"
 
 PR_NUMBER=""
 REPO=""
+OUTPUT_DIR=""
 SHOW_HELP=false
 
 parse_args() {
@@ -19,24 +20,35 @@ parse_args() {
                 PR_NUMBER="$2"
                 shift 2
                 ;;
+            --output-dir)
+                OUTPUT_DIR="$2"
+                shift 2
+                ;;
             -h|--help)
-                echo "Usage: $0 [--pr NUMBER]"
+                echo "Usage: $0 --output-dir DIR [--pr NUMBER]"
                 echo ""
                 echo "Fetch all PR data for Renovate evaluation."
+                echo "Writes pr-data.md and pr-diff.patch to OUTPUT_DIR."
                 echo ""
                 echo "Options:"
-                echo "  --pr NUMBER    PR number (default: auto-detect from current branch)"
-                echo "  -h, --help     Show this help message"
+                echo "  --output-dir DIR Directory to write output files (required)"
+                echo "  --pr NUMBER      PR number (default: auto-detect from current branch)"
+                echo "  -h, --help       Show this help message"
                 SHOW_HELP=true
                 return 0
                 ;;
             *)
                 echo "Unknown argument: $1" >&2
-                echo "Usage: $0 [--pr NUMBER]" >&2
+                echo "Usage: $0 --output-dir DIR [--pr NUMBER]" >&2
                 return 1
                 ;;
         esac
     done
+
+    if [[ -z "$OUTPUT_DIR" ]]; then
+        echo "ERROR: --output-dir is required" >&2
+        return 1
+    fi
 }
 
 check_prerequisites() {
@@ -92,6 +104,18 @@ fetch_body() {
 }
 
 fetch_files() {
+    # Write diff first so we can include line offsets in the file list
+    run_diff "$PR_NUMBER" "$OUTPUT_DIR/pr-diff.patch"
+
+    # Build a map of file path -> line number in the patch
+    declare -A DIFF_OFFSETS
+    while IFS=: read -r line_num content; do
+        # Extract the b/ path (new name) from "diff --git a/... b/..."
+        local fpath
+        fpath="${content##* b/}"
+        DIFF_OFFSETS["$fpath"]="$line_num"
+    done < <(grep -n '^diff --git ' "$OUTPUT_DIR/pr-diff.patch" 2>/dev/null || true)
+
     echo "## Files Changed"
     if ! FILES_DATA=$(gh pr view "$PR_NUMBER" --json files 2>&1); then
         echo "ERROR: Failed to fetch files data"
@@ -100,16 +124,16 @@ fetch_files() {
         FILE_COUNT=$(echo "$FILES_DATA" | jq '.files | length')
         echo "Total: $FILE_COUNT files"
         echo ""
-        echo "$FILES_DATA" | jq -r '.files[] | "- \(.path) (+\(.additions)/-\(.deletions))"'
+        echo "$FILES_DATA" | jq -r '.files[] | "\(.path)\t\(.additions)\t\(.deletions)"' | \
+            while IFS=$'\t' read -r fpath adds dels; do
+                local offset="${DIFF_OFFSETS[$fpath]:-}"
+                if [[ -n "$offset" ]]; then
+                    echo "- $fpath (+$adds/-$dels) [L$offset]"
+                else
+                    echo "- $fpath (+$adds/-$dels)"
+                fi
+            done
     fi
-    echo ""
-}
-
-fetch_diff() {
-    echo "## Diff"
-    echo '```diff'
-    gh pr diff "$PR_NUMBER" 2>&1
-    echo '```'
     echo ""
 }
 
@@ -171,17 +195,16 @@ main() {
     detect_pr
     detect_repo
 
-    echo "# Renovate PR Data for #$PR_NUMBER"
-    echo ""
+    local pr_data="$OUTPUT_DIR/pr-data.md"
 
-    fetch_metadata
-    fetch_body
-    fetch_files
-    fetch_diff
-    fetch_related_issues
+    {
+        fetch_metadata
+        fetch_body
+        fetch_files
+        fetch_related_issues
+    } > "$pr_data"
 
-    echo "---"
-    echo "Data collection complete for PR #$PR_NUMBER"
+    echo "Wrote $pr_data" >&2
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
