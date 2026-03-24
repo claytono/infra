@@ -1,12 +1,73 @@
 ---
-# Copyright (C) 2021-2025 Robert Wimmer
+# Copyright (C) 2021-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 - name: Verify setup
   hosts: all
   vars:
     containerd__nginx_version: "1.24"
+    # Molecule verifier doesn't automatically load role defaults, so provide
+    # safe fallbacks and discover the actual containerd binary path.
+    containerd__config_directory: "{{ containerd_config_directory | default('/etc/containerd') }}"
+    containerd__candidate_binaries:
+      - "{{ (containerd_binary_directory | default('/usr/local/sbin')) }}/containerd"
+      - "{{ (containerd_binary_directory | default('/usr/local/bin')) }}/containerd"
+      - "/usr/local/sbin/containerd"
+      - "/usr/local/bin/containerd"
+      - "/usr/bin/containerd"
   tasks:
+    - name: Locate containerd binary
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ containerd__candidate_binaries }}"
+      register: containerd__binary_stats
+      changed_when: false
+
+    - name: Set containerd binary path
+      ansible.builtin.set_fact:
+        containerd__binary_path: "{{ (containerd__binary_stats.results | selectattr('stat.exists', '==', True) | map(attribute='stat.path') | first) }}"
+
+    - name: Assert containerd binary found
+      ansible.builtin.assert:
+        that:
+          - containerd__binary_path is defined
+          - containerd__binary_path | length > 0
+        fail_msg: "containerd binary not found in candidate paths: {{ containerd__candidate_binaries }}"
+
+    - name: Verify conf.d imports behavior
+      when: inventory_hostname == 'test-cd-ubuntu2404-conf-d'
+      block:
+        - name: Read containerd main config
+          ansible.builtin.slurp:
+            src: "{{ containerd__config_directory }}/config.toml"
+          register: containerd_config_toml
+
+        - name: Ensure imports are configured in main config
+          ansible.builtin.assert:
+            that:
+              - "(containerd_config_toml.content | b64decode) is regex('(?m)^\\s*imports\\s*=\\s*\\[.*conf\\.d/\\*\\.toml.*\\]')"
+
+        - name: Ensure conf.d drop-in file exists
+          ansible.builtin.stat:
+            path: "{{ containerd__config_directory }}/conf.d/10-molecule.toml"
+          register: containerd_dropin_stat
+
+        - name: Assert conf.d drop-in file exists
+          ansible.builtin.assert:
+            that:
+              - containerd_dropin_stat.stat.exists
+
+        - name: Dump containerd config (main + imports)
+          ansible.builtin.command:
+            cmd: "{{ containerd__binary_path }} --config {{ containerd__config_directory }}/config.toml config dump"
+          register: containerd_config_dump
+          changed_when: false
+
+        - name: Ensure conf.d drop-in override is present
+          ansible.builtin.assert:
+            that:
+              - "containerd_config_dump.stdout is regex('(?m)^\\s*max_container_log_line_size\\s*=\\s*32768\\s*$')"
+
     - name: Pull nginx image with ctr
       ansible.builtin.command:
         cmd: "ctr images pull docker.io/library/nginx:{{ containerd__nginx_version }}"
