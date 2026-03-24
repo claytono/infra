@@ -5,6 +5,8 @@ kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
 
+containerd_validate_config: true
+
 # Override containerd config to include conf.d imports
 # Enables drop-in configs (e.g., nvidia runtime) without modifying main config
 containerd_config: |
@@ -28,7 +30,7 @@ containerd_config: |
               BinaryName = '/usr/local/sbin/runc'
               SystemdCgroup = true
       [plugins.'io.containerd.cri.v1.runtime'.cni]
-        bin_dir = '/opt/cni/bin'
+        bin_dirs = ['/opt/cni/bin']
         conf_dir = '/etc/cni/net.d'
 
 # Our goal is to stay one version behind
