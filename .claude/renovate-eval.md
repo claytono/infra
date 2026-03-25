@@ -62,3 +62,7 @@ skill (Merge, Review later, Close).
   update type. For Kubernetes: `kubectl apply -k kubernetes/<app>/`. For
   Ansible: run `ansible-playbook` from the `ansible/` directory. For OpenTofu:
   run `tofu plan` then `tofu apply` from the `opentofu/` directory.
+
+## Merge Strategy
+
+Always merge with rebase: append `--rebase` to all `gh pr merge` commands.

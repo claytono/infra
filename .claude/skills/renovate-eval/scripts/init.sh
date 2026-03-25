@@ -19,6 +19,7 @@ detect_environment() {
     PLANNOTATOR=$(command -v plannotator >/dev/null 2>&1 && echo true || echo false)
     REPO_CONFIG="${REPO_ROOT}/.claude/renovate-eval.md"
     HAS_REPO_CONFIG=$([ -f "$REPO_CONFIG" ] && echo true || echo false)
+    AUTOMERGE_AVAILABLE=$(gh api 'repos/{owner}/{repo}' --jq '.allow_auto_merge // false')
 }
 
 fetch_renovate_prs() {
@@ -59,10 +60,12 @@ output_result() {
         --argjson plannotator_available "$PLANNOTATOR" \
         --argjson has_repo_config "$HAS_REPO_CONFIG" \
         --arg repo_config "$REPO_CONFIG" \
+        --argjson automerge_available "$AUTOMERGE_AVAILABLE" \
         --argjson prs "$PRS" \
         '{
             repo_root: $repo_root,
             plannotator_available: $plannotator_available,
+            automerge_available: $automerge_available,
             repo_config: (if $has_repo_config then $repo_config else null end),
             prs: $prs
         }'

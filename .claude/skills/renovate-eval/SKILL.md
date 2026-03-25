@@ -33,8 +33,9 @@ The script outputs a JSON object:
 }
 ```
 
-Store `plannotator_available` and `repo_config` for later use. If `repo_config`
-is non-null, read it for custom actions and repo context.
+Store `plannotator_available`, `automerge_available`, and `repo_config` for
+later use. If `repo_config` is non-null, read it for custom actions and repo
+context.
 
 **If user specified a PR number:** Go to Evaluate or Present mode for that PR.
 
@@ -99,27 +100,33 @@ Any actions defined there MUST be included in the menu you present to the user.
 The repo config is authoritative — it may add actions, modify conditions for
 showing them, or change how they work.
 
-Extract CI status from the sentinel comment (if in present mode) or from the
-evaluate.sh stdout output (if in evaluate mode — parse the Metadata JSON block
-printed to stdout):
+**Always fetch live CI status** for the actions menu, regardless of mode. The
+sentinel comment's `ci_status` reflects the state at evaluation time and may be
+stale. Use the check-ci-status script or `gh pr checks` to get current status:
 
 ```bash
-# From comment sentinel:
-META=$(echo "$EVAL_COMMENT" | grep -o '<!-- renovate-eval-skill:{[^}]*}' | \
-    sed 's/<!-- renovate-eval-skill://')
-CI_STATUS=$(echo "$META" | jq -r '.ci_status // "unknown"')
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+CI_OUTPUT=$("$REPO_ROOT/.claude/skills/renovate-eval/scripts/check-ci-status.sh" --pr "$PR" 2>/dev/null || true)
 ```
+
+Determine `CI_STATUS` from the output: `"passing"` if all checks pass,
+`"failing"` if any check failed, `"pending"` if checks are still running,
+`"unknown"` if status cannot be determined.
 
 **Default actions (always show):**
 
-1. **Merge** — `gh pr merge $PR --auto --rebase`
+1. **Merge** — only show if `CI_STATUS` is `"passing"` or `"pending"`. If
+   passing: `gh pr merge $PR`. If pending and `automerge_available` is `true`:
+   `gh pr merge $PR --auto`. If pending and automerge is not available:
+   `gh pr checks $PR --required --watch && gh pr merge $PR`. Repo config may
+   specify additional flags (e.g., `--rebase`).
 2. **Review later** — no action, move on
 3. **Close** — `gh pr close $PR` (warn: Renovate will NOT reopen for this
    version)
 
 **Default conditional actions:**
 
-- **Fix CI** — only if `CI_STATUS` is `"failing"`
+- **Investigate CI** — only if `CI_STATUS` is `"failing"` or `"unknown"`
 - **View in Plannotator** — only if `plannotator_available` is `true`
 
 **Then add any actions from `$REPO_ROOT/.claude/renovate-eval.md`.**
@@ -128,13 +135,19 @@ Print all actions as a numbered list. Wait for user selection.
 
 ## Handling Actions
 
-- **Merge**: `gh pr merge $PR --auto --rebase`
+- **Merge**: If `CI_STATUS` is `"passing"`: `gh pr merge $PR`. If `CI_STATUS` is
+  `"pending"` and `automerge_available`: `gh pr merge $PR --auto`. If
+  `"pending"` and automerge not available:
+  `gh pr checks $PR --required --watch && gh pr merge $PR`. Append any
+  additional flags from repo config. Do not offer Merge when CI is failing or
+  unknown.
 - **Review later**: No action. If evaluating multiple PRs, move to next.
 - **Close**: Warn first: "Closing tells Renovate to ignore this version
   permanently. Are you sure?" Then `gh pr close $PR`.
 - **Deploy for testing**: Read `.claude/renovate-eval.md` and repo rules (e.g.,
   `.claude/rules/`) for deployment instructions specific to this repo.
-- **Fix CI**: Investigate the CI failure and attempt to fix it.
+- **Investigate CI**: Analyze CI failures or unknown status and report findings
+  to the user.
 - **Re-evaluate**: Run `evaluate.sh --pr $PR --post --context local` to
   regenerate and post updated evaluation.
 - **View in Plannotator**: Open the evaluation report in plannotator's
