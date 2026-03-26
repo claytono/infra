@@ -33,19 +33,6 @@ jobs:
             - 'Dockerfile.ansible'
             - '.github/workflows/ansible-integration-test.yaml'
 
-    - name: Set up Docker Buildx
-      if: steps.changes.outputs.ansible == 'true'
-      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4
-
-    - name: Cache Docker layers
-      if: steps.changes.outputs.ansible == 'true'
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-${{ matrix.arch }}-
-
     - name: Write vault password file
       if: steps.changes.outputs.ansible == 'true'
       run: echo "$ANSIBLE_VAULT_PASSWORD" > ansible/ansible-vault-password
@@ -54,12 +41,4 @@ jobs:
 
     - name: Run Ansible integration test
       if: steps.changes.outputs.ansible == 'true'
-      run: |-
-        docker buildx build --load \
-          --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
-          --build-arg VCS_REF=$(git rev-parse --short HEAD) \
-          --cache-from=type=local,src=/tmp/.buildx-cache \
-          --cache-to=type=local,dest=/tmp/.buildx-cache-new \
-          -t ansible-integration-test \
-          -f Dockerfile.ansible .
-        ansible/scripts/docker-integration-test
+      run: ansible/scripts/docker-integration-test
