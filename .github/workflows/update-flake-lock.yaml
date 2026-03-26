@@ -54,6 +54,8 @@ jobs:
     - name: Sync flake.lock to semaphore
       if: steps.update-flake-lock.outputs.pull-request-number != ''
       run: |
+        git fetch origin update_flake_lock_action
+        git checkout update_flake_lock_action
         cp flake.lock kubernetes/semaphore/nix-flake.lock
         git add kubernetes/semaphore/nix-flake.lock
         if ! git diff --cached --quiet; then
