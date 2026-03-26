@@ -14,7 +14,7 @@ jq: 1.8.1
 kopia: 0.22.3
 kubecolor: 0.5.3
 kubeconform: 0.7.0
-kubectl: 1.35.2
+kubectl: 1.35.3
 kubernetes-helm: 3.19.1
 kustomize: 5.8.1
 kyverno: 1.16.2
@@ -23,13 +23,13 @@ mcp-cli: 0.3.0-post
 mosquitto: 2.0.22
 nodejs: 24.14.0
 opentofu: 1.11.5
-pluto: 5.22.7
+pluto: 5.23.5
 pre-commit: 4.5.1
 python3: 3.13.12-env
 rclone: 1.73.2
 skopeo: 1.22.0
 tflint: 0.61.0
-uv: 0.10.12
+uv: 0.11.0
 velero: 1.17.2
 yamlfix: 1.19.1
 yq-go: 4.52.4
