@@ -128,6 +128,18 @@ def parse_ingress_file(file_path) -> list:
         return []
 
 
+def _read_kustomization_namespace(file_path) -> Optional[str]:
+    """Read namespace from kustomization.yaml in the same directory as file_path."""
+    kust_path = Path(file_path).parent / "kustomization.yaml"
+    try:
+        with open(kust_path, "r") as f:
+            data = yaml.safe_load(f)
+        ns = data.get("namespace") if data else None
+        return ns if ns and ns != "default" else None
+    except Exception:
+        return None
+
+
 def build_app_info_from_ingress(ingress, file_path):
     """Build app_info dict from an Ingress resource."""
 
@@ -145,10 +157,14 @@ def build_app_info_from_ingress(ingress, file_path):
     if not ingress_name:
         raise ValueError("Ingress missing required 'name' field in metadata")
 
-    # Get namespace: prefer ak-namespace annotation, then metadata.namespace, then default
+    # Get namespace: prefer ak-namespace annotation, then metadata.namespace,
+    # then kustomization.yaml namespace, then default
     annotations = metadata.get("annotations", {}) or {}
     namespace = (
-        annotations.get("ak-namespace") or metadata.get("namespace") or "default"
+        annotations.get("ak-namespace")
+        or metadata.get("namespace")
+        or _read_kustomization_namespace(file_path)
+        or "default"
     )
 
     # Get external host from first rule

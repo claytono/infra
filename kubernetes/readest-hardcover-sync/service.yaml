@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: readest-hardcover-sync
+
+spec:
+  selector:
+    app.kubernetes.io/name: readest-hardcover-sync
+    app.kubernetes.io/instance: readest-hardcover-sync
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
