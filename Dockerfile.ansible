@@ -13,6 +13,7 @@ RUN apt-get update && \
         ca-certificates \
         git \
         xz-utils \
+        python3-docker \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,10 +39,21 @@ ENV PATH="/home/ansible/.nix-profile/bin:/home/ansible/.local/bin:/usr/local/sbi
 ENV NIX_CONFIG="experimental-features = nix-command flakes"
 SHELL ["/bin/bash", "-c"]
 
-WORKDIR /workspace/ansible
-# Copy only ansible directory and flake config
-COPY --chown=ansible:ansible ansible /workspace/ansible
+WORKDIR /workspace
+
+# Configure Cachix binary cache for faster nix builds
+RUN nix-env -iA cachix -f https://cachix.org/api/v1/install && \
+    cachix use --mode root-nixconf claytono
+
+# Copy flake files first and run nix develop — this layer only rebuilds when
+# flake.nix or flake.lock change, not on every ansible file change.
 COPY --chown=ansible:ansible flake.nix flake.lock /workspace/
+RUN su ansible -c 'cd /workspace && nix develop --command true'
+
+# Now copy ansible directory (changes frequently, but layers above are cached)
+COPY --chown=ansible:ansible ansible /workspace/ansible
+
+WORKDIR /workspace/ansible
 
 # Ensure the Nix wrapper is executable before using it
 RUN chmod +x ../ansible/scripts/docker-nix-wrapper
@@ -54,10 +66,10 @@ ansible-integration-test ansible_connection=local
 
 [tailscale_disabled]
 ansible-integration-test
-EOF
 
-# Run nix develop as ansible user from workspace directory
-RUN su ansible -c 'cd /workspace && nix develop --command true'
+[docker]
+ansible-integration-test
+EOF
 
 # Let the base image handle systemd startup
 # ENTRYPOINT ["../ansible/scripts/docker-nix-wrapper"]
