@@ -414,6 +414,11 @@
       "matchPackageNames": [
         "ghcr.io/home-assistant/home-assistant"
       ]
+    },
+    {
+      "description": "Disable Renovate for readest-hardcover-sync (personal project, tracks edge)",
+      "matchPackageNames": ["ghcr.io/claytono/readest-hardcover-sync"],
+      "enabled": false
     }
   ],
   "gitIgnoredAuthors": [
