@@ -1,2 +1,3 @@
 ---
 netdata_enabled: true
+netdata_version: "2.8.5"

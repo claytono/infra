@@ -15,11 +15,21 @@
     enabled: true
   register: netdata_repo
 
+- name: "Create netdata package pin for version"
+  ansible.builtin.copy:
+    dest: "/etc/apt/preferences.d/netdata"
+    content: |
+      Package: netdata*
+      Pin: version {{ netdata_version }}*
+      Pin-Priority: 900
+    mode: "0644"
+
 - name: "Install Netdata"
   ansible.builtin.apt:
-    name: netdata
+    name: "netdata={{ netdata_version }}"
     state: present
     update_cache: "{{ netdata_repo is changed }}"
+    allow_downgrade: true
 
 - name: "Deploy Netdata configuration"
   ansible.builtin.template:
