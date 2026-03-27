@@ -70,6 +70,17 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
+        "ansible/roles/netdata/defaults/main.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*netdata_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
+      ],
+      "depNameTemplate": "netdata/netdata",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
         "ansible/requirements.yml"
       ],
       "matchStrings": [
