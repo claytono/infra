@@ -18,6 +18,14 @@
         "UNIFI_TOOL_MODE": "eager"
       }
     },
+    "grafana": {
+      "command": "uvx",
+      "args": ["mcp-grafana"],
+      "env": {
+        "GRAFANA_URL": "https://grafana.k.oneill.net",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GRAFANA_SERVICE_ACCOUNT_TOKEN}"
+      }
+    },
     "netdata": {
       "url": "https://netdata-stream.k.oneill.net:19999/mcp"
     }
