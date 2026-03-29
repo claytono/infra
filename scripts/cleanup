@@ -207,6 +207,34 @@ def clean_platformio() -> None:
         clean("PlatformIO cache", [p])
 
 
+def _newest_mtime(p: Path) -> float:
+    """Return the newest mtime within a path tree (non-symlink entries only).
+
+    For files, this is just the file's own mtime. For directories, we walk the
+    entire tree because directory mtime only reflects entry creation/deletion,
+    not content modifications to files inside.
+    """
+    try:
+        newest = p.stat().st_mtime
+    except OSError:
+        return 0.0
+    if p.is_dir():
+        for dirpath, _dirnames, filenames in os.walk(p, followlinks=False):
+            try:
+                newest = max(newest, os.stat(dirpath).st_mtime)
+            except OSError:
+                pass
+            for f in filenames:
+                full = os.path.join(dirpath, f)
+                try:
+                    if not os.path.islink(full):
+                        newest = max(newest, os.stat(full).st_mtime)
+                except OSError:
+                    pass
+    return newest
+
+
+
 def clean_tmp() -> None:
     """Delete .tmp/ items older than 7 days (recursive scan)."""
     seven_days_ago = time.time() - 7 * 86400
@@ -215,7 +243,9 @@ def clean_tmp() -> None:
         old_items: list[Path] = []
         for p in tmp_dir.iterdir():
             try:
-                if p.is_symlink() or p.stat().st_mtime >= seven_days_ago:
+                if p.is_symlink():
+                    continue
+                if _newest_mtime(p) >= seven_days_ago:
                     continue
             except OSError:
                 continue
