@@ -398,7 +398,7 @@
     },
     {
       "description": "PostgreSQL: Major versions at least 6 months old (auto-managed)",
-      "allowedVersions": "/^(17|16|15|14)\\./",
+      "allowedVersions": "/^(18|17|16|15|14)\\./",
       "matchDatasources": [
         "docker"
       ],
@@ -428,7 +428,9 @@
     },
     {
       "description": "Disable Renovate for readest-hardcover-sync (personal project, tracks edge)",
-      "matchPackageNames": ["ghcr.io/claytono/readest-hardcover-sync"],
+      "matchPackageNames": [
+        "ghcr.io/claytono/readest-hardcover-sync"
+      ],
       "enabled": false
     }
   ],
