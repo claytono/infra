@@ -29,7 +29,7 @@ configMapGenerator:
 
 images:
 - name: creativeprojects/resticprofile
-  newTag: 0.32.0@sha256:2d1ff9a32ec23cb231fba7abecc5a014cb1fa44cc1d7100327cceed92481a4c7
+  newTag: 0.32.0@sha256:81069ba7e40d461e311a02e870f513cebf9f36eef653893b816af86c3e33ffc9
 
 labels:
 - includeSelectors: true
