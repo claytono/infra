@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# ESPHome wrapper script using uvx
-# Runs ESPHome via uv's tool execution for native serial port access
+# ESPHome wrapper script
+# Runs ESPHome via uv for native serial port access
 
 set -Eeuo pipefail
 
@@ -16,6 +16,10 @@ ESPHOME_DIR="${ESPHOME_DIR:-$(dirname "$SCRIPT_DIR")}"
 
 # Ensure we're in the ESPHome directory
 cd "$ESPHOME_DIR" || exit 1
+
+# Keep PlatformIO cache in the repo tree (cleaned by scripts/cleanup).
+# PLATFORMIO_CORE_DIR is the current env var; PLATFORMIO_HOME_DIR is deprecated.
+export PLATFORMIO_CORE_DIR="${ESPHOME_DIR}/.platformio"
 
 # Run ESPHome via uv with pip included (required by PlatformIO)
 exec uv run --with pip --with "esphome==${ESPHOME_VERSION}" esphome "$@"
