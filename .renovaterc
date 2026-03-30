@@ -70,6 +70,17 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
+        "ansible/roles/netdata/defaults/main.yaml"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)\\s*netdata_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
+      ],
+      "depNameTemplate": "netdata/netdata",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
         "ansible/requirements.yml"
       ],
       "matchStrings": [
@@ -387,7 +398,7 @@
     },
     {
       "description": "PostgreSQL: Major versions at least 6 months old (auto-managed)",
-      "allowedVersions": "/^(17|16|15|14)\\./",
+      "allowedVersions": "/^(18|17|16|15|14)\\./",
       "matchDatasources": [
         "docker"
       ],
@@ -414,6 +425,13 @@
       "matchPackageNames": [
         "ghcr.io/home-assistant/home-assistant"
       ]
+    },
+    {
+      "description": "Disable Renovate for readest-hardcover-sync (personal project, tracks edge)",
+      "matchPackageNames": [
+        "ghcr.io/claytono/readest-hardcover-sync"
+      ],
+      "enabled": false
     }
   ],
   "gitIgnoredAuthors": [

@@ -16,7 +16,7 @@ terraform {
     }
     tailscale = {
       source  = "tailscale/tailscale"
-      version = "~> 0.25"
+      version = "~> 0.28"
     }
     github = {
       source  = "integrations/github"
@@ -44,7 +44,7 @@ terraform {
     }
     proxmox = {
       source  = "bpg/proxmox"
-      version = "~> 0.93"
+      version = "~> 0.99"
     }
     healthchecksio = {
       source  = "kristofferahl/healthchecksio"

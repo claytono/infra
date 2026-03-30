@@ -37,6 +37,7 @@
     api_user: "root@pam"
     api_password: "{{ proxmox_root_password }}"
     cluster_name: "{{ proxmox_cluster_name }}"
+    validate_certs: true
     state: present
   delegate_to: localhost
   become: false
@@ -52,6 +53,7 @@
     api_user: "root@pam"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
+    validate_certs: true
   delegate_to: localhost
   become: false
   register: proxmox_join_info
@@ -84,6 +86,7 @@
     cluster_name: "{{ proxmox_cluster_name }}"
     master_ip: "{{ proxmox_preferred_node.pve_addr }}"
     fingerprint: "{{ proxmox_preferred_node.pve_fp }}"
+    validate_certs: true
     state: present
   delegate_to: localhost
   become: false

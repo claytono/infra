@@ -27,6 +27,7 @@
     email: "{{ proxmox_admin_email }}"
     comment: "{{ proxmox_admin_comment }}"
     enable: true
+    validate_certs: true
     state: present
   delegate_to: localhost
   become: false
@@ -44,6 +45,7 @@
     email: "{{ proxmox_admin_email }}"
     comment: "{{ proxmox_admin_comment }}"
     enable: true
+    validate_certs: true
     state: present
   delegate_to: localhost
   become: false
@@ -57,6 +59,7 @@
     api_user: "root@pam"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
+    validate_certs: true
     state: present
     path: /
     type: user

@@ -24,6 +24,7 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: read
       issues: write
     outputs:
@@ -32,6 +33,12 @@ jobs:
       trigger: ${{ steps.check.outputs.trigger }}
       fingerprint: ${{ steps.check.outputs.fingerprint }}
     steps:
+    - name: Checkout
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
+
     - name: Check evaluation eligibility
       id: check
       env:
@@ -57,9 +64,11 @@ jobs:
             exit 0
           fi
 
-          # Compute PR fingerprint (hash of added/removed lines only)
-          FINGERPRINT=$(gh pr diff "$PR_NUMBER" --repo "${{ github.repository }}" | \
-            grep '^[+-]' | grep -v '^[+-][+-][+-]' | \
+          # Compute PR fingerprint using local git diff
+          # (avoids gh pr diff which fails on large PRs with HTTP 406)
+          BASE_REF="${{ github.event.pull_request.base.ref }}"
+          FINGERPRINT=$(git diff --no-ext-diff "origin/$BASE_REF"...HEAD | \
+            { grep '^[+-]' || true; } | { grep -v '^[+-][+-][+-]' || true; } | \
             shasum -a 256 | cut -d' ' -f1)
           echo "PR fingerprint: $FINGERPRINT"
 
@@ -150,10 +159,13 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
 
     # Set up Nix BEFORE waiting so eval starts immediately when checks complete
     - name: Install Nix
-      uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934  # v31
+      uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe  # v31
       with:
         github_access_token: ${{ github.token }}
 

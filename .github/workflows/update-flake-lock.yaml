@@ -14,9 +14,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        token: ${{ secrets.PAT }}
 
     - name: Install Nix
-      uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934  # v31
+      uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe  # v31
 
     - name: Check day of week
       id: check-day
@@ -50,16 +52,6 @@ jobs:
         pr-labels: |-
           nix
           automerge
-
-    - name: Sync flake.lock to semaphore
-      if: steps.update-flake-lock.outputs.pull-request-number != ''
-      run: |
-        cp flake.lock kubernetes/semaphore/nix-flake.lock
-        git add kubernetes/semaphore/nix-flake.lock
-        if ! git diff --cached --quiet; then
-          git commit --amend --no-edit
-          git push --force-with-lease
-        fi
 
     - name: Enable automerge
       if: steps.update-flake-lock.outputs.pull-request-number != ''
