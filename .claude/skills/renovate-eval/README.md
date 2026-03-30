@@ -6,27 +6,28 @@ reports with risk assessments, evidence documentation, and GitHub labels.
 ## How It Works
 
 ```text
-evaluate.sh
-  ├── fetch-pr-data.sh      # Collect PR metadata, diff, CI status
-  ├── check-ci-status.sh     # Check/wait for CI results
+renovate_eval.py evaluate
+  ├── fetch_pr_data      # Collect PR metadata, diff, CI status
+  ├── check_ci           # Check/wait for CI results
   │
   ├── Round 1: Evaluator (claude -p, opus)
   │   ├── Reads PR data, repo config, upstream release notes
   │   ├── Cross-references changes against local project config
-  │   ├── Writes: eval-report.md, eval-meta.json, eval-evidence.md
-  │   └── Runs validate-report.sh to catch mechanical errors
+  │   ├── Writes: eval-data.json (structured), eval-evidence.md
+  │   └── Validated against JSON schema (retries on failure)
   │
   ├── Round 1: Auditor (claude -p, sonnet, no tools)
-  │   ├── Reviews report against quality criteria
+  │   ├── Reviews rendered report against quality criteria
   │   ├── Checks evidence supports claims
   │   └── Outputs: PASS or FEEDBACK with specific issues
   │
   ├── Round 2+ (if FEEDBACK): Resume evaluator session
   │   ├── Reads auditor feedback + revision.md guidelines
-  │   ├── Makes targeted fixes (doesn't re-research)
+  │   ├── Makes targeted fixes to eval-data.json
   │   └── Auditor re-reviews (resumes its session too)
   │
   └── Output
+      ├── Template renders eval-data.json → markdown report
       ├── dry-run: Print report to stdout, clean up temp files
       └── post: Comment on PR, apply labels (renovate:safe/caution/breaking/risk)
 ```
@@ -45,14 +46,19 @@ Lists open Renovate PRs, evaluates selected PR, shows actions menu.
 
 ```bash
 # Dry run (prints report, cleans up)
-.claude/skills/renovate-eval/evaluate.sh --pr 1234 --dry-run --context local
+python3 .claude/skills/renovate-eval/renovate_eval.py evaluate --pr 1234 --dry-run --context local
 
 # Post to GitHub (comment + labels)
-.claude/skills/renovate-eval/evaluate.sh --pr 1234 --post --context local
+python3 .claude/skills/renovate-eval/renovate_eval.py evaluate --pr 1234 --post --context local
 
-# With custom instructions
-.claude/skills/renovate-eval/evaluate.sh --pr 1234 --dry-run --context local \
-    --instructions "Focus on security implications"
+# Quick status check (live CI + existing eval)
+python3 .claude/skills/renovate-eval/renovate_eval.py status --pr 1234
+
+# Validate eval-data.json
+python3 .claude/skills/renovate-eval/renovate_eval.py validate path/to/eval-data.json
+
+# Render eval-data.json to markdown
+python3 .claude/skills/renovate-eval/renovate_eval.py render path/to/eval-data.json --ci-status passing
 ```
 
 ### GitHub Actions
@@ -60,12 +66,6 @@ Lists open Renovate PRs, evaluates selected PR, shows actions menu.
 The workflow at `.github/workflows/renovate-eval.yaml` runs via
 `workflow_dispatch`. It uses the composite action at
 `.claude/skills/renovate-eval/action.yaml`.
-
-## Repo Context
-
-Repos provide context via `.claude/renovate-eval.md`. This file tells the
-evaluator where config files live, what tools are available, and what actions to
-show in the interactive menu. See the file in this repo for an example.
 
 ## Labels
 
@@ -79,14 +79,16 @@ show in the interactive menu. See the file in this repo for an example.
 
 ## Key Design Decisions
 
+- **Structured JSON output**: The evaluator produces `eval-data.json`; a Python
+  template renders the markdown report deterministically.
 - **Evidence file**: The evaluator documents commands run and their output so
   the auditor can verify claims without tool access.
-- **Self-validation**: A shell script catches mechanical errors (invalid labels,
-  bare links, missing sections) before the auditor runs, reducing wasted rounds.
+- **Validation retries**: If the evaluator produces invalid JSON, it gets
+  synthetic feedback and retries (up to 3 times) without counting as an audit
+  round.
 - **Session resume**: Round 2+ reuses the evaluator/auditor session for faster
   revisions with warm context.
-- **Repo config drives behavior**: The generic skill has no repo-specific
-  content. All repo-specific details (config paths, tools, actions menu) come
-  from `.claude/renovate-eval.md`.
+- **Repo config drives behavior**: All repo-specific details (config paths,
+  tools, actions menu) come from `.claude/renovate-eval.md`.
 - **Conservative default**: When uncertain, the evaluator labels as
-  `renovate:risk` with low confidence.
+  `renovate:risk`.

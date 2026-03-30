@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: readest-hardcover-sync
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: readest-hardcover-sync
+      app.kubernetes.io/instance: readest-hardcover-sync
+  template:
+    metadata:
+      name: readest-hardcover-sync
+      labels:
+        app.kubernetes.io/name: readest-hardcover-sync
+        app.kubernetes.io/instance: readest-hardcover-sync
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: readest-hardcover-sync
+        image: ghcr.io/claytono/readest-hardcover-sync:edge
+        imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - containerPort: 8080
+        env:
+        - name: READEST_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: readest-hardcover-sync
+              key: READEST_EMAIL
+        - name: READEST_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: readest-hardcover-sync
+              key: READEST_PASSWORD
+        - name: HARDCOVER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: readest-hardcover-sync
+              key: HARDCOVER_TOKEN
+        - name: STATE_FILE
+          value: /data/state.json
+        - name: COVERS_DIR
+          value: /data/covers
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: readest-hardcover-sync-data

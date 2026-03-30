@@ -1,0 +1,15 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+
+metadata:
+  name: readest-hardcover-sync-data
+  labels:
+    k8s-app: readest-hardcover-sync
+
+spec:
+  accessModes:
+  - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 1Gi

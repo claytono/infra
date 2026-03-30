@@ -3,9 +3,9 @@
 ## CRITICAL: Read-Only Constraint
 
 You are strictly read-only. Do NOT create, modify, or delete any files or
-resources EXCEPT the three output files specified at the end of this prompt. Do
+resources EXCEPT the two output files specified at the end of this prompt. Do
 NOT deploy, restart, or change anything. Do NOT run destructive commands. Only
-read files, run read-only commands (git log, curl, etc.), and write the three
+read files, run read-only commands (git log, curl, etc.), and write the two
 specified output files.
 
 ## Your Role
@@ -16,8 +16,6 @@ information for the user to make a confident decision about whether to deploy
 this update and whether to take advantage of new features.
 
 ## Environment
-
-You are running in `{context}` mode (the actual value is provided below).
 
 - **local mode:** You may inspect the live environment for richer analysis. If
   repo context is provided below, check it for what tools and access are
@@ -109,10 +107,12 @@ your own independent research:
    beyond the one in this PR:
 
    - `gh release list --repo upstream/repo --limit 10`
-   - If a newer version fixes bugs or regressions in the proposed version, flag
-     this prominently and recommend waiting for Renovate to pick it up
-   - If the proposed version has known issues fixed in a later release, this
-     should influence the verdict toward `renovate:risk`
+   - If a newer version fixes bugs or regressions _introduced_ in the proposed
+     version range, flag this prominently — this should influence the verdict
+     toward `renovate:risk`
+   - Pre-existing issues (present in the current deployed version too) do not
+     change the risk level of this PR. However, prominently flag any
+     pre-existing CVEs and note if a newer release fixes them
 
 8. **Security analysis:** Search for CVEs affecting the version range:
    - Check GitHub Security Advisories for the upstream repo
@@ -125,37 +125,20 @@ your own independent research:
 
 ## Output
 
-Write exactly three files to the paths specified below:
+Write exactly two files to the paths specified below:
 
-### 1. Report file (eval-report.md)
+### 1. Evaluation data file (eval-data.json)
 
-Follow the Report Format provided below. Sections may be omitted if not
-applicable, but document why in the evidence file.
+Follow the schema documented in the Output Schema file provided below. A
+template renders the markdown report from your JSON — you do NOT write the
+report yourself. Sections may be set to `null` if not applicable, but document
+why in the evidence file.
 
-### 2. Metadata file (eval-meta.json)
+**Conservative default:** If data is missing, evidence is thin, or you are
+uncertain, use `renovate:risk`. It is better to over-flag than to mark something
+safe that causes problems.
 
-```json
-{
-  "label": "renovate:safe",
-  "confidence": "high",
-  "packages": ["package-name@1.0.0->1.1.0"],
-  "sources_used": ["https://github.com/..."],
-  "ci_status": "passing"
-}
-```
-
-Fields:
-
-- `label`: One of `renovate:safe`, `renovate:caution`, `renovate:breaking`,
-  `renovate:risk`
-- `confidence`: `high`, `medium`, or `low`
-- `packages`: Array of "name@oldVersion->newVersion" strings
-- `update_type`: (optional) Only include if the repo context defines categories
-- `sources_used`: Array of URLs you consulted
-- `ci_status`: `passing`, `failing`, `pending`, or `unknown` (from CI data
-  below)
-
-### 3. Evidence file (eval-evidence.md)
+### 2. Evidence file (eval-evidence.md)
 
 This file is NOT included in the report — it is read by the auditor to verify
 your claims. Document your work:
@@ -180,16 +163,12 @@ Output: (no matches)
 Conclusion: No usage of the deprecated API in source or dependencies.
 ```
 
-**Conservative default:** If data is missing, evidence is thin, or you are
-uncertain, use `renovate:risk` and `confidence: low`. It is better to over-flag
-than to mark something safe that causes problems.
-
 ## Self-Validation
 
-After writing all three output files, run the validation script:
+After writing both output files, run the validation subcommand:
 
 ```bash
-$SCRIPT_DIR/scripts/validate-report.sh $ARTIFACT_DIR
+python3 $SCRIPT_DIR/renovate_eval.py validate $ARTIFACT_DIR/eval-data.json
 ```
 
 where `$SCRIPT_DIR` and `$ARTIFACT_DIR` are the paths provided below. If it

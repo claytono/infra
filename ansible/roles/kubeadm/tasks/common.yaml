@@ -31,11 +31,6 @@
     mode: "0644"
   notify: Reload sysctl
 
-- name: "Install apt-transport-https"
-  ansible.builtin.apt:
-    name: apt-transport-https
-    state: latest # noqa package-latest
-
 - name: "Add Kubernetes APT key"
   ansible.builtin.copy:
     # Copy from role's files directory to remote host

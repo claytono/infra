@@ -1,0 +1,52 @@
+---
+name: Sync Semaphore Flake
+
+on:
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - reopened
+
+concurrency:
+  group: sync-semaphore-flake-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync-semaphore-flake:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout PR branch
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        ref: ${{ github.head_ref }}
+        token: ${{ secrets.PAT }}
+
+    - name: Check for flake changes
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
+      id: changes
+      with:
+        filters: |
+          flake:
+            - 'flake.nix'
+            - 'flake.lock'
+
+    - name: Sync flake files to semaphore
+      if: steps.changes.outputs.flake == 'true'
+      run: |-
+        { echo "# DO NOT EDIT - This is a copy. Edit the original in the repo root."; cat flake.nix; } > kubernetes/semaphore/nix-flake.nix
+        cp flake.lock kubernetes/semaphore/nix-flake.lock
+
+        if git diff --quiet kubernetes/semaphore/nix-flake.nix kubernetes/semaphore/nix-flake.lock; then
+          echo "No changes to sync"
+          exit 0
+        fi
+
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add kubernetes/semaphore/nix-flake.nix kubernetes/semaphore/nix-flake.lock
+        git commit -m "Sync flake files to semaphore"
+        git push

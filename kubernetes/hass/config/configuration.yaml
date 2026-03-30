@@ -289,51 +289,6 @@ template:
     state: "{{ state_attr('air_quality.office_node_pro_air_quality', 'pm2_5_sensor_life') | default(0) }}"
     unit_of_measurement: ug/m3
 
-  # Plant moisture sensors (calibrated)
-  - name: Plant A Soil Moisture
-    unique_id: plant_sensor_a_d1f5_moisture_calibrated
-    unit_of_measurement: '%'
-    device_class: moisture
-    state: >-
-      {% set raw = states('sensor.plant_sensor_a_d1f5_moisture') | float %}
-      {% set mn  = states('input_number.plant_sensor_a_d1f5_moisture_min') | float %}
-      {% set mx  = states('input_number.plant_sensor_a_d1f5_moisture_max') | float %}
-      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-      {%- endif %}
-
-  - name: Plant B Soil Moisture
-    unique_id: plant_sensor_b_d1d7_moisture_calibrated
-    unit_of_measurement: '%'
-    device_class: moisture
-    state: >-
-      {% set raw = states('sensor.plant_sensor_b_d1d7_moisture') | float %}
-      {% set mn  = states('input_number.plant_sensor_b_d1d7_moisture_min') | float %}
-      {% set mx  = states('input_number.plant_sensor_b_d1d7_moisture_max') | float %}
-      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-      {%- endif %}
-
-  - name: Plant C Soil Moisture
-    unique_id: plant_sensor_c_f419_moisture_calibrated
-    unit_of_measurement: '%'
-    device_class: moisture
-    state: >-
-      {% set raw = states('sensor.plant_sensor_c_f419_moisture') | float %}
-      {% set mn  = states('input_number.plant_sensor_c_f419_moisture_min') | float %}
-      {% set mx  = states('input_number.plant_sensor_c_f419_moisture_max') | float %}
-      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-      {%- endif %}
-
-  - name: Plant D Soil Moisture
-    unique_id: plant_sensor_d_d0ad_moisture_calibrated
-    unit_of_measurement: '%'
-    device_class: moisture
-    state: >-
-      {% set raw = states('sensor.plant_sensor_d_d0ad_moisture') | float %}
-      {% set mn  = states('input_number.plant_sensor_d_d0ad_moisture_min') | float %}
-      {% set mx  = states('input_number.plant_sensor_d_d0ad_moisture_max') | float %}
-      {%- if mx <= mn -%} 0 {%- else -%} {{ ((raw - mn)/(mx - mn)*100) | round(1) }}
-      {%- endif %}
-
 - binary_sensor:
   - name: Washer Running
     unique_id: washer_running
@@ -369,53 +324,6 @@ template:
     state: 'true'
     auto_off:
       seconds: 3  # self-resets so each finish creates a clean edge
-
-input_number:
-  moisture_base: &moisture_base
-    min: 0
-    max: 100
-    step: 0.1
-    mode: slider
-
-  plant_sensor_a_d1f5_moisture_min:
-    <<: *moisture_base
-    name: Plant A Moisture Min
-    initial: 0
-
-  plant_sensor_a_d1f5_moisture_max:
-    <<: *moisture_base
-    name: Plant A Moisture Max
-    initial: 45
-
-  plant_sensor_b_d1d7_moisture_min:
-    <<: *moisture_base
-    name: Plant B Moisture Min
-    initial: 5
-
-  plant_sensor_b_d1d7_moisture_max:
-    <<: *moisture_base
-    name: Plant B Moisture Max
-    initial: 68
-
-  plant_sensor_c_f419_moisture_min:
-    <<: *moisture_base
-    name: Plant C Moisture Min
-    initial: 6
-
-  plant_sensor_c_f419_moisture_max:
-    <<: *moisture_base
-    name: Plant C Moisture Max
-    initial: 55
-
-  plant_sensor_d_d0ad_moisture_min:
-    <<: *moisture_base
-    name: Plant D Moisture Min
-    initial: 4.5
-
-  plant_sensor_d_d0ad_moisture_max:
-    <<: *moisture_base
-    name: Plant D Moisture Max
-    initial: 52
 
 alert:
   basement_sump_water:
@@ -493,7 +401,7 @@ script: !include scripts.yaml
 
 mqtt:
   sensor:
-  - name: Soil Moisture WH51 0eb421
+  - name: Soil Moisture WH51 0eb421 (Peppers)
     unique_id: wh51_0eb421_moisture
     state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
     value_template: '{{ value_json.moisture }}'
@@ -512,12 +420,12 @@ mqtt:
       }}
     device:
       identifiers: [wh51_0eb421]
-      name: WH51 Soil Moisture 0eb421
+      name: WH51 Soil Moisture 0eb421 (Peppers)
       model: WH51
       manufacturer: Ecowitt
       via_device: rtl_433
 
-  - name: Soil Moisture WH51 0eb446
+  - name: Soil Moisture WH51 0eb446 (Raspberries)
     unique_id: wh51_0eb446_moisture
     state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
     value_template: '{{ value_json.moisture }}'
@@ -536,12 +444,12 @@ mqtt:
       }}
     device:
       identifiers: [wh51_0eb446]
-      name: WH51 Soil Moisture 0eb446
+      name: WH51 Soil Moisture 0eb446 (Raspberries)
       model: WH51
       manufacturer: Ecowitt
       via_device: rtl_433
 
-  - name: Soil Moisture WH51 0eadc9 (Other Veggies)
+  - name: Soil Moisture WH51 0eadc9 (Peppers)
     unique_id: wh51_0eadc9_moisture
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
     value_template: '{{ value_json.moisture }}'
@@ -560,7 +468,7 @@ mqtt:
       }}
     device:
       identifiers: [wh51_0eadc9]
-      name: WH51 Soil Moisture 0eadc9 (Other Veggies)
+      name: WH51 Soil Moisture 0eadc9 (Peppers)
       model: WH51
       manufacturer: Ecowitt
       via_device: rtl_433
@@ -589,7 +497,31 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
-  - name: Soil Battery WH51 0eb421
+  - name: Soil Moisture WH51 0f1792 (Raspberries)
+    unique_id: wh51_0f1792_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0f1792]
+      name: WH51 Soil Moisture 0f1792 (Raspberries)
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Soil Battery WH51 0eb421 (Peppers)
     unique_id: wh51_0eb421_battery
     state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
     value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
@@ -599,7 +531,7 @@ mqtt:
     device:
       identifiers: [wh51_0eb421]
 
-  - name: Soil Battery WH51 0eb446
+  - name: Soil Battery WH51 0eb446 (Raspberries)
     unique_id: wh51_0eb446_battery
     state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
     value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
@@ -609,7 +541,7 @@ mqtt:
     device:
       identifiers: [wh51_0eb446]
 
-  - name: Soil Battery WH51 0eadc9 (Other Veggies)
+  - name: Soil Battery WH51 0eadc9 (Peppers)
     unique_id: wh51_0eadc9_battery
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
     value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
@@ -628,6 +560,16 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0ed338]
+
+  - name: Soil Battery WH51 0f1792 (Raspberries)
+    unique_id: wh51_0f1792_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0f1792]
 
   - name: Rain Meter WH40 51409
     unique_id: wh40_51409_rain
@@ -685,7 +627,7 @@ mqtt:
       via_device: rtl_433
 
   binary_sensor:
-  - name: Soil Battery Low WH51 0eb421
+  - name: Soil Battery Low WH51 0eb421 (Peppers)
     unique_id: wh51_0eb421_battery_low
     state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
     value_template: '{{ value_json.battery_ok }}'
@@ -696,7 +638,7 @@ mqtt:
     device:
       identifiers: [wh51_0eb421]
 
-  - name: Soil Battery Low WH51 0eb446
+  - name: Soil Battery Low WH51 0eb446 (Raspberries)
     unique_id: wh51_0eb446_battery_low
     state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
     value_template: '{{ value_json.battery_ok }}'
@@ -707,7 +649,7 @@ mqtt:
     device:
       identifiers: [wh51_0eb446]
 
-  - name: Soil Battery Low WH51 0eadc9 (Other Veggies)
+  - name: Soil Battery Low WH51 0eadc9 (Peppers)
     unique_id: wh51_0eadc9_battery_low
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
     value_template: '{{ value_json.battery_ok }}'
@@ -728,6 +670,17 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0ed338]
+
+  - name: Soil Battery Low WH51 0f1792 (Raspberries)
+    unique_id: wh51_0f1792_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0f1792]
 
   - name: Rain Meter Battery Low WH40 51409
     unique_id: wh40_51409_battery_low

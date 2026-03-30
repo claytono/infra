@@ -15,8 +15,7 @@ copy_with_header() {
   { echo "# DO NOT EDIT - This is a copy. Edit the original in the repo root."; cat "$src"; } > "$dst"
 }
 
-copy_with_header ../../flake.nix nix-flake.nix
-cp ../../flake.lock nix-flake.lock
+# nix-flake.nix and nix-flake.lock are synced by the sync-semaphore-flake workflow
 
 mkdir -p scripts/lib
 copy_with_header ../../scripts/ansible-idempotency-test scripts/ansible-idempotency-test

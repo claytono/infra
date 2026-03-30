@@ -1,4 +1,0 @@
----
-dependencies:
-  - role: docker
-    when: nut_webgui_enabled | default(false) | bool

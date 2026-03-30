@@ -1,0 +1,403 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["sh>=2.0"]
+# ///
+"""Remove project-local caches and build artifacts, then reinitialize.
+
+Cross-repo convention: every repo can have a scripts/cleanup that removes
+project-local caches and build artifacts. Run it, it cleans up, it reports
+what it did.
+"""
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import sh as sh_lib
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+TARGETS = [
+    "terraform",
+    "esphome",
+    "platformio",
+    "tmp",
+    "ansible",
+    "direnv",
+    "pycache",
+    "ruff",
+]
+
+total_freed = 0  # bytes
+total_rebuilt = 0  # bytes (space consumed by reinit)
+_errors: list[str] = []
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def format_size(size_bytes: int) -> str:
+    """Format bytes as human-readable string with one decimal place."""
+    if size_bytes >= 1024**3:
+        return f"{size_bytes / 1024**3:.1f} GB"
+    if size_bytes >= 1024**2:
+        return f"{size_bytes / 1024**2:.1f} MB"
+    if size_bytes >= 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    return f"{size_bytes} B"
+
+
+def dir_size(path: Path) -> int:
+    """Compute total size of a path (file or directory)."""
+    if path.is_symlink():
+        return 0
+    if path.is_file():
+        try:
+            return path.stat().st_size
+        except OSError:
+            return 0
+    total = 0
+    try:
+        for dirpath, _dirnames, filenames in os.walk(path, followlinks=False):
+            for f in filenames:
+                try:
+                    total += os.path.getsize(os.path.join(dirpath, f))
+                except OSError:
+                    pass
+    except OSError:
+        pass
+    return total
+
+
+def find_dirs(
+    root: Path, name: str, exclude: set[str] | None = None
+) -> list[Path]:
+    """Find directories named *name* under *root*, pruning matches and excludes."""
+    if exclude is None:
+        exclude = {".git"}
+    found: list[Path] = []
+    if not root.is_dir():
+        return found
+    for dirpath, dirnames, _ in os.walk(root, followlinks=False):
+        dirnames[:] = [d for d in dirnames if d not in exclude]
+        if name in dirnames:
+            found.append(Path(dirpath) / name)
+            dirnames.remove(name)
+    return found
+
+
+def remove(p: Path) -> None:
+    """Remove a path (file or dir), skipping symlinks."""
+    if p.is_symlink():
+        return
+    try:
+        if p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as e:
+        msg = f"could not remove {p}: {e}"
+        print(f"  Warning: {msg}", file=sys.stderr)
+        _errors.append(msg)
+
+
+def clean(label: str, paths: list[Path]) -> None:
+    """Measure size, print status, delete (or skip in dry-run)."""
+    global total_freed
+    existing = [p for p in paths if p.exists()]
+    if not existing:
+        return
+    size_before = sum(dir_size(p) for p in existing)
+    print(f"Cleaning {label} ({format_size(size_before)})...")
+    if not args.dry_run:
+        for p in existing:
+            remove(p)
+        size_after = sum(dir_size(p) for p in existing if p.exists())
+        total_freed += size_before - size_after
+    else:
+        total_freed += size_before
+
+
+def run_cmd(cmd: list[str], **kwargs) -> int:
+    """Run a command, streaming output and reporting exit code."""
+    print(f"+ {' '.join(cmd)}")
+    try:
+        sh_lib.Command(cmd[0])(
+            *cmd[1:],
+            _out=sys.stdout.buffer,
+            _err=sys.stderr.buffer,
+            **kwargs,
+        )
+        print(f"+ exit code: 0")
+        return 0
+    except sh_lib.CommandNotFound:
+        print(f"+ error: {cmd[0]} not found")
+        return 127
+    except sh_lib.ErrorReturnCode as e:
+        print(f"+ exit code: {e.exit_code}")
+        return e.exit_code
+
+
+def should_run(target: str) -> bool:
+    """Check if a target should run based on CLI args."""
+    if not args.targets:
+        return True
+    return target in args.targets
+
+
+# ---------------------------------------------------------------------------
+# Cleanup targets
+# ---------------------------------------------------------------------------
+
+
+def clean_terraform() -> None:
+    """Delete .terraform/ dirs under opentofu/, then reinitialize."""
+    opentofu_dir = REPO_ROOT / "opentofu"
+    if not opentofu_dir.is_dir():
+        return
+
+    tf_dirs = find_dirs(opentofu_dir, ".terraform")
+    if tf_dirs:
+        clean("OpenTofu .terraform/ directories (rebuilt after cleanup)", tf_dirs)
+
+    if not args.dry_run:
+        init_failures: list[str] = []
+        for lockfile in sorted(opentofu_dir.rglob(".terraform.lock.hcl")):
+            d = lockfile.parent
+            rel = d.relative_to(REPO_ROOT)
+            print(f"Reinitializing {rel}/...")
+            rc = run_cmd(
+                ["tofu", "init", "-input=false"],
+                _cwd=str(d),
+            )
+            if rc != 0:
+                init_failures.append(str(rel))
+        for failure in init_failures:
+            _errors.append(f"tofu init failed in {failure}")
+
+        # Measure space consumed by freshly initialized caches
+        rebuilt_dirs = find_dirs(opentofu_dir, ".terraform")
+        if rebuilt_dirs:
+            global total_rebuilt
+            rebuilt_size = sum(dir_size(d) for d in rebuilt_dirs)
+            total_rebuilt += rebuilt_size
+            print(f"Rebuilt OpenTofu caches ({format_size(rebuilt_size)})")
+
+
+def clean_esphome() -> None:
+    """Delete esphome/.esphome/ entirely."""
+    p = REPO_ROOT / "esphome" / ".esphome"
+    if p.exists():
+        clean("ESPHome .esphome/ directory", [p])
+
+
+def clean_platformio() -> None:
+    """Delete esphome/.platformio/ entirely."""
+    p = REPO_ROOT / "esphome" / ".platformio"
+    if p.exists():
+        clean("PlatformIO cache", [p])
+
+
+def _newest_mtime(p: Path) -> float:
+    """Return the newest mtime within a path tree (non-symlink entries only).
+
+    For files, this is just the file's own mtime. For directories, we walk the
+    entire tree because directory mtime only reflects entry creation/deletion,
+    not content modifications to files inside.
+    """
+    try:
+        newest = p.stat().st_mtime
+    except OSError:
+        return 0.0
+    if p.is_dir():
+        for dirpath, _dirnames, filenames in os.walk(p, followlinks=False):
+            try:
+                newest = max(newest, os.stat(dirpath).st_mtime)
+            except OSError:
+                pass
+            for f in filenames:
+                full = os.path.join(dirpath, f)
+                try:
+                    if not os.path.islink(full):
+                        newest = max(newest, os.stat(full).st_mtime)
+                except OSError:
+                    pass
+    return newest
+
+
+
+def clean_tmp() -> None:
+    """Delete .tmp/ items older than 7 days (recursive scan)."""
+    seven_days_ago = time.time() - 7 * 86400
+
+    for tmp_dir in find_dirs(REPO_ROOT, ".tmp"):
+        old_items: list[Path] = []
+        for p in tmp_dir.iterdir():
+            try:
+                if p.is_symlink():
+                    continue
+                if _newest_mtime(p) >= seven_days_ago:
+                    continue
+            except OSError:
+                continue
+            old_items.append(p)
+        if old_items:
+            rel = tmp_dir.relative_to(REPO_ROOT)
+            clean(f".tmp/ items older than 7 days ({rel})", old_items)
+
+
+def clean_ansible() -> None:
+    """Delete ansible/.ansible/ entirely."""
+    p = REPO_ROOT / "ansible" / ".ansible"
+    if p.exists():
+        clean("Ansible runtime cache", [p])
+
+
+def clean_direnv() -> None:
+    """Delete .direnv/ and rebuild via direnv exec."""
+    direnv_dir = REPO_ROOT / ".direnv"
+    if not direnv_dir.exists():
+        return
+
+    if not args.dry_run:
+        # Pre-flight: verify direnv can evaluate .envrc before we delete anything.
+        # direnv exec checks that .envrc is allowed and evaluates it — if this
+        # fails, we bail out with the cache still intact.
+        print("Verifying direnv can rebuild cache...")
+        rc = run_cmd(["direnv", "exec", str(REPO_ROOT), "true"])
+        if rc != 0:
+            _errors.append(
+                "direnv pre-flight failed — is .envrc allowed? "
+                "Run 'direnv allow'. Skipping direnv cleanup."
+            )
+            return
+
+    clean("direnv cache (rebuilt after cleanup)", [direnv_dir])
+
+    if not args.dry_run:
+        print("Rebuilding direnv cache...")
+        # direnv exec evaluates .envrc and rebuilds .direnv/ cache in one step.
+        # Unlike direnv reload, this works without needing the shell hook active.
+        rc = run_cmd(["direnv", "exec", str(REPO_ROOT), "true"])
+        if rc != 0:
+            _errors.append("direnv rebuild failed after deleting cache")
+        elif direnv_dir.exists():
+            global total_rebuilt
+            rebuilt_size = dir_size(direnv_dir)
+            total_rebuilt += rebuilt_size
+            print(f"Rebuilt direnv cache ({format_size(rebuilt_size)})")
+
+
+def clean_pycache() -> None:
+    """Delete all __pycache__/ dirs recursively."""
+    pycache_dirs = find_dirs(REPO_ROOT, "__pycache__")
+    if pycache_dirs:
+        clean("Python __pycache__/ directories", pycache_dirs)
+
+
+def clean_ruff() -> None:
+    """Delete .ruff_cache/ entirely."""
+    p = REPO_ROOT / ".ruff_cache"
+    if p.exists():
+        clean(".ruff_cache", [p])
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+TARGET_FUNCS = {
+    "terraform": clean_terraform,
+    "esphome": clean_esphome,
+    "platformio": clean_platformio,
+    "tmp": clean_tmp,
+    "ansible": clean_ansible,
+    "direnv": clean_direnv,
+    "pycache": clean_pycache,
+    "ruff": clean_ruff,
+}
+
+
+def main() -> None:
+    global args
+
+    parser = argparse.ArgumentParser(
+        description="Remove project-local caches and build artifacts.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Run even if working tree has uncommitted changes",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print what would be cleaned without deleting anything",
+    )
+    parser.add_argument(
+        "targets",
+        nargs="*",
+        choices=TARGETS,
+        metavar="target",
+        help=f"Targets to clean (all if none specified): {', '.join(TARGETS)}",
+    )
+    args = parser.parse_args()
+
+    # Clean working tree check
+    if not args.force:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
+        )
+        if result.returncode != 0:
+            sys.exit(
+                "Error: git status failed. "
+                "Is this a git repository? Use --force to skip this check."
+            )
+        if result.stdout.strip():
+            sys.exit(
+                "Error: working tree has uncommitted changes. "
+                "Commit or stash first, or use --force."
+            )
+
+    if args.dry_run:
+        print("Dry run — nothing will be deleted.\n")
+
+    # Run each target
+    for target, func in TARGET_FUNCS.items():
+        if should_run(target):
+            func()
+
+    # Summary
+    if total_freed > 0 or total_rebuilt > 0:
+        print()
+        if args.dry_run:
+            print(f"Would free: {format_size(total_freed)}")
+        else:
+            print(f"Deleted: {format_size(total_freed)}")
+            if total_rebuilt > 0:
+                print(f"Rebuilt:  {format_size(total_rebuilt)}")
+                print(f"Net freed: {format_size(total_freed - total_rebuilt)}")
+    else:
+        print("Nothing to clean.")
+
+    if _errors:
+        print(f"\nErrors ({len(_errors)}):", file=sys.stderr)
+        for err in _errors:
+            print(f"  - {err}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
