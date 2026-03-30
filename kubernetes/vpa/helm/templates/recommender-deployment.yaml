@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vpa-recommender
+  namespace: vpa
   labels:
     app.kubernetes.io/component: recommender
     app.kubernetes.io/name: vpa
