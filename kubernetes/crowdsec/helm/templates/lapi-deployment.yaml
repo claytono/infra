@@ -133,6 +133,7 @@ spec:
             mountPath: /etc/crowdsec_data/config.yaml.local
             subPath: config.yaml.local
           
+
       terminationGracePeriodSeconds: 30
       volumes:
       - name: crowdsec-docker-start-script
