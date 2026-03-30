@@ -1,0 +1,27 @@
+[project]
+name = "renovate-eval"
+version = "4.0.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["lib"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+]
+
+[tool.ruff.lint]
+extend-select = ["RUF059"]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]

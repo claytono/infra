@@ -76,6 +76,13 @@ repos:
     language: system
     pass_filenames: true
     files: ^kubernetes/.*\.(ya?ml)$
+  - id: renovate-eval-tests
+    name: renovate-eval pytest + coverage
+    entry: bash -c 'cd .claude/skills/renovate-eval && uv run pytest tests/ --cov
+      --cov-report=term-missing -q'
+    language: system
+    files: ^\.claude/skills/renovate-eval/
+    pass_filenames: false
   - id: esphome-hosts-check
     name: check ESPHome hosts terraform is up to date
     entry: scripts/gen-esphome-hosts --check
