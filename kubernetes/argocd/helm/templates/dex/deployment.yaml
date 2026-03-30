@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: dex-server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.3.2"
+    app.kubernetes.io/version: "v3.3.4"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -28,14 +28,14 @@ spec:
         app.kubernetes.io/component: dex-server
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.3.2"
+        app.kubernetes.io/version: "v3.3.4"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-dex-server
       automountServiceAccountToken: true
       containers:
       - name: dex-server
-        image: ghcr.io/dexidp/dex:v2.44.0
+        image: ghcr.io/dexidp/dex:v2.45.1
         imagePullPolicy: IfNotPresent
         command:
         - /shared/argocd-dex
@@ -100,6 +100,7 @@ spec:
             - ALL
           readOnlyRootFilesystem: true
           runAsNonRoot: true
+          runAsUser: 1001
           seccompProfile:
             type: RuntimeDefault
         volumeMounts:
@@ -111,7 +112,7 @@ spec:
           mountPath: /tls
       initContainers:
       - name: copyutil
-        image: quay.io/argoproj/argocd:v3.3.2
+        image: quay.io/argoproj/argocd:v3.3.4
         imagePullPolicy: IfNotPresent
         command:
         - /bin/cp
@@ -132,6 +133,7 @@ spec:
             - ALL
           readOnlyRootFilesystem: true
           runAsNonRoot: true
+          runAsUser: 1001
           seccompProfile:
             type: RuntimeDefault
       affinity:
