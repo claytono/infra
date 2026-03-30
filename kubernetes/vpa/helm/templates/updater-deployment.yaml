@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vpa-updater
+  namespace: vpa
   labels:
     app.kubernetes.io/component: updater
     app.kubernetes.io/name: vpa
