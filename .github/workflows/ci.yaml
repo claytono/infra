@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
     - name: Install Nix
-      uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934  # v31
+      uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe  # v31
       with:
         github_access_token: ${{ github.token }}
 
@@ -45,22 +45,15 @@ jobs:
         SKIP: terraform_validate,terraform_providers_lock
 
   test:
-    name: Bats Tests
+    name: Renovate Eval Tests
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
-    - name: Install Nix
-      uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934  # v31
-      with:
-        github_access_token: ${{ github.token }}
+    - name: Install uv
+      uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb  # v6
 
-    - name: Setup Cachix
-      uses: cachix/cachix-action@1eb2ef646ac0255473d23a5907ad7b04ce94065c  # v17
-      with:
-        name: claytono
-        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-    - name: Run bats tests
-      run: nix develop --command bats .claude/skills/renovate-eval/tests/*.bats
+    - name: Run pytest with coverage
+      working-directory: .claude/skills/renovate-eval
+      run: uv run pytest tests/ --cov --cov-report=term-missing

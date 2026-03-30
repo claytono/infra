@@ -64,6 +64,7 @@ runs:
       EVAL_INSTRUCTIONS: ${{ inputs.instructions }}
     run: |
       ARGS=(
+        evaluate
         --pr "${{ inputs.pr_number }}"
         --"${{ inputs.mode }}"
         --context "${{ inputs.context }}"
@@ -75,7 +76,7 @@ runs:
       if [[ -n "$EVAL_INSTRUCTIONS" ]]; then
         ARGS+=(--instructions "$EVAL_INSTRUCTIONS")
       fi
-      OUTPUT=$("${{ github.action_path }}/evaluate.sh" "${ARGS[@]}" 2>&1 | tee /dev/stderr)
+      OUTPUT=$(python3 "${{ github.action_path }}/renovate_eval.py" "${ARGS[@]}" 2>&1 | tee /dev/stderr)
       ARTIFACT_PATH=$(echo "$OUTPUT" | grep "^Artifacts:" | tail -1 | sed 's/Artifacts: //')
       echo "artifact_path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
       if [[ -n "$ARTIFACT_PATH" && -f "$ARTIFACT_PATH/result.json" ]]; then

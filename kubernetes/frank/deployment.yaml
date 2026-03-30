@@ -55,7 +55,7 @@ spec:
         - name: syncthing-config
           mountPath: /var/syncthing/config
       - name: www
-        image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:6582a34398ce9530ea3ae5b46595391a26ef44955335bed21a9afa4c3f715c70
+        image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:f99cc61bf1719f30230602036314ff6ba5dcede8965c5ed3ded71b8bbced3723
         restartPolicy: Always
         ports:
         - containerPort: 8080
@@ -84,7 +84,7 @@ spec:
         - name: nginx-cache
           mountPath: /var/cache/nginx
       - name: api
-        image: oven/bun:1.3.10-alpine@sha256:32f1fcccb1523960b254c4f80973bee1a910d60be000a45c20c9129a1efcffee
+        image: oven/bun:1.3.11-alpine@sha256:7ed9f74c326d1c260abe247ac423ccbf5ac92af62bb442d515d1f92f21e8ea9b
         restartPolicy: Always
         command: [/bin/sh, /etc/api/api-entrypoint.sh]
         ports:
@@ -160,7 +160,7 @@ spec:
         - name: tmp
           mountPath: /tmp
       - name: browser
-        image: zenika/alpine-chrome:latest@sha256:26d54593b9a85e76d0a21729ca6f039dd1063e7261129776f27c9b91ef4dfef6
+        image: zenika/alpine-chrome:latest@sha256:1db3ae560c20f70f31bca4ea81fac3fc19cfb22343990d65326e92a5b59760a7
         args:
         - --no-sandbox
         - --disable-gpu

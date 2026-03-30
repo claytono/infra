@@ -127,6 +127,12 @@
     - role: resticprofile
       tags: [restic, resticprofile]
 
+- name: Docker
+  hosts: docker
+  roles:
+    - role: geerlingguy.docker
+      tags: docker
+
 - name: Traefik
   hosts: traefik
   roles:
@@ -150,12 +156,6 @@
   roles:
     - role: os-install
       tags: os-install
-
-- name: Docker
-  hosts: docker
-  roles:
-    - role: docker
-      tags: docker
 
 - name: Tailscale
   hosts: all,!tailscale_disabled
@@ -220,7 +220,8 @@
 - name: Docker host maintenance
   hosts: docker
   tasks:
-    - name: Run Docker maintenance tasks
-      ansible.builtin.include_role:
-        name: docker
-        tasks_from: maintenance
+    - name: Prune unused Docker images
+      community.docker.docker_prune:
+        images: true
+        images_filters:
+          dangling: false

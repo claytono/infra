@@ -1,12 +1,9 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2025, Florian Paul Azim Hoberg (@gyptazy) <florian.hoberg@credativ.de>
 # GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
 DOCUMENTATION = r"""
 module: proxmox_storage
@@ -196,6 +193,11 @@ options:
           - The required datastore to use from the Proxmox Backup Server.
         type: str
         required: false
+      namespace:
+        description:
+          - The namespace to use from the Proxmox Backup Server.
+        type: str
+        required: false
       fingerprint:
         description:
           - The required fingerprint of the Proxmox Backup Server system.
@@ -211,6 +213,10 @@ options:
           - The name of the ZFS pool to use.
         type: str
         required: false
+      sparse:
+        description:
+          - Use ZFS thin-provisioning.
+        type: bool
   content:
     description:
       - The desired content that should be used with this storage type.
@@ -281,6 +287,19 @@ EXAMPLES = r"""
     state: absent
     name: net-nfsshare01
     type: nfs
+- name: Add ZFS storage to Proxmox VE Cluster
+  community.proxmox.proxmox_storage:
+    api_host: proxmoxhost
+    api_user: root@pam
+    api_password: password123
+    validate_certs: false
+    state: present
+    name: zfspool-storage
+    type: zfspool
+    content: ["rootdir", "images"]
+    zfspool_options:
+      pool: rpool/data
+      sparse: true
 """
 
 RETURN = r"""
@@ -292,133 +311,141 @@ storage:
 """
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.common.text.converters import to_native
+from ansible.module_utils.errors import AnsibleValidationError
+
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
-    proxmox_auth_argument_spec, ProxmoxAnsible)
+    ProxmoxAnsible,
+    proxmox_auth_argument_spec,
+)
+
+STORAGE_REQUIRED_OPTIONS = {
+    "cephfs": (["content"], "CephFS storage requires 'content' option."),
+    "cifs": (["server", "share"], "CIFS storage requires 'server' and 'share' options."),
+    "dir": (["path", "content"], "Directory storage requires 'path' and 'content' options."),
+    "iscsi": (["portal", "target"], "iSCSI storage requires 'portal' and 'target' options."),
+    "nfs": (["server", "export"], "NFS storage requires 'server' and 'export' options."),
+    "pbs": (
+        ["server", "username", "password", "datastore"],
+        "PBS storage requires 'server', 'username', 'password' and 'datastore' options.",
+    ),
+    "zfspool": (["pool", "content"], "ZFS storage requires 'pool' and 'content' options."),
+}
+
+
+def validate_storage_type_options(storage_type, options):
+    if storage_type not in STORAGE_REQUIRED_OPTIONS:
+        return
+    required_fields, error_msg = STORAGE_REQUIRED_OPTIONS[storage_type]
+    if not all(options.get(field) for field in required_fields):
+        raise AnsibleValidationError(error_msg)
 
 
 class ProxmoxNodeAnsible(ProxmoxAnsible):
     def add_storage(self):
         changed = False
         result = "Unchanged"
-        storage_name = self.module.params['name']
-        storage_type = self.module.params['type']
-        nodes = self.module.params['nodes']
-        content = self.module.params.get('content')
+        storage_name = self.module.params["name"]
+        storage_type = self.module.params["type"]
+        nodes = self.module.params["nodes"]
+        content = self.module.params.get("content")
 
         # Create payload for storage creation
-        payload = {
-            'storage': storage_name,
-            'type': storage_type,
-            'nodes': nodes,
-            'content': content
-        }
+        payload = {"storage": storage_name, "type": storage_type, "nodes": nodes, "content": content}
 
         # Validate required parameters based on storage type
         if storage_type == "cephfs":
-            cephfs_options = self.module.params.get(f'{storage_type}_options', {})
-            monhost = cephfs_options.get('monhost', '')
-            username = cephfs_options.get('username')
-            password = cephfs_options.get('password')
-            path = cephfs_options.get('path', '/')
-            subdir = cephfs_options.get('subdir', None)
-            client_keyring = cephfs_options.get('client_keyring')
-            fs_name = cephfs_options.get('fs_name')
+            cephfs_options = self.module.params.get(f"{storage_type}_options", {})
+            monhost = cephfs_options.get("monhost", "")
+            username = cephfs_options.get("username")
+            password = cephfs_options.get("password")
+            path = cephfs_options.get("path", "/")
+            subdir = cephfs_options.get("subdir", None)
+            client_keyring = cephfs_options.get("client_keyring")
+            fs_name = cephfs_options.get("fs_name")
 
-            if not monhost == "":
-                payload['monhost'] = monhost
+            if monhost != "":
+                payload["monhost"] = monhost
             if username:
-                payload['username'] = username
+                payload["username"] = username
             if password:
-                payload['password'] = password
-            payload['path'] = path
-            payload['subdir'] = subdir
+                payload["password"] = password
+            payload["path"] = path
+            payload["subdir"] = subdir
             if client_keyring:
-                payload['client_keyring'] = client_keyring
+                payload["client_keyring"] = client_keyring
             if fs_name:
-                payload['fs_name'] = fs_name
+                payload["fs_name"] = fs_name
 
         if storage_type == "cifs":
-            cifs_options = self.module.params.get(f'{storage_type}_options', {})
-            server = cifs_options.get('server')
-            share = cifs_options.get('share')
-            username = cifs_options.get('username')
-            password = cifs_options.get('password')
-            smb_version = cifs_options.get('smb_version')
-            domain = cifs_options.get('domain')
-            subdir = cifs_options.get('subdir')
+            cifs_options = self.module.params.get(f"{storage_type}_options", {})
+            server = cifs_options.get("server")
+            share = cifs_options.get("share")
+            username = cifs_options.get("username")
+            password = cifs_options.get("password")
+            smb_version = cifs_options.get("smb_version")
+            domain = cifs_options.get("domain")
+            subdir = cifs_options.get("subdir")
 
             if username:
-                payload['username'] = username
+                payload["username"] = username
             if password:
-                payload['password'] = password
+                payload["password"] = password
             if smb_version:
-                payload['smbversion'] = smb_version
+                payload["smbversion"] = smb_version
             if domain:
-                payload['domain'] = domain
+                payload["domain"] = domain
             if subdir:
-                payload['subdir'] = subdir
+                payload["subdir"] = subdir
 
-            if not all([server, share]):
-                self.module.fail_json(msg="CIFS storage requires 'server' and 'share' parameters.")
-            else:
-                payload['server'] = server
-                payload['share'] = share
+            payload["server"] = server
+            payload["share"] = share
 
         if storage_type == "dir":
-            dir_options = self.module.params.get(f'{storage_type}_options', {})
-            path = dir_options.get('path')
-            if not all([path]):
-                self.module.fail_json(msg="Directory storage requires 'path' parameter.")
-            else:
-                payload['path'] = path
+            dir_options = self.module.params.get(f"{storage_type}_options", {})
+            path = dir_options.get("path")
+            payload["path"] = path
 
         if storage_type == "iscsi":
-            iscsi_options = self.module.params.get(f'{storage_type}_options', {})
-            portal = iscsi_options.get('portal')
-            target = iscsi_options.get('target')
-            if not all([portal, target]):
-                self.module.fail_json(msg="iSCSI storage requires 'portal' and 'target' parameters.")
-            else:
-                payload['portal'] = portal
-                payload['target'] = target
+            iscsi_options = self.module.params.get(f"{storage_type}_options", {})
+            portal = iscsi_options.get("portal")
+            target = iscsi_options.get("target")
+            payload["portal"] = portal
+            payload["target"] = target
 
         if storage_type == "nfs":
-            nfs_options = self.module.params.get(f'{storage_type}_options', {})
-            server = nfs_options.get('server')
-            export = nfs_options.get('export')
-            options = nfs_options.get('options')
-            if not all([server, export]):
-                self.module.fail_json(msg="NFS storage requires 'server' and 'export' parameters.")
-            else:
-                payload['server'] = server
-                payload['export'] = export
-                if options:
-                    payload['options'] = options
+            nfs_options = self.module.params.get(f"{storage_type}_options", {})
+            server = nfs_options.get("server")
+            export = nfs_options.get("export")
+            options = nfs_options.get("options")
+            payload["server"] = server
+            payload["export"] = export
+            if options:
+                payload["options"] = options
 
         if storage_type == "pbs":
-            pbs_options = self.module.params.get(f'{storage_type}_options', {})
-            server = pbs_options.get('server')
-            username = pbs_options.get('username')
-            password = pbs_options.get('password')
-            datastore = pbs_options.get('datastore')
-            fingerprint = pbs_options.get('fingerprint')
-            if not all([server, datastore, username, password]):
-                self.module.fail_json(msg="PBS storage requires 'server', 'username', 'password' and 'datastore' parameters.")
-            else:
-                payload['server'] = server
-                payload['username'] = username
-                payload['password'] = password
-                payload['datastore'] = datastore
-                if fingerprint:
-                    payload['fingerprint'] = fingerprint
+            pbs_options = self.module.params.get(f"{storage_type}_options", {})
+            server = pbs_options.get("server")
+            username = pbs_options.get("username")
+            password = pbs_options.get("password")
+            datastore = pbs_options.get("datastore")
+            fingerprint = pbs_options.get("fingerprint")
+            namespace = pbs_options.get("namespace")
+            payload["server"] = server
+            payload["username"] = username
+            payload["password"] = password
+            payload["datastore"] = datastore
+            if fingerprint:
+                payload["fingerprint"] = fingerprint
+            if namespace:
+                payload["namespace"] = namespace
 
         if storage_type == "zfspool":
-            zfspool_options = self.module.params.get(f'{storage_type}_options', {})
-            pool = zfspool_options.get('pool')
-            if not all([pool]):
-                self.module.fail_json(msg="ZFS storage requires 'pool' parameter.")
-            else:
-                payload['pool'] = pool
+            zfspool_options = self.module.params.get(f"{storage_type}_options", {})
+            pool = zfspool_options.get("pool")
+            payload["pool"] = pool
+
+            payload["sparse"] = 1 if zfspool_options.get("sparse") else 0
 
         # Check Mode validation
         if self.module.check_mode:
@@ -498,61 +525,76 @@ def main():
     module_args = proxmox_auth_argument_spec()
 
     storage_args = dict(
-        nodes=dict(type='list', elements='str',),
-        name=dict(type='str', required=True),
-        state=dict(choices=['present', 'absent']),
-        type=dict(choices=['cephfs', 'cifs', 'dir', 'iscsi', 'nfs', 'pbs', 'zfspool'], required=True),
-        dir_options=dict(type='dict', options={
-            'path': dict(type='str')
-        }),
-        cephfs_options=dict(type='dict', options={
-            'monhost': dict(type='list', elements='str'),
-            'username': dict(type='str'),
-            'password': dict(type='str', no_log=True),
-            'path': dict(type='str', default='/'),
-            'subdir': dict(type='str',),
-            'fs_name': dict(type='str',),
-            'client_keyring': dict(type='str', no_log=True)
-        }),
-        cifs_options=dict(type='dict', options={
-            'server': dict(type='str'),
-            'username': dict(type='str'),
-            'password': dict(type='str', no_log=True),
-            'share': dict(type='str'),
-            'domain': dict(type='str'),
-            'smb_version': dict(type='str'),
-            'subdir': dict(type='str',)
-        }),
-        nfs_options=dict(type='dict', options={
-            'server': dict(type='str'),
-            'export': dict(type='str'),
-            'options': dict(type='str')
-        }),
-        iscsi_options=dict(type='dict', options={
-            'portal': dict(type='str'),
-            'target': dict(type='str')
-        }),
-        pbs_options=dict(type='dict', options={
-            'server': dict(type='str'),
-            'username': dict(type='str'),
-            'password': dict(type='str', no_log=True),
-            'datastore': dict(type='str'),
-            'fingerprint': dict(type='str')
-        }),
-        zfspool_options=dict(type='dict', options={
-            'pool': dict(type='str')
-        }),
-        content=dict(type='list', elements='str', choices=["images", "snippets", "import", "iso", "backup", "rootdir", "vztmpl"]),
+        nodes=dict(
+            type="list",
+            elements="str",
+        ),
+        name=dict(type="str", required=True),
+        state=dict(choices=["present", "absent"]),
+        type=dict(choices=["cephfs", "cifs", "dir", "iscsi", "nfs", "pbs", "zfspool"], required=True),
+        dir_options=dict(type="dict", options={"path": dict(type="str")}),
+        cephfs_options=dict(
+            type="dict",
+            options={
+                "monhost": dict(type="list", elements="str"),
+                "username": dict(type="str"),
+                "password": dict(type="str", no_log=True),
+                "path": dict(type="str", default="/"),
+                "subdir": dict(
+                    type="str",
+                ),
+                "fs_name": dict(
+                    type="str",
+                ),
+                "client_keyring": dict(type="str", no_log=True),
+            },
+        ),
+        cifs_options=dict(
+            type="dict",
+            options={
+                "server": dict(type="str"),
+                "username": dict(type="str"),
+                "password": dict(type="str", no_log=True),
+                "share": dict(type="str"),
+                "domain": dict(type="str"),
+                "smb_version": dict(type="str"),
+                "subdir": dict(
+                    type="str",
+                ),
+            },
+        ),
+        nfs_options=dict(
+            type="dict", options={"server": dict(type="str"), "export": dict(type="str"), "options": dict(type="str")}
+        ),
+        iscsi_options=dict(type="dict", options={"portal": dict(type="str"), "target": dict(type="str")}),
+        pbs_options=dict(
+            type="dict",
+            options={
+                "server": dict(type="str"),
+                "username": dict(type="str"),
+                "password": dict(type="str", no_log=True),
+                "datastore": dict(type="str"),
+                "fingerprint": dict(type="str"),
+                "namespace": dict(type="str"),
+            },
+        ),
+        zfspool_options=dict(
+            type="dict",
+            options={"pool": dict(type="str"), "sparse": dict(type="bool")},
+        ),
+        content=dict(
+            type="list", elements="str", choices=["images", "snippets", "import", "iso", "backup", "rootdir", "vztmpl"]
+        ),
     )
 
     module_args.update(storage_args)
 
     module = AnsibleModule(
         argument_spec=module_args,
-        required_one_of=[('api_password', 'api_token_id')],
-        required_together=[('api_token_id', 'api_token_secret')],
+        required_one_of=[("api_password", "api_token_id")],
+        required_together=[("api_token_id", "api_token_secret")],
         supports_check_mode=True,
-        required_if=[['state', 'present', ['nodes', 'content']]],
+        required_if=[["state", "present", ["nodes", "content"]]],
     )
 
     # Initialize objects and avoid re-polling the current
@@ -562,6 +604,15 @@ def main():
 
     # Actions
     if module.params.get("state") == "present":
+        storage_type = module.params.get("type")
+        options_key = f"{storage_type}_options"
+        options = module.params.get(options_key) or {}
+
+        try:
+            validate_storage_type_options(storage_type, options)
+        except AnsibleValidationError as e:
+            module.fail_json(msg=to_native(e))
+
         changed, function_result = proxmox.add_storage()
         result = {"changed": changed, "msg": function_result}
 
@@ -572,5 +623,5 @@ def main():
     module.exit_json(**result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

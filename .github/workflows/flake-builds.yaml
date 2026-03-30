@@ -44,7 +44,7 @@ jobs:
     - name: Install Nix
       if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.flake
         == 'true'
-      uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934  # v31
+      uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe  # v31
       with:
         github_access_token: ${{ github.token }}
 

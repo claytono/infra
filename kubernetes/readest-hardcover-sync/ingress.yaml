@@ -1,0 +1,30 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: readest-hardcover-sync
+  annotations:
+    ak-type: simple
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Readest Sync
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: mdi-book-sync
+
+spec:
+  tls:
+  - hosts:
+    - readest-hardcover-sync.k.oneill.net
+    secretName: readest-hardcover-sync-tls
+  rules:
+  - host: readest-hardcover-sync.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: readest-hardcover-sync
+            port:
+              number: 8080

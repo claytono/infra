@@ -17,6 +17,7 @@
     api_user: "root@pam"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
+    validate_certs: true
     groupid: "homelab-admin-authentik"
     comment: "Homelab admins - synced from OIDC"
     state: present
@@ -30,6 +31,7 @@
     api_user: "root@pam"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
+    validate_certs: true
     state: present
     path: /
     type: group

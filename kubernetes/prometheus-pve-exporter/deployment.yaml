@@ -24,7 +24,7 @@ spec:
         emptyDir: {}
       containers:
       - name: pve-exporter
-        image: ghcr.io/prometheus-pve/prometheus-pve-exporter:3.8.0@sha256:66e0c8558b23f06231ab55ab1afdef2d43ff24365bcf75d36adaef6d9f7497df
+        image: ghcr.io/prometheus-pve/prometheus-pve-exporter:3.8.2@sha256:e3d501a82df58bc0dd0e3f1fb49f4c10d3069e71ddad68b1fbb773b65da0c177
         ports:
         - containerPort: 9221
         volumeMounts:
