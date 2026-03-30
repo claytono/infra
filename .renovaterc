@@ -423,8 +423,18 @@
         "docker"
       ],
       "matchPackageNames": [
-        "ghcr.io/home-assistant/home-assistant"
+        "homeassistant/home-assistant"
       ]
+    },
+    {
+      "description": "GHCR does not support release timestamps; skip age check to avoid permanently pending updates",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^ghcr\\.io/"
+      ],
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
     },
     {
       "description": "Disable Renovate for readest-hardcover-sync (personal project, tracks edge)",
