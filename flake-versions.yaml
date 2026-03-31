@@ -9,7 +9,7 @@ awscli2: 2.33.2
 bats: 1.12.0
 curl: 8.18.0
 efficient-compression-tool: 0.9.5
-go-unifi-mcp: 8b20bf2274d91b7a63cf76b1246bf7f7f9201280
+go-unifi-mcp: ac47d7460c7b6a0841115e91278c8c6217c8b043
 jq: 1.8.1
 kopia: 0.22.3
 kubecolor: 0.5.3
