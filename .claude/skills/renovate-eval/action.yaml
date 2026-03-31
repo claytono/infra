@@ -62,21 +62,28 @@ runs:
       ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
       CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs.claude_code_oauth_token }}
       EVAL_INSTRUCTIONS: ${{ inputs.instructions }}
+      INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+      INPUT_MODE: ${{ inputs.mode }}
+      INPUT_CONTEXT: ${{ inputs.context }}
+      INPUT_EVALUATOR_MODEL: ${{ inputs.evaluator_model }}
+      INPUT_AUDITOR_MODEL: ${{ inputs.auditor_model }}
+      INPUT_CI_TIMEOUT: ${{ inputs.ci_timeout }}
+      ACTION_PATH: ${{ github.action_path }}
     run: |
       ARGS=(
         evaluate
-        --pr "${{ inputs.pr_number }}"
-        --"${{ inputs.mode }}"
-        --context "${{ inputs.context }}"
-        --evaluator-model "${{ inputs.evaluator_model }}"
-        --auditor-model "${{ inputs.auditor_model }}"
-        --ci-timeout "${{ inputs.ci_timeout }}"
+        --pr "$INPUT_PR_NUMBER"
+        --"$INPUT_MODE"
+        --context "$INPUT_CONTEXT"
+        --evaluator-model "$INPUT_EVALUATOR_MODEL"
+        --auditor-model "$INPUT_AUDITOR_MODEL"
+        --ci-timeout "$INPUT_CI_TIMEOUT"
         --keep-artifacts
       )
       if [[ -n "$EVAL_INSTRUCTIONS" ]]; then
         ARGS+=(--instructions "$EVAL_INSTRUCTIONS")
       fi
-      OUTPUT=$(python3 "${{ github.action_path }}/renovate_eval.py" "${ARGS[@]}" 2>&1 | tee /dev/stderr)
+      OUTPUT=$(python3 "$ACTION_PATH/renovate_eval.py" "${ARGS[@]}" 2>&1 | tee /dev/stderr)
       ARTIFACT_PATH=$(echo "$OUTPUT" | grep "^Artifacts:" | tail -1 | sed 's/Artifacts: //')
       echo "artifact_path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
       if [[ -n "$ARTIFACT_PATH" && -f "$ARTIFACT_PATH/result.json" ]]; then

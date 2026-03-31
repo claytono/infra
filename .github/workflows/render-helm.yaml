@@ -67,13 +67,18 @@ jobs:
 
     - name: Render changed charts
       if: steps.changes.outputs.need-render-helm == 'true'
+      env:
+        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PUSH_BEFORE_SHA: ${{ github.event.before }}
+        PUSH_HEAD_SHA: ${{ github.sha }}
       run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          BASE_SHA=${{ github.event.pull_request.base.sha }}
-          HEAD_SHA=${{ github.event.pull_request.head.sha }}
+        if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+          BASE_SHA=$PR_BASE_SHA
+          HEAD_SHA=$PR_HEAD_SHA
         else
-          BASE_SHA=${{ github.event.before }}
-          HEAD_SHA=${{ github.sha }}
+          BASE_SHA=$PUSH_BEFORE_SHA
+          HEAD_SHA=$PUSH_HEAD_SHA
         fi
         echo "Comparing $BASE_SHA..$HEAD_SHA"
         git diff --name-only -z $BASE_SHA $HEAD_SHA \
@@ -113,7 +118,9 @@ jobs:
     - name: Push changes via PAT
       if: steps.changes.outputs.need-render-helm == 'true' && github.event_name ==
         'pull_request'
+      env:
+        PAT_TOKEN: ${{ secrets.PAT }}
       run: |-
         BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF##*/}}"
         echo "Pushing to branch: $BRANCH_NAME"
-        git push "https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}" "HEAD:${BRANCH_NAME}"
+        git push "https://x-access-token:${PAT_TOKEN}@github.com/${GITHUB_REPOSITORY}" "HEAD:${BRANCH_NAME}"

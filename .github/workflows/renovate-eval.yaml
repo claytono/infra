@@ -36,6 +36,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         ref: ${{ github.event.pull_request.head.sha || github.ref }}
         fetch-depth: 0
 
@@ -43,10 +44,12 @@ jobs:
       id: check
       env:
         GH_TOKEN: ${{ github.token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
       run: |
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
 
           # Only evaluate Renovate PRs
           if [[ "$PR_AUTHOR" != "renovate[bot]" ]]; then
@@ -56,7 +59,7 @@ jobs:
           fi
 
           # Skip automerge PRs
-          LABELS=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" \
+          LABELS=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
             --json labels --jq '[.labels[].name] | join(",")')
           if [[ ",$LABELS," == *",automerge,"* ]]; then
             echo "Skipping: PR has automerge label"
@@ -66,14 +69,13 @@ jobs:
 
           # Compute PR fingerprint using local git diff
           # (avoids gh pr diff which fails on large PRs with HTTP 406)
-          BASE_REF="${{ github.event.pull_request.base.ref }}"
-          FINGERPRINT=$(git diff --no-ext-diff "origin/$BASE_REF"...HEAD | \
+          FINGERPRINT=$(git diff --no-ext-diff "origin/$PR_BASE_REF"...HEAD | \
             { grep '^[+-]' || true; } | { grep -v '^[+-][+-][+-]' || true; } | \
             shasum -a 256 | cut -d' ' -f1)
           echo "PR fingerprint: $FINGERPRINT"
 
           # Check sentinel from existing comment
-          REPO_NWO="${{ github.repository }}"
+          REPO_NWO="$GITHUB_REPOSITORY"
           SENTINEL_JSON=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
             --paginate --jq '
             [.[] | select(.body | contains("<!-- renovate-eval-skill:"))
@@ -119,13 +121,13 @@ jobs:
 
         else
           # workflow_dispatch
-          if [ "${{ inputs.pr_number }}" != "all" ]; then
-            MATRIX=$(jq -cn --arg pr "${{ inputs.pr_number }}" \
+          if [ "$INPUT_PR_NUMBER" != "all" ]; then
+            MATRIX=$(jq -cn --arg pr "$INPUT_PR_NUMBER" \
               '{pr: [($pr | tonumber)]}')
             echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
             echo "should_evaluate=true" >> "$GITHUB_OUTPUT"
           else
-            PRS=$(gh pr list --repo "${{ github.repository }}" \
+            PRS=$(gh pr list --repo "$GITHUB_REPOSITORY" \
               --author "app/renovate" --state open \
               --json number,labels --limit 100)
             FILTERED=$(echo "$PRS" | jq -c '{pr: [
@@ -160,6 +162,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         ref: ${{ github.event.pull_request.head.sha || github.ref }}
         fetch-depth: 0
 
@@ -185,8 +188,8 @@ jobs:
       if: needs.gate.outputs.trigger == 'auto'
       env:
         GH_TOKEN: ${{ github.token }}
+        PR_NUMBER: ${{ matrix.pr }}
       run: |
-        PR_NUMBER="${{ matrix.pr }}"
         OUR_WORKFLOW="Renovate PR Evaluation"
         INTERVAL=10
 

@@ -31,22 +31,28 @@ runs:
   steps:
   - name: Fetch refs (if provided)
     shell: bash
+    env:
+      BASE_REF: ${{ inputs.base_ref }}
+      HEAD_REF: ${{ inputs.head_ref }}
     run: |
       set -euo pipefail
-      if [[ -n "${{ inputs.base_ref }}" ]]; then
-        git fetch --no-tags --prune origin "+${{ inputs.base_ref }}" || true
+      if [[ -n "$BASE_REF" ]]; then
+        git fetch --no-tags --prune origin "+${BASE_REF}" || true
       fi
-      if [[ -n "${{ inputs.head_ref }}" ]]; then
-        git fetch --no-tags --prune origin "+${{ inputs.head_ref }}" || true
+      if [[ -n "$HEAD_REF" ]]; then
+        git fetch --no-tags --prune origin "+${HEAD_REF}" || true
       fi
 
   - name: Collect apps
     id: collect
     shell: bash
+    env:
+      BASE_REF: ${{ inputs.base_ref }}
+      HEAD_REF: ${{ inputs.head_ref }}
     run: |
       set -euo pipefail
-      base='${{ inputs.base_ref }}'
-      head='${{ inputs.head_ref }}'
+      base="$BASE_REF"
+      head="$HEAD_REF"
       if [[ -z "$base" || -z "$head" ]]; then
         # No refs provided - find all apps (for workflow_dispatch or similar)
         echo "No refs provided - finding all ArgoCD applications"
@@ -63,10 +69,13 @@ runs:
     shell: bash
     env:
       GH_TOKEN: ${{ github.token }}
+      ACTION_TYPE: ${{ inputs.action_type }}
+      PR_NUMBER: ${{ inputs.pr_number }}
+      INPUT_EVENT_NAME: ${{ inputs.event_name }}
     run: |-
-      action_type="${{ inputs.action_type }}"
-      pr_number="${{ inputs.pr_number }}"
-      event_name="${{ inputs.event_name }}"
+      action_type="$ACTION_TYPE"
+      pr_number="$PR_NUMBER"
+      event_name="$INPUT_EVENT_NAME"
 
       message="📋 No ArgoCD applications detected in changed files - nothing to ${action_type}."
 

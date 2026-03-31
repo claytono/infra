@@ -13,22 +13,25 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+    - name: Checkout repository
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        persist-credentials: false
 
-      - name: Check for relevant changes
-        if: github.event_name != 'workflow_dispatch'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
-        id: filter
-        with:
-          filters: |
-            rpi:
-              - 'scripts/rpi-image-customize'
-              - 'scripts/rpi-image-test'
-              - 'ansible/roles/os-install/files/post-install.sh'
-              - 'tests/rpi/**'
-              - '.github/workflows/rpi-image-test.yaml'
+    - name: Check for relevant changes
+      if: github.event_name != 'workflow_dispatch'
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
+      id: filter
+      with:
+        filters: |
+          rpi:
+            - 'scripts/rpi-image-customize'
+            - 'scripts/rpi-image-test'
+            - 'ansible/roles/os-install/files/post-install.sh'
+            - 'tests/rpi/**'
+            - '.github/workflows/rpi-image-test.yaml'
 
-      - name: Run RPi integration test
-        if: github.event_name == 'workflow_dispatch' || steps.filter.outputs.rpi == 'true'
-        run: ./scripts/rpi-image-test
+    - name: Run RPi integration test
+      if: github.event_name == 'workflow_dispatch' || steps.filter.outputs.rpi ==
+        'true'
+      run: ./scripts/rpi-image-test

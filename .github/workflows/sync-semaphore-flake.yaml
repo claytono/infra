@@ -22,6 +22,7 @@ jobs:
     - name: Checkout PR branch
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         ref: ${{ github.head_ref }}
         token: ${{ secrets.PAT }}
 
@@ -36,6 +37,9 @@ jobs:
 
     - name: Sync flake files to semaphore
       if: steps.changes.outputs.flake == 'true'
+      env:
+        PAT: ${{ secrets.PAT }}
+        BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
       run: |-
         { echo "# DO NOT EDIT - This is a copy. Edit the original in the repo root."; cat flake.nix; } > kubernetes/semaphore/nix-flake.nix
         cp flake.lock kubernetes/semaphore/nix-flake.lock
@@ -49,4 +53,4 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add kubernetes/semaphore/nix-flake.nix kubernetes/semaphore/nix-flake.lock
         git commit -m "Sync flake files to semaphore"
-        git push
+        git push "https://x-access-token:${PAT}@github.com/${GITHUB_REPOSITORY}" "HEAD:${BRANCH_NAME}"
