@@ -19,8 +19,10 @@ jobs:
     steps:
     - name: Ensure this is a PR comment
       if: github.event_name == 'issue_comment'
+      env:
+        PR_URL: ${{ github.event.issue.pull_request.url }}
       run: |
-        if [ -z "${{ github.event.issue.pull_request.url }}" ]; then
+        if [ -z "$PR_URL" ]; then
           echo "Not a PR – skipping"
           exit 1
         fi
@@ -38,6 +40,7 @@ jobs:
       if: steps.diff.outputs.command-name
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         fetch-depth: 0
         ref: ${{ format('refs/pull/{0}/head', github.event.issue.number) }}
 
@@ -45,6 +48,7 @@ jobs:
       if: steps.diff.outputs.command-name
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         fetch-depth: 0
         ref: main
         path: trusted-main
@@ -54,10 +58,10 @@ jobs:
       id: base
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |
         # Query PR base dynamically instead of assuming 'main'
-        PR_NUMBER=${{ github.event.issue.number }}
-        BASE=$(gh pr view $PR_NUMBER --json baseRefName -q .baseRefName)
+        BASE=$(gh pr view "$ISSUE_NUMBER" --json baseRefName -q .baseRefName)
         echo "base=$BASE" >> $GITHUB_OUTPUT
         git fetch origin "$BASE:$BASE"
 
@@ -66,9 +70,9 @@ jobs:
       id: pr-head
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |
-        PR_NUMBER=${{ github.event.issue.number }}
-        PR_HEAD=$(gh pr view $PR_NUMBER --json headRefOid -q .headRefOid)
+        PR_HEAD=$(gh pr view "$ISSUE_NUMBER" --json headRefOid -q .headRefOid)
         echo "sha=$PR_HEAD" >> $GITHUB_OUTPUT
 
     - name: Detect Changed Apps
@@ -95,9 +99,9 @@ jobs:
       id: pr-branch
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |
-        PR_NUMBER=${{ github.event.issue.number }}
-        PR_BRANCH=$(gh pr view $PR_NUMBER --json headRefName -q .headRefName)
+        PR_BRANCH=$(gh pr view "$ISSUE_NUMBER" --json headRefName -q .headRefName)
         echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
 
     - name: ArgoCD Diff
@@ -106,13 +110,16 @@ jobs:
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         KUBECTL_EXTERNAL_DIFF: git diff --no-index --no-color
+        DETECTED_APPS: ${{ steps.detect.outputs.apps }}
+        PR_BRANCH: ${{ steps.pr-branch.outputs.branch }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |-
         set -x
         # Split apps into array for processing
-        IFS=' ' read -ra APPS_ARRAY <<< "${{ steps.detect.outputs.apps }}"
+        IFS=' ' read -ra APPS_ARRAY <<< "$DETECTED_APPS"
 
-        echo "🔍 Running ArgoCD diff for apps: ${{ steps.detect.outputs.apps }}"
-        echo "Comparing against branch: ${{ steps.pr-branch.outputs.branch }}"
+        echo "🔍 Running ArgoCD diff for apps: $DETECTED_APPS"
+        echo "Comparing against branch: $PR_BRANCH"
 
         # Create diff output for each app
         diff_output=""
@@ -121,7 +128,7 @@ jobs:
 
           # Run argocd diff and capture exit code (disable set -e temporarily)
           set +e
-          app_diff=$(argocd app diff "$app" --revision "${{ steps.pr-branch.outputs.branch }}" 2>&1)
+          app_diff=$(argocd app diff "$app" --revision "$PR_BRANCH" 2>&1)
           exit_code=$?
           set -e
 
@@ -138,13 +145,10 @@ jobs:
           fi
         done
 
-        # Comment the diff results on the PR
-        PR_NUMBER=${{ github.event.issue.number }}
-
         if [[ -n "$diff_output" ]]; then
           # Always comment when there are diffs
-          gh pr comment "$PR_NUMBER" --body "$(echo -e "$diff_output")"
+          gh pr comment "$ISSUE_NUMBER" --body "$(echo -e "$diff_output")"
         else
           # Only slash commands now, always comment
-          gh pr comment "$PR_NUMBER" --body "📋 No ArgoCD diffs to display."
+          gh pr comment "$ISSUE_NUMBER" --body "📋 No ArgoCD diffs to display."
         fi

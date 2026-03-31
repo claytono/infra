@@ -27,11 +27,16 @@ jobs:
       id: get-issues
       env:
         GH_TOKEN: ${{ github.token }}
+        INPUT_ISSUE_NUMBER: ${{ inputs.issue_number }}
       run: |
-        if [ -n "${{ inputs.issue_number }}" ]; then
-          ISSUES='[{"number": ${{ inputs.issue_number }}}]'
+        if [ -n "$INPUT_ISSUE_NUMBER" ]; then
+          if ! [[ "$INPUT_ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "issue_number must be a numeric issue ID" >&2
+            exit 1
+          fi
+          ISSUES=$(jq -cn --arg n "$INPUT_ISSUE_NUMBER" '[{number: ($n | tonumber)}]')
         else
-          ISSUES=$(gh issue list --repo "${{ github.repository }}" \
+          ISSUES=$(gh issue list --repo "$GITHUB_REPOSITORY" \
             --state open --author claytono --json number --limit 100)
         fi
         COUNT=$(echo "$ISSUES" | jq 'length')
@@ -56,6 +61,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        persist-credentials: false
 
     - name: Install Nix
       uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe  # v31
@@ -280,9 +287,11 @@ jobs:
           `{"status":"BLOCKED","upstreams":[{"url":"...","state":"open"}]}`
 
     - name: Rename triage result with issue number
+      env:
+        ISSUE_NUMBER: ${{ matrix.issue }}
       run: |
         if [ -f /tmp/triage-result.json ]; then
-          cp /tmp/triage-result.json "/tmp/triage-result-${{ matrix.issue }}.json"
+          cp /tmp/triage-result.json "/tmp/triage-result-${ISSUE_NUMBER}.json"
         fi
 
     - name: Upload triage result
@@ -294,8 +303,10 @@ jobs:
 
     - name: Display triage result
       if: always()
+      env:
+        ISSUE_NUMBER: ${{ matrix.issue }}
       run: |
-        echo "=== Triage Result for Issue #${{ matrix.issue }} ==="
+        echo "=== Triage Result for Issue #${ISSUE_NUMBER} ==="
         if [ -f /tmp/triage-result.json ]; then
           echo "--- JSON Structure ---"
           jq . /tmp/triage-result.json
@@ -362,12 +373,12 @@ jobs:
           LABEL_ACTION=$(echo "$RESULT" | jq -r '.label_action')
 
           # Post comment
-          echo "$COMMENT" | gh issue comment "$ISSUE" --repo "${{ github.repository }}" -F -
+          echo "$COMMENT" | gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" -F -
 
           # Manage labels
           if [ "$LABEL_ACTION" = "add" ]; then
-            gh issue edit "$ISSUE" --repo "${{ github.repository }}" --add-label blocked
+            gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --add-label blocked
           elif [ "$LABEL_ACTION" = "remove" ]; then
-            gh issue edit "$ISSUE" --repo "${{ github.repository }}" --remove-label blocked
+            gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --remove-label blocked
           fi
         done

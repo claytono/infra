@@ -15,7 +15,9 @@ jobs:
       esphome: ${{ steps.filter.outputs.esphome }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
-    - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
+      with:
+        persist-credentials: false
+    - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
       id: filter
       with:
         filters: |
@@ -34,6 +36,8 @@ jobs:
         shard_total: [8]
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      with:
+        persist-credentials: false
 
     - name: Install Nix
       uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe  # v31
@@ -100,13 +104,16 @@ jobs:
     if: always()
     steps:
     - name: Check ESPHome results
+      env:
+        ESPHOME_CHANGED: ${{ needs.changes.outputs.esphome }}
+        COMPILE_RESULT: ${{ needs.esphome-compile.result }}
       run: |-
-        if [ "${{ needs.changes.outputs.esphome }}" != "true" ]; then
+        if [ "$ESPHOME_CHANGED" != "true" ]; then
           echo "No ESPHome changes detected - skipping compilation"
           exit 0
         fi
 
-        if [ "${{ needs.esphome-compile.result }}" != "success" ]; then
+        if [ "$COMPILE_RESULT" != "success" ]; then
           echo "ESPHome compilation failed"
           exit 1
         fi

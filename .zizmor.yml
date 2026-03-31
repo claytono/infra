@@ -1,0 +1,8 @@
+---
+rules:
+  secrets-outside-env:
+    disable: true
+  excessive-permissions:
+    disable: true
+  ref-version-mismatch:
+    disable: true

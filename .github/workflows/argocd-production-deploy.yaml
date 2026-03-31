@@ -21,11 +21,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         fetch-depth: 0
 
     - name: Checkout trusted scripts
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         fetch-depth: 0
         ref: main
         path: trusted-main
@@ -50,8 +52,11 @@ jobs:
       if: steps.detect.outputs.apps != ''
       env:
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+        DETECTED_APPS: ${{ steps.detect.outputs.apps }}
+        SERVER_URL: ${{ github.server_url }}
+        RUN_ID: ${{ github.run_id }}
       run: |-
         "${GITHUB_WORKSPACE}/trusted-main/scripts/argocd-deploy" \
-          --apps "${{ steps.detect.outputs.apps }}" \
+          --apps "$DETECTED_APPS" \
           --target-revision "main" \
-          --action-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          --action-run-url "$SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$RUN_ID"

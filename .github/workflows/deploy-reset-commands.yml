@@ -22,8 +22,10 @@ jobs:
 
     steps:
     - name: Ensure this is a PR comment
+      env:
+        PR_URL: ${{ github.event.issue.pull_request.url }}
       run: |
-        if [ -z "${{ github.event.issue.pull_request.url }}" ]; then
+        if [ -z "$PR_URL" ]; then
           echo "Not a PR – skipping"
           exit 1
         fi
@@ -48,6 +50,7 @@ jobs:
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         fetch-depth: 0
         ref: refs/pull/${{ github.event.issue.number }}/head
 
@@ -55,6 +58,7 @@ jobs:
       if: steps.deploy.outputs.command-name || steps.reset.outputs.command-name
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
+        persist-credentials: false
         fetch-depth: 0
         ref: main
         path: trusted-main
@@ -64,9 +68,10 @@ jobs:
       id: base
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |
         # Query PR base dynamically instead of assuming 'main'
-        BASE=$(gh pr view ${{ github.event.issue.number }} --json baseRefName -q .baseRefName)
+        BASE=$(gh pr view "$ISSUE_NUMBER" --json baseRefName -q .baseRefName)
         echo "base=$BASE" >> $GITHUB_OUTPUT
         git fetch origin "$BASE:$BASE"
 
@@ -75,14 +80,17 @@ jobs:
       id: pr-info
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
+        DEPLOY_COMMAND: ${{ steps.deploy.outputs.command-name }}
+        RESET_COMMAND: ${{ steps.reset.outputs.command-name }}
       run: |
-        PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
+        PR_BRANCH=$(gh pr view "$ISSUE_NUMBER" --json headRefName -q .headRefName)
         echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
 
-        if [[ "${{ steps.deploy.outputs.command-name }}" == "deploy" ]]; then
+        if [[ "$DEPLOY_COMMAND" == "deploy" ]]; then
           echo "Deploying branch: $PR_BRANCH"
           TARGET_REVISION="$PR_BRANCH"
-        elif [[ "${{ steps.reset.outputs.command-name }}" == "reset" ]]; then
+        elif [[ "$RESET_COMMAND" == "reset" ]]; then
           echo "Resetting branch: $PR_BRANCH to main"
           TARGET_REVISION="main"
         fi
@@ -93,8 +101,9 @@ jobs:
       id: pr-head
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |
-        PR_HEAD=$(gh pr view ${{ github.event.issue.number }} --json headRefOid -q .headRefOid)
+        PR_HEAD=$(gh pr view "$ISSUE_NUMBER" --json headRefOid -q .headRefOid)
         echo "sha=$PR_HEAD" >> $GITHUB_OUTPUT
 
     - name: Detect Changed Apps
@@ -122,9 +131,14 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+        DETECTED_APPS: ${{ steps.detect.outputs.apps }}
+        TARGET_REVISION: ${{ steps.pr-info.outputs.target-revision }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
+        SERVER_URL: ${{ github.server_url }}
+        RUN_ID: ${{ github.run_id }}
       run: |-
         "${GITHUB_WORKSPACE}/trusted-main/scripts/argocd-deploy" \
-          --apps "${{ steps.detect.outputs.apps }}" \
-          --target-revision "${{ steps.pr-info.outputs.target-revision }}" \
-          --comment-pr "${{ github.event.issue.number }}" \
-          --action-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          --apps "$DETECTED_APPS" \
+          --target-revision "$TARGET_REVISION" \
+          --comment-pr "$ISSUE_NUMBER" \
+          --action-run-url "$SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$RUN_ID"

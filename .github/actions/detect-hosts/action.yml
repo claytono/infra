@@ -23,22 +23,28 @@ runs:
   steps:
   - name: Fetch refs (if provided)
     shell: bash
+    env:
+      BASE_REF: ${{ inputs.base_ref }}
+      HEAD_REF: ${{ inputs.head_ref }}
     run: |
       set -euo pipefail
-      if [[ -n "${{ inputs.base_ref }}" ]]; then
-        git fetch --no-tags --prune origin "+${{ inputs.base_ref }}" || true
+      if [[ -n "$BASE_REF" ]]; then
+        git fetch --no-tags --prune origin "+${BASE_REF}" || true
       fi
-      if [[ -n "${{ inputs.head_ref }}" ]]; then
-        git fetch --no-tags --prune origin "+${{ inputs.head_ref }}" || true
+      if [[ -n "$HEAD_REF" ]]; then
+        git fetch --no-tags --prune origin "+${HEAD_REF}" || true
       fi
 
   - name: Collect hosts
     id: collect
     shell: bash
-    run: |
+    env:
+      BASE_REF: ${{ inputs.base_ref }}
+      HEAD_REF: ${{ inputs.head_ref }}
+    run: |-
       set -euo pipefail
-      base='${{ inputs.base_ref }}'
-      head='${{ inputs.head_ref }}'
+      base="$BASE_REF"
+      head="$HEAD_REF"
       if [[ -z "$base" || -z "$head" ]]; then
         # No refs provided - deploy all hosts (for workflow_dispatch or similar)
         echo "No refs provided - targeting all hosts"
