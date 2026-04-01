@@ -1,4 +1,7 @@
 ---
+quicklaunch:
+  mobileButtonPosition: bottom-right
+
 layout:
   Media:
     tab: Home
