@@ -5,11 +5,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1774913704,
-        "narHash": "sha256-nhjollSO3DTAJCeeGecUMWqWoLDWbboze1HHYEip8lM=",
+        "lastModified": 1774972171,
+        "narHash": "sha256-M4P06EsKrywNLWZOdecLjKIxSEKsQc/F2nSjDaTLtT0=",
         "owner": "claytono",
         "repo": "go-unifi-mcp",
-        "rev": "ac47d7460c7b6a0841115e91278c8c6217c8b043",
+        "rev": "d967d34d8bb7e4dc82eceb9717fea72379314a4d",
         "type": "github"
       },
       "original": {
