@@ -22,6 +22,7 @@ spec:
         app.kubernetes.io/name: frank
         app.kubernetes.io/instance: frank
     spec:
+      serviceAccountName: frank
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
@@ -159,6 +160,9 @@ spec:
           mountPath: /home/node/.openclaw
         - name: tmp
           mountPath: /tmp
+        - name: kube-api-access
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
       - name: browser
         image: zenika/alpine-chrome:latest@sha256:1db3ae560c20f70f31bca4ea81fac3fc19cfb22343990d65326e92a5b59760a7
         args:
@@ -187,6 +191,23 @@ spec:
         - name: browser-home
           mountPath: /home/chrome
       volumes:
+      - name: kube-api-access
+        projected:
+          defaultMode: 0444
+          sources:
+          - serviceAccountToken:
+              expirationSeconds: 3600
+              path: token
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+              - key: ca.crt
+                path: ca.crt
+          - downwardAPI:
+              items:
+              - fieldRef:
+                  fieldPath: metadata.namespace
+                path: namespace
       - name: config
         configMap:
           name: frank-config
