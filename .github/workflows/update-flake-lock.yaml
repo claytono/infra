@@ -34,7 +34,7 @@ jobs:
     - name: Check for existing PR
       id: check-pr
       run: |
-        pr_number=$(gh pr list --state open --head "${{ github.repository_owner }}:update_flake_lock_action" --json number --jq '.[0].number // empty')
+        pr_number=$(gh pr list --state open --head update_flake_lock_action --json number --jq '.[0].number // empty')
         if [ -n "$pr_number" ]; then
           echo "existing_pr=true" >> "$GITHUB_OUTPUT"
         else
