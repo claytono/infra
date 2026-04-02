@@ -34,7 +34,8 @@ jobs:
     - name: Check for existing PR
       id: check-pr
       run: |
-        if gh pr list --state open --label nix --search "Update Nix flake inputs in:title" --json number --jq '.[0].number' > /dev/null 2>&1; then
+        pr_number=$(gh pr list --state open --head "${{ github.repository_owner }}:update_flake_lock_action" --json number --jq '.[0].number // empty')
+        if [ -n "$pr_number" ]; then
           echo "existing_pr=true" >> "$GITHUB_OUTPUT"
         else
           echo "existing_pr=false" >> "$GITHUB_OUTPUT"
@@ -50,13 +51,18 @@ jobs:
       with:
         token: ${{ secrets.PAT }}
         pr-title: Update Nix flake inputs
-        pr-labels: |-
-          nix
-          automerge
+        pr-body: |
+          Automated changes by the [update-flake-lock](https://github.com/DeterminateSystems/update-flake-lock) GitHub Action.
 
-    - name: Enable automerge
+          ```
+          {{ env.GIT_COMMIT_MESSAGE }}
+          ```
+
+    - name: Apply labels and enable automerge
       if: steps.update-flake-lock.outputs.pull-request-number != ''
       env:
         GH_TOKEN: ${{ secrets.PAT }}
         FLAKE_PR_NUMBER: ${{ steps.update-flake-lock.outputs.pull-request-number }}
-      run: gh pr merge --auto --rebase "$FLAKE_PR_NUMBER"
+      run: |-
+        gh pr edit "$FLAKE_PR_NUMBER" --add-label nix,automerge
+        gh pr merge --auto --rebase "$FLAKE_PR_NUMBER"
