@@ -361,6 +361,34 @@ alert:
     repeat: 10
     notifiers:
     - call_me
+  main_floor_bathroom_water:
+    name: Water is detected in the main floor bathroom!
+    entity_id: binary_sensor.main_floor_bathroom_leak_water_leak
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  basement_bathroom_water:
+    name: Water is detected in the basement bathroom!
+    entity_id: binary_sensor.basement_bathroom_leak_water_leak
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  kids_bathroom_water:
+    name: Water is detected in the kids bathroom!
+    entity_id: binary_sensor.kids_bathroom_leak_water_leak
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+  master_bathroom_water:
+    name: Water is detected in the master bathroom!
+    entity_id: binary_sensor.master_bathroom_leak_water_leak
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
   freezer_sensor_offline:
     name: Freezer sensor is offline
     entity_id: binary_sensor.freezer_sensor_status
