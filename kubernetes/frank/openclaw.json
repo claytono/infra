@@ -21,7 +21,17 @@
       "dmPolicy": "allowlist",
       "groupPolicy": "open",
       "requireMention": false,
-      "allowFrom": ["U08060TS9"]
+      "allowFrom": ["U08060TS9"],
+      "execApprovals": {
+        "enabled": true,
+        "approvers": ["U08060TS9"]
+      }
+    }
+  },
+  "approvals": {
+    "exec": {
+      "enabled": true,
+      "mode": "session"
     }
   },
   "tools": {
