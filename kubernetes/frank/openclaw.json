@@ -30,13 +30,12 @@
   },
   "approvals": {
     "exec": {
-      "enabled": true,
-      "mode": "session"
+      "enabled": false
     }
   },
   "tools": {
     "exec": {
-      "ask": "always"
+      "ask": "off"
     }
   },
   "plugins": {
@@ -59,6 +58,7 @@
   },
   "agents": {
     "defaults": {
+      "model": "openai-codex/gpt-5.4",
       "sandbox": {
         "mode": "off",
         "workspaceAccess": "rw"
