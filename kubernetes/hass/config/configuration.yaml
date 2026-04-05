@@ -605,6 +605,7 @@ mqtt:
     value_template: '{{ value_json.rain_mm }}'
     unit_of_measurement: mm
     device_class: precipitation
+    state_class: total_increasing
     expire_after: 3600
     json_attributes_topic: rtl_433/devices/EcoWitt-WH40/51409
     json_attributes_template: >-
