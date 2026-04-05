@@ -60,7 +60,7 @@ def get_mariadb_allowed_versions() -> str | None:
         print("Warning: No MariaDB LTS versions found >= 6 months old", file=sys.stderr)
         return None
 
-    return f"/^({"|".join(lts_cycles)})\\./"
+    return f"/^({'|'.join(lts_cycles)})\\./"
 
 
 def get_postgresql_allowed_versions() -> str | None:
@@ -87,12 +87,10 @@ def get_postgresql_allowed_versions() -> str | None:
             cycles.append(release["cycle"])
 
     if not cycles:
-        print(
-            "Warning: No PostgreSQL versions found >= 6 months old", file=sys.stderr
-        )
+        print("Warning: No PostgreSQL versions found >= 6 months old", file=sys.stderr)
         return None
 
-    return f"/^({"|".join(cycles)})\\./"
+    return f"/^({'|'.join(cycles)})\\./"
 
 
 def get_kubernetes_allowed_versions() -> str | None:
@@ -233,7 +231,7 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
         "home-assistant-n-minus-1": {
             "description": "Home Assistant: One month behind latest (auto-managed)",
             "matchDatasources": ["docker"],
-            "matchPackageNames": ["ghcr.io/home-assistant/home-assistant"],
+            "matchPackageNames": ["homeassistant/home-assistant"],
             "get_allowed": get_home_assistant_allowed_versions,
         },
         "esphome-n-minus-1": {
@@ -253,7 +251,9 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
         # Find existing rule by description
         existing_idx = None
         for idx, rule in enumerate(package_rules):
-            if rule.get("description", "").startswith(rule_config["description"].split(" (")[0]):
+            if rule.get("description", "").startswith(
+                rule_config["description"].split(" (")[0]
+            ):
                 existing_idx = idx
                 break
 
@@ -263,7 +263,12 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
         }
 
         # Add matching criteria
-        for key in ["matchDatasources", "matchPackageNames", "matchManagers", "matchFileNames"]:
+        for key in [
+            "matchDatasources",
+            "matchPackageNames",
+            "matchManagers",
+            "matchFileNames",
+        ]:
             if key in rule_config:
                 new_rule[key] = rule_config[key]
 
