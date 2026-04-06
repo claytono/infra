@@ -19,6 +19,8 @@ set -euo pipefail
 # Options:
 #   --skip-pod-checks    Skip waiting for pods to be ready (faster but less safe)
 #                        Reverts to old behavior of just waiting 30s between nodes
+#   --skip-uncordon      Drain node but do not uncordon (for upgrades where manual
+#                        intervention is needed between drain and uncordon)
 
 # Color output
 RED='\033[0;31m'
@@ -50,6 +52,7 @@ Options:
   -h, --help                      Show this help message and exit
   --skip-pod-checks               Skip waiting for pods to be ready (faster but less safe)
   --skip-reboot                   Drain and uncordon nodes without rebooting (useful for testing)
+  --skip-uncordon                 Drain node but do not uncordon (for upgrades)
 
   Timeout Options (in seconds):
   --timeout <seconds>             Set all timeouts at once (overridden by specific flags)
@@ -91,6 +94,7 @@ DEFAULT_PROGRESS_INTERVAL=10
 # Parse command line options
 SKIP_POD_CHECKS=false
 SKIP_REBOOT=false
+SKIP_UNCORDON=false
 NODES_ARGS=()
 GLOBAL_TIMEOUT=""
 TIMEOUT_DRAIN=""
@@ -111,6 +115,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-reboot)
             SKIP_REBOOT=true
+            shift
+            ;;
+        --skip-uncordon)
+            SKIP_UNCORDON=true
             shift
             ;;
         --timeout)
@@ -420,27 +428,31 @@ for node in $NODES; do
         log_info "Skipping reboot for node $node (--skip-reboot enabled)"
     fi
 
-    # Uncordon the node
-    log_info "Uncordoning node $node..."
-    if ! kubectl uncordon "$node"; then
-        log_error "Failed to uncordon node $node"
-        exit 1
-    fi
-
-    log_info "Node $node is back online and uncordoned"
-
-    # Wait for all pods on the node to be ready (if not skipping checks)
-    if [ "$SKIP_POD_CHECKS" = false ]; then
-        if ! wait_for_node_pods_ready "$node"; then
-            log_error "Pods on node $node did not become ready"
-            log_warn "Press ENTER to continue anyway, or Ctrl+C to abort..."
-            read -r
-            log_info "Continuing to next node despite pods not being ready"
-        fi
+    if [ "$SKIP_UNCORDON" = true ]; then
+        log_info "Skipping uncordon for node $node (--skip-uncordon enabled)"
     else
-        # Wait a bit before moving to next node to let pods stabilize
-        log_info "Waiting 30 seconds for pods to stabilize before next node..."
-        sleep 30
+        # Uncordon the node
+        log_info "Uncordoning node $node..."
+        if ! kubectl uncordon "$node"; then
+            log_error "Failed to uncordon node $node"
+            exit 1
+        fi
+
+        log_info "Node $node is back online and uncordoned"
+
+        # Wait for all pods on the node to be ready (if not skipping checks)
+        if [ "$SKIP_POD_CHECKS" = false ]; then
+            if ! wait_for_node_pods_ready "$node"; then
+                log_error "Pods on node $node did not become ready"
+                log_warn "Press ENTER to continue anyway, or Ctrl+C to abort..."
+                read -r
+                log_info "Continuing to next node despite pods not being ready"
+            fi
+        else
+            # Wait a bit before moving to next node to let pods stabilize
+            log_info "Waiting 30 seconds for pods to stabilize before next node..."
+            sleep 30
+        fi
     fi
     echo
 done

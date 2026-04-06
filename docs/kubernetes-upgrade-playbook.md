@@ -1,367 +1,239 @@
 # Kubernetes Upgrade Playbook
 
-This playbook provides step-by-step instructions for upgrading Kubernetes
-clusters managed by Ansible and kubeadm.
+Step-by-step instructions for upgrading Kubernetes clusters managed by Ansible
+and kubeadm.
 
 ## Version Policy
 
-**Target**: Always stay one major version behind the latest stable release.
-
-- Latest: 1.33 → Target: 1.32
-- Latest: 1.34 → Target: 1.33
-- etc.
-
-This provides stability while maintaining reasonable currency with security
-updates and feature availability.
+Stay one minor version behind the latest stable release (e.g., latest is 1.35 →
+target 1.34).
 
 ## Prerequisites
 
-- [ ] VM snapshot of k1
-- [ ] Verify all applications are healthy before starting:
-
-  ```bash
-  kubectl get applications -A  # All should be Synced & Healthy
-  # Should be empty or only completed jobs
-  kubectl get pods --all-namespaces --field-selector=status.phase!=Running
-  ```
-
-## Phase 0: Environment Preparation
-
-### 0.1 Update Development Environment
-
-1. **Update nix flake for latest tooling**
+1. **Investigate the release.** Before starting, review the target version's
+   changelog, urgent upgrade notes, and deprecation list. Check for removed
+   APIs, removed feature gates, and breaking changes that affect our workloads.
+   Run pluto against the cluster and kubeconform against our manifests during
+   this phase — not mid-upgrade.
 
    ```bash
-   # Update flake inputs to latest versions
-   nix flake update
-
-   # Rebuild development environment with latest tools
-   exit  # exit current nix develop
-   nix develop  # re-enter with updated packages
-   ```
-
-2. **Verify required tools are available**
-
-   ```bash
-   # Verify all required tools
-   kubectl version
-   kubeconform -v
-   pluto version
-   ansible --version
-   ```
-
-3. **Check certificate expiration (pre-upgrade)**
-
-   ```bash
-   # Check current certificate expiration dates (SSH to k1)
-   ssh k1 sudo kubeadm certs check-expiration
-   ```
-
-## Phase 1: Infrastructure Preparation
-
-### 1.1 Version Assessment
-
-1. **Check current cluster version and APIs**
-
-   ```bash
-   # Check current Kubernetes version to determine target
-   kubectl version
-   ```
-
-2. **Determine target version**
-   - Check [Kubernetes release notes](https://kubernetes.io/releases/) for
-     breaking changes
-   - Plan upgrade path (Kubernetes supports n-1 version skew)
-
-### 1.2 Compatibility Verification
-
-1. **Check for deprecated APIs and invalid manifests**
-
-   ```bash
-   # Check for deprecated APIs in running cluster
    pluto detect-all-in-cluster --target-versions k8s=v1.XX.0
 
-   # Validate manifests against target version (with CRDs catalog)
    CRD_SCHEMA_URL='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
    kubeconform -schema-location default \
      -schema-location "$CRD_SCHEMA_URL" \
      -kubernetes-version 1.XX.0 kubernetes/
    ```
 
-   **Note:** Clean up any deprecated resources found by pluto before proceeding.
+   kubeconform flags kustomize patches, non-K8s YAML (values.yaml,
+   kustomization.yaml), and `.tmp/` directories as failures — these are expected
+   noise.
 
-2. **Verify component compatibility with target Kubernetes version:**
+2. **Verify component compatibility** with the target version. Check upstream
+   docs for flannel, metallb, traefik, argocd, vpa, descheduler, external-dns,
+   external-secrets, cert-manager, kube-state-metrics, metrics-server,
+   democratic-csi, nfs-subdir-external-provisioner, reloader, and containerd.
 
-   Check current Chart.yaml versions and confirm compatibility:
-
-   ```bash
-   # Check all Helm chart versions
-   find kubernetes -name "Chart.yaml" -exec grep -H "version:" {} \;
-
-   # Verify ArgoCD application version
-   kubectl get deploy argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].image}'
-   ```
-
-   **Key Components to verify:**
-
-   - **CNI**: flannel
-   - **Load Balancer**: metallb
-   - **Ingress**: ingress-nginx
-   - **GitOps**: argocd
-   - **Autoscaling**: vpa, descheduler
-   - **DNS/Secrets**: external-dns, external-secrets, 1password-connect
-   - **Monitoring**: kube-state-metrics, metrics-server
-   - **Storage**: nfs-client-provisioner
-   - **Operations**: reloader
-   - **Container Runtime**: containerd (via githubixx.containerd role)
-
-   **Action:** Research compatibility online and update components if needed
-   before upgrade.
-
-## Phase 2: kubeadm Upgrade (Control Plane)
-
-### 2.1 Update Repository Configuration
-
-1. **Update kubernetes.yaml variables for repo and kubeadm:**
-
-   ```yaml
-   # In group_vars/kubernetes.yaml
-   kubernetes_short_version: "1.XX" # Update repo config
-   kubeadm_version: "1.XX.XX-1.1"
-   cri_tools_version: "1.XX.0-1.1" # MUST match k8s minor version
-   # Keep other versions at current for now
-   ```
-
-2. **Deploy kubeadm to all nodes:**
+3. **Snapshot k1** on Proxmox:
 
    ```bash
-   ansible-playbook -l kubernetes -t kubernetes site.yaml
+   # From any Proxmox node (p1-p4):
+   pvesh get /cluster/resources --type vm --output-format json | \
+     python3 -c "import sys,json; [print(f'VMID={v[\"vmid\"]} node={v[\"node\"]}') for v in json.load(sys.stdin) if v['name']=='k1']"
+
+   VMID=<vmid>
+   NODE=<node>
+
+   pvesh create /nodes/$NODE/qemu/$VMID/snapshot --snapname pre-upgrade \
+     --description "Before K8s upgrade to v1.XX"
+
+   # Verify it exists
+   pvesh get /nodes/$NODE/qemu/$VMID/snapshot --output-format json | python3 -m json.tool
    ```
 
-### 2.2 Evaluate Cluster Configuration
-
-1. **Check kubeadm ConfigMap:**
+4. **Verify cluster health:**
 
    ```bash
-   kubectl get configmap kubeadm-config -n kube-system -o yaml
-   kubectl get configmap kubelet-config -n kube-system -o yaml
+   kubectl get applications -A                                  # All Synced & Healthy
+   kubectl get pods -A --field-selector=status.phase!=Running   # Only completed jobs
+   ssh k1 sudo kubeadm certs check-expiration                  # Save for post-upgrade comparison
    ```
 
-2. **Compare with kubeadm expectations (SSH to k1):**
+## Phase 1: Deploy kubeadm
 
-   ```bash
-   ssh k1 sudo kubeadm config print init-defaults
-   ssh k1 sudo kubeadm config print join-defaults
-   ```
+Update `ansible/group_vars/kubernetes.yaml` — only kubeadm, cri-tools, and repo
+versions. Leave kubelet/kubectl/kubernetes-cni unchanged:
 
-3. **Look for:**
-   - Version mismatches
-   - Deprecated API versions
-   - Missing configuration parameters
-   - CNI configuration alignment
-
-### 2.3 Run kubeadm Upgrade (SSH to k1)
-
-1. **Plan the upgrade (USER TO RUN MANUALLY):**
-
-   ```bash
-   ssh k1 sudo kubeadm upgrade plan
-   ```
-
-2. **Apply the upgrade (USER TO RUN MANUALLY):**
-
-   ```bash
-   ssh k1 sudo kubeadm upgrade apply v1.XX.XX
-   ```
-
-## Phase 3: Control Plane Package Updates
-
-### 3.1 Drain Control Plane
-
-```bash
-kubectl drain k1 --ignore-daemonsets --force --delete-emptydir-data
+```yaml
+kubernetes_short_version: "1.XX"
+kubeadm_version: "1.XX.XX-1.1"
+cri_tools_version: "1.XX.0-1.1"
+kubernetes_repo_versions:
+  - "1.XX"
+  - "1.YY" # previous version for rollback
 ```
 
-### 3.2 Update All Package Versions
+If the kubeadm config API version has changed (e.g., v1beta3 → v1beta4), update
+`ansible/roles/kubeadm/templates/kubeadm.conf.j2` to match. This template is not
+used during `kubeadm upgrade apply` (kubeadm reads the live ConfigMap), but it
+should stay current for any future `kubeadm reset && init`.
 
-1. **Check available package versions (SSH to k1):**
-
-   ```bash
-   ssh k1 "sudo apt update && apt-cache policy kubernetes-cni kubelet kubectl cri-tools"
-   ```
-
-2. **Update kubernetes.yaml with latest available versions from target repo:**
-
-   ```yaml
-   kubernetes_version: "1.XX.XX"
-   kubeadm_version: "1.XX.XX-1.1"
-   kubelet_version: "1.XX.XX-1.1"
-   kubectl_version: "1.XX.XX-1.1"
-   cri_tools_version: "1.XX.X-1.1" # Use latest patch from target minor version
-   kubernetes_cni_version: "1.X.X-1.1" # Use latest available version
-   ```
-
-### 3.3 Deploy Updated Packages
+Deploy to all nodes and verify:
 
 ```bash
-ansible-playbook -l k1 -t kubernetes site.yaml
+cd ansible && ansible-playbook -l kubernetes -t kubernetes site.yaml
+ssh k1 kubeadm version   # Should show target version
 ```
 
-### 3.4 Uncordon Control Plane
+## Phase 2: Upgrade Control Plane
+
+Review what kubeadm will do, pre-pull images, then apply:
 
 ```bash
+ssh k1 sudo kubeadm upgrade plan 2>&1 | tee /tmp/k1-upgrade-plan.log
+
+ssh k1 'sudo time kubeadm config images pull --kubernetes-version v1.XX.XX' \
+  2>&1 | tee /tmp/k1-image-pull.log
+
+ssh k1 'sudo time kubeadm upgrade apply v1.XX.XX' \
+  2>&1 | tee /tmp/k1-upgrade.log
+```
+
+The upgrade can take up to 20 minutes, especially with major etcd version jumps
+(e.g., 3.5 → 3.6). Tee the output so it's available for review if the terminal
+disconnects.
+
+Verify the control plane is healthy before touching anything else:
+
+```bash
+kubectl cluster-info
+kubectl get nodes
+kubectl get pods -n kube-system
+```
+
+If the control plane is unhealthy, restore from the Proxmox snapshot (see
+Rollback Plan) before proceeding.
+
+## Phase 3: Upgrade k1 Packages
+
+Drain k1, update package versions, deploy, and uncordon:
+
+```bash
+scripts/rolling-node-reboot.sh --skip-reboot --skip-uncordon k1
+```
+
+Check available package versions, then update `kubernetes.yaml`:
+
+```bash
+ssh k1 'sudo apt update && apt-cache policy kubernetes-cni kubelet kubectl cri-tools'
+```
+
+```yaml
+kubernetes_version: "1.XX.XX"
+kubelet_version: "1.XX.XX-1.1"
+kubectl_version: "1.XX.XX-1.1"
+kubernetes_cni_version: "1.X.X-1.1" # latest available in target repo
+```
+
+```bash
+cd ansible && ansible-playbook -l k1 -t kubernetes site.yaml
 kubectl uncordon k1
 ```
 
-## Phase 4: Worker Node Upgrades
+The API server may be briefly unavailable after the kubelet restarts — wait a
+few seconds and retry if `kubectl uncordon` gets a connection error.
 
-For each worker node, repeat these steps:
-
-### 4.1 Drain Worker Node
-
-```bash
-kubectl drain <worker-hostname> --ignore-daemonsets --force --delete-emptydir-data
-```
-
-### 4.2 Deploy Packages to Worker
-
-```bash
-ansible-playbook -l <worker-hostname> -t kubernetes site.yaml
-```
-
-### 4.3 Uncordon Worker Node
-
-```bash
-kubectl uncordon <worker-hostname>
-```
-
-### 4.4 Verify Node Ready
+Verify k1 shows the target version before proceeding to workers:
 
 ```bash
 kubectl get nodes -o wide
-# Ensure node shows Ready status and correct version before continuing
 ```
+
+## Phase 4: Upgrade Workers
+
+Upgrade one at a time. Generic workers first, specialized nodes (GPU) last.
+
+For each worker:
+
+```bash
+scripts/rolling-node-reboot.sh --skip-reboot --skip-uncordon <worker>
+ssh <worker> sudo kubeadm upgrade node
+cd ansible && ansible-playbook -l <worker> -t kubernetes site.yaml
+kubectl uncordon <worker>
+kubectl get nodes -o wide   # Verify Ready + target version before next worker
+```
+
+Drains can take several minutes due to PodDisruptionBudgets and iSCSI volume
+detachment. On a small cluster, some evicted pods may remain Pending until the
+node is uncordoned — this is expected when capacity is tight.
 
 ## Phase 5: Final Validation
 
-### 5.1 Cluster Health Check
-
 ```bash
-# Check all nodes are ready and on correct version
-kubectl get nodes -o wide
-
-# Check for any non-running pods
-kubectl get pods --all-namespaces --field-selector=status.phase!=Running
-
-# Verify all pods are running (count should match)
-kubectl get pods --all-namespaces | wc -l && \
-  kubectl get pods --all-namespaces | grep Running | wc -l
-
-# Verify cluster info
+kubectl get nodes -o wide                                      # All at target version
 kubectl cluster-info
-```
-
-### 5.2 Ingress Connectivity Check
-
-```bash
-# Verify all ingress resources have addresses
-kubectl get ingress --all-namespaces
-```
-
-### 5.3 DNS Resolution Test
-
-```bash
-# Test DNS resolution from within cluster
+kubectl get pods -A --field-selector=status.phase!=Running     # Only completed jobs
+kubectl get applications -A                                    # All Synced & Healthy
+ssh k1 sudo kubeadm certs check-expiration                    # Should be ~1 year out
+kubectl get ingress -A                                         # All have addresses
+kubectl get pv,pvc -A                                          # All Bound
+kubectl get pods -A -o wide | grep nvidia                      # GPU workloads running
 kubectl run test-dns --image=nicolaka/netshoot --rm -it --restart=Never \
   -- dig kubernetes.default.svc.cluster.local
 ```
 
-### 5.4 Storage Validation
+Once satisfied, remove the Proxmox snapshot:
 
 ```bash
-# Check all persistent volumes and claims are bound
-kubectl get pv,pvc --all-namespaces
+# From the same Proxmox node as Prerequisites
+pvesh delete /nodes/$NODE/qemu/$VMID/snapshot/pre-upgrade
 ```
 
-### 5.5 Certificate Validation
+## Rollback Plan
+
+If the control plane upgrade fails or is unhealthy:
+
+1. Restore k1 from Proxmox snapshot:
+
+   ```bash
+   pvesh create /nodes/$NODE/qemu/$VMID/snapshot/pre-upgrade/rollback
+   ```
+
+2. Workers reconnect automatically once the API server is back. If workers were
+   already upgraded, kubelet n+1 talking to apiserver n is supported (n-1 skew),
+   but they should be rolled back by redeploying previous packages via Ansible.
+
+**Rollback triggers:** `kubeadm upgrade apply` exits non-zero, API server not
+responding within 5 minutes, control plane pods in CrashLoopBackOff.
+
+## Reference
+
+### kubeadm Configuration Template
+
+The template at `ansible/roles/kubeadm/templates/kubeadm.conf.j2` uses the
+kubeadm v1beta4 API. kubeadm migrates the live cluster ConfigMap automatically
+during upgrades, but the local template must be updated manually when the API
+version changes (e.g., v1beta4 changed `extraArgs` from a map to a list of
+`{name, value}` objects).
+
+Before any `kubeadm reset && init`, reconcile the template against the live
+config and kubeadm defaults:
 
 ```bash
-# Verify certificates were automatically renewed during upgrade (SSH to k1)
-ssh k1 sudo kubeadm certs check-expiration
+cat ansible/roles/kubeadm/templates/kubeadm.conf.j2
+kubectl get configmap kubeadm-config -n kube-system -o jsonpath='{.data.ClusterConfiguration}'
+ssh k1 sudo kubeadm config print init-defaults
 ```
-
-**Note:** Kubeadm automatically renews all certificates (1-year default
-lifetime) during cluster upgrades.
-
-### 5.6 Additional Application Testing (Optional)
-
-- [ ] Test specific application endpoints via ingress
-- [ ] Verify certificate auto-renewal functionality
-- [ ] Test external integrations (webhooks, APIs, etc.)
-- [ ] Validate backup/restore operations
-- [ ] Check custom resource controllers
-
-### 5.7 Component Updates (Optional)
-
-1. **Update Helm charts** to latest compatible versions
-2. **Update documentation** with new versions
-3. **Update monitoring/alerting** if needed
-
-## Important Notes
 
 ### Dependency Requirements
 
-- **kubeadm dependency**: kubeadm 1.XX requires cri-tools >= 1.XX.0
-- Always update `cri_tools_version` when updating `kubeadm_version`
+kubeadm requires cri-tools from the same minor version. Always update
+`cri_tools_version` when updating `kubeadm_version`.
 
 ### Troubleshooting
 
-#### Hostname Resolution Issues
+**Certificate errors with kubectl:** Check `hostname -f` returns the FQDN and
+`/etc/hosts` is correct.
 
-If `kubectl` commands fail with certificate errors:
-
-- Verify `hostname -f` returns proper FQDN
-- Check `/etc/hosts` configuration
-- Ensure hostname role is applied
-
-#### Package Dependency Conflicts
-
-If apt shows dependency conflicts:
-
-- Update dependent packages simultaneously
-- Check apt preferences files in `/etc/apt/preferences.d/`
-
-### Rollback Plan
-
-If issues occur:
-
-1. **Control plane rollback:**
-
-   ```bash
-   sudo kubeadm upgrade apply v1.OLD.VERSION
-   ```
-
-2. **Downgrade packages:**
-
-   ```bash
-   apt-get install kubeadm=1.OLD.VERSION-1.1 kubelet=1.OLD.VERSION-1.1
-   ```
-
-3. **Restore etcd from backup** if needed
-4. **Restart services** and validate functionality
-
-## Version-Specific Notes
-
-### 1.29 → 1.30
-
-- No breaking changes for standard workloads
-- FlowSchema/PriorityLevelConfiguration API removal (rarely used)
-- All kustomize v1beta1 usage remains compatible
-
-### General Upgrade Guidelines
-
-- Always test in staging environment first
-- Upgrade one minor version at a time
-- Monitor cluster metrics during upgrade
-- Keep etcd backups recent
-- Document any custom modifications needed
+**Package dependency conflicts:** Check apt preferences files in
+`/etc/apt/preferences.d/` — the Ansible role creates version pins there.

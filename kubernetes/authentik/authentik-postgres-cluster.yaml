@@ -13,6 +13,10 @@ spec:
   storage:
     size: 10Gi
 
+  postgresql:
+    parameters:
+      max_connections: '200'
+
   bootstrap:
     initdb:
       database: authentik
