@@ -6,10 +6,10 @@ metadata:
   name: hass-home-assistant
   namespace: hass
   labels:
-    app.kubernetes.io/name: home-assistant
     app.kubernetes.io/instance: hass
-    app.kubernetes.io/version: "2026.3.1"
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: home-assistant
+    app.kubernetes.io/version: 2026.3.3
 spec:
   type: ClusterIP
   ports:
