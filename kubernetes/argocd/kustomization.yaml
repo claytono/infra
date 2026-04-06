@@ -61,7 +61,7 @@ resources:
 - helm/templates/argocd-server/serviceaccount.yaml
 - helm/templates/crds/crd-application.yaml
 - helm/templates/crds/crd-applicationset.yaml
-- helm/templates/crds/crd-project.yaml
+- helm/templates/crds/crd-appproject.yaml
 - helm/templates/dex/deployment.yaml
 - helm/templates/dex/role.yaml
 - helm/templates/dex/rolebinding.yaml
