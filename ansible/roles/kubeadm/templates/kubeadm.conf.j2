@@ -1,5 +1,5 @@
 kind: InitConfiguration
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 bootstrapTokens:
 - groups:
   - system:bootstrappers:kubeadm:default-node-token
@@ -14,7 +14,7 @@ nodeRegistration:
     key: node-role.kubernetes.io/master
 ---
 kind: ClusterConfiguration
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 apiServer:
   certSANs:
   - {{ ansible_facts['fqdn'] }}
@@ -23,9 +23,12 @@ clusterName: kubernetes
 controlPlaneEndpoint: "{{ ansible_facts['fqdn'] }}:6443"
 controllerManager:
   extraArgs:
-    allocate-node-cidrs: "true"
-    cloud-provider: external
-    cluster-cidr: 10.244.0.0/16
+  - name: allocate-node-cidrs
+    value: "true"
+  - name: cloud-provider
+    value: external
+  - name: cluster-cidr
+    value: 10.244.0.0/16
 etcd:
   local:
     dataDir: /var/lib/etcd
