@@ -69,6 +69,16 @@ spec:
             secretKeyRef:
               name: cross-seed-secrets
               key: qbittorrent-url
+        - name: SONARR_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cross-seed-secrets
+              key: sonarr-api-key
+        - name: RADARR_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cross-seed-secrets
+              key: radarr-api-key
       volumes:
       - name: config-file
         configMap:

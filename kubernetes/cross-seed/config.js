@@ -21,6 +21,8 @@ module.exports = {
         process.env.PROWLARR_URL_3,
         process.env.PROWLARR_URL_4
     ].filter(Boolean),
+    sonarr: [`https://sonarr.k.oneill.net/?apikey=${process.env.SONARR_API_KEY}`],
+    radarr: [`https://radarr.k.oneill.net/?apikey=${process.env.RADARR_API_KEY}`],
     /**
      * To search with downloaded data, you can pass in directories to your downloaded torrent
      * data to find matches rather using the torrent files themselves for matching.
@@ -40,7 +42,7 @@ module.exports = {
      * using the standard matching algorithm. "risky" uses filesize as its only comparison point.
      * Options: "safe", "risky"
      */
-    matchMode: "safe",
+    matchMode: "partial",
     /**
      * Defines what category torrents injected by data-based matching should use.
      * Default is "cross-seed-data"
@@ -75,7 +77,7 @@ module.exports = {
      * Setting this to higher values will result in more searchees and more API hits to
      * your indexers.
      */
-    maxDataDepth: 2,
+    maxDataDepth: 3,
     /**
      * Directory containing .torrent files.
      * For qBittorrent, this is BT_Backup
@@ -93,16 +95,13 @@ module.exports = {
      * Don't change this for Docker.
      * Instead set the volume mapping on your docker container.
      */
-    outputDir: "/cross-seeds",
-    /**
-     * Whether to search for all episode torrents, including those from season packs. This option overrides includeSingleEpisodes.
-     */
-    includeEpisodes: false,
+    outputDir: null,
     /**
      * Whether to include single episode torrents in the search (not from season packs).
      * Like `includeEpisodes` but slightly more restrictive.
      */
     includeSingleEpisodes: false,
+    seasonFromEpisodes: 0.8,
     /**
      * Include torrents which contain non-video files
      * This option does not override includeEpisodes or includeSingleEpisodes.
@@ -179,7 +178,7 @@ module.exports = {
      * "2w"
      * "3 days"
      */
-    rssCadence: undefined,
+    rssCadence: "30min",
     /**
      * Run searches on a schedule. Format: https://github.com/vercel/ms
      * Set to undefined or null to disable. Minimum of 1 day.
