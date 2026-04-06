@@ -33,8 +33,6 @@ metadata:
     app.kubernetes.io/instance: spegel
     app.kubernetes.io/version: "v0.6.0"
     app.kubernetes.io/managed-by: Helm
-  annotations:
-    service.kubernetes.io/topology-mode: "auto"
 spec:
   type: NodePort
   selector:
@@ -47,6 +45,7 @@ spec:
       targetPort: registry
       nodePort: 30021
       protocol: TCP
+  trafficDistribution: PreferSameNode
 ---
 # Source: spegel/templates/service.yaml
 apiVersion: v1
