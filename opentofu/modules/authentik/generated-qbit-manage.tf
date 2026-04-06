@@ -5,7 +5,7 @@
 resource "authentik_provider_proxy" "qbit-manage" {
   name                  = "qbit-manage"
   external_host         = "https://qbit-manage.k.oneill.net"
-  internal_host         = "http://qbit-manage.default.svc.cluster.local:8080"
+  internal_host         = "http://qbit-manage.default.svc.cluster.local:8181"
   mode                  = "forward_domain"
   cookie_domain         = "oneill.net"
   authorization_flow    = data.authentik_flow.default_authorization.id
