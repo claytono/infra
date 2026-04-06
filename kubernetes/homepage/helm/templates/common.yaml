@@ -138,7 +138,7 @@ metadata:
     app.kubernetes.io/name: homepage
     app.kubernetes.io/version: v1.2.0
   annotations:
-    values-checksum: 586f17f2f0e53b83af1d4339b9244221933355d84daade1eb11a3ccdc4a959b4
+    values-checksum: ba02cd2872aa11dfec0b818963d05c72d3358b529cd59471b59da76cb0287161
 spec:
   revisionHistoryLimit: 3
   replicas: 1
@@ -151,7 +151,7 @@ spec:
   template:
     metadata:
       annotations:
-        values-checksum: 586f17f2f0e53b83af1d4339b9244221933355d84daade1eb11a3ccdc4a959b4
+        values-checksum: ba02cd2872aa11dfec0b818963d05c72d3358b529cd59471b59da76cb0287161
         checksum/secrets: 4141e6981f3b767e75a4e744858b9ff414dba5d0ef6afd761f7700061fb6e32e
       labels:
         app.kubernetes.io/name: homepage
@@ -163,7 +163,7 @@ spec:
       enableServiceLinks: true
       containers:
         - name: homepage
-          image: ghcr.io/gethomepage/homepage:v1.11.0@sha256:b129cb0f674bd6d204e215bde2c2fc3f11d6ad0e82f6d20007cf80f74e1acbb1
+          image: ghcr.io/gethomepage/homepage:v1.12.3@sha256:cc84f2f5eb3c7734353701ccbaa24ed02dacb0d119114e50e4251e2005f3990a
           imagePullPolicy:
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
