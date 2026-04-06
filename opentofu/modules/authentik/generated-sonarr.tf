@@ -17,7 +17,7 @@ resource "authentik_provider_proxy" "sonarr" {
   basic_auth_password_attribute = "password"
 
   skip_path_regex = <<-EOT
-^https://sonarr.k.oneill.net/api/v\d+.*
+^https://sonarr.k.oneill.net/api(/|$).*
   EOT
 }
 
