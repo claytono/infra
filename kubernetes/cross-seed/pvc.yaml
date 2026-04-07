@@ -1,13 +1,16 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 
 metadata:
-  name: cross-seed-data
+  name: cross-seed-config
+  labels:
+    velero.io/backup: 'true'
 
 spec:
   accessModes:
   - ReadWriteOnce
+  storageClassName: synology-iscsi
   resources:
     requests:
-      storage: 1Gi
+      storage: 10Gi

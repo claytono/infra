@@ -33,8 +33,6 @@ spec:
           name: config
         - mountPath: /downloads
           name: downloads
-        - name: cross-seed-data
-          mountPath: /cross-seeds
         env:
         - name: PUID
           value: '10001'
@@ -50,6 +48,3 @@ spec:
           server: fs2.oneill.net
           path: /volume2/shared/downloads
         name: downloads
-      - name: cross-seed-data
-        persistentVolumeClaim:
-          claimName: cross-seed-data
