@@ -49,6 +49,12 @@ tools/recyclarr/data/resources/
 tools/recyclarr/data/settings.yml
 tools/recyclarr/data/state/
 
+# Claude Code (ephemeral/local files)
+.claude/settings.local.json
+.claude/sessions/
+.claude/todos/
+.claude/scheduled_tasks.*
+
 # Beads (JSONL committed only to beads-sync branch)
 .beads/issues.jsonl
 .beads/interactions.jsonl
