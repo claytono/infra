@@ -37,7 +37,7 @@ target 1.34).
 3. **Snapshot k1** on Proxmox:
 
    ```bash
-   # From any Proxmox node (p1-p4):
+   # From the Proxmox node (p1):
    pvesh get /cluster/resources --type vm --output-format json | \
      python3 -c "import sys,json; [print(f'VMID={v[\"vmid\"]} node={v[\"node\"]}') for v in json.load(sys.stdin) if v['name']=='k1']"
 

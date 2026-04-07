@@ -13,9 +13,7 @@ targets:
   - k2.oneill.net
   - k3.oneill.net
   - k4.oneill.net
-  - p2.oneill.net
-  - p3.oneill.net
-  - p4.oneill.net
+  - k5.oneill.net
   - infra1.oneill.net
   - pantrypi.oneill.net
   - garagepi.oneill.net

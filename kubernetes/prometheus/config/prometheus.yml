@@ -30,6 +30,7 @@ scrape_configs:
     - k2.oneill.net:9100
     - k3.oneill.net:9100
     - k4.oneill.net:9100
+    - k5.oneill.net:9100
 
 # scrape szamar via http on port 10445
 - job_name: hwinfo gaming pc
@@ -324,9 +325,6 @@ scrape_configs:
   static_configs:
   - targets:
     - p1.oneill.net
-    - p2.oneill.net
-    - p3.oneill.net
-    - p4.oneill.net
   relabel_configs:
   - source_labels: [__address__]
     target_label: __param_target

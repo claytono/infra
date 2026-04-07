@@ -1,12 +1,12 @@
 ---
 substitutions:
-  devicename: p2-power
-  device_id: p2_power
-  human_devicename: P2
+  devicename: k4-power
+  device_id: k4_power
+  human_devicename: K4
   icon: mdi:ship-wheel
   restore_mode: always_on
-  mac: 48:3F:DA:2B:FB:35
-  ip: 172.20.7.163
+  mac: C8:2B:96:06:7A:88
+  ip: 172.20.5.17
 
 packages:
   wifi: !include common/wifi.yaml
