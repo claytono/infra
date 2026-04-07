@@ -52,14 +52,18 @@ item to its PR or issue.
 Check whether newer versions exist beyond what this PR proposes. If they do,
 evaluate their changelogs for:
 
-- Bugs or regressions INTRODUCED in the proposed version and fixed later. These
-  MUST be called out if relevant to the deployment's config — they mean the
-  proposed version has known issues. This should influence the verdict toward
-  Caution or Risk.
-- Security fixes for vulnerabilities introduced in the proposed version. Always
-  flag these regardless of config relevance.
-- Bugs that pre-date the proposed version (already present in the current
-  version) can be omitted unless they are serious.
+- Bugs or regressions INTRODUCED in the proposed version range (not present in
+  the current version) and fixed in a later release. These MUST be called out if
+  relevant to the deployment's config — they mean the proposed version has known
+  issues. This should influence the verdict toward Caution or Risk.
+- Security vulnerabilities INTRODUCED in the proposed version range (not present
+  in the current version) and fixed in a later release. Always flag these
+  regardless of config relevance. This should influence the verdict toward Risk.
+- Pre-existing issues (bugs, CVEs, or vulnerabilities present in BOTH the
+  current and proposed versions) do NOT affect the verdict — they are not risks
+  introduced by this PR. Note them as context if serious, but they must not
+  drive the label. A CVE that exists in both versions is not a reason to flag
+  the update as risky.
 
 ## Hazards & Risks
 
@@ -90,7 +94,9 @@ highest-risk-wins for the label.
 
 ## Verdict Mapping
 
-- 🟢 **Safe** (`renovate:safe`) — no concerns, straightforward update
+- 🟢 **Safe** (`renovate:safe`) — no concerns, straightforward update. Security
+  patches that fix CVEs without introducing behavioral changes are safe — the
+  change reduces risk without adding any.
 - 🟡 **Caution** (`renovate:caution`) — behavioral changes worth validating
 - 🟠 **Breaking** (`renovate:breaking`) — breaking changes, needs config rework
 - 🔴 **Risk** (`renovate:risk`) — known issues, regressions, or low confidence

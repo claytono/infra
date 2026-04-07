@@ -53,7 +53,9 @@ include one.
 
 One of:
 
-- `renovate:safe` — no concerns, straightforward update
+- `renovate:safe` — no concerns, straightforward update. Security patches that
+  fix CVEs without introducing behavioral changes are safe — the change reduces
+  risk without adding any.
 - `renovate:caution` — behavioral changes worth validating
 - `renovate:breaking` — breaking changes, needs config rework
 - `renovate:risk` — known issues, regressions, or low confidence
