@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Show OpenArchiver status: pods, ingestion, search index, and job queues.
+
+set -euo pipefail
+
+NS=openarchiver
+API_KEY="${OPENARCHIVER_API_KEY:-}"
+BACKEND_POD=""
+MEILI_KEY=""
+
+# Colors
+bold='\033[1m'
+dim='\033[2m'
+green='\033[32m'
+yellow='\033[33m'
+red='\033[31m'
+reset='\033[0m'
+
+header() { printf "\n${bold}── %s${reset}\n" "$1"; }
+
+# ── Pods ──────────────────────────────────────────────────────────────────────
+
+header "Pods"
+kubectl get pods -n "$NS" -o wide --no-headers 2>/dev/null | while IFS= read -r line; do
+    if echo "$line" | grep -q "Running"; then
+        printf "${green}  %s${reset}\n" "$line"
+    else
+        printf "${red}  %s${reset}\n" "$line"
+    fi
+done
+
+# ── Meilisearch index ────────────────────────────────────────────────────────
+
+header "Meilisearch"
+MEILI_KEY=$(kubectl get secret -n "$NS" openarchiver-secrets \
+    -o jsonpath='{.data.meilisearch-master-key}' 2>/dev/null | base64 -d)
+
+if [[ -n "$MEILI_KEY" ]]; then
+    stats=$(kubectl exec -n "$NS" openarchiver-meilisearch-0 -- \
+        curl -sf http://localhost:7700/indexes/emails/stats \
+        -H "Authorization: Bearer ${MEILI_KEY}" 2>/dev/null || echo "{}")
+    docs=$(echo "$stats" | python3 -c "import sys,json; print(json.load(sys.stdin).get('numberOfDocuments','?'))" 2>/dev/null || echo "?")
+    indexing=$(echo "$stats" | python3 -c "import sys,json; print(json.load(sys.stdin).get('isIndexing','?'))" 2>/dev/null || echo "?")
+    printf "  Documents: ${bold}%s${reset}\n" "$docs"
+    printf "  Indexing:  %s\n" "$indexing"
+else
+    echo "  (could not read meilisearch key)"
+fi
+
+# ── PostgreSQL ───────────────────────────────────────────────────────────────
+
+header "PostgreSQL"
+pg_pod=$(kubectl get pods -n "$NS" -l cnpg.io/cluster=openarchiver-postgres \
+    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+
+if [[ -n "$pg_pod" ]]; then
+    total=$(kubectl exec -n "$NS" "$pg_pod" -c postgres -- \
+        psql -U postgres -d openarchiver -t -A \
+        -c "SELECT count(*) FROM archived_emails" 2>/dev/null || echo "?")
+    dupes=$(kubectl exec -n "$NS" "$pg_pod" -c postgres -- \
+        psql -U postgres -d openarchiver -t -A \
+        -c "SELECT count(*) FROM (SELECT message_id_header FROM archived_emails GROUP BY message_id_header HAVING count(*) > 1) d" 2>/dev/null || echo "?")
+    printf "  Total emails:   ${bold}%s${reset}\n" "$total"
+    printf "  Duplicates:     %s\n" "$dupes"
+fi
+
+# ── Ingestion sources ────────────────────────────────────────────────────────
+
+header "Ingestion Sources"
+if [[ -n "$pg_pod" ]]; then
+    kubectl exec -n "$NS" "$pg_pod" -c postgres -- \
+        psql -U postgres -d openarchiver -t -A \
+        -c "SELECT name, status, last_sync_status_message, last_sync_started_at, last_sync_finished_at, sync_state FROM ingestion_sources" 2>/dev/null | \
+    while IFS='|' read -r name status msg started finished sync_state; do
+        case "$status" in
+            active)    color=$green ;;
+            error)     color=$red ;;
+            importing|syncing) color=$yellow ;;
+            *)         color=$dim ;;
+        esac
+        printf "  ${bold}%s${reset}: ${color}%s${reset}\n" "$name" "$status"
+        if [[ -n "$msg" ]]; then printf "    Message:  %s\n" "$msg"; fi
+        if [[ -n "$started" ]]; then printf "    Started:  %s\n" "$started"; fi
+        if [[ -n "$finished" ]]; then printf "    Finished: %s\n" "$finished"; fi
+        if [[ -n "$sync_state" ]]; then
+            echo "$sync_state" | python3 -c "
+import sys, json
+try:
+    state = json.loads(sys.stdin.read())
+    imap = state.get('imap', {})
+    for mbox in sorted(imap.keys()):
+        uid = imap[mbox].get('maxUid', 0)
+        print(f'    {mbox}: maxUid={uid}')
+except: pass
+" 2>/dev/null
+        fi
+    done
+fi
+
+# ── Job queues (requires API key) ────────────────────────────────────────────
+
+header "Job Queues"
+if [[ -z "$API_KEY" ]]; then
+    printf "  %sSet OPENARCHIVER_API_KEY to see queue status%s\n" "$dim" "$reset"
+else
+    BACKEND_POD=$(kubectl get pods -n "$NS" -l app.kubernetes.io/name=openarchiver \
+        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+    if [[ -n "$BACKEND_POD" ]]; then
+        queues=$(kubectl exec -n "$NS" "$BACKEND_POD" -- \
+            wget -qO- --header="x-api-key: ${API_KEY}" \
+            http://localhost:4000/v1/jobs/queues 2>/dev/null || echo "")
+        if [[ -n "$queues" ]]; then
+            echo "$queues" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for q in data.get('queues', []):
+    name = q['name']
+    c = q['counts']
+    parts = []
+    for k in ['active', 'waiting', 'delayed', 'failed', 'completed']:
+        v = c.get(k, 0)
+        if v > 0:
+            parts.append(f'{k}={v}')
+    print(f'  {name}: {\"  \".join(parts) if parts else \"idle\"}')
+" 2>/dev/null
+        else
+            echo "  (could not reach backend API)"
+        fi
+    fi
+fi
+
+# ── Recent logs (last 5 meaningful lines) ─────────────────────────────────────
+
+header "Recent Activity"
+kubectl logs -n "$NS" -l app.kubernetes.io/name=openarchiver --tail=100 2>/dev/null | \
+    grep -v '^\[1\] \[1\] en' | \
+    grep -v 'Setting up fake' | \
+    grep -vi 'NOT valid form\|Unsupported.*field' | \
+    grep -i 'batch\|mailbox\|error\|fail\|indexed\|sync\|scheduler\|session\|stale\|duplicate\|import\|Processing' | \
+    tail -5 | \
+    sed 's/^/  /'
+
+echo ""
