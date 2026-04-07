@@ -108,11 +108,14 @@ your own independent research:
 
    - `gh release list --repo upstream/repo --limit 10`
    - If a newer version fixes bugs or regressions _introduced_ in the proposed
-     version range, flag this prominently — this should influence the verdict
-     toward `renovate:risk`
-   - Pre-existing issues (present in the current deployed version too) do not
-     change the risk level of this PR. However, prominently flag any
-     pre-existing CVEs and note if a newer release fixes them
+     version range (not present in the current version), flag this prominently —
+     this should influence the verdict toward `renovate:risk`
+   - Pre-existing issues (present in BOTH the current deployed version and the
+     proposed version) do NOT change the risk level of this PR and must NOT
+     influence the label. A CVE that exists in both versions is not a reason to
+     flag the update as risky — the PR doesn't make things worse. Note
+     pre-existing CVEs as informational context if serious, but do not let them
+     drive the verdict
 
 8. **Security analysis:** Search for CVEs affecting the version range:
    - Check GitHub Security Advisories for the upstream repo
