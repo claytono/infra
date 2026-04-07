@@ -3,7 +3,7 @@ host_ipv4: "172.19.74.74"
 
 manage_network: true
 interfaces_ether_interfaces:
-  - device: ens18
+  - device: enp1s0f0
     bootproto: static
     address: "172.19.74.74"
     netmask: "255.255.255.0"

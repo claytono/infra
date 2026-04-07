@@ -58,20 +58,17 @@ resource "unifi_device" "usxg16" {
   }
 
   port_override {
-    number          = 2
-    name            = "p2"
-    port_profile_id = unifi_port_profile.proxmox_trunk.id
+    number = 2
+    name   = "k5"
   }
 
   port_override {
-    number          = 4
-    name            = "p4"
-    port_profile_id = unifi_port_profile.proxmox_trunk.id
+    number = 4
+    name   = "k4"
   }
 
   port_override {
-    number          = 5
-    name            = "p3"
-    port_profile_id = unifi_port_profile.proxmox_trunk.id
+    number = 5
+    name   = "k3"
   }
 }

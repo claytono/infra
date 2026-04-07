@@ -12,7 +12,7 @@
 # - public_dns (default: true) - set to false to skip public DNS record
 # - enable_ipv6 (default: true) - set to false to skip AAAA record creation
 #
-# Proxmox VE hosts IP plan: 172.19.74.4x (p1=.41, p2=.42, p3=.43, etc.)
+# Proxmox VE hosts IP plan: 172.19.74.4x (p1=.41)
 
 locals {
   # IPv6 prefix for Default VLAN (172.19.74.0/24)
@@ -26,44 +26,26 @@ locals {
       hostname = "p1.oneill.net"
       note     = "Proxmox VE host"
     }
-    p2 = {
-      mac      = "b4:96:91:4b:34:58"
-      ip       = "172.19.74.42"
-      hostname = "p2.oneill.net"
-      note     = "Proxmox VE host"
-    }
-    p3 = {
-      mac      = "b4:96:91:39:e0:94"
-      ip       = "172.19.74.43"
-      hostname = "p3.oneill.net"
-      note     = "Proxmox VE host"
-    }
-    p4 = {
-      mac      = "b4:96:91:a0:83:54"
-      ip       = "172.19.74.44"
-      hostname = "p4.oneill.net"
-      note     = "Proxmox VE host"
-    }
     # AMT/vPro management interfaces
-    p2-amt = {
+    k5-amt = {
       mac         = "34:17:eb:aa:83:12"
       ip          = "172.19.74.201"
-      hostname    = "p2-amt.oneill.net"
-      note        = "p2 AMT interface"
+      hostname    = "k5-amt.oneill.net"
+      note        = "k5 AMT interface"
       enable_ipv6 = false
     }
-    p3-amt = {
+    k3-amt = {
       mac         = "98:90:96:b8:cc:3d"
       ip          = "172.19.74.82"
-      hostname    = "p3-amt.oneill.net"
-      note        = "p3 AMT interface"
+      hostname    = "k3-amt.oneill.net"
+      note        = "k3 AMT interface"
       enable_ipv6 = false
     }
-    p4-amt = {
+    k4-amt = {
       mac         = "64:00:6a:4d:46:30"
       ip          = "172.19.74.83"
-      hostname    = "p4-amt.oneill.net"
-      note        = "p4 AMT interface"
+      hostname    = "k4-amt.oneill.net"
+      note        = "k4 AMT interface"
       enable_ipv6 = false
     }
     # Kubernetes nodes
@@ -80,16 +62,22 @@ locals {
       note     = "Kubernetes worker node (VM)"
     }
     k3 = {
-      mac      = "52:54:72:19:74:74"
+      mac      = "b4:96:91:39:e0:94"
       ip       = "172.19.74.74"
       hostname = "k3.oneill.net"
-      note     = "Kubernetes worker node (VM)"
+      note     = "Kubernetes worker node (bare metal)"
     }
     k4 = {
-      mac      = "52:54:72:19:74:75"
+      mac      = "b4:96:91:a0:83:54"
       ip       = "172.19.74.75"
       hostname = "k4.oneill.net"
-      note     = "Kubernetes worker node (VM)"
+      note     = "Kubernetes worker node (bare metal)"
+    }
+    k5 = {
+      mac      = "b4:96:91:4b:34:58"
+      ip       = "172.19.74.76"
+      hostname = "k5.oneill.net"
+      note     = "Kubernetes worker node (bare metal)"
     }
     luser = {
       mac        = "52:54:72:19:74:61"

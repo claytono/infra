@@ -17,9 +17,6 @@ resource "authentik_provider_oauth2" "proxmox" {
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
     { url = "https://pve.oneill.net", matching_mode = "strict" },
-    { url = "https://p2.oneill.net:8006", matching_mode = "strict" },
-    { url = "https://p3.oneill.net:8006", matching_mode = "strict" },
-    { url = "https://p4.oneill.net:8006", matching_mode = "strict" },
     { url = "https://p9.oneill.net:8006", matching_mode = "strict" },
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id

@@ -48,6 +48,24 @@ locals {
       hostname = "infra1-power.oneill.net"
       note     = "ESPHome: Infra1"
     }
+    k3-power = {
+      mac      = "48:3F:DA:2B:78:8A"
+      ip       = "172.20.5.22"
+      hostname = "k3-power.oneill.net"
+      note     = "ESPHome: K3"
+    }
+    k4-power = {
+      mac      = "C8:2B:96:06:7A:88"
+      ip       = "172.20.5.17"
+      hostname = "k4-power.oneill.net"
+      note     = "ESPHome: K4"
+    }
+    k5-power = {
+      mac      = "48:3F:DA:2B:FB:35"
+      ip       = "172.20.7.163"
+      hostname = "k5-power.oneill.net"
+      note     = "ESPHome: K5"
+    }
     living-room-bme280 = {
       mac      = "4C:11:AE:0D:D1:8A"
       ip       = "172.20.6.176"
@@ -101,24 +119,6 @@ locals {
       ip       = "172.20.6.148"
       hostname = "p1-power.oneill.net"
       note     = "ESPHome: P1"
-    }
-    p2-power = {
-      mac      = "48:3F:DA:2B:FB:35"
-      ip       = "172.20.7.163"
-      hostname = "p2-power.oneill.net"
-      note     = "ESPHome: P2"
-    }
-    p3-power = {
-      mac      = "48:3F:DA:2B:78:8A"
-      ip       = "172.20.5.22"
-      hostname = "p3-power.oneill.net"
-      note     = "ESPHome: P3"
-    }
-    p4-power = {
-      mac      = "C8:2B:96:06:7A:88"
-      ip       = "172.20.5.17"
-      hostname = "p4-power.oneill.net"
-      note     = "ESPHome: P4"
     }
     szamar-power = {
       mac      = "C4:5B:BE:E5:1F:43"

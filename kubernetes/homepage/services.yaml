@@ -26,25 +26,25 @@
   - P1:
       href: http://p1-power.oneill.net
       icon: mdi-flash
-  - P2:
-      href: http://p2-power.oneill.net
+  - K5:
+      href: http://k5-power.oneill.net
       icon: mdi-flash
-  - P3:
-      href: http://p3-power.oneill.net
+  - K3:
+      href: http://k3-power.oneill.net
       icon: mdi-flash
-  - P4:
-      href: http://p4-power.oneill.net
+  - K4:
+      href: http://k4-power.oneill.net
       icon: mdi-flash
 
 - AMT Management:
-  - P2:
-      href: http://p2-amt.oneill.net:16992
+  - K5:
+      href: http://k5-amt.oneill.net:16992
       icon: mdi-chip
-  - P3:
-      href: http://p3-amt.oneill.net:16992
+  - K3:
+      href: http://k3-amt.oneill.net:16992
       icon: mdi-chip
-  - P4:
-      href: http://p4-amt.oneill.net:16992
+  - K4:
+      href: http://k4-amt.oneill.net:16992
       icon: mdi-chip
 
 - Infrastructure:

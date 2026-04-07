@@ -30,7 +30,8 @@ fi
 
 # Install packages based on system type
 apt-get update
-if is_proxmox; then
+if [ "$(systemd-detect-virt)" = "none" ]; then
+    # Bare metal or Proxmox - no VM packages needed
     apt-get install -y python3 sudo
 else
     # Debian VM packages

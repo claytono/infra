@@ -21,31 +21,10 @@ resource "proxmox_virtual_environment_hardware_mapping_pci" "rtx2060" {
 }
 
 # Intel iGPU hardware mapping for PCI passthrough
-# Intel HD Graphics 4600 (Haswell) on p2, p3, p4, p9
+# Intel HD Graphics 4600 (Haswell)
 resource "proxmox_virtual_environment_hardware_mapping_pci" "intel_igpu" {
   name = "intel-igpu"
   map = [
-    {
-      id           = "8086:0412"
-      node         = "p2"
-      path         = "0000:00:02"
-      iommu_group  = 0
-      subsystem_id = "1028:05a4"
-    },
-    {
-      id           = "8086:0412"
-      node         = "p3"
-      path         = "0000:00:02"
-      iommu_group  = 0
-      subsystem_id = "1028:05a4"
-    },
-    {
-      id           = "8086:0412"
-      node         = "p4"
-      path         = "0000:00:02"
-      iommu_group  = 0
-      subsystem_id = "1028:05a4"
-    },
     {
       id           = "8086:0412"
       node         = "p9"
@@ -153,108 +132,6 @@ resource "proxmox_virtual_environment_vm" "k2" {
     device  = "hostpci0"
     mapping = proxmox_virtual_environment_hardware_mapping_pci.rtx2060.name
     pcie    = true
-  }
-
-  operating_system {
-    type = "l26"
-  }
-
-  lifecycle {
-    ignore_changes = [node_name, started]
-  }
-}
-
-resource "proxmox_virtual_environment_vm" "k3" {
-  name      = "k3"
-  node_name = "p9"
-  vm_id     = 1074
-
-  started = false
-  on_boot = true
-  machine = "q35"
-
-  cpu {
-    cores   = 4
-    sockets = 1
-    type    = "x86-64-v3"
-  }
-
-  memory {
-    dedicated = 24576
-  }
-
-  agent {
-    enabled = true
-    trim    = true
-  }
-
-  scsi_hardware = "virtio-scsi-single"
-
-  disk {
-    interface    = "scsi0"
-    datastore_id = "local-zfs"
-    size         = 150
-    file_format  = "raw"
-    iothread     = true
-    discard      = "on"
-  }
-
-  network_device {
-    bridge      = "vmbr0"
-    mac_address = "52:54:72:19:74:74"
-    model       = "virtio"
-    queues      = 4
-  }
-
-  operating_system {
-    type = "l26"
-  }
-
-  lifecycle {
-    ignore_changes = [node_name, started]
-  }
-}
-
-resource "proxmox_virtual_environment_vm" "k4" {
-  name      = "k4"
-  node_name = "p4"
-  vm_id     = 1075
-
-  started = false
-  on_boot = true
-  machine = "q35"
-
-  cpu {
-    cores   = 4
-    sockets = 1
-    type    = "x86-64-v3"
-  }
-
-  memory {
-    dedicated = 24576
-  }
-
-  agent {
-    enabled = true
-    trim    = true
-  }
-
-  scsi_hardware = "virtio-scsi-single"
-
-  disk {
-    interface    = "scsi0"
-    datastore_id = "local-zfs"
-    size         = 150
-    file_format  = "raw"
-    iothread     = true
-    discard      = "on"
-  }
-
-  network_device {
-    bridge      = "vmbr0"
-    mac_address = "52:54:72:19:74:75"
-    model       = "virtio"
-    queues      = 4
   }
 
   operating_system {
