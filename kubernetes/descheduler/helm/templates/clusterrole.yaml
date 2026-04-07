@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: descheduler
     app.kubernetes.io/instance: descheduler
-    app.kubernetes.io/version: "0.35.1"
+    app.kubernetes.io/version: "0.34.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: ["events.k8s.io"]
@@ -30,7 +30,4 @@ rules:
   verbs: ["get", "watch", "list"]
 - apiGroups: ["policy"]
   resources: ["poddisruptionbudgets"]
-  verbs: ["get", "watch", "list"]
-- apiGroups: [""]
-  resources: ["persistentvolumeclaims"]
   verbs: ["get", "watch", "list"]
