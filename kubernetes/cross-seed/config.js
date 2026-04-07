@@ -21,8 +21,8 @@ module.exports = {
         process.env.PROWLARR_URL_3,
         process.env.PROWLARR_URL_4
     ].filter(Boolean),
-    sonarr: [`https://sonarr.k.oneill.net/?apikey=${process.env.SONARR_API_KEY}`],
-    radarr: [`https://radarr.k.oneill.net/?apikey=${process.env.RADARR_API_KEY}`],
+    sonarr: [`http://${process.env.SONARR_SERVICE_HOST}:${process.env.SONARR_SERVICE_PORT}/?apikey=${process.env.SONARR_API_KEY}`],
+    radarr: [`http://${process.env.RADARR_SERVICE_HOST}:${process.env.RADARR_SERVICE_PORT}/?apikey=${process.env.RADARR_API_KEY}`],
     /**
      * To search with downloaded data, you can pass in directories to your downloaded torrent
      * data to find matches rather using the torrent files themselves for matching.
