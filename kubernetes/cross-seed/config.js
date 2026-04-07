@@ -72,6 +72,7 @@ module.exports = {
      * Only applies to data based matches.
      */
     skipRecheck: false,
+    ignoreNonRelevantFilesToResume: true,
     /**
      * Determines how deep into the specified dataDirs to go to generate new searchees.
      * Setting this to higher values will result in more searchees and more API hits to
@@ -125,7 +126,7 @@ module.exports = {
      * "2w"
      * "3 days"
      */
-    excludeOlder: "3w",
+    excludeOlder: "2w",
     /**
      * Exclude torrents which have been searched
      * more recently than this long ago.
@@ -134,7 +135,7 @@ module.exports = {
      * "2w"
      * "3 days"
      */
-    excludeRecentSearch: "9d",
+    excludeRecentSearch: "3d",
     /**
      * With "inject" you need to set up one of the below clients.
      * Options: "save", "inject"
@@ -188,7 +189,7 @@ module.exports = {
      * "2w"
      * "3 days"
      */
-    searchCadence: "3d",
+    searchCadence: "1d",
     /**
      * Fail snatch requests that haven't responded after this long.
      * Set to null for an infinite timeout.

@@ -11,9 +11,8 @@ resources:
 - deploy.yaml
 - service.yaml
 - ingress.yaml
-- pvc.yaml
 - externalsecret.yaml
-- pvc-config.yaml
+- pvc.yaml
 
 configMapGenerator:
 - name: cross-seed-config
