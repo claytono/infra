@@ -2,6 +2,7 @@ indent_mapping = 2
 indent_offset = 0
 indent_sequence = 2
 quote_basic_values = false
+preserve_quotes = true
 whitelines = 1
 section_whitelines = 1
 sequence_style = "keep_style"

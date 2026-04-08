@@ -29,7 +29,7 @@ automation:
   id: notify_slack_low_bird_count
   trigger:
   - platform: time
-    at: 09:00:00
+    at: "09:00:00"
   condition:
   - condition: numeric_state
     entity_id: sensor.birdfy_birds_last_24h

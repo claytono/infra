@@ -14,7 +14,7 @@ automation:
   description: Sequential charging of EGO batteries every 3 months
   trigger:
   - platform: time
-    at: 03:00:00
+    at: "03:00:00"
   condition:
   - condition: template
     value_template: >
@@ -134,7 +134,7 @@ automation:
   description: Ensure chargers are off every morning (safety reset)
   trigger:
   - platform: time
-    at: 12:00:00
+    at: "12:00:00"
   action:
   - service: switch.turn_off
     target:
