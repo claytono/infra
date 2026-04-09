@@ -1,0 +1,98 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: frigate
+
+components:
+- ../components/authentik
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- externalsecret.yaml
+- ingress-api.yaml
+- deploy-viewu.yaml
+- helm/frigate/config-pvc.yaml
+- helm/frigate/deployment.yaml
+- helm/frigate/ingress.yaml
+- helm/frigate/media-pvc.yaml
+- helm/frigate/service.yaml
+
+configMapGenerator:
+- name: frigate
+  options:
+    disableNameSuffixHash: true
+  files:
+  - config/config.yml
+
+patches:
+
+# Add reloader annotation
+- target:
+    kind: Deployment
+    name: frigate
+  patch: |-
+    - op: add
+      path: /metadata/annotations/reloader.stakater.com~1auto
+      value: "true"
+
+# Add GPU priority class
+- target:
+    kind: Deployment
+    name: frigate
+  patch: |-
+    - op: add
+      path: /spec/template/spec/priorityClassName
+      value: gpu-priority
+
+# Inject RTSP aliases from ExternalSecret as env vars
+- target:
+    kind: Deployment
+    name: frigate
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: frigate
+    spec:
+      template:
+        spec:
+          containers:
+          - name: frigate
+            envFrom:
+            - secretRef:
+                name: frigate
+
+# Download ONNX model into config PVC if not present
+- target:
+    kind: Deployment
+    name: frigate
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: frigate
+    spec:
+      template:
+        spec:
+          initContainers:
+          - name: download-model
+            image: curlimages/curl:latest@sha256:b066cbf876d50a5d024927878a586c4a39c985325ded195e2e231f4abdddf3c8
+            command: ["/bin/sh", "-c"]
+            args:
+            - |
+              set -e
+              if [ ! -f /config/yolov9-s-640.onnx ]; then
+                echo "Downloading YOLOv9-s ONNX model..."
+                curl -fsSL -o /tmp/yolov9-s-640.onnx "https://github.com/oritromax/YOLOv9-onnx/raw/master/yolov9-s-640.onnx"
+                mv /tmp/yolov9-s-640.onnx /config/yolov9-s-640.onnx
+                echo "Download complete"
+              else
+                echo "Model already exists, skipping download"
+              fi
+            volumeMounts:
+            - mountPath: /config
+              name: config

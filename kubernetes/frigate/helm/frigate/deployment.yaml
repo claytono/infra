@@ -1,0 +1,125 @@
+---
+# Source: frigate/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frigate
+  labels:
+    app.kubernetes.io/name: frigate
+    app.kubernetes.io/instance: frigate
+    app.kubernetes.io/version: "0.14.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frigate
+      app.kubernetes.io/instance: frigate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frigate
+        app.kubernetes.io/instance: frigate
+      annotations:
+        checksum/configmap: f9d1efda4135dca4040152a44329aa38be9753ca5075caea0f94b599b7844dd5
+    spec:
+      runtimeClassName: nvidia
+      initContainers:
+        - name: copyconfig
+          image: "ghcr.io/blakeblackshear/frigate:0.17.1-tensorrt@sha256:a8d21fae3d49aea25384d56eec20a0414e24bae91b17d5f9e8f9b2f89d574a3f"
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /config.yml
+              subPath: config.yml
+              name: configmap
+            - mountPath: /config
+              name: config
+          command: [ "cp" ]
+          args: [ "-v", "/config.yml", "/config/config.yml" ]
+      containers:
+        - name: frigate
+          image: "ghcr.io/blakeblackshear/frigate:0.17.1-tensorrt@sha256:a8d21fae3d49aea25384d56eec20a0414e24bae91b17d5f9e8f9b2f89d574a3f"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {}
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+            - name: http-auth
+              containerPort: 8971
+              protocol: TCP
+            - name: rtmp
+              containerPort: 1935
+              protocol: TCP
+            - name: rtsp
+              containerPort: 8554
+              protocol: TCP
+            - name: webrtc-udp
+              containerPort: 8555
+              protocol: UDP
+            - name: webrtc-tcp
+              containerPort: 8555
+              protocol: TCP
+            - name: go2rtc-admin
+              containerPort: 1984
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
+          env:
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: "all"
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+          envFrom:
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /media
+              name: media
+            - name: dshm
+              mountPath: /dev/shm
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+      volumes:
+        - name: configmap
+          configMap:
+            name: frigate
+        - name: config
+          persistentVolumeClaim:
+            claimName: frigate-config
+        - name: data
+          emptyDir: {}
+        - name: media
+          persistentVolumeClaim:
+            claimName: frigate-media
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
