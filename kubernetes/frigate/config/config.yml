@@ -1,0 +1,108 @@
+---
+tls:
+  enabled: false
+
+mqtt:
+  enabled: true
+  host: mosquitto.default.svc.cluster.local
+  port: 1883
+  user: "{FRIGATE_MQTT_USER}"
+  password: "{FRIGATE_MQTT_PASSWORD}"
+
+go2rtc:
+  streams:
+    living_room:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_LIVING_ROOM_HIGH}"
+    living_room_sub:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_LIVING_ROOM_LOW}"
+    g4_instant:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_G4_INSTANT_HIGH}"
+    g4_instant_sub:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_G4_INSTANT_LOW}"
+    g3_micro:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_G3_MICRO_HIGH}"
+    g3_micro_sub:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_G3_MICRO_LOW}"
+    garage:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_GARAGE_HIGH}"
+    garage_sub:
+    - "rtspx://udmp.oneill.net:7441/{FRIGATE_RTSP_GARAGE_LOW}"
+
+face_recognition:
+  enabled: true
+  model_size: large
+
+semantic_search:
+  enabled: true
+  model_size: large
+
+detectors:
+  onnx:
+    type: onnx
+
+model:
+  model_type: yolo-generic
+  path: /config/yolov9-s-640.onnx
+  width: 640
+  height: 640
+  input_tensor: nchw
+  input_pixel_format: rgb
+  input_dtype: float
+
+ffmpeg:
+  output_args:
+    record: preset-record-ubiquiti
+
+record:
+  enabled: true
+  retain:
+    days: 3
+
+cameras:
+  living_room:
+    ffmpeg:
+      inputs:
+      - path: rtsp://127.0.0.1:8554/living_room
+        roles: [record]
+      - path: rtsp://127.0.0.1:8554/living_room_sub
+        roles: [detect]
+    detect:
+      enabled: true
+    objects:
+      track: [person, car, dog, cat]
+
+  g4_instant:
+    ffmpeg:
+      inputs:
+      - path: rtsp://127.0.0.1:8554/g4_instant
+        roles: [record]
+      - path: rtsp://127.0.0.1:8554/g4_instant_sub
+        roles: [detect]
+    detect:
+      enabled: true
+    objects:
+      track: [person, car, dog, cat]
+
+  g3_micro:
+    ffmpeg:
+      inputs:
+      - path: rtsp://127.0.0.1:8554/g3_micro
+        roles: [record]
+      - path: rtsp://127.0.0.1:8554/g3_micro_sub
+        roles: [detect]
+    detect:
+      enabled: true
+    objects:
+      track: [person, car, dog, cat]
+
+  garage:
+    ffmpeg:
+      inputs:
+      - path: rtsp://127.0.0.1:8554/garage
+        roles: [record]
+      - path: rtsp://127.0.0.1:8554/garage_sub
+        roles: [detect]
+    detect:
+      enabled: true
+    objects:
+      track: [person, car, dog, cat]

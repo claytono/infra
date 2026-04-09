@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/name: nvidia-device-plugin
         app.kubernetes.io/instance: nvidia-device-plugin
       annotations:
-        checksum/config: 2335eb800ad1a6b1ad81544124b9de51cde5b0e50338d88a656b3f3680adcc43
+        checksum/config: 1faee416beb3f8ec352fd3ae5237541da38a4e18bb6b2a4ce5cb93a5b278f249
     spec:
       priorityClassName: system-node-critical
       runtimeClassName: nvidia

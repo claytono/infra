@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: viewu
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: viewu
+      app.kubernetes.io/instance: viewu
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: viewu
+        app.kubernetes.io/instance: viewu
+    spec:
+      containers:
+      - name: viewu
+        image: mjeoffline/viewu:amd64_3.5@sha256:13e7132bf59aa1a295341a7142868780ab28b0a01af4ddf19a4bbda1ddab486a
+        env:
+        - name: MQTT_IP
+          value: mosquitto.default.svc.cluster.local
+        - name: MQTT_PORT
+          value: "1883"
+        - name: MQTT_USER
+          valueFrom:
+            secretKeyRef:
+              name: frigate
+              key: FRIGATE_MQTT_USER
+        - name: MQTT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: frigate
+              key: FRIGATE_MQTT_PASSWORD
