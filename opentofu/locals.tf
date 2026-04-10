@@ -106,6 +106,12 @@ locals {
       hostname = "garagepi.oneill.net"
       note     = "Raspberry Pi in garage - rtl433"
     }
+    garagepi-eth = {
+      mac      = "d8:3a:dd:1c:15:2f"
+      ip       = "172.19.74.221"
+      hostname = "garagepi-eth.oneill.net"
+      note     = "Raspberry Pi in garage - wired interface"
+    }
     pantrypi = {
       mac      = "dc:a6:32:9d:b7:0f"
       ip       = "172.19.74.120"

@@ -1,5 +1,6 @@
 ---
 manage_network: true
+interfaces_pause_time: 5
 host_ipv4: "172.19.74.216"
 
 # WiFi configuration (layereight.wifi role)
@@ -9,6 +10,16 @@ wifi_psk: "{{ vault_wifi_psk_bleh }}"
 
 # Static IP configuration (michaelrigart.interfaces role)
 interfaces_ether_interfaces:
+  - device: eth0
+    bootproto: static
+    address: "172.19.74.221"
+    netmask: "255.255.255.0"
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
+    pre_up: "sysctl -w net.ipv6.conf.eth0.accept_ra=0"
+    ip6:
+      address: "{{ infrastructure_ipv6_prefix }}::74:221"
+      prefix: "{{ infrastructure_ipv6_netmask }}"
   - device: wlan0
     bootproto: static
     address: "172.19.74.216"
