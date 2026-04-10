@@ -1,0 +1,37 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: audiobookshelf
+  annotations:
+    ak-type: oidc
+    ak-oidc-callback: /auth/openid/callback
+    ak-path-exclude: /api(/|$)
+    ak-oidc-extra-redirects: |-
+      shelfplayer://callback
+      https://audiobookshelf.k.oneill.net/auth/openid/mobile-redirect
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Audiobookshelf
+    gethomepage.dev/description: Audiobook Server
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: audiobookshelf.png
+    gethomepage.dev/pod-selector: app=audiobookshelf
+
+spec:
+  tls:
+  - hosts:
+    - audiobookshelf.k.oneill.net
+    secretName: audiobookshelf-tls
+  rules:
+  - host: audiobookshelf.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: audiobookshelf
+            port:
+              number: 13378
