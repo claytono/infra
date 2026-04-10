@@ -59,6 +59,7 @@
   "agents": {
     "defaults": {
       "model": "openai-codex/gpt-5.4",
+      "thinkingDefault": "medium",
       "sandbox": {
         "mode": "off",
         "workspaceAccess": "rw"
