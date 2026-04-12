@@ -16,7 +16,7 @@
 
 locals {
   # IPv6 prefix for Default VLAN (172.19.74.0/24)
-  infrastructure_ipv6_prefix = "2600:4040:2ece:7500"
+  infrastructure_ipv6_prefix = "2600:4040:2eec:a000"
 
   infrastructure_hosts = {
     # Proxmox VE hosts
