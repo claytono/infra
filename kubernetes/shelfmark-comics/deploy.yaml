@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: shelfmark-comics
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shelfmark-comics
+  template:
+    metadata:
+      labels:
+        app: shelfmark-comics
+    spec:
+      containers:
+      - name: shelfmark-comics
+        image: ghcr.io/calibrain/shelfmark:v1.2.1@sha256:5e00d47cccaa3b67234855d950d016c50691b78197a68adf15a624f6c08acee2
+        ports:
+        - containerPort: 8084
+          name: http
+        env:
+        - name: PUID
+          value: '10001'
+        - name: PGID
+          value: '10001'
+        - name: TZ
+          value: EST5EDT
+        - name: AUTH_METHOD
+          value: oidc
+        - name: OIDC_DISCOVERY_URL
+          value: https://auth.k.oneill.net/application/o/shelfmark-comics/.well-known/openid-configuration
+        - name: OIDC_AUTO_REDIRECT
+          value: 'true'
+        - name: OIDC_AUTO_PROVISION
+          value: 'true'
+        - name: OIDC_ADMIN_GROUP
+          value: authentik Admins
+        - name: OIDC_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: shelfmark-comics-oidc
+              key: OIDC_CLIENT_ID
+        - name: OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: shelfmark-comics-oidc
+              key: OIDC_CLIENT_SECRET
+        volumeMounts:
+        - mountPath: /config
+          name: config
+        - mountPath: /books
+          name: komga-staging
+        - mountPath: /downloads
+          name: downloads
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: shelfmark-comics-config
+      - name: komga-staging
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/books/komga-staging
+      - name: downloads
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/downloads

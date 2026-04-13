@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: komga
+  annotations:
+    ak-type: oidc
+    ak-oidc-callback: /login/oauth2/code/authentik
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Komga
+    gethomepage.dev/description: Comics & Manga Server
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: komga.png
+    gethomepage.dev/pod-selector: app=komga
+
+spec:
+  tls:
+  - hosts:
+    - komga.k.oneill.net
+    secretName: komga-tls
+  rules:
+  - host: komga.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: komga
+            port:
+              number: 25600

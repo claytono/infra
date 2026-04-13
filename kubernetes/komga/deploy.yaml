@@ -1,0 +1,95 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: komga
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: komga
+  template:
+    metadata:
+      labels:
+        app: komga
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+      - name: komga
+        image: gotson/komga:1.24.3@sha256:517033528928003d730e6d3ae99c74470e23938e3f3954924a60dd069bd28c5a
+        ports:
+        - containerPort: 25600
+          name: http
+        env:
+        - name: KOMGA_OAUTH2_ACCOUNT_CREATION
+          value: 'true'
+        # Authentik's default OIDC email scope mapping hardcodes
+        # email_verified=false even for local-DB users. Komga's
+        # oidcEmailVerification defaults to true, so it would reject every
+        # login. Accept unverified emails here — in this homelab, the admin
+        # creates Authentik users directly, so they are implicitly verified.
+        - name: KOMGA_OIDCEMAILVERIFICATION
+          value: 'false'
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_AUTHENTIK_PROVIDER
+          value: authentik
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_AUTHENTIK_CLIENT_NAME
+          value: Authentik
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_AUTHENTIK_SCOPE
+          value: openid,email
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_AUTHENTIK_ISSUER_URI
+          value: https://auth.k.oneill.net/application/o/komga/
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_AUTHENTIK_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: komga-oidc
+              key: OIDC_CLIENT_ID
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_AUTHENTIK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: komga-oidc
+              key: OIDC_CLIENT_SECRET
+        startupProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - mountPath: /config
+          name: config
+        - mountPath: /data
+          name: library
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: komga-config
+      - name: library
+        nfs:
+          server: fs2.oneill.net
+          path: /volume2/shared/books/komga
