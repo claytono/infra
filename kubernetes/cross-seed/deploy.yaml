@@ -45,26 +45,11 @@ spec:
         env:
         - name: TZ
           value: EST5EDT
-        - name: PROWLARR_URL_1
+        - name: PROWLARR_API_KEY
           valueFrom:
             secretKeyRef:
               name: cross-seed-secrets
-              key: prowlarr-url-1
-        - name: PROWLARR_URL_2
-          valueFrom:
-            secretKeyRef:
-              name: cross-seed-secrets
-              key: prowlarr-url-2
-        - name: PROWLARR_URL_3
-          valueFrom:
-            secretKeyRef:
-              name: cross-seed-secrets
-              key: prowlarr-url-3
-        - name: PROWLARR_URL_4
-          valueFrom:
-            secretKeyRef:
-              name: cross-seed-secrets
-              key: prowlarr-url-4
+              key: prowlarr-api-key
         - name: QBITTORRENT_URL
           valueFrom:
             secretKeyRef:

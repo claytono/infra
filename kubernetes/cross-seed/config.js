@@ -15,12 +15,19 @@ module.exports = {
      * For Prowlarr, click on the indexer name and copy the Torznab Url, then append "?apikey=YOUR_PROWLARR_API_KEY"
      * Wrap each URL in quotation marks, and separate them with commas, and surround the entire set in brackets.
      */
-    torznab: [
-        process.env.PROWLARR_URL_1,
-        process.env.PROWLARR_URL_2,
-        process.env.PROWLARR_URL_3,
-        process.env.PROWLARR_URL_4
-    ].filter(Boolean),
+    torznab: (() => {
+        const prowlarr = (id) =>
+            `https://prowlarr.k.oneill.net/${id}/api?apikey=${process.env.PROWLARR_API_KEY}`;
+        return [
+            prowlarr(2),
+            prowlarr(3),
+            prowlarr(7),
+            prowlarr(11),
+            prowlarr(13),
+            prowlarr(14),
+            prowlarr(16),
+        ];
+    })(),
     sonarr: [`http://${process.env.SONARR_SERVICE_HOST}:${process.env.SONARR_SERVICE_PORT}/?apikey=${process.env.SONARR_API_KEY}`],
     radarr: [`http://${process.env.RADARR_SERVICE_HOST}:${process.env.RADARR_SERVICE_PORT}/?apikey=${process.env.RADARR_API_KEY}`],
     /**
@@ -112,7 +119,7 @@ module.exports = {
      * To search for everything except season pack episodes (data-based)
      *    use (includeEpisodes: false, includeSingleEpisodes: true, includeNonVideos: true)
      */
-    includeNonVideos: false,
+    includeNonVideos: true,
     /**
      * fuzzy size match threshold
      * decimal value (0.02 = 2%)
