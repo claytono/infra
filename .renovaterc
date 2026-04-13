@@ -10,6 +10,7 @@
     "ansible/galaxy/**"
   ],
   "rebaseWhen": "behind-base-branch",
+  "automergeStrategy": "rebase",
   "minimumReleaseAge": "14 days",
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
