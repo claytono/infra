@@ -39,7 +39,6 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.frank-syncthing.id,
     authentik_provider_proxy.frank-ui.id,
     authentik_provider_proxy.frank-www.id,
-    authentik_provider_proxy.frigate.id,
     authentik_provider_proxy.goldilocks.id,
     authentik_provider_proxy.healthchecks.id,
     authentik_provider_proxy.homepage.id,
