@@ -7,6 +7,12 @@ namespace: immich
 commonAnnotations:
   argoManaged: 'true'
 
+images:
+- name: ghcr.io/immich-app/immich-server
+  newTag: v2.3.1
+- name: ghcr.io/immich-app/immich-machine-learning
+  newTag: v2.3.1-cuda
+
 resources:
 - namespace.yaml
 - immich-postgres-cluster.yaml

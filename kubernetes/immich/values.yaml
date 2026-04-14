@@ -3,8 +3,6 @@ controllers:
   main:
     containers:
       main:
-        image:
-          tag: v2.3.1
         env:
           TZ: America/New_York
           DB_DATABASE_NAME: immich
@@ -38,9 +36,7 @@ server:
       annotations:
         reloader.stakater.com/auto: 'true'
       containers:
-        main:
-          image:
-            tag: v2.3.1
+        main: {}
   ingress:
     main:
       enabled: true
@@ -79,8 +75,6 @@ machine-learning:
           kubernetes.io/hostname: k2
       containers:
         main:
-          image:
-            tag: v2.3.1-cuda
           resources:
             limits:
               nvidia.com/gpu: 1
