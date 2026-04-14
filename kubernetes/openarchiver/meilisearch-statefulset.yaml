@@ -27,6 +27,10 @@ spec:
         image: docker.io/getmeili/meilisearch:v1.41.0@sha256:860fa4baed04ae1c235de870edab0c8006227546dea1bbb6411fbfc5e27cf1db
         imagePullPolicy: IfNotPresent
         env:
+        - name: MEILI_ENV
+          value: production
+        - name: MEILI_NO_ANALYTICS
+          value: 'true'
         - name: MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE
           value: 'true'
         - name: MEILI_MASTER_KEY
