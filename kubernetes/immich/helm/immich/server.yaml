@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: server
     app.kubernetes.io/service: immich-server
-    app.kubernetes.io/version: v2.0.0
+    app.kubernetes.io/version: v2.6.3
   namespace: immich
 spec:
   type: ClusterIP
@@ -18,6 +18,8 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+      appProtocol: kubernetes.io/ws
+        
   selector:
     app.kubernetes.io/controller: main
     app.kubernetes.io/instance: immich
@@ -33,7 +35,7 @@ metadata:
     app.kubernetes.io/instance: immich
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: server
-    app.kubernetes.io/version: v2.0.0
+    app.kubernetes.io/version: v2.6.3
   annotations:
     reloader.stakater.com/auto: "true"
   namespace: immich
@@ -92,7 +94,7 @@ spec:
           envFrom:
           - secretRef:
               name: immich-secrets
-          image: ghcr.io/immich-app/immich-server:v2.3.1
+          image: ghcr.io/immich-app/immich-server:v2.6.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -140,7 +142,7 @@ metadata:
     app.kubernetes.io/instance: immich
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: server
-    app.kubernetes.io/version: v2.0.0
+    app.kubernetes.io/version: v2.6.3
   annotations:
     ak-oidc-callback: /auth/login
     ak-oidc-extra-redirects: |
