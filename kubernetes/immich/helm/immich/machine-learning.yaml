@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: immich
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: machine-learning
-    app.kubernetes.io/version: v2.0.0
+    app.kubernetes.io/version: v2.6.3
   namespace: immich
 spec:
   accessModes:
@@ -27,7 +27,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: machine-learning
     app.kubernetes.io/service: immich-machine-learning
-    app.kubernetes.io/version: v2.0.0
+    app.kubernetes.io/version: v2.6.3
   namespace: immich
 spec:
   type: ClusterIP
@@ -51,7 +51,7 @@ metadata:
     app.kubernetes.io/instance: immich
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: machine-learning
-    app.kubernetes.io/version: v2.0.0
+    app.kubernetes.io/version: v2.6.3
   annotations:
     reloader.stakater.com/auto: "true"
   namespace: immich
@@ -120,7 +120,7 @@ spec:
           envFrom:
           - secretRef:
               name: immich-secrets
-          image: ghcr.io/immich-app/immich-machine-learning:v2.3.1-cuda
+          image: ghcr.io/immich-app/immich-machine-learning:v2.6.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
