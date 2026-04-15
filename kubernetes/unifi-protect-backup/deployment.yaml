@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: unifi-protect-backup
-        image: ghcr.io/ep1cman/unifi-protect-backup:0.14.2@sha256:37c98ce08fb8626116afedfbcea4dbb46b6292c1c2cd519adb8cafadb1f83dcd
+        image: ghcr.io/ep1cman/unifi-protect-backup:0.14.3@sha256:92a54a43f41ccbe7ee84b55fc3c73bd929f0c865113d7300c78702c218f08342
         env:
         - name: UFP_ADDRESS
           value: udmp.oneill.net
