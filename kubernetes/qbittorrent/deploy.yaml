@@ -27,7 +27,7 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
-        - containerPort: 51414
+        - containerPort: 51413
         volumeMounts:
         - mountPath: /config
           name: config

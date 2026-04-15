@@ -17,8 +17,8 @@ spec:
     port: 8080
     targetPort: 8080
   - name: bittorrent
-    port: 51414
-    targetPort: 51414
+    port: 51413
+    targetPort: 51413
     protocol: TCP
   selector:
     app: qbittorrent
@@ -39,8 +39,8 @@ spec:
   loadBalancerIP: 172.19.74.22
   ports:
   - name: bittorrent
-    port: 51414
-    targetPort: 51414
+    port: 51413
+    targetPort: 51413
     protocol: UDP
   selector:
     app: qbittorrent
