@@ -56,10 +56,18 @@
       }
     }
   },
+  "auth": {
+    "order": {
+      "openai-codex": [
+        "openai-codex:coneill@oneill.net",
+        "openai-codex:clayton@oneill.net"
+      ]
+    }
+  },
   "agents": {
     "defaults": {
       "model": "openai-codex/gpt-5.4",
-      "thinkingDefault": "medium",
+      "thinkingDefault": "high",
       "sandbox": {
         "mode": "off",
         "workspaceAccess": "rw"
