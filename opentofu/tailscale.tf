@@ -19,6 +19,7 @@ resource "tailscale_acl" "main" {
             "tag:restic": ["tag:k8s-operator"],
             "tag:healthchecks": ["tag:k8s-operator"],
             "tag:netdata": ["tag:k8s-operator"],
+            "tag:byparr": ["tag:k8s-operator"],
         },
 
         // Define access control lists for users, groups, autogroups, tags,

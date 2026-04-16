@@ -8,6 +8,7 @@ resources:
 - namespace.yaml
 - deployment.yaml
 - service.yaml
+- tailscale-ingress.yaml
 
 commonAnnotations:
   argoManaged: 'true'
