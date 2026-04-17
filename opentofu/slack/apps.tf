@@ -86,6 +86,7 @@ resource "slack-app_manifest" "home" {
       scopes = {
         bot = [
           "chat:write",
+          "dnd:read",
           "incoming-webhook",
         ]
       }
