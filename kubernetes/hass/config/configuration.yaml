@@ -57,6 +57,15 @@ person:
 
 logger:
   default: info
+  logs:
+    # Suppress "Missing NET_ADMIN/NET_RAW capabilities for Bluetooth
+    # management" startup ERROR. HA's bluetooth integration is enabled
+    # only to receive advertisements from the ESPHome Bluetooth proxy;
+    # there is no local adapter on this node for HA to manage, so the
+    # adapter-recovery capability check is inapplicable. Raise to fatal
+    # to silence this module's errors without granting unused
+    # NET_ADMIN/NET_RAW capabilities.
+    habluetooth.manager: fatal
 
 homekit:
   filter:
