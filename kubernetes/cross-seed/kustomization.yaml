@@ -18,6 +18,9 @@ configMapGenerator:
 - name: cross-seed-config
   files:
   - config.js
+- name: cross-seed-cleanup-script
+  files:
+  - cleanup.js
 
 labels:
 

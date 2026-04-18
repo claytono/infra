@@ -23,6 +23,39 @@ spec:
       securityContext:
         runAsUser: 10001
         runAsGroup: 10001
+      initContainers:
+      - name: cleanup
+        image: ghcr.io/cross-seed/cross-seed:6.13.6@sha256:e2bf5b593e4e7d699e6242423ad7966190cd52ba8eefafdfdbb0cb5b0b609b96
+        restartPolicy: Always
+        command: [node, /script/cleanup.js]
+        env:
+        - name: QBITTORRENT_URL
+          valueFrom:
+            secretKeyRef:
+              name: cross-seed-secrets
+              key: qbittorrent-url
+        - name: MIN_AGE_HOURS
+          value: "2"
+        - name: SLEEP_SECONDS
+          value: "3600"
+        - name: CLEANUP_APPLY
+          value: "true"
+        - name: CROSS_SEEDS_DIR
+          value: /config/cross-seeds
+        - name: CROSS_SEED_CONFIG
+          value: /config/config.js
+        - name: TZ
+          value: EST5EDT
+        volumeMounts:
+        - name: config-file
+          mountPath: /config/config.js
+          subPath: config.js
+          readOnly: true
+        - name: config
+          mountPath: /config
+        - name: cleanup-script
+          mountPath: /script
+          readOnly: true
       containers:
       - name: cross-seed
         image: ghcr.io/cross-seed/cross-seed:6.13.6@sha256:e2bf5b593e4e7d699e6242423ad7966190cd52ba8eefafdfdbb0cb5b0b609b96
@@ -79,3 +112,7 @@ spec:
         nfs:
           server: fs2.oneill.net
           path: /volume2/shared/downloads
+      - name: cleanup-script
+        configMap:
+          name: cross-seed-cleanup-script
+          defaultMode: 0755
