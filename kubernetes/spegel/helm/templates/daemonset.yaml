@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: spegel
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.6.0"
+    app.kubernetes.io/version: "v0.7.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   revisionHistoryLimit: 10
@@ -33,7 +33,7 @@ spec:
       priorityClassName: system-node-critical
       initContainers:
       - name: configuration
-        image: "ghcr.io/spegel-org/spegel@sha256:82f5dd969ed74e3a9cfd6284045099a161778a0d85f9e01a234a62f15eb9d696"
+        image: "ghcr.io/spegel-org/spegel@sha256:1109b33fabac86809b06f831eef7359b12232f5708554aef39efd036dce40748"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true
@@ -60,7 +60,7 @@ spec:
             mountPath: /etc/containerd/certs.d
       containers:
       - name: registry
-        image: "ghcr.io/spegel-org/spegel@sha256:82f5dd969ed74e3a9cfd6284045099a161778a0d85f9e01a234a62f15eb9d696"
+        image: "ghcr.io/spegel-org/spegel@sha256:1109b33fabac86809b06f831eef7359b12232f5708554aef39efd036dce40748"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true
@@ -74,14 +74,12 @@ spec:
           - --metrics-addr=:9090
           - --containerd-sock=/run/containerd/containerd.sock
           - --containerd-namespace=k8s.io
-          - --containerd-registry-config-path=/etc/containerd/certs.d
           - --bootstrap-kind=dns
           - --dns-bootstrap-domain=spegel-bootstrap.spegel.svc.cluster.local.
           - --containerd-content-path=/var/lib/containerd/io.containerd.content.v1.content
           - --debug-web-enabled=true
+          - --data-dir=/var/lib/spegel
         env:
-        - name: DATA_DIR
-          value: ""
         - name: GOMEMLIMIT
           valueFrom:
             resourceFieldRef:
@@ -95,9 +93,12 @@ spec:
           - name: registry
             containerPort: 5000
             protocol: TCP
-          - name: router
+          - name: router-tcp
             containerPort: 5001
             protocol: TCP
+          - name: router-quic
+            containerPort: 5001
+            protocol: UDP
           - name: metrics
             containerPort: 9090
             protocol: TCP
@@ -114,6 +115,8 @@ spec:
             path: /readyz
             port: registry
         volumeMounts:
+          - name: spegel-data
+            mountPath: /var/lib/spegel
           - name: containerd-sock
             mountPath: /run/containerd/containerd.sock
           - name: containerd-content
@@ -125,6 +128,10 @@ spec:
           requests:
             memory: 128Mi
       volumes:
+        - name: spegel-data
+          hostPath:
+            path: /var/lib/spegel
+            type: DirectoryOrCreate
         - name: containerd-sock
           hostPath:
             path: /run/containerd/containerd.sock
