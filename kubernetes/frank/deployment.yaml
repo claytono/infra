@@ -56,7 +56,7 @@ spec:
         - name: syncthing-config
           mountPath: /var/syncthing/config
       - name: www
-        image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:42a7d7f2ee23e9f5a1dcdf3647ba5c585bbd18f79e79cd817e70e8cd61c55779
+        image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:ede1d5af209ef9d29c902e0775ae850ce231d810a6980b1762f81110e757aa96
         restartPolicy: Always
         ports:
         - containerPort: 8080
