@@ -18,13 +18,12 @@ POST_INSTALL="$REPO_ROOT/ansible/roles/os-install/files/post-install.sh"
 
 # Image configuration
 IMAGE_TAG="2025-12-04-raspios-trixie-arm64"
-IFS='-' read -r YEAR MONTH DAY _ RELEASE _ <<<"$IMAGE_TAG"
-IMAGE_DATE="${YEAR}-${MONTH}-${DAY}"
+RELEASE="${IMAGE_TAG#*-*-*-raspios-}"
+RELEASE="${RELEASE%-arm64}"
 IMAGE_BASE_URL="https://downloads.raspberrypi.com/raspios_lite_arm64/images"
 IMAGE_DIR="/tmp/rpi-images"
 IMAGE_FILENAME="${IMAGE_TAG}-lite.img"
 IMAGE_XZ_FILENAME="${IMAGE_FILENAME}.xz"
-IMAGE_URL="${IMAGE_BASE_URL}/raspios_lite_arm64-${IMAGE_DATE}/${IMAGE_XZ_FILENAME}"
 IMAGE_XZ="$IMAGE_DIR/$IMAGE_XZ_FILENAME"
 IMAGE="$IMAGE_DIR/$IMAGE_FILENAME"
 
@@ -33,6 +32,7 @@ OP_WIFI_SSID="op://infra/wifi/network name"
 OP_WIFI_PSK="op://infra/wifi/wireless network password"
 
 # Test mode password hash (openssl passwd -6 -salt testsalt testpassword)
+# shellcheck disable=SC2016 # The $6$ prefix is part of the literal hash format.
 TEST_ROOT_PW_HASH='$6$testsalt$mGsoypwuoRHmmi31D2IfpZdmzbF5mX0yMhb/xSVguNcCI2EkoGrxfImuLJzvurLwR3UIRGHEBAUgqW6nuriIY0'
 
 usage() {
@@ -127,7 +127,63 @@ unmount_existing() {
     fi
 }
 
+resolve_image_url() {
+    local index_html
+    local dir
+    local url
+    local -a dirs=()
+    local -a matches=()
+
+    echo "Resolving image URL for $IMAGE_XZ_FILENAME..." >&2
+    index_html=$(curl -fsL "${IMAGE_BASE_URL}/")
+    while IFS= read -r dir; do
+        dirs+=("$dir")
+    done < <(
+        printf '%s' "$index_html" |
+            grep -oE 'raspios_lite_arm64-[0-9]{4}-[0-9]{2}-[0-9]{2}/' |
+            sort -u -r
+    )
+
+    if [[ ${#dirs[@]} -eq 0 ]]; then
+        echo "Error: Could not find any Raspberry Pi image directories at $IMAGE_BASE_URL" >&2
+        exit 1
+    fi
+
+    for dir in "${dirs[@]}"; do
+        url="${IMAGE_BASE_URL}/${dir%/}/${IMAGE_XZ_FILENAME}"
+        if curl -fsIL "$url" > /dev/null; then
+            matches+=("$url")
+        fi
+    done
+
+    if [[ ${#matches[@]} -eq 0 ]]; then
+        echo "Error: Expected image $IMAGE_XZ_FILENAME was not found in the Raspberry Pi downloads index" >&2
+        exit 1
+    fi
+
+    if [[ ${#matches[@]} -gt 1 ]]; then
+        echo "Error: Expected image $IMAGE_XZ_FILENAME matched multiple download URLs:" >&2
+        printf '  %s\n' "${matches[@]}" >&2
+        exit 1
+    fi
+
+    echo "${matches[0]}"
+}
+
+validate_cached_archive() {
+    if xz -t "$IMAGE_XZ" 2>/dev/null; then
+        return 0
+    fi
+
+    echo "Cached archive is invalid, removing $IMAGE_XZ..."
+    rm -f "$IMAGE_XZ"
+    return 1
+}
+
 download_image() {
+    local image_url
+    local tmp_archive
+
     mkdir -p "$IMAGE_DIR"
 
     if [[ -f "$IMAGE" ]]; then
@@ -136,10 +192,26 @@ download_image() {
     fi
 
     if [[ -f "$IMAGE_XZ" ]]; then
-        echo "Decompressing cached $IMAGE_XZ..."
-    else
-        echo "Downloading Raspberry Pi OS Lite ($RELEASE)..."
-        curl -L -o "$IMAGE_XZ" "$IMAGE_URL"
+        echo "Found cached archive: $IMAGE_XZ"
+        if ! validate_cached_archive; then
+            echo "Re-downloading $IMAGE_XZ_FILENAME..."
+        fi
+    fi
+
+    if [[ ! -f "$IMAGE_XZ" ]]; then
+        image_url=$(resolve_image_url)
+        tmp_archive=$(mktemp "$IMAGE_DIR/${IMAGE_XZ_FILENAME}.tmp.XXXXXX")
+        echo "Downloading Raspberry Pi OS Lite ($RELEASE) from $image_url..."
+        if ! curl -fL -o "$tmp_archive" "$image_url"; then
+            rm -f "$tmp_archive"
+            echo "Error: Failed to download $IMAGE_XZ_FILENAME" >&2
+            exit 1
+        fi
+        mv "$tmp_archive" "$IMAGE_XZ"
+        if ! validate_cached_archive; then
+            echo "Error: Downloaded archive failed xz validation" >&2
+            exit 1
+        fi
     fi
 
     echo "Decompressing image..."
@@ -169,7 +241,7 @@ mount_boot_partition() {
         BOOT_PART="${LOOP_DEV}p1"
 
         # Wait for partition device to appear (udev may take a moment)
-        for i in {1..10}; do
+        for _ in {1..10}; do
             [[ -b "$BOOT_PART" ]] && break
             sleep 0.5
         done
