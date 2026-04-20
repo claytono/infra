@@ -27,6 +27,7 @@ module.exports = {
             prowlarr(14),
             prowlarr(16),
             prowlarr(17),
+            prowlarr(18),
         ];
     })(),
     sonarr: [`http://${process.env.SONARR_SERVICE_HOST}:${process.env.SONARR_SERVICE_PORT}/?apikey=${process.env.SONARR_API_KEY}`],
