@@ -172,7 +172,6 @@ async function qbitLogin() {
   const sid = resp.headers.getSetCookie().find((c) => c.startsWith('SID='));
   if (!sid) throw new Error('login returned Ok. but no SID cookie');
   sidCookie = sid.split(';')[0];
-  log('info', 'qBit login successful', { base: qbit.base, user: qbit.user });
 }
 
 async function qbitFetch(method, apiPath, formBody) {
@@ -194,14 +193,16 @@ async function qbitFetch(method, apiPath, formBody) {
 
   let resp = await fetch(url, buildInit());
   if (resp.status === 401 || resp.status === 403) {
-    log('warn', 'auth failed; re-logging in', {
-      status: resp.status,
-      method,
-      path: apiPath,
-    });
     sidCookie = null;
     await qbitLogin();
     resp = await fetch(url, buildInit());
+    if (resp.status === 401 || resp.status === 403) {
+      log('warn', 'auth still failing after re-login', {
+        status: resp.status,
+        method,
+        path: apiPath,
+      });
+    }
   }
   return resp;
 }
@@ -487,7 +488,8 @@ async function main() {
   // Threshold loads once; the Reloader annotation restarts the pod on
   // ConfigMap changes, so there's no need to re-read each sweep.
   const threshold = loadSeasonThreshold();
-  log('info', 'starting', {
+  const startupFields = {
+    action: 'startup',
     base: qbit.base,
     apply: applyMode,
     threshold,
@@ -496,8 +498,10 @@ async function main() {
     dir: CROSS_SEEDS_DIR,
     config: CROSS_SEED_CONFIG,
     actions_log: ACTIONS_LOG_PATH,
-  });
+  };
+  await logAction('info', startupFields);
   await qbitLogin();
+  log('info', 'qBit login successful', { base: qbit.base, user: qbit.user });
 
   // sweep-first, sleep-after — first sweep runs immediately on container start
   while (true) {
