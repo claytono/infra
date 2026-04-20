@@ -17,7 +17,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 POST_INSTALL="$REPO_ROOT/ansible/roles/os-install/files/post-install.sh"
 
 # Image configuration
-IMAGE_TAG="2025-12-04-raspios-trixie-arm64"
+IMAGE_TAG="2026-04-13-raspios-trixie-arm64"
 RELEASE="${IMAGE_TAG#*-*-*-raspios-}"
 RELEASE="${RELEASE%-arm64}"
 IMAGE_BASE_URL="https://downloads.raspberrypi.com/raspios_lite_arm64/images"
