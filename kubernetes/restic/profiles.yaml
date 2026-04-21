@@ -64,10 +64,10 @@ b2:
       - name: Content-Type
         value: text/plain; charset=UTF-8
   forget:
-    keep-hourly: 24
-    keep-daily: 14
-    keep-monthly: 24
-    keep-weekly: 12
+    keep-within-hourly: 24h
+    keep-within-daily: 14d
+    keep-within-monthly: 24m
+    keep-within-weekly: 3m
     prune: true
     send-before: *send_before
     send-after: *send_after
@@ -137,11 +137,11 @@ xtal-b2:
   env: *rclone_env
 
   forget:
-    keep-hourly: 24
-    keep-daily: 7
-    keep-weekly: 12
-    keep-monthly: 12
-    keep-yearly: 5
+    keep-within-hourly: 24h
+    keep-within-daily: 7d
+    keep-within-weekly: 3m
+    keep-within-monthly: 12m
+    keep-within-yearly: 5y
     prune: true
     send-before: *send_before
     send-after: *send_after
@@ -172,10 +172,10 @@ main: &nfs_maintenance
     RESTIC_CACHE_DIR: /cache
 
   forget: &nfs_forget
-    keep-hourly: 48
-    keep-daily: 14
-    keep-weekly: 12
-    keep-monthly: 24
+    keep-within-hourly: 48h
+    keep-within-daily: 14d
+    keep-within-weekly: 3m
+    keep-within-monthly: 24m
     prune: true
     send-before: *send_before
     send-after: *send_after
@@ -201,8 +201,8 @@ xtal:
   repository: /source/backups/restic/repos/xtal
   forget:
     <<: *nfs_forget
-    keep-hourly: 24
-    keep-daily: 7
-    keep-weekly: 12
-    keep-monthly: 12
-    keep-yearly: 5
+    keep-within-hourly: 24h
+    keep-within-daily: 7d
+    keep-within-weekly: 3m
+    keep-within-monthly: 12m
+    keep-within-yearly: 5y
