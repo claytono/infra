@@ -486,7 +486,7 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
-  - name: Soil Moisture WH51 0eadc9 (Peppers)
+  - name: Soil Moisture WH51 0eadc9 (Watermelons)
     unique_id: wh51_0eadc9_moisture
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
     value_template: '{{ value_json.moisture }}'
@@ -505,7 +505,7 @@ mqtt:
       }}
     device:
       identifiers: [wh51_0eadc9]
-      name: WH51 Soil Moisture 0eadc9 (Peppers)
+      name: WH51 Soil Moisture 0eadc9 (Watermelons)
       model: WH51
       manufacturer: Ecowitt
       via_device: rtl_433
@@ -558,6 +558,30 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
+  - name: Soil Moisture WH51 0fb505 (Hanging Plants)
+    unique_id: wh51_0fb505_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0fb505]
+      name: WH51 Soil Moisture 0fb505 (Hanging Plants)
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
   - name: Soil Battery WH51 0eb421 (Peppers)
     unique_id: wh51_0eb421_battery
     state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
@@ -578,7 +602,7 @@ mqtt:
     device:
       identifiers: [wh51_0eb446]
 
-  - name: Soil Battery WH51 0eadc9 (Peppers)
+  - name: Soil Battery WH51 0eadc9 (Watermelons)
     unique_id: wh51_0eadc9_battery
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
     value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
@@ -607,6 +631,16 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0f1792]
+
+  - name: Soil Battery WH51 0fb505 (Hanging Plants)
+    unique_id: wh51_0fb505_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0fb505]
 
   - name: Rain Meter WH40 51409
     unique_id: wh40_51409_rain
@@ -687,7 +721,7 @@ mqtt:
     device:
       identifiers: [wh51_0eb446]
 
-  - name: Soil Battery Low WH51 0eadc9 (Peppers)
+  - name: Soil Battery Low WH51 0eadc9 (Watermelons)
     unique_id: wh51_0eadc9_battery_low
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
     value_template: '{{ value_json.battery_ok }}'
@@ -719,6 +753,17 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0f1792]
+
+  - name: Soil Battery Low WH51 0fb505 (Hanging Plants)
+    unique_id: wh51_0fb505_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0fb505]
 
   - name: Rain Meter Battery Low WH40 51409
     unique_id: wh40_51409_battery_low
