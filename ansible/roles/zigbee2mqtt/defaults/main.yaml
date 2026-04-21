@@ -1,6 +1,6 @@
 ---
 # renovate: datasource=docker
-zigbee2mqtt_image: "koenkk/zigbee2mqtt:2.9.1@sha256:574b2bd0dcbb59fae6edbbb81a35b5563291d3825da0225f0078aa5575dac37f"
+zigbee2mqtt_image: "koenkk/zigbee2mqtt:2.9.2@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0"
 zigbee2mqtt_data_dir: /etc/zigbee2mqtt
 zigbee2mqtt_device: /dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_621e38fda096ed118be4c498a7669f5d-if00-port0
 zigbee2mqtt_hostname: zigbee2mqtt.oneill.net
