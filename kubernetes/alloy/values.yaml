@@ -7,9 +7,15 @@ alloy:
   - name: TZ
     value: America/New_York
 
+  # Persist Alloy state so DaemonSet rollouts do not replay old logs.
+  storagePath: /var/lib/alloy
+
   # Enable log file mounts
   mounts:
     varlog: true
+    extra:
+    - name: alloy-storage
+      mountPath: /var/lib/alloy
 
   # Custom Alloy configuration for Loki with K8s metadata
   configMap:
@@ -97,6 +103,14 @@ controller:
   - key: node-role.kubernetes.io/control-plane
     operator: Exists
     effect: NoSchedule
+
+  # Use node-local persistent storage for Alloy state in the DaemonSet.
+  volumes:
+    extra:
+    - name: alloy-storage
+      hostPath:
+        path: /var/lib/alloy
+        type: DirectoryOrCreate
 
   # Pod annotations for Prometheus scraping
   podAnnotations:

@@ -36,7 +36,7 @@ spec:
           args:
             - run
             - /etc/alloy/config.alloy
-            - --storage.path=/tmp/alloy
+            - --storage.path=/var/lib/alloy
             - --server.http.listen-addr=0.0.0.0:12345
             - --server.http.ui-path-prefix=/
             - --stability.level=generally-available
@@ -69,6 +69,8 @@ spec:
             - name: varlog
               mountPath: /var/log
               readOnly: true
+            - mountPath: /var/lib/alloy
+              name: alloy-storage
         - name: config-reloader
           image: quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0
           imagePullPolicy: IfNotPresent
@@ -94,3 +96,7 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
+        - hostPath:
+            path: /var/lib/alloy
+            type: DirectoryOrCreate
+          name: alloy-storage
