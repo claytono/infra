@@ -10,7 +10,14 @@ cd "$SCRIPT_DIR"
 # shellcheck source=../../../scripts/require-secrets
 source "$REPO_ROOT/scripts/require-secrets"
 
-image=$(yq -r .spec.jobTemplate.spec.template.spec.containers[0].image <"$BASEDIR/cronjobs/cronjob-b2.yaml")
+base_image=$(yq -r .spec.jobTemplate.spec.template.spec.containers[0].image <"$BASEDIR/cronjobs/cronjob-b2.yaml")
+image_tag=$(yq -r ".images[] | select(.name == \"$base_image\") | .newTag" <"$BASEDIR/kustomization.yaml")
+
+if [[ "$image_tag" == "null" || -z "$image_tag" ]]; then
+	image="$base_image"
+else
+	image="${base_image}:$image_tag"
+fi
 
 mkdir -p .cache
 mkdir -p .tmp
