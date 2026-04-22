@@ -90,15 +90,6 @@ repos:
     additional_dependencies: [pyyaml]
     files: ^(esphome/[^/]+\.yaml|opentofu/esphome-hosts\.tf|scripts/gen-esphome-hosts)$
     pass_filenames: false
-  - id: beads-flush
-    name: beads pre-commit flush
-    entry: bash -c '[ "$GITHUB_ACTIONS" = "true" ] && exit 0; [ "$(git rev-parse --abbrev-ref
-      HEAD)" != "beads-sync" ] && exit 0; bd hooks run pre-commit'
-    language: system
-    pass_filenames: false
-    always_run: true
-    stages: [pre-commit]
-
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1
   hooks:
