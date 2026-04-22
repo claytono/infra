@@ -9,10 +9,26 @@ ephemeral "onepassword_item" "vultr_api" {
   title = "Vultr API"
 }
 
+# Hetzner Cloud API credentials from 1Password
+ephemeral "onepassword_item" "hetzner_cloud_api" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "hetzner-cloud-api"
+}
+
 # Backblaze B2 credentials from 1Password (master key with writeBuckets permission)
 data "onepassword_item" "terraform_b2" {
   vault = data.onepassword_vault.infra.uuid
   title = "terraform-b2"
+}
+
+data "onepassword_item" "resticprofile_rclone" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "resticprofile-rclone"
+}
+
+data "onepassword_item" "velero_b2_credentials" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "velero-b2-credentials"
 }
 
 # Tailscale OpenTofu OAuth credentials from 1Password (for managing policy/ACLs/OAuth clients)
@@ -52,11 +68,24 @@ locals {
       for k, v in sec.field_map : k => v.value
     }
   ]...)
+
+  resticprofile_rclone_fields = merge([
+    for _, sec in data.onepassword_item.resticprofile_rclone.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
+
+  velero_b2_credentials_fields = merge([
+    for _, sec in data.onepassword_item.velero_b2_credentials.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
 }
 
 # Local values for easier reference
 locals {
   vultr_api_key = ephemeral.onepassword_item.vultr_api.password
+  hcloud_token  = ephemeral.onepassword_item.hetzner_cloud_api.password
 
   # B2 credentials using clean field mapping
   b2_application_key_id = local.b2_fields["RCLONE_CONFIG_B2_ACCOUNT"]
