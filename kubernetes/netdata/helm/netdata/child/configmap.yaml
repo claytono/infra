@@ -7,7 +7,7 @@ metadata:
   namespace: netdata
   labels:
     app: netdata
-    chart: netdata-3.7.161
+    chart: netdata-3.7.163
     release: netdata
     heritage: Helm
 data:
@@ -58,7 +58,7 @@ metadata:
   namespace: netdata
   labels:
     app: netdata
-    chart: netdata-3.7.161
+    chart: netdata-3.7.163
     release: netdata
     heritage: Helm
 data:
