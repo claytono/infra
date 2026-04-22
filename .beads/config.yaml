@@ -1,3 +1,4 @@
+---
 # Beads Configuration File
 # This file configures default behavior for all bd commands in this repository
 # All settings can also be set via environment variables (BD_* prefix)
@@ -42,15 +43,18 @@ issue-prefix: "infra"
 # This setting persists across clones (unlike database config which is gitignored).
 # Can also use BEADS_SYNC_BRANCH env var for local override.
 # If not set, bd sync will require you to run 'bd config set sync.branch <branch>'.
-sync-branch: "beads-sync"
+sync-branch: ""
+
+export:
+  auto: false
 
 # Multi-repo configuration (experimental - bd-307)
 # Allows hydrating from multiple repositories and routing writes to the correct JSONL
 # repos:
 #   primary: "."  # Primary repo (where this database lives)
-#   additional:   # Additional repos to hydrate from (read-only)
+#   additional:  # Additional repos to hydrate from (read-only)
 #     - ~/beads-planning  # Personal planning repo
-#     - ~/work-planning   # Work planning repo
+#     - ~/work-planning  # Work planning repo
 
 # Integration settings (access with 'bd config get/set')
 # These are stored in the database, not in this file:
@@ -60,3 +64,5 @@ sync-branch: "beads-sync"
 # - linear.api-key
 # - github.org
 # - github.repo
+
+sync.remote: "git+ssh://git@github.com/claytono/infra.git"

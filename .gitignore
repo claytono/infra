@@ -58,3 +58,7 @@ tools/recyclarr/data/state/
 
 # Environment files (secrets)
 *.env
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+.beads-credential-key
