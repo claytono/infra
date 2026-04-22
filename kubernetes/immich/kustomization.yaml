@@ -9,9 +9,9 @@ commonAnnotations:
 
 images:
 - name: ghcr.io/immich-app/immich-server
-  newTag: v2.3.1@sha256:f8d06a32b1b2a81053d78e40bf8e35236b9faefb5c3903ce9ca8712c9ed78445
+  newTag: v2.7.5@sha256:c15bff75068effb03f4355997d03dc7e0fc58720c2b54ad6f7f10d1bc57efaa5
 - name: ghcr.io/immich-app/immich-machine-learning
-  newTag: v2.3.1-cuda@sha256:723c82610d713bc9bc15d90d8426f96915c2cbd634ef5bec1bf45a098d82d81d
+  newTag: v2.7.5-cuda@sha256:304142175e345f0155d7642f637cfdceae60e89075ff03938cb2886d52c65a62
 
 resources:
 - namespace.yaml
