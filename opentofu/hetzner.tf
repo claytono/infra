@@ -117,11 +117,30 @@ resource "hcloud_storage_box_subaccount" "velero" {
 }
 
 resource "onepassword_item" "hetzner_restic_main" {
-  vault    = data.onepassword_vault.infra.uuid
-  title    = "hetzner-restic-main"
-  category = "login"
-  url      = "https://${hcloud_storage_box_subaccount.main.server}"
-  username = hcloud_storage_box_subaccount.main.username
+  vault      = data.onepassword_vault.infra.uuid
+  title      = "hetzner-restic-main"
+  category   = "login"
+  url        = "https://${hcloud_storage_box_subaccount.main.server}"
+  username   = hcloud_storage_box_subaccount.main.username
+  note_value = <<-EOF
+    Managed by OpenTofu.
+
+    This login item holds the raw Hetzner Storage Box WebDAV credentials for the main restic destination.
+    - `username` and the built-in `password` are the raw WebDAV login credentials.
+    - `url` is consumed directly by `kubernetes/restic/shared/externalsecret.yaml`.
+    - `RCLONE_CONFIG_HETZNER_RESTIC_PASSWORD` and `RCLONE_CONFIG_HETZNER_RESTIC_PASSWORD2` are the crypt backend passwords copied from `resticprofile-rclone`.
+
+    The companion secure note `hetzner-restic-rclone` stores `RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS`, which must be the literal output of `rclone obscure` for this item's raw built-in password.
+    If this password rotates, update the companion item's obscured field too.
+  EOF
+  # Keep the built-in password as the raw WebDAV login password for this
+  # subaccount. Kubernetes reads the matching URL/username from this item, but
+  # reads the pre-obscured `RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS`
+  # value from the separate `hetzner-restic-rclone` secure note.
+  #
+  # That companion item is documented and validated in `secrets.tf`; it exists
+  # because `rclone obscure` is intentionally non-deterministic and would drift
+  # on every plan/apply if we tried to generate it inside OpenTofu.
   password = random_password.storage_box_main.result
 
   section {
@@ -148,11 +167,29 @@ resource "onepassword_item" "hetzner_restic_main" {
 }
 
 resource "onepassword_item" "hetzner_restic_xtal" {
-  vault    = data.onepassword_vault.infra.uuid
-  title    = "hetzner-restic-xtal"
-  category = "login"
-  url      = "https://${hcloud_storage_box_subaccount.xtal.server}"
-  username = hcloud_storage_box_subaccount.xtal.username
+  vault      = data.onepassword_vault.infra.uuid
+  title      = "hetzner-restic-xtal"
+  category   = "login"
+  url        = "https://${hcloud_storage_box_subaccount.xtal.server}"
+  username   = hcloud_storage_box_subaccount.xtal.username
+  note_value = <<-EOF
+    Managed by OpenTofu.
+
+    This login item holds the raw Hetzner Storage Box WebDAV credentials for the xtal restic destination.
+    - `username` and the built-in `password` are the raw WebDAV login credentials.
+    - `url` is the xtal destination URL consumed by the same restic/rclone pattern.
+    - `RCLONE_CONFIG_HETZNER_RESTIC_PASSWORD` and `RCLONE_CONFIG_HETZNER_RESTIC_PASSWORD2` are the crypt backend passwords copied from `resticprofile-rclone`.
+
+    The companion secure note `hetzner-restic-rclone` stores `RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS`, which must be the literal output of `rclone obscure` for this item's raw built-in password.
+    If this password rotates, update the companion item's obscured field too.
+  EOF
+  # Keep the built-in password as the raw WebDAV login password for this
+  # subaccount. The companion `hetzner-restic-rclone` secure note carries the
+  # pre-obscured `RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS` value that
+  # rclone expects for WebDAV auth.
+  #
+  # See `secrets.tf` for the companion-item read/validation and why this is not
+  # generated inside OpenTofu.
   password = random_password.storage_box_xtal.result
 
   section {

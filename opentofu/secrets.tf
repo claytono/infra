@@ -26,6 +26,21 @@ data "onepassword_item" "resticprofile_rclone" {
   title = "resticprofile-rclone"
 }
 
+# Manual companion item for Hetzner WebDAV rclone pass values. The built-in
+# `password` fields on the tofu-managed `hetzner-restic-main` /
+# `hetzner-restic-xtal` login items stay as the raw WebDAV login passwords.
+# This secure note carries only the pre-obscured `RCLONE_CONFIG_HETZNER_WEBDAV_*`
+# values that Kubernetes needs for rclone's `webdav pass` setting.
+#
+# We keep this as a separate item because `rclone obscure` uses a random IV.
+# If OpenTofu tried to regenerate the obscured values during plan/apply, the
+# result would drift every time even when the underlying raw password had not
+# changed.
+data "onepassword_item" "hetzner_restic_rclone" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "hetzner-restic-rclone"
+}
+
 data "onepassword_item" "velero_b2_credentials" {
   vault = data.onepassword_vault.infra.uuid
   title = "velero-b2-credentials"
@@ -75,11 +90,32 @@ locals {
     }
   ]...)
 
+  hetzner_restic_rclone_fields = merge([
+    for _, sec in data.onepassword_item.hetzner_restic_rclone.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
+
   velero_b2_credentials_fields = merge([
     for _, sec in data.onepassword_item.velero_b2_credentials.section_map : {
       for k, v in sec.field_map : k => v.value
     }
   ]...)
+}
+
+# Read the companion item intentionally and fail early if the manual rclone
+# fields are missing. This keeps the relationship between the tofu-managed login
+# items and the manual companion secure note explicit in OpenTofu.
+resource "terraform_data" "validate_hetzner_restic_rclone" {
+  lifecycle {
+    precondition {
+      condition = alltrue([
+        can(local.hetzner_restic_rclone_fields["RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS"]),
+        can(local.hetzner_restic_rclone_fields["RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS"]),
+      ])
+      error_message = "1Password item 'hetzner-restic-rclone' must contain RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS and RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS as pre-obscured rclone WebDAV passwords."
+    }
+  }
 }
 
 # Local values for easier reference

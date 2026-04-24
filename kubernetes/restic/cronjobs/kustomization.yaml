@@ -18,5 +18,9 @@ resources:
 - cronjob-b2.yaml
 - cronjob-b2-forget.yaml
 - cronjob-b2-check.yaml
+- cronjob-hetzner.yaml
+- cronjob-hetzner-forget.yaml
+- cronjob-hetzner-check.yaml
+- cronjob-hetzner-main-copy.yaml
 - cronjob-xtal-b2-forget.yaml
 - cronjob-xtal-b2-check.yaml

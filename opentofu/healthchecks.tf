@@ -187,6 +187,54 @@ resource "healthchecksio_check" "kube_restic_b2_check" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
+# kube-restic Hetzner backup - expects ping every 24 hours
+resource "healthchecksio_check" "kube_restic_hetzner_backup" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-hetzner-backup"
+  desc     = "Daily Hetzner restic backup from Kubernetes"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400 # 1 day
+  grace    = 86400 # 1 day
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic Hetzner forget - expects ping every 24 hours
+resource "healthchecksio_check" "kube_restic_hetzner_forget" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-hetzner-forget"
+  desc     = "Daily Hetzner restic forget/prune from Kubernetes"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400 # 1 day
+  grace    = 86400 # 1 day
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic Hetzner check - weekly integrity check
+resource "healthchecksio_check" "kube_restic_hetzner_check" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-hetzner-check"
+  desc     = "Weekly Hetzner restic integrity check from Kubernetes"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 604800 # 7 days
+  grace    = 86400  # 1 day
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic hetzner-main-copy - copies main backup to Hetzner
+resource "healthchecksio_check" "kube_restic_hetzner_main_copy" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-hetzner-main-copy-copy"
+  desc     = "Daily copy of main restic backup to Hetzner"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400  # 1 day
+  grace    = 108000 # 30 hours - allow one failure + next day to complete
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
 # kube-restic xtal-b2-forget - daily forget/prune on xtal B2 repo
 resource "healthchecksio_check" "kube_restic_xtal_b2_forget" {
   provider = healthchecksio.selfhosted
