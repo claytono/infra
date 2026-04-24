@@ -42,6 +42,20 @@
     "entries": {
       "slack": {
         "enabled": true
+      },
+      "active-memory": {
+        "enabled": true,
+        "config": {
+          "enabled": true,
+          "agents": ["main"],
+          "allowedChatTypes": ["direct", "group", "channel"],
+          "queryMode": "recent",
+          "promptStyle": "balanced",
+          "timeoutMs": 15000,
+          "maxSummaryChars": 220,
+          "logging": true,
+          "persistTranscripts": false
+        }
       }
     }
   },
@@ -66,8 +80,8 @@
   },
   "agents": {
     "defaults": {
-      "model": "openai-codex/gpt-5.4",
-      "thinkingDefault": "high",
+      "model": "openai-codex/gpt-5.5",
+      "thinkingDefault": "xhigh",
       "sandbox": {
         "mode": "off",
         "workspaceAccess": "rw"
