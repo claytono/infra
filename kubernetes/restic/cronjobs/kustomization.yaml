@@ -24,3 +24,6 @@ resources:
 - cronjob-hetzner-main-copy.yaml
 - cronjob-xtal-b2-forget.yaml
 - cronjob-xtal-b2-check.yaml
+- cronjob-hetzner-xtal-copy.yaml
+- cronjob-hetzner-xtal-forget.yaml
+- cronjob-hetzner-xtal-check.yaml

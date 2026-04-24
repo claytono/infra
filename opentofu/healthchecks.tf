@@ -259,6 +259,42 @@ resource "healthchecksio_check" "kube_restic_xtal_b2_check" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
+# kube-restic hetzner-xtal-copy - copies xtal backup to Hetzner
+resource "healthchecksio_check" "kube_restic_hetzner_xtal_copy" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-hetzner-xtal-copy-copy"
+  desc     = "Daily copy of xtal restic backup to Hetzner"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400  # 1 day
+  grace    = 108000 # 30 hours - allow one failure + next day to complete
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic xtal-hetzner-forget - daily forget/prune on xtal Hetzner repo
+resource "healthchecksio_check" "kube_restic_xtal_hetzner_forget" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-xtal-hetzner-forget"
+  desc     = "Daily forget/prune on xtal Hetzner repo"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 86400  # 1 day
+  grace    = 108000 # 30 hours - allow one failure + next day to complete
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# kube-restic xtal-hetzner-check - weekly integrity check on xtal Hetzner repo
+resource "healthchecksio_check" "kube_restic_xtal_hetzner_check" {
+  provider = healthchecksio.selfhosted
+
+  name     = "kube-restic-xtal-hetzner-check"
+  desc     = "Weekly integrity check on xtal Hetzner repo"
+  tags     = ["backup", "kubernetes", "restic"]
+  timeout  = 604800 # 7 days
+  grace    = 86400  # 1 day
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
 # Ansible idempotency test - daily verification that playbooks are idempotent
 resource "healthchecksio_check" "ansible_idempotency_test" {
   provider = healthchecksio.selfhosted
