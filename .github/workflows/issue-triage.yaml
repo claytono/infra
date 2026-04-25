@@ -228,7 +228,14 @@ jobs:
           Compare this JSON to the previous triage comment's JSON. If the status and
           upstream states are identical, no new comment is needed.
 
-          **If status is unchanged:** Write JSON with `action: "no_change"` and stop.
+          Labels must still be reconciled even when no new comment is needed:
+          - BLOCKED issues should have the `blocked` label and should not have `unblocked`
+          - UNBLOCKED issues should have the `unblocked` label and should not have `blocked`
+          - Use `label_action` to declare the desired label state even when `action` is
+            `no_change`
+
+          **If status is unchanged:** Write JSON with `action: "no_change"` and set
+          `label_action` to `"blocked"` or `"unblocked"` for the current status.
 
           ## STEP 6: OUTPUT FORMAT
 
@@ -239,7 +246,7 @@ jobs:
           {
             "action": "comment",
             "status": "BLOCKED",
-            "label_action": "add",
+            "label_action": "blocked",
             "comment_body": "<!-- issue-triage:v1:{...} -->\n## Issue Triage Report\n\n**Status:** BLOCKED\n\n..."
           }
           ```
@@ -248,12 +255,13 @@ jobs:
 
           **Action values:**
           - `"skip"` - Issue is not about external blockers (no comment needed)
-          - `"no_change"` - Status unchanged since last triage (no comment needed)
+          - `"no_change"` - Status unchanged since last triage (no comment needed;
+            labels may still be updated)
           - `"comment"` - Post the comment and update labels
 
           **Label action values:**
-          - `"add"` - Add the `blocked` label
-          - `"remove"` - Remove the `blocked` label
+          - `"blocked"` - Ensure the `blocked` label is present and `unblocked` is absent
+          - `"unblocked"` - Ensure the `unblocked` label is present and `blocked` is absent
           - `"none"` - Don't change labels
 
           **Comment format (for comment_body):**
@@ -354,6 +362,58 @@ jobs:
           exit 0
         fi
 
+        create_label_output=""
+        if ! create_label_output=$(gh label create unblocked --repo "$GITHUB_REPOSITORY" \
+            --color 0e8a16 \
+            --description "External blocker cleared; ready for follow-up" 2>&1); then
+          if ! printf '%s\n' "$create_label_output" | grep -Fqi "already exists"; then
+            printf '%s\n' "$create_label_output" >&2
+            exit 1
+          fi
+        fi
+
+        ensure_label_state() {
+          local issue="$1"
+          local desired="$2"
+          local current_labels
+
+          case "$desired" in
+            none|"")
+              return 0
+              ;;
+          esac
+
+          current_labels=$(gh issue view "$issue" --repo "$GITHUB_REPOSITORY" \
+            --json labels --jq '[.labels[].name]')
+
+          has_label() {
+            echo "$current_labels" | jq -e --arg label "$1" 'index($label) != null' >/dev/null
+          }
+
+          case "$desired" in
+            blocked|add)
+              if ! has_label blocked; then
+                gh issue edit "$issue" --repo "$GITHUB_REPOSITORY" --add-label blocked
+              fi
+              if has_label unblocked; then
+                gh issue edit "$issue" --repo "$GITHUB_REPOSITORY" --remove-label unblocked
+              fi
+              ;;
+            unblocked|remove)
+              if has_label blocked; then
+                gh issue edit "$issue" --repo "$GITHUB_REPOSITORY" --remove-label blocked
+              fi
+              if ! has_label unblocked; then
+                gh issue edit "$issue" --repo "$GITHUB_REPOSITORY" --add-label unblocked
+              fi
+              ;;
+            *)
+              echo "ERROR: Unsupported label_action '$desired' for issue #$issue" >&2
+              exit 1
+              ;;
+          esac
+        }
+
         for result_file in "${result_files[@]}"; do
           # Extract issue number from filename (triage-result-123.json -> 123)
           # This avoids prompt injection by not trusting Claude's JSON output
@@ -361,24 +421,24 @@ jobs:
 
           RESULT=$(cat "$result_file")
           ACTION=$(echo "$RESULT" | jq -r '.action')
+          LABEL_ACTION=$(echo "$RESULT" | jq -r '.label_action // "none"')
 
-          echo "Processing issue #$ISSUE: action=$ACTION"
+          echo "Processing issue #$ISSUE: action=$ACTION label_action=$LABEL_ACTION"
 
-          if [ "$ACTION" = "skip" ] || [ "$ACTION" = "no_change" ]; then
+          if [ "$ACTION" = "skip" ]; then
             echo "  No action needed"
             continue
           fi
 
-          COMMENT=$(echo "$RESULT" | jq -r '.comment_body')
-          LABEL_ACTION=$(echo "$RESULT" | jq -r '.label_action')
-
-          # Post comment
-          echo "$COMMENT" | gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" -F -
-
-          # Manage labels
-          if [ "$LABEL_ACTION" = "add" ]; then
-            gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --add-label blocked
-          elif [ "$LABEL_ACTION" = "remove" ]; then
-            gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --remove-label blocked
+          if [ "$ACTION" = "comment" ]; then
+            COMMENT=$(echo "$RESULT" | jq -r '.comment_body')
+            echo "$COMMENT" | gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" -F -
+          elif [ "$ACTION" = "no_change" ]; then
+            echo "  No comment needed"
+          else
+            echo "ERROR: Unsupported action '$ACTION' for issue #$ISSUE" >&2
+            exit 1
           fi
+
+          ensure_label_state "$ISSUE" "$LABEL_ACTION"
         done
