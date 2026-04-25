@@ -3,8 +3,9 @@
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASEDIR/../kubernetes/hass"
 
-# Extract Home Assistant image from rendered Kubernetes manifests
-HASS_IMAGE=$(yq '.spec.template.spec.containers[] | select(.name == "home-assistant") | .image' helm/statefulset.yaml)
+# Extract Home Assistant image from final kustomize output, not the raw Helm
+# render. The kustomization may override the chart image used at runtime.
+HASS_IMAGE=$(kustomize build . | yq 'select(.kind == "StatefulSet" and .metadata.name == "hass-home-assistant") | .spec.template.spec.containers[] | select(.name == "home-assistant") | .image')
 
 # Create temporary config directory
 mkdir -p config-check

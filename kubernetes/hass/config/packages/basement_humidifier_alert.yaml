@@ -8,11 +8,14 @@ template:
     delay_on:
       minutes: 25
     state: >
+      {% set hygrostat_on = is_state('humidifier.basement', 'on') %}
       {% set switch_on = is_state('switch.rec_room_humidifier', 'on') %}
       {% set power = states('sensor.rec_room_humidifier_power') | float(0) %}
-      {{ switch_on and power < 2 }}
+      {{ hygrostat_on and switch_on and power < 2 }}
     availability: >
-      {{ states('sensor.rec_room_humidifier_power') | is_number }}
+      {{ states('humidifier.basement') in ['on', 'off']
+        and states('switch.rec_room_humidifier') in ['on', 'off']
+        and states('sensor.rec_room_humidifier_power') | is_number }}
 
   - name: Basement Hallway Humidifier Not Running
     unique_id: basement_hallway_humidifier_not_running
@@ -20,12 +23,15 @@ template:
     delay_on:
       minutes: 25
     state: >
+      {% set hygrostat_on = is_state('humidifier.basement', 'on') %}
       {% set switch_on = is_state('switch.basement_hallway_humidifier', 'on') %}
       {% set power = states('sensor.basement_hallway_humidifier_power') | float(0)
       %}
-      {{ switch_on and power < 2 }}
+      {{ hygrostat_on and switch_on and power < 2 }}
     availability: >
-      {{ states('sensor.basement_hallway_humidifier_power') | is_number }}
+      {{ states('humidifier.basement') in ['on', 'off']
+        and states('switch.basement_hallway_humidifier') in ['on', 'off']
+        and states('sensor.basement_hallway_humidifier_power') | is_number }}
 
 alert:
   rec_room_humidifier_not_running:
