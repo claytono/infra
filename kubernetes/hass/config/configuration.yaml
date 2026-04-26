@@ -558,6 +558,30 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
+  - name: Soil Moisture WH51 0f519f (Verbena)
+    unique_id: wh51_0f519f_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0f519f]
+      name: WH51 Soil Moisture 0f519f (Verbena)
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
   - name: Soil Moisture WH51 0fb505 (Hanging Plants)
     unique_id: wh51_0fb505_moisture
     state_topic: rtl_433/devices/Fineoffset-WH51/0fb505
@@ -631,6 +655,16 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0f1792]
+
+  - name: Soil Battery WH51 0f519f (Verbena)
+    unique_id: wh51_0f519f_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0f519f]
 
   - name: Soil Battery WH51 0fb505 (Hanging Plants)
     unique_id: wh51_0fb505_battery
@@ -753,6 +787,17 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0f1792]
+
+  - name: Soil Battery Low WH51 0f519f (Verbena)
+    unique_id: wh51_0f519f_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0f519f]
 
   - name: Soil Battery Low WH51 0fb505 (Hanging Plants)
     unique_id: wh51_0fb505_battery_low
