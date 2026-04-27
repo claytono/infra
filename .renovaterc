@@ -231,6 +231,9 @@
       "matchManagers": [
         "pre-commit"
       ],
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -247,6 +250,9 @@
         "kubernetes"
       ],
       "minimumReleaseAge": "0 days",
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -268,6 +274,9 @@
         "custom.regex"
       ],
       "minimumReleaseAge": "0 days",
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -283,6 +292,9 @@
         "digest"
       ],
       "minimumReleaseAge": "0 days",
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -305,6 +317,9 @@
         "digest"
       ],
       "minimumReleaseAge": "0 days",
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -320,6 +335,13 @@
         "ghcr.io/cloudnative-pg/postgresql"
       ],
       "matchCurrentVersion": "/^17\\./",
+      "matchUpdateTypes": [
+        "patch",
+        "digest"
+      ],
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
@@ -370,6 +392,9 @@
         "digest"
       ],
       "minimumReleaseAge": "0 days",
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "addLabels": [
