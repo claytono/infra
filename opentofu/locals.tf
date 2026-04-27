@@ -112,6 +112,20 @@ locals {
       hostname = "garagepi-eth.oneill.net"
       note     = "Raspberry Pi in garage - wired interface"
     }
+    den-powerline = {
+      mac         = "b8:d5:26:f6:ff:72"
+      ip          = "172.19.74.147"
+      hostname    = "den-powerline.oneill.net"
+      note        = "Zyxel PLA6456 G.hn powerline adapter in den"
+      enable_ipv6 = false
+    }
+    garage-powerline = {
+      mac         = "b8:d5:26:f6:ff:73"
+      ip          = "172.19.74.151"
+      hostname    = "garage-powerline.oneill.net"
+      note        = "Zyxel PLA6456 G.hn powerline adapter in garage"
+      enable_ipv6 = false
+    }
     pantrypi = {
       mac      = "dc:a6:32:9d:b7:0f"
       ip       = "172.19.74.120"
