@@ -118,6 +118,14 @@ locals {
       hostname = "pantrypi.oneill.net"
       note     = "Raspberry Pi in pantry - zwavejs, zigbee2mqtt, rtl433"
     }
+    landroid = {
+      mac         = "7c:fa:80:61:08:2e"
+      ip          = "172.20.6.67"
+      hostname    = "landroid.oneill.net"
+      note        = "Worx Landroid WR310.1 mower"
+      public_dns  = false
+      enable_ipv6 = false
+    }
     # Test VMs
     testvm = {
       mac      = "BC:24:11:59:85:90"

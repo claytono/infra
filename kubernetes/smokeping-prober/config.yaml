@@ -23,6 +23,14 @@ targets:
   network: ip
   protocol: icmp
 
+  # IoT devices
+
+- hosts:
+  - landroid.oneill.net
+  interval: 1s
+  network: ip4
+  protocol: icmp
+
   # External domains
 
 - hosts:
