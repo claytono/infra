@@ -2,34 +2,34 @@
 # Auto-generated from flake.lock — do not edit
 # Regenerate with: scripts/gen-flake-versions
 
-act: 0.2.86
+act: 0.2.87
 age: 1.3.1
 ansible-lint: 25.8.2
 awscli2: 2.34.24
 bats: 1.12.0
-curl: 8.18.0
+curl: 8.19.0
 efficient-compression-tool: 0.9.5
-go-unifi-mcp: 406acbca40e88ebe56dc0fa7781cafdfe7a3c13b
+go-unifi-mcp: f63393219b3ee560db75022b8d3cb44147f6d65f
 jq: 1.8.1
 kopia: 0.22.3
 kubecolor: 0.6.0
 kubeconform: 0.7.0
-kubectl: 1.35.3
-kubernetes-helm: 3.20.1
+kubectl: 1.35.4
+kubernetes-helm: 3.20.2
 kustomize: 5.8.1
 kyverno: 1.17.1
 logcli: 3.6.4
 mcp-cli: 0.3.0-post
 mosquitto: 2.0.22
-nodejs: 24.14.0
+nodejs: 24.14.1
 opentofu: 1.11.6
 pluto: 5.23.6
 pre-commit: 4.5.1
 python3: 3.13.12-env
-rclone: 1.73.4
-skopeo: 1.22.1
+rclone: 1.73.5
+skopeo: 1.22.2
 tflint: 0.61.0
-uv: 0.11.6
-velero: 1.17.2
+uv: 0.11.7
+velero: 1.18.0
 yamlfix: 1.19.1
-yq-go: 4.52.5
+yq-go: 4.53.2
