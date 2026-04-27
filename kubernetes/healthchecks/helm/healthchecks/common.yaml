@@ -96,10 +96,16 @@ spec:
               value: "False"
             - name: REMOTE_USER_HEADER
               value: HTTP_X_AUTHENTIK_EMAIL
+            - name: SECRET_KEY
+              value: null
             - name: SITE_NAME
               value: Healthchecks
             - name: SITE_ROOT
               value: https://hc.k.oneill.net
+            - name: SUPERUSER_EMAIL
+              value: null
+            - name: SUPERUSER_PASSWORD
+              value: null
             - name: TZ
               value: America/New_York
           envFrom:
