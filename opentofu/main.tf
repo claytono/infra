@@ -58,6 +58,10 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 5.0"
     }
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "~> 1.60"
+    }
   }
 
   backend "s3" {
@@ -113,6 +117,10 @@ provider "proxmox" {
 
 provider "cloudflare" {
   api_token = local.cloudflare_api_token
+}
+
+provider "hcloud" {
+  token = local.hcloud_token
 }
 
 module "dns" {
