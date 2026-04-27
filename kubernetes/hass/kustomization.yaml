@@ -17,7 +17,7 @@ resources:
 images:
 - name: ghcr.io/home-assistant/home-assistant
   newName: homeassistant/home-assistant
-  newTag: 2026.3.4@sha256:916682086154a7390114a9788782b8efb199852d4f7d47066722c2bc5d1829e6
+  newTag: 2026.4.4@sha256:c1e5f0147f4cb51ccb05bb30b62a1269cc1bd48a6274792d3b38a77ab274dfd2
 
 labels:
 
