@@ -1,5 +1,12 @@
 # GitHub repository secrets management
 
+locals {
+  tailscale_ssh_github_repositories = toset([
+    "github-actions",
+    "dotfiles",
+  ])
+}
+
 # Infra repository secrets
 resource "github_actions_secret" "infra_argocd_auth_token" {
   repository      = "infra"
@@ -23,6 +30,22 @@ resource "github_actions_secret" "infra_tailscale_oauth_client_secret" {
   repository      = "infra"
   secret_name     = "TAILSCALE_OAUTH_CLIENT_SECRET"
   plaintext_value = tailscale_oauth_client.github_actions.key
+}
+
+resource "github_actions_secret" "tailscale_ssh_oauth_client_id" {
+  for_each = local.tailscale_ssh_github_repositories
+
+  repository      = each.key
+  secret_name     = "TAILSCALE_SSH_OAUTH_CLIENT_ID"
+  plaintext_value = tailscale_oauth_client.github_actions_ssh.id
+}
+
+resource "github_actions_secret" "tailscale_ssh_oauth_client_secret" {
+  for_each = local.tailscale_ssh_github_repositories
+
+  repository      = each.key
+  secret_name     = "TAILSCALE_SSH_OAUTH_CLIENT_SECRET"
+  plaintext_value = tailscale_oauth_client.github_actions_ssh.key
 }
 
 resource "github_actions_secret" "infra_semaphore_api_token" {

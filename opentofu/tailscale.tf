@@ -13,6 +13,7 @@ resource "tailscale_acl" "main" {
             "tag:k8s-operator": [],
             "tag:k8s": ["tag:k8s-operator"],
             "tag:github-actions": [],
+            "tag:github-actions-ssh": [],
             "tag:argocd": ["tag:k8s-operator"],
             "tag:semaphore": ["tag:k8s-operator"],
             "tag:flux": ["autogroup:admin"],
@@ -106,6 +107,14 @@ resource "tailscale_acl" "main" {
 
         // Define users and devices that can use Tailscale SSH.
         "ssh": [
+            // Allow members to debug ephemeral GitHub Actions runners.
+            {
+                "action": "check",
+                "src":    ["autogroup:member"],
+                "dst":    ["tag:github-actions-ssh"],
+                "users":  ["autogroup:nonroot"],
+            },
+
             // Allow all users to SSH into their own devices in check mode.
             // Comment this section out if you want to define specific restrictions.
             {
@@ -142,6 +151,15 @@ resource "tailscale_oauth_client" "github_actions" {
   description = "github-actions"
   scopes      = ["auth_keys"]
   tags        = ["tag:github-actions"]
+}
+
+# Create OAuth client for GitHub Actions SSH debugging (ephemeral nodes)
+resource "tailscale_oauth_client" "github_actions_ssh" {
+  description = "github-actions-ssh"
+  scopes      = ["auth_keys"]
+  tags        = ["tag:github-actions-ssh"]
+
+  depends_on = [tailscale_acl.main]
 }
 
 # Store operator OAuth credentials in 1Password
@@ -190,6 +208,31 @@ resource "onepassword_item" "tailscale_github_actions" {
       label = "client_secret"
       type  = "CONCEALED"
       value = tailscale_oauth_client.github_actions.key
+    }
+  }
+}
+
+# Store GitHub Actions SSH debug OAuth credentials in 1Password
+resource "onepassword_item" "tailscale_github_actions_ssh" {
+  vault    = data.onepassword_vault.infra.uuid
+  title    = "tailscale-github-actions-ssh"
+  category = "login"
+
+  note_value = "Tailscale OAuth client for GitHub Actions SSH debugging. Managed by OpenTofu - do not edit manually."
+
+  section {
+    label = "OAuth Credentials"
+
+    field {
+      label = "client_id"
+      type  = "STRING"
+      value = tailscale_oauth_client.github_actions_ssh.id
+    }
+
+    field {
+      label = "client_secret"
+      type  = "CONCEALED"
+      value = tailscale_oauth_client.github_actions_ssh.key
     }
   }
 }
