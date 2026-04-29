@@ -126,6 +126,13 @@ locals {
       note        = "Zyxel PLA6456 G.hn powerline adapter in garage"
       enable_ipv6 = false
     }
+    wr741nd = {
+      mac         = "64:70:02:63:e6:cc"
+      ip          = "172.20.6.81"
+      hostname    = "wr741nd.oneill.net"
+      note        = "TP-Link WR741ND router on deck in waterproof box for Landroid"
+      enable_ipv6 = false
+    }
     pantrypi = {
       mac      = "dc:a6:32:9d:b7:0f"
       ip       = "172.19.74.120"
