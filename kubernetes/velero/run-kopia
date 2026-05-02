@@ -12,24 +12,18 @@ REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 # shellcheck source=../../scripts/require-secrets
 source "$REPO_ROOT/scripts/require-secrets"
 
-require_secrets VELERO_RCLONE_CONFIG_B2_ACCOUNT VELERO_RCLONE_CONFIG_B2_KEY \
-	VELERO_RCLONE_S3_ACCESS_KEY VELERO_RCLONE_S3_SECRET_KEY KOPIA_PASSWORD || exit 1
+require_secrets VELERO_RCLONE_S3_ACCESS_KEY VELERO_RCLONE_S3_SECRET_KEY \
+	KOPIA_PASSWORD || exit 1
 
 # Re-export with names expected by the script
-export RCLONE_CONFIG_B2_ACCOUNT="$VELERO_RCLONE_CONFIG_B2_ACCOUNT"
-export RCLONE_CONFIG_B2_KEY="$VELERO_RCLONE_CONFIG_B2_KEY"
 export RCLONE_S3_ACCESS_KEY="$VELERO_RCLONE_S3_ACCESS_KEY"
 export RCLONE_S3_SECRET_KEY="$VELERO_RCLONE_S3_SECRET_KEY"
-
-# Create temporary directory for kopia config
-TMPDIR=$(mktemp -d)
-trap 'rm -rf "$TMPDIR"' EXIT
 
 # Kopia repository is accessed via the rclone S3 gateway
 # This matches how Velero accesses it
 S3_ENDPOINT="rclone-s3-velero.k.oneill.net"
 S3_BUCKET="data"
-S3_PREFIX="velero/kopia/default"
+S3_PREFIX="kopia/default"
 
 # S3 credentials (for accessing the rclone S3 gateway)
 export AWS_ACCESS_KEY_ID="$RCLONE_S3_ACCESS_KEY"
@@ -45,7 +39,7 @@ export KOPIA_CHECK_FOR_UPDATES=false
 # Use persistent kopia config directory in user's cache
 KOPIA_CONFIG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/kopia"
 mkdir -p "$KOPIA_CONFIG_DIR"
-KOPIA_CONFIG="$KOPIA_CONFIG_DIR/velero.config"
+KOPIA_CONFIG="$KOPIA_CONFIG_DIR/velero-hetzner-default.config"
 
 # Connect to the repository if not already connected
 if [ ! -f "$KOPIA_CONFIG" ]; then

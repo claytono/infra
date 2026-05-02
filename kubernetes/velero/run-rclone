@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-# Script to run rclone with Velero B2 credentials
+# Script to run rclone with Velero Hetzner credentials
 # For local development use only
 
 # Directory where this script is located
@@ -11,33 +11,37 @@ REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 # shellcheck source=../../scripts/require-secrets
 source "$REPO_ROOT/scripts/require-secrets"
 
-require_secrets VELERO_RCLONE_CONFIG_B2_ACCOUNT VELERO_RCLONE_CONFIG_B2_KEY \
-	VELERO_RCLONE_ENCRYPTION_PASSWORD || exit 1
+require_secrets VELERO_RCLONE_HETZNER_URL VELERO_RCLONE_HETZNER_USER \
+	VELERO_RCLONE_HETZNER_PASS VELERO_RCLONE_ENCRYPTION_PASSWORD || exit 1
 
 # Re-export with names expected by the script
-export RCLONE_CONFIG_B2_ACCOUNT="$VELERO_RCLONE_CONFIG_B2_ACCOUNT"
-export RCLONE_CONFIG_B2_KEY="$VELERO_RCLONE_CONFIG_B2_KEY"
+export RCLONE_CONFIG_HETZNER_URL="$VELERO_RCLONE_HETZNER_URL"
+export RCLONE_CONFIG_HETZNER_USER="$VELERO_RCLONE_HETZNER_USER"
+export RCLONE_CONFIG_HETZNER_PASS="$VELERO_RCLONE_HETZNER_PASS"
 export RCLONE_ENCRYPTION_PASSWORD="$VELERO_RCLONE_ENCRYPTION_PASSWORD"
 
 # Create temporary directory for rclone config
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# Obscure the encryption password for rclone
-OBSCURED_PASSWORD=$(rclone obscure "$RCLONE_ENCRYPTION_PASSWORD")
+OBSCURED_HETZNER_PASS=$(rclone obscure "$RCLONE_CONFIG_HETZNER_PASS")
+OBSCURED_ENCRYPTION_PASSWORD=$(rclone obscure "$RCLONE_ENCRYPTION_PASSWORD")
 
 # Create rclone config matching the Velero deployment
 cat > "$TMPDIR/rclone.conf" <<EOF
-[b2]
-type = b2
-account = $RCLONE_CONFIG_B2_ACCOUNT
-key = $RCLONE_CONFIG_B2_KEY
+[hetzner]
+type = webdav
+url = $RCLONE_CONFIG_HETZNER_URL
+vendor = other
+user = $RCLONE_CONFIG_HETZNER_USER
+pass = $OBSCURED_HETZNER_PASS
 
-[crypt_b2]
+[hetzner_velero]
 type = crypt
-remote = b2:cmo-velero
+remote = hetzner:
+filename_encryption = standard
 directory_name_encryption = true
-password = $OBSCURED_PASSWORD
+password = $OBSCURED_ENCRYPTION_PASSWORD
 EOF
 
 # Set rclone config location

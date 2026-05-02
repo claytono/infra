@@ -14,7 +14,6 @@ spec:
   accessMode: ReadWrite
   objectStorage:
     bucket: "data"
-    prefix: "velero"
   config:
     checksumAlgorithm: ""
     region: "rclone"
