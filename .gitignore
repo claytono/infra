@@ -5,6 +5,8 @@
 .secrets.age
 .secrets.tmpl.hash
 .tmp/
+.cache/
+**/.cache/
 
 # Ansible
 ansible-vault-password
