@@ -124,68 +124,8 @@ resource "healthchecksio_check" "velero_daily" {
 }
 
 # =============================================================================
-# kube-restic checks (B2 and main-copy)
+# kube-restic checks
 # =============================================================================
-
-# kube-restic B2 backup - expects ping every 24 hours
-resource "healthchecksio_check" "kube_restic_b2_backup" {
-  provider = healthchecksio.selfhosted
-
-  name     = "kube-restic-b2-backup"
-  desc     = "Daily B2 restic backup from Kubernetes"
-  tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 86400 # 1 day
-  grace    = 86400 # 1 day
-  channels = [data.healthchecksio_channel.selfhosted_email.id]
-}
-
-# kube-restic B2 forget - expects ping every 24 hours
-resource "healthchecksio_check" "kube_restic_b2_forget" {
-  provider = healthchecksio.selfhosted
-
-  name     = "kube-restic-b2-forget"
-  desc     = "Daily B2 restic forget/prune from Kubernetes"
-  tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 86400 # 1 day
-  grace    = 86400 # 1 day
-  channels = [data.healthchecksio_channel.selfhosted_email.id]
-}
-
-# kube-restic main-copy - copies main backup to B2
-resource "healthchecksio_check" "kube_restic_main_copy" {
-  provider = healthchecksio.selfhosted
-
-  name     = "kube-restic-main-copy-copy"
-  desc     = "Daily copy of main restic backup to B2"
-  tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 86400  # 1 day
-  grace    = 108000 # 30 hours - allow one failure + next day to complete
-  channels = [data.healthchecksio_channel.selfhosted_email.id]
-}
-
-# kube-restic xtal-copy - copies xtal backup to B2
-resource "healthchecksio_check" "kube_restic_xtal_copy" {
-  provider = healthchecksio.selfhosted
-
-  name     = "kube-restic-xtal-copy-copy"
-  desc     = "Daily copy of xtal restic backup to B2"
-  tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 86400  # 1 day
-  grace    = 108000 # 30 hours - allow one failure + next day to complete
-  channels = [data.healthchecksio_channel.selfhosted_email.id]
-}
-
-# kube-restic B2 check - weekly integrity check
-resource "healthchecksio_check" "kube_restic_b2_check" {
-  provider = healthchecksio.selfhosted
-
-  name     = "kube-restic-b2-check"
-  desc     = "Weekly B2 restic integrity check from Kubernetes"
-  tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 604800 # 7 days
-  grace    = 86400  # 1 day
-  channels = [data.healthchecksio_channel.selfhosted_email.id]
-}
 
 # kube-restic Hetzner backup - expects ping every 24 hours
 resource "healthchecksio_check" "kube_restic_hetzner_backup" {
@@ -232,30 +172,6 @@ resource "healthchecksio_check" "kube_restic_hetzner_main_copy" {
   tags     = ["backup", "kubernetes", "restic"]
   timeout  = 86400  # 1 day
   grace    = 108000 # 30 hours - allow one failure + next day to complete
-  channels = [data.healthchecksio_channel.selfhosted_email.id]
-}
-
-# kube-restic xtal-b2-forget - daily forget/prune on xtal B2 repo
-resource "healthchecksio_check" "kube_restic_xtal_b2_forget" {
-  provider = healthchecksio.selfhosted
-
-  name     = "kube-restic-xtal-b2-forget"
-  desc     = "Daily forget/prune on xtal B2 repo"
-  tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 86400  # 1 day
-  grace    = 108000 # 30 hours - allow one failure + next day to complete
-  channels = [data.healthchecksio_channel.selfhosted_email.id]
-}
-
-# kube-restic xtal-b2-check - weekly integrity check on xtal B2 repo
-resource "healthchecksio_check" "kube_restic_xtal_b2_check" {
-  provider = healthchecksio.selfhosted
-
-  name     = "kube-restic-xtal-b2-check"
-  desc     = "Weekly integrity check on xtal B2 repo"
-  tags     = ["backup", "kubernetes", "restic"]
-  timeout  = 604800 # 7 days
-  grace    = 86400  # 1 day
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
