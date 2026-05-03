@@ -26,7 +26,7 @@ spec:
         - /scripts/start.sh
         - serve
         - s3
-        - 'crypt_b2:'
+        - 'hetzner_velero:'
         - --force-path-style=true
         - --addr=:8080
         - --log-level=INFO

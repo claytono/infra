@@ -4,7 +4,6 @@ configuration:
   - name: default
     provider: aws
     bucket: data
-    prefix: velero
     config:
       region: rclone
       s3Url: https://rclone-s3-velero.k.oneill.net
@@ -29,7 +28,7 @@ nodeAgent:
 uploaderType: kopia
 
 credentials:
-  existingSecret: velero-b2-credentials
+  existingSecret: velero-credentials
 
 metrics:
   enabled: true

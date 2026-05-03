@@ -106,6 +106,83 @@ main-copy:
   - backend: b2
   prometheus-push: https://pushgateway.k.oneill.net/
 
+# Hetzner profile for direct backup to Hetzner Storage Box
+hetzner:
+  force-inactive-lock: true
+  repository: 'rclone:hetzner_crypt_restic_main:'
+  compression: max
+  verbose: true
+  pack-size: 64
+
+  env:
+    <<: *rclone_env
+    RCLONE_TRANSFERS: '5'
+    RCLONE_CHECKERS: '3'
+    RCLONE_LOW_LEVEL_RETRIES: '50'
+
+  backup:
+    source:
+    - /source
+    exclude:
+    - /source/backups/arq
+    - /source/backups/restic
+    - /source/k8s-pv/*-resticprofile-cache*
+    - /source/k8s-pv/*-prometheus-data/
+    - /source/shared/video/tv
+    - /source/shared/video/channels
+    - /source/shared/video/movies
+    - /source/shared/downloads
+    no-error-on-warning: true
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
+  forget:
+    keep-within-hourly: 24h
+    keep-within-daily: 14d
+    keep-within-monthly: 24m
+    keep-within-weekly: 3m
+    prune: true
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
+  prometheus-labels:
+  - host: kubernetes
+  - backend: hetzner
+  prometheus-push: https://pushgateway.k.oneill.net/
+  check:
+    read-data-subset: 1%
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
+  rewrite:
+    exclude:
+    - /source/k8s-pv/*-resticprofile-cache*
+    forget: true
+
+# Hetzner copy profile (copy from local repo to Hetzner)
+hetzner-main-copy:
+  force-inactive-lock: true
+  compression: max
+  verbose: true
+  pack-size: 64
+
+  env:
+    <<: *rclone_env
+    RCLONE_TRANSFERS: '5'
+    RCLONE_CHECKERS: '3'
+    RCLONE_LOW_LEVEL_RETRIES: '50'
+
+  copy:
+    from-repository: /source/backups/restic/repos/main
+    repository: 'rclone:hetzner_crypt_restic_main:'
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
+  prometheus-labels:
+  - host: kubernetes
+  - backend: hetzner
+  prometheus-push: https://pushgateway.k.oneill.net/
+
 # B2 copy profile (copy from local xtal repo to B2)
 xtal-copy:
   force-inactive-lock: true
@@ -156,6 +233,66 @@ xtal-b2:
   prometheus-labels:
   - host: kubernetes
   - backend: b2
+  prometheus-push: https://pushgateway.k.oneill.net/
+
+# Hetzner copy profile (copy from local xtal repo to Hetzner)
+hetzner-xtal-copy:
+  force-inactive-lock: true
+  compression: max
+  verbose: true
+  pack-size: 64
+
+  env:
+    <<: *rclone_env
+    RCLONE_TRANSFERS: '5'
+    RCLONE_CHECKERS: '3'
+    RCLONE_LOW_LEVEL_RETRIES: '50'
+
+  copy:
+    from-repository: /source/backups/restic/repos/xtal
+    repository: 'rclone:hetzner_crypt_restic_xtal:'
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
+  prometheus-labels:
+  - host: kubernetes
+  - backend: hetzner
+  prometheus-push: https://pushgateway.k.oneill.net/
+
+# xtal Hetzner profile for forget/check operations on Hetzner xtal repo
+xtal-hetzner:
+  force-inactive-lock: true
+  repository: 'rclone:hetzner_crypt_restic_xtal:'
+  compression: max
+  verbose: true
+  pack-size: 64
+
+  env:
+    <<: *rclone_env
+    RCLONE_TRANSFERS: '5'
+    RCLONE_CHECKERS: '3'
+    RCLONE_LOW_LEVEL_RETRIES: '50'
+
+  forget:
+    keep-within-hourly: 24h
+    keep-within-daily: 7d
+    keep-within-weekly: 3m
+    keep-within-monthly: 12m
+    keep-within-yearly: 5y
+    prune: true
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
+
+  check:
+    read-data-subset: 1%
+    send-before: *send_before
+    send-after: *send_after
+    send-after-fail: *send_after_fail
+
+  prometheus-labels:
+  - host: kubernetes
+  - backend: hetzner
   prometheus-push: https://pushgateway.k.oneill.net/
 
 # NFS repo maintenance profiles

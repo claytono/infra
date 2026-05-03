@@ -108,7 +108,7 @@ spec:
       volumes:
         - name: cloud-credentials
           secret:
-            secretName: velero-b2-credentials
+            secretName: velero-credentials
         - name: plugins
           emptyDir: {}
         - name: scratch
