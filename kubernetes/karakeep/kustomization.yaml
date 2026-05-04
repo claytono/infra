@@ -23,4 +23,4 @@ images:
 - name: ghcr.io/karakeep-app/karakeep
   newTag: 0.31.0@sha256:20754dbdafb11dfe288bbb1c2342a7855081b08ea069e86fcf2d4a2d945d3653
 - name: getmeili/meilisearch
-  newTag: v1.42.0@sha256:9902342ef8b4fe379cb87052941003a6b9ff18eb603c1dcc96d6c4442b6336df
+  newTag: v1.42.1@sha256:e13a16ddc45f66fd065b3416230c2669426cfa8907f4a43f14a9c09a17691fa4
