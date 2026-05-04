@@ -32,13 +32,8 @@ require_secrets RESTIC_PASSWORD \
 	RCLONE_CONFIG_HETZNER_CRYPT_RESTIC_XTAL_PASSWORD \
 	RCLONE_CONFIG_HETZNER_CRYPT_RESTIC_XTAL_PASSWORD2 || exit 1
 
-for env_name in \
-	RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS \
-	RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS \
-	RCLONE_CONFIG_HETZNER_WEBDAV_ROOT_PASS; do
-	printf -v "$env_name" '%s' "$(rclone obscure "${!env_name}")"
-	export "${env_name?}"
-done
+RCLONE_CONFIG_HETZNER_WEBDAV_ROOT_PASS="$(rclone obscure "$RCLONE_CONFIG_HETZNER_WEBDAV_ROOT_PASS")"
+export RCLONE_CONFIG_HETZNER_WEBDAV_ROOT_PASS
 
 # Now run the Docker container with the config file and necessary environment variables
 docker run --rm \
