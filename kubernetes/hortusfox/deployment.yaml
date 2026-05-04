@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: hortusfox
-        image: ghcr.io/danielbrendel/hortusfox-web:v5.7@sha256:8c286b6656920071c4c10142203566b5305702806117d01a66be6ba66d27a104
+        image: ghcr.io/danielbrendel/hortusfox-web:v5.8@sha256:62fdac133dddda643d4e533de58068dc25eef7bb70f5607a0dd7a16c01049668
         ports:
         - containerPort: 80
           name: http
