@@ -15,12 +15,6 @@ ephemeral "onepassword_item" "hetzner_cloud_api" {
   title = "hetzner-cloud-api"
 }
 
-# Backblaze B2 credentials from 1Password (master key with writeBuckets permission)
-data "onepassword_item" "terraform_b2" {
-  vault = data.onepassword_vault.infra.uuid
-  title = "terraform-b2"
-}
-
 data "onepassword_item" "resticprofile_rclone" {
   vault = data.onepassword_vault.infra.uuid
   title = "resticprofile-rclone"
@@ -71,14 +65,7 @@ ephemeral "onepassword_item" "openai_admin_api" {
   title = "terraform-openai-admin-key"
 }
 
-# Clean field mapping for B2 credentials
 locals {
-  b2_fields = merge([
-    for _, sec in data.onepassword_item.terraform_b2.section_map : {
-      for k, v in sec.field_map : k => v.value
-    }
-  ]...)
-
   resticprofile_rclone_fields = merge([
     for _, sec in data.onepassword_item.resticprofile_rclone.section_map : {
       for k, v in sec.field_map : k => v.value
@@ -111,10 +98,6 @@ resource "terraform_data" "validate_hetzner_restic_rclone" {
 locals {
   vultr_api_key = ephemeral.onepassword_item.vultr_api.password
   hcloud_token  = ephemeral.onepassword_item.hetzner_cloud_api.password
-
-  # B2 credentials using clean field mapping
-  b2_application_key_id = local.b2_fields["RCLONE_CONFIG_B2_ACCOUNT"]
-  b2_application_key    = local.b2_fields["RCLONE_CONFIG_B2_KEY"]
 
   # Tailscale OpenTofu credentials for policy and OAuth client management
   tailscale_fields = merge([

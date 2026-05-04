@@ -10,10 +10,6 @@ terraform {
       source  = "1Password/onepassword"
       version = "~> 3.0"
     }
-    b2 = {
-      source  = "Backblaze/b2"
-      version = "~> 0.12"
-    }
     tailscale = {
       source  = "tailscale/tailscale"
       version = "~> 0.28"
@@ -79,11 +75,6 @@ provider "onepassword" {
 
 provider "vultr" {
   api_key = local.vultr_api_key
-}
-
-provider "b2" {
-  application_key_id = local.b2_application_key_id
-  application_key    = local.b2_application_key
 }
 
 provider "tailscale" {

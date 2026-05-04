@@ -34,6 +34,21 @@ resource "random_password" "storage_box_velero" {
   override_special = "^!$%()=?+#-.,:~*@{}_&"
 }
 
+resource "random_password" "rclone_encryption" {
+  length  = 32
+  special = true
+}
+
+resource "random_password" "rclone_s3_secret" {
+  length  = 32
+  special = true
+}
+
+resource "random_password" "kopia_password" {
+  length  = 32
+  special = true
+}
+
 resource "hcloud_storage_box" "backups" {
   location         = "fsn1" # Falkenstein, Germany
   storage_box_type = "bx41" # 10 TB class
