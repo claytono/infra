@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/instance: hass
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: home-assistant
-    app.kubernetes.io/version: 2026.4.2
+    app.kubernetes.io/version: 2026.4.3
 spec:
   type: ClusterIP
   ports:
