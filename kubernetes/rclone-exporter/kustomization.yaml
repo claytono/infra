@@ -1,0 +1,28 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: o11y
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- deployment.yaml
+- service.yaml
+- externalsecret.yaml
+
+configMapGenerator:
+
+- files:
+  - rclone.conf
+  name: rclone-exporter
+  options:
+    disableNameSuffixHash: true
+
+labels:
+
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/name: rclone-exporter
+    app.kubernetes.io/instance: rclone-exporter

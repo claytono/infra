@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: rclone-exporter
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rclone-exporter
+      app.kubernetes.io/instance: rclone-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rclone-exporter
+        app.kubernetes.io/instance: rclone-exporter
+    spec:
+      containers:
+      - name: rclone-exporter
+        image: ghcr.io/crazyuploader/rclone_exporter:latest@sha256:bfed0633be29c7d14f895b578452e5356dca28644878dfa5a6eebe5021a84c5b
+        env:
+        - name: RC_EXPORTER_RCLONE_TIMEOUT
+          value: 1m50s
+        - name: RCLONE_CONFIG
+          value: /config/rclone.conf
+        envFrom:
+        - secretRef:
+            name: rclone-exporter
+        ports:
+        - name: http
+          containerPort: 9116
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10000
+          runAsGroup: 10000
+          capabilities:
+            drop: [ALL]
+      volumes:
+      - name: config
+        configMap:
+          name: rclone-exporter
+      - name: tmp
+        emptyDir: {}

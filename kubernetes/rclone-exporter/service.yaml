@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: rclone-exporter
+
+spec:
+  selector:
+    app.kubernetes.io/name: rclone-exporter
+    app.kubernetes.io/instance: rclone-exporter
+  ports:
+  - name: http
+    port: 9116
+    targetPort: 9116

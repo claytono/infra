@@ -333,6 +333,23 @@ scrape_configs:
   - target_label: __address__
     replacement: prometheus-pve-exporter.o11y.svc:9221
 
+- job_name: rclone-exporter
+  scrape_interval: 120s
+  scrape_timeout: 120s
+  metrics_path: /probe
+  static_configs:
+  - targets:
+    - "hetzner_crypt_restic_main:"
+    - "hetzner_crypt_restic_xtal:"
+    - "hetzner_velero:"
+  relabel_configs:
+  - source_labels: [__address__]
+    target_label: __param_remote
+  - source_labels: [__param_remote]
+    target_label: instance
+  - target_label: __address__
+    replacement: rclone-exporter.o11y.svc:9116
+
 - job_name: karakeep
   metrics_path: /api/metrics
   static_configs:
