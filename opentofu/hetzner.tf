@@ -68,11 +68,18 @@ resource "hcloud_storage_box" "backups" {
 }
 
 resource "onepassword_item" "hetzner_storage_box_parent" {
-  vault    = data.onepassword_vault.infra.uuid
-  title    = "hetzner-storage-box-parent"
-  url      = local.hetzner_storage_box_urls.parent
-  username = hcloud_storage_box.backups.username
-  password = random_password.storage_box_parent.result
+  vault      = data.onepassword_vault.infra.uuid
+  title      = "hetzner-storage-box-parent"
+  url        = local.hetzner_storage_box_urls.parent
+  username   = hcloud_storage_box.backups.username
+  password   = random_password.storage_box_parent.result
+  note_value = <<-EOF
+    Managed by OpenTofu.
+
+    This login item holds the raw parent Hetzner Storage Box WebDAV credentials.
+    The companion secure note `hetzner-restic-rclone` stores `RCLONE_CONFIG_HETZNER_WEBDAV_ROOT_PASS`, which must be the literal output of `rclone obscure` for this item's raw built-in password.
+    If this password rotates, run `./scripts/bootstrap-secrets --apply rclone` to populate any missing companion fields.
+  EOF
 
   section {
     label = "credentials"
@@ -226,11 +233,18 @@ resource "onepassword_item" "hetzner_restic_xtal" {
 }
 
 resource "onepassword_item" "hetzner_velero" {
-  vault    = data.onepassword_vault.infra.uuid
-  title    = "hetzner-velero"
-  url      = local.hetzner_storage_box_urls.velero
-  username = hcloud_storage_box_subaccount.velero.username
-  password = random_password.storage_box_velero.result
+  vault      = data.onepassword_vault.infra.uuid
+  title      = "hetzner-velero"
+  url        = local.hetzner_storage_box_urls.velero
+  username   = hcloud_storage_box_subaccount.velero.username
+  password   = random_password.storage_box_velero.result
+  note_value = <<-EOF
+    Managed by OpenTofu.
+
+    This login item holds the raw Hetzner Storage Box WebDAV credentials and raw Velero rclone encryption password.
+    The companion secure note `hetzner-velero-rclone` stores `RCLONE_CONFIG_HETZNER_WEBDAV_VELERO_PASS` and `RCLONE_CONFIG_HETZNER_VELERO_PASSWORD`, which must be the literal output of `rclone obscure` for the corresponding raw values.
+    If the raw WebDAV or encryption password rotates, run `./scripts/bootstrap-secrets --apply rclone` to populate any missing companion fields.
+  EOF
 
   section {
     label = "credentials"

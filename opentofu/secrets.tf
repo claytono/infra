@@ -35,6 +35,11 @@ data "onepassword_item" "hetzner_restic_rclone" {
   title = "hetzner-restic-rclone"
 }
 
+data "onepassword_item" "hetzner_velero_rclone" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "hetzner-velero-rclone"
+}
+
 # Tailscale OpenTofu OAuth credentials from 1Password (for managing policy/ACLs/OAuth clients)
 data "onepassword_item" "tailscale_opentofu" {
   vault = data.onepassword_vault.infra.uuid
@@ -77,6 +82,12 @@ locals {
       for k, v in sec.field_map : k => v.value
     }
   ]...)
+
+  hetzner_velero_rclone_fields = merge([
+    for _, sec in data.onepassword_item.hetzner_velero_rclone.section_map : {
+      for k, v in sec.field_map : k => v.value
+    }
+  ]...)
 }
 
 # Read the companion item intentionally and fail early if the manual rclone
@@ -88,8 +99,21 @@ resource "terraform_data" "validate_hetzner_restic_rclone" {
       condition = alltrue([
         can(local.hetzner_restic_rclone_fields["RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS"]),
         can(local.hetzner_restic_rclone_fields["RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS"]),
+        can(local.hetzner_restic_rclone_fields["RCLONE_CONFIG_HETZNER_WEBDAV_ROOT_PASS"]),
       ])
-      error_message = "1Password item 'hetzner-restic-rclone' must contain RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS and RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS as pre-obscured rclone WebDAV passwords."
+      error_message = "1Password item 'hetzner-restic-rclone' must contain RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_MAIN_PASS, RCLONE_CONFIG_HETZNER_WEBDAV_RESTIC_XTAL_PASS, and RCLONE_CONFIG_HETZNER_WEBDAV_ROOT_PASS as pre-obscured rclone WebDAV passwords. Run './scripts/bootstrap-secrets --apply rclone'."
+    }
+  }
+}
+
+resource "terraform_data" "validate_hetzner_velero_rclone" {
+  lifecycle {
+    precondition {
+      condition = alltrue([
+        can(local.hetzner_velero_rclone_fields["RCLONE_CONFIG_HETZNER_WEBDAV_VELERO_PASS"]),
+        can(local.hetzner_velero_rclone_fields["RCLONE_CONFIG_HETZNER_VELERO_PASSWORD"]),
+      ])
+      error_message = "1Password item 'hetzner-velero-rclone' must contain RCLONE_CONFIG_HETZNER_WEBDAV_VELERO_PASS and RCLONE_CONFIG_HETZNER_VELERO_PASSWORD as pre-obscured rclone passwords. Run './scripts/bootstrap-secrets --apply rclone'."
     }
   }
 }
