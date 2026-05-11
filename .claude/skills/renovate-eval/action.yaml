@@ -14,6 +14,10 @@ inputs:
     description: "'local' or 'ci'"
     required: false
     default: ci
+  provider:
+    description: "'claude' or 'codex'"
+    required: false
+    default: ''
   evaluator_model:
     description: Model for evaluator
     required: false
@@ -22,6 +26,26 @@ inputs:
     description: Model for auditor
     required: false
     default: sonnet
+  codex_evaluator_model:
+    description: Codex model for evaluator; empty uses Codex default
+    required: false
+    default: ''
+  codex_auditor_model:
+    description: Codex model for auditor; empty uses Codex default
+    required: false
+    default: ''
+  codex_reasoning_effort:
+    description: Codex reasoning effort; empty uses Codex default
+    required: false
+    default: ''
+  codex_version:
+    description: Codex CLI npm package version
+    required: false
+    default: latest
+  agent_timeout:
+    description: Agent subprocess timeout in seconds; 0 disables the timeout
+    required: false
+    default: '600'
   ci_timeout:
     description: CI wait timeout in seconds
     required: false
@@ -50,9 +74,36 @@ runs:
     with:
       node-version: '24'
 
+  - name: Resolve provider
+    id: provider
+    shell: bash
+    env:
+      INPUT_PROVIDER: ${{ inputs.provider }}
+    run: |
+      provider="$INPUT_PROVIDER"
+      if [[ -z "$provider" ]]; then
+        provider="${RENOVATE_EVAL_PROVIDER:-claude}"
+      fi
+      case "$provider" in
+        claude|codex) ;;
+        *)
+          echo "Unsupported provider: $provider" >&2
+          exit 1
+          ;;
+      esac
+      echo "provider=$provider" >> "$GITHUB_OUTPUT"
+
   - name: Install Claude CLI
+    if: steps.provider.outputs.provider == 'claude'
     shell: bash
     run: npm install -g @anthropic-ai/claude-code
+
+  - name: Install Codex CLI
+    if: steps.provider.outputs.provider == 'codex'
+    shell: bash
+    env:
+      CODEX_VERSION: ${{ inputs.codex_version }}
+    run: npm install -g "@openai/codex@$CODEX_VERSION"
 
   - name: Run evaluation
     id: evaluate
@@ -65,8 +116,13 @@ runs:
       INPUT_PR_NUMBER: ${{ inputs.pr_number }}
       INPUT_MODE: ${{ inputs.mode }}
       INPUT_CONTEXT: ${{ inputs.context }}
+      INPUT_PROVIDER: ${{ steps.provider.outputs.provider }}
       INPUT_EVALUATOR_MODEL: ${{ inputs.evaluator_model }}
       INPUT_AUDITOR_MODEL: ${{ inputs.auditor_model }}
+      INPUT_CODEX_EVALUATOR_MODEL: ${{ inputs.codex_evaluator_model }}
+      INPUT_CODEX_AUDITOR_MODEL: ${{ inputs.codex_auditor_model }}
+      INPUT_CODEX_REASONING_EFFORT: ${{ inputs.codex_reasoning_effort }}
+      INPUT_AGENT_TIMEOUT: ${{ inputs.agent_timeout }}
       INPUT_CI_TIMEOUT: ${{ inputs.ci_timeout }}
       ACTION_PATH: ${{ github.action_path }}
     run: |
@@ -75,11 +131,24 @@ runs:
         --pr "$INPUT_PR_NUMBER"
         --"$INPUT_MODE"
         --context "$INPUT_CONTEXT"
+        --provider "$INPUT_PROVIDER"
         --evaluator-model "$INPUT_EVALUATOR_MODEL"
         --auditor-model "$INPUT_AUDITOR_MODEL"
         --ci-timeout "$INPUT_CI_TIMEOUT"
         --keep-artifacts
       )
+      if [[ -n "$INPUT_CODEX_EVALUATOR_MODEL" ]]; then
+        ARGS+=(--codex-evaluator-model "$INPUT_CODEX_EVALUATOR_MODEL")
+      fi
+      if [[ -n "$INPUT_CODEX_AUDITOR_MODEL" ]]; then
+        ARGS+=(--codex-auditor-model "$INPUT_CODEX_AUDITOR_MODEL")
+      fi
+      if [[ -n "$INPUT_CODEX_REASONING_EFFORT" ]]; then
+        ARGS+=(--codex-reasoning-effort "$INPUT_CODEX_REASONING_EFFORT")
+      fi
+      if [[ -n "$INPUT_AGENT_TIMEOUT" ]]; then
+        ARGS+=(--agent-timeout "$INPUT_AGENT_TIMEOUT")
+      fi
       if [[ -n "$EVAL_INSTRUCTIONS" ]]; then
         ARGS+=(--instructions "$EVAL_INSTRUCTIONS")
       fi

@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: codex-runner-hooks
+  labels:
+    app.kubernetes.io/name: codex-runners
+    app.kubernetes.io/part-of: codex-runners
+
+data:
+  job-started.sh: |
+    #!/usr/bin/env bash
+    set -Eeuo pipefail
+
+    echo "Running ARC Job Started Hooks"
+
+    shopt -s nullglob
+    for hook in /etc/arc/hooks/job-started.d/*; do
+      echo "Running hook: $hook"
+      "$hook" "$@"
+    done
+
+  install-runner-prerequisites.sh: |-
+    #!/usr/bin/env bash
+    set -Eeuo pipefail
+
+    export DEBIAN_FRONTEND=noninteractive
+
+    sudo -n true
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends gh xz-utils

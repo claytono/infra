@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: codex-runners
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- pvc.yaml
+- networkpolicy.yaml
+- serviceaccount-runner.yaml
+- runner-hooks-configmap.yaml
+- externalsecret-github.yaml
+# BEGIN generated runner scale sets
+- helm/manager-role.yaml
+- helm/manager-role-binding.yaml
+- helm/infra-autoscalingrunnerset.yaml
+# END generated runner scale sets

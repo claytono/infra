@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: codex-home
+
+spec:
+  accessModes:
+  - ReadWriteOncePod
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 1Gi

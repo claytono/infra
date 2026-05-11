@@ -1,0 +1,65 @@
+---
+githubConfigUrl: https://github.com/claytono/infra
+githubConfigSecret: codex-runner-github
+
+controllerServiceAccount:
+  namespace: actions-runner-system
+  name: actions-runner-controller-gha-rs-controller
+
+runnerScaleSetName: codex-infra
+scaleSetLabels:
+- codex
+
+minRunners: 0
+maxRunners: 1
+
+template:
+  metadata:
+    labels:
+      codex-runner: 'true'
+      codex-runner-repo: infra
+  spec:
+    serviceAccountName: codex-runner
+    securityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+      fsGroupChangePolicy: OnRootMismatch
+      supplementalGroups:
+      - 27
+    dnsPolicy: None
+    dnsConfig:
+      nameservers:
+      - 1.1.1.1
+      - 1.0.0.1
+    containers:
+    - name: runner
+      image: ghcr.io/actions/actions-runner:2.333.0
+      command:
+      - /home/runner/run.sh
+      env:
+      - name: CODEX_HOME
+        value: /home/runner/.codex
+      - name: USER
+        value: runner
+      - name: ACTIONS_RUNNER_HOOK_JOB_STARTED
+        value: /etc/arc/hooks/job-started.sh
+      volumeMounts:
+      - name: codex-home
+        mountPath: /home/runner/.codex
+      - name: runner-hooks
+        mountPath: /etc/arc/hooks
+        readOnly: true
+    volumes:
+    - name: codex-home
+      persistentVolumeClaim:
+        claimName: codex-home
+    - name: runner-hooks
+      configMap:
+        name: codex-runner-hooks
+        defaultMode: 493
+        items:
+        - key: job-started.sh
+          path: job-started.sh
+        - key: install-runner-prerequisites.sh
+          path: job-started.d/10-install-runner-prerequisites.sh

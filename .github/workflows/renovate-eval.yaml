@@ -15,6 +15,29 @@ on:
         required: false
         type: boolean
         default: false
+      provider:
+        description: AI provider for evaluation
+        required: false
+        type: choice
+        options:
+        - claude
+        - codex
+        default: claude
+      codex_runner_label:
+        description: Runner label for provider=codex
+        required: false
+        type: string
+        default: ubuntu-latest
+      codex_reasoning_effort:
+        description: Codex reasoning effort for provider=codex
+        required: false
+        type: string
+        default: xhigh
+      codex_agent_timeout:
+        description: Codex agent subprocess timeout in seconds; 0 disables the timeout
+        required: false
+        type: string
+        default: '1800'
 
 concurrency:
   group: renovate-eval-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
@@ -32,6 +55,10 @@ jobs:
       matrix: ${{ steps.check.outputs.matrix }}
       trigger: ${{ steps.check.outputs.trigger }}
       fingerprint: ${{ steps.check.outputs.fingerprint }}
+      provider: ${{ steps.check.outputs.provider }}
+      runner_label: ${{ steps.check.outputs.runner_label }}
+      codex_reasoning_effort: ${{ steps.check.outputs.codex_reasoning_effort }}
+      codex_agent_timeout: ${{ steps.check.outputs.codex_agent_timeout }}
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
@@ -48,7 +75,37 @@ jobs:
         PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
         INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        INPUT_PROVIDER: ${{ inputs.provider }}
+        INPUT_CODEX_RUNNER_LABEL: ${{ inputs.codex_runner_label }}
+        INPUT_CODEX_REASONING_EFFORT: ${{ inputs.codex_reasoning_effort }}
+        INPUT_CODEX_AGENT_TIMEOUT: ${{ inputs.codex_agent_timeout }}
       run: |
+        PROVIDER="${INPUT_PROVIDER:-claude}"
+        CODEX_REASONING_EFFORT=""
+        CODEX_AGENT_TIMEOUT=""
+        case "$PROVIDER" in
+          claude)
+            RUNNER_LABEL="ubuntu-latest"
+            ;;
+          codex)
+            RUNNER_LABEL="${INPUT_CODEX_RUNNER_LABEL:-ubuntu-latest}"
+            CODEX_REASONING_EFFORT="${INPUT_CODEX_REASONING_EFFORT:-xhigh}"
+            CODEX_AGENT_TIMEOUT="${INPUT_CODEX_AGENT_TIMEOUT:-1800}"
+            if [[ -z "$RUNNER_LABEL" ]]; then
+              echo "Codex runner label must not be empty" >&2
+              exit 1
+            fi
+            ;;
+          *)
+            echo "Unsupported provider: $PROVIDER" >&2
+            exit 1
+            ;;
+        esac
+        echo "provider=$PROVIDER" >> "$GITHUB_OUTPUT"
+        echo "runner_label=$RUNNER_LABEL" >> "$GITHUB_OUTPUT"
+        echo "codex_reasoning_effort=$CODEX_REASONING_EFFORT" >> "$GITHUB_OUTPUT"
+        echo "codex_agent_timeout=$CODEX_AGENT_TIMEOUT" >> "$GITHUB_OUTPUT"
+
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
 
           # Only evaluate Renovate PRs
@@ -148,7 +205,7 @@ jobs:
     name: 'Evaluate PR #${{ matrix.pr }}'
     needs: gate
     if: needs.gate.outputs.should_evaluate == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ needs.gate.outputs.runner_label }}
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -168,7 +225,7 @@ jobs:
 
     # Set up Nix BEFORE waiting so eval starts immediately when checks complete
     - name: Install Nix
-      uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # v31
+      uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b  # v31
       with:
         github_access_token: ${{ github.token }}
 
@@ -222,9 +279,13 @@ jobs:
       env:
         EVAL_TRIGGER: ${{ needs.gate.outputs.trigger }}
         EVAL_FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
+        CODEX_HOME: /home/runner/.codex
       with:
         pr_number: ${{ matrix.pr }}
         mode: ${{ inputs.dry_run && 'dry-run' || 'post' }}
         context: ci
+        provider: ${{ needs.gate.outputs.provider }}
+        codex_reasoning_effort: ${{ needs.gate.outputs.codex_reasoning_effort }}
+        agent_timeout: ${{ needs.gate.outputs.codex_agent_timeout }}
         claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         github_token: ${{ github.token }}

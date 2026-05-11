@@ -119,6 +119,20 @@ Each source you consulted. Fields:
 - Set optional sections to `null` (not empty string) when not applicable.
   Document in the evidence file why each was omitted.
 
+## Report Style
+
+The report is rendered as a GitHub PR comment. Optimize the JSON field values
+for fast scanning:
+
+- Prefer short bullet lists for sections with multiple facts, changes, fixes,
+  risks, sources of evidence, or deployment impacts.
+- Use at most one short lead sentence before bullets in a section.
+- Keep each bullet focused on one claim plus its deployment-specific impact.
+- Avoid dense narrative paragraphs in `performance_stability`, `features_ux`,
+  `security`, `key_fixes`, `newer_versions`, and `hazards`.
+- `update_scope` may be prose, but keep it compact and specific.
+- `verdict` remains 1-2 sentences.
+
 ## Validation
 
 After writing eval-data.json, run the validation subcommand:

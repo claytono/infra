@@ -13,3 +13,30 @@ resources:
 - helm/templates/daemonset.yaml
 - helm/templates/rbac.yaml
 - helm/templates/serviceaccount.yaml
+
+patches:
+
+# kube-network-policies uses containerd NRI to attach policy hooks. The chart
+# does not mount the host NRI socket, so add it to the DaemonSet locally.
+- target:
+    kind: DaemonSet
+    name: kube-flannel-ds
+  patch: |-
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: kube-flannel-ds
+    spec:
+      template:
+        spec:
+          containers:
+          - name: kube-network-policies
+            volumeMounts:
+            - name: nri
+              mountPath: /var/run/nri
+              readOnly: true
+          volumes:
+          - name: nri
+            hostPath:
+              path: /run/nri
+              type: Directory

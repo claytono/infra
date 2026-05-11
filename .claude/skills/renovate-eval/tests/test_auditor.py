@@ -94,7 +94,7 @@ class TestRunAuditor:
             "usage": {},
         }
         monkeypatch.setattr(
-            "lib.auditor.subprocess.run",
+            "lib.agent_runner.subprocess.run",
             lambda *a, **kw: subprocess.CompletedProcess(
                 a[0],
                 0,
@@ -121,7 +121,7 @@ class TestRunAuditor:
 
     def test_nonzero_exit_raises(self, monkeypatch, tmp_dir):
         monkeypatch.setattr(
-            "lib.auditor.subprocess.run",
+            "lib.agent_runner.subprocess.run",
             lambda *a, **kw: subprocess.CompletedProcess(
                 a[0], 1, stdout="", stderr="error"
             ),
@@ -145,7 +145,7 @@ class TestRunAuditor:
     def test_no_json_sentinels(self, monkeypatch, tmp_dir):
         output = {"result": "No JSON here", "total_cost_usd": 0.1, "usage": {}}
         monkeypatch.setattr(
-            "lib.auditor.subprocess.run",
+            "lib.agent_runner.subprocess.run",
             lambda *a, **kw: subprocess.CompletedProcess(
                 a[0],
                 0,
@@ -185,7 +185,7 @@ class TestRunAuditor:
                 cmd, 0, stdout=json.dumps(output), stderr=""
             )
 
-        monkeypatch.setattr("lib.auditor.subprocess.run", mock_run)
+        monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
         with open(os.path.join(tmp_dir, "eval-report.md"), "w") as f:
             f.write("# Report")
         prompts_dir = os.path.join(tmp_dir, "prompts")
@@ -198,6 +198,39 @@ class TestRunAuditor:
             round_num=1, artifact_dir=tmp_dir, model="sonnet", script_dir=tmp_dir
         )
         assert "No evidence file provided" in called_with["input"]
+
+    def test_timeout_override(self, monkeypatch, tmp_dir):
+        audit_json = '{"status":"PASS","issues":[]}'
+        output = {
+            "result": f"---JSON_START---\n{audit_json}\n---JSON_END---",
+            "total_cost_usd": 0.1,
+            "usage": {},
+        }
+        called = {}
+
+        def mock_run(cmd, **kw):
+            called["timeout"] = kw["timeout"]
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout=json.dumps(output), stderr=""
+            )
+
+        monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
+        with open(os.path.join(tmp_dir, "eval-report.md"), "w") as f:
+            f.write("# Report")
+        prompts_dir = os.path.join(tmp_dir, "prompts")
+        os.makedirs(prompts_dir)
+        for f in ("auditor.md", "evaluator.md", "report-format.md"):
+            with open(os.path.join(prompts_dir, f), "w") as fh:
+                fh.write("content\n---\ninstructions")
+
+        run_auditor(
+            round_num=1,
+            artifact_dir=tmp_dir,
+            model="sonnet",
+            script_dir=tmp_dir,
+            timeout=1800,
+        )
+        assert called["timeout"] == 1800
 
     def test_revision_requires_session(self, tmp_dir):
         with open(os.path.join(tmp_dir, "eval-report.md"), "w") as f:

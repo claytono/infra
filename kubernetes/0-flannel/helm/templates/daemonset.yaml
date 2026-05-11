@@ -93,7 +93,33 @@ spec:
           mountPath: /etc/kube-flannel/
         - name: xtables-lock
           mountPath: /run/xtables.lock
+      - name: kube-network-policies
+        image: registry.k8s.io/networking/kube-network-policies:v1.0.0
+        command:
+        - "/bin/netpol"
+        - "--hostname-override=$(MY_NODE_NAME)"
+        - "--v=2"
+        env:
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        volumeMounts:
+        - name: lib-modules
+          mountPath: /lib/modules
+          readOnly: true
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "50Mi"
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["NET_ADMIN"]
       volumes:
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
       - name: run
         hostPath:
           path: /run/flannel
