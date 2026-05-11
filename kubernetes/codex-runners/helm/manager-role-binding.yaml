@@ -1,0 +1,27 @@
+---
+# Source: gha-runner-scale-set/templates/manager_role_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: codex-runners-gha-rs-manager
+  namespace: codex-runners
+  labels:
+    app.kubernetes.io/name: codex-runners
+    app.kubernetes.io/instance: codex-runners
+    app.kubernetes.io/version: "0.14.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: gha-rs
+    actions.github.com/scale-set-name: codex-runners
+    actions.github.com/scale-set-namespace: codex-runners
+    app.kubernetes.io/component: manager-role-binding
+  annotations:
+  finalizers:
+    - actions.github.com/cleanup-protection
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: codex-runners-gha-rs-manager
+subjects:
+  - kind: ServiceAccount
+    name: actions-runner-controller-gha-rs-controller
+    namespace: actions-runner-system

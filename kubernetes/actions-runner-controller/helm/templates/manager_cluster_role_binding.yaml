@@ -1,0 +1,14 @@
+---
+# Source: gha-runner-scale-set-controller/templates/manager_cluster_role_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: actions-runner-controller-gha-rs-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: actions-runner-controller-gha-rs-controller
+subjects:
+- kind: ServiceAccount
+  name: actions-runner-controller-gha-rs-controller
+  namespace: actions-runner-system

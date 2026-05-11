@@ -9,3 +9,6 @@ flannel:
   tolerations:
   - effect: NoSchedule
     operator: Exists
+
+netpol:
+  enabled: true

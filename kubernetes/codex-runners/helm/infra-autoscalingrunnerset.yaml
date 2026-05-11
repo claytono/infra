@@ -1,0 +1,79 @@
+---
+# Source: gha-runner-scale-set/templates/autoscalingrunnerset.yaml
+apiVersion: actions.github.com/v1alpha1
+kind: AutoscalingRunnerSet
+metadata:
+  name: codex-infra
+  namespace: codex-runners
+  labels:
+    app.kubernetes.io/component: "autoscaling-runner-set"
+    app.kubernetes.io/name: codex-infra
+    app.kubernetes.io/instance: codex-infra
+    app.kubernetes.io/version: "0.14.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: gha-rs
+    actions.github.com/scale-set-name: codex-infra
+    actions.github.com/scale-set-namespace: codex-runners
+  annotations:
+    actions.github.com/values-hash: 66b8bc44f52a1c26e45f07940023159f7e4c442e22d3037fdaf3768215b15c9
+    actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
+    actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
+spec:
+  githubConfigUrl: https://github.com/claytono/infra
+  githubConfigSecret: codex-runner-github
+  runnerScaleSetName: codex-infra
+  runnerScaleSetLabels:
+    - codex
+  maxRunners: 1
+  minRunners: 0
+  template:
+    metadata:
+      labels:
+        codex-runner: "true"
+        codex-runner-repo: infra
+    spec:
+      dnsConfig:
+        nameservers:
+          - 1.1.1.1
+          - 1.0.0.1
+      dnsPolicy: None
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1001
+        runAsUser: 1001
+        supplementalGroups:
+          - 27
+      restartPolicy: Never
+      serviceAccountName: codex-runner
+      containers:
+        - name: runner
+          command:
+            - /home/runner/run.sh
+          image: ghcr.io/actions/actions-runner:2.333.0
+          env:
+            - name: CODEX_HOME
+              value: /home/runner/.codex
+            - name: USER
+              value: runner
+            - name: ACTIONS_RUNNER_HOOK_JOB_STARTED
+              value: /etc/arc/hooks/job-started.sh
+          volumeMounts:
+            - mountPath: /home/runner/.codex
+              name: codex-home
+            - mountPath: /etc/arc/hooks
+              name: runner-hooks
+              readOnly: true
+      volumes:
+        - name: codex-home
+          persistentVolumeClaim:
+            claimName: codex-home
+        - configMap:
+            defaultMode: 493
+            items:
+              - key: job-started.sh
+                path: job-started.sh
+              - key: install-runner-prerequisites.sh
+                path: job-started.d/10-install-runner-prerequisites.sh
+            name: codex-runner-hooks
+          name: runner-hooks

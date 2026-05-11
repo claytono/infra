@@ -93,12 +93,33 @@ def _run_evaluate(
     validate_eval_data,
 ) -> None:
     """Inner evaluate logic, wrapped in try/finally for cleanup."""
+    from lib.agent_runner import resolve_provider
+
+    provider = resolve_provider(args.provider)
+    evaluator_model = (
+        args.evaluator_model if provider == "claude" else args.codex_evaluator_model
+    )
+    auditor_model = (
+        args.auditor_model if provider == "claude" else args.codex_auditor_model
+    )
+    codex_reasoning_effort = args.codex_reasoning_effort if provider == "codex" else ""
+    agent_timeout = None if args.agent_timeout == 0 else args.agent_timeout
+
     print("=== Renovate PR Evaluation ===")
     print(f"PR: #{args.pr}")
     print(f"Mode: {args.mode}")
     print(f"Context: {args.context}")
-    print(f"Evaluator: {args.evaluator_model}")
-    print(f"Auditor: {args.auditor_model}")
+    print(f"Provider: {provider}")
+    print(f"Evaluator: {evaluator_model or '(provider default)'}")
+    print(f"Auditor: {auditor_model or '(provider default)'}")
+    if provider == "codex":
+        print(
+            f"Codex reasoning effort: {codex_reasoning_effort or '(provider default)'}"
+        )
+    if agent_timeout is None:
+        print("Agent timeout: none")
+    else:
+        print(f"Agent timeout: {agent_timeout}s")
     print()
 
     # Fetch PR data
@@ -174,16 +195,19 @@ def _run_evaluate(
                 eval_output = run_evaluator(
                     round_num=round_num,
                     artifact_dir=artifact_dir,
-                    model=args.evaluator_model,
+                    model=evaluator_model,
                     context=args.context,
                     script_dir=SCRIPT_DIR,
                     repo_root=repo_root,
+                    provider=provider,
+                    reasoning_effort=codex_reasoning_effort,
                     instructions=args.instructions,
                     session_id=eval_session_id,
                     is_revision=use_revision,
                     cost_suffix=f"-a{validation_attempt}"
                     if validation_attempt > 1
                     else "",
+                    timeout=agent_timeout,
                 )
             except Exception as e:
                 print(f"ERROR: Evaluator failed — {e}", file=sys.stderr)
@@ -295,9 +319,13 @@ def _run_evaluate(
             audit_result = run_auditor(
                 round_num=auditor_round,
                 artifact_dir=artifact_dir,
-                model=args.auditor_model,
+                model=auditor_model,
                 script_dir=SCRIPT_DIR,
+                repo_root=repo_root,
+                provider=provider,
+                reasoning_effort=codex_reasoning_effort,
                 session_id=audit_session_id if auditor_has_run else "",
+                timeout=agent_timeout,
             )
         except Exception as e:
             print(f"ERROR: Auditor failed — {e}", file=sys.stderr)
@@ -448,6 +476,7 @@ def _run_evaluate(
         "ci_status": ci_status,
         "rounds": final_round,
         "status": status,
+        "provider": provider,
     }
     with open(os.path.join(artifact_dir, "result.json"), "w") as f:
         json.dump(result, f, indent=2)
@@ -788,8 +817,32 @@ def main() -> None:
     mode_group.add_argument("--post", dest="mode", action="store_const", const="post")
     p_eval.set_defaults(mode="dry-run")
     p_eval.add_argument("--context", default="local", choices=["local", "ci"])
+    p_eval.add_argument(
+        "--provider",
+        default=os.environ.get("RENOVATE_EVAL_PROVIDER", "claude"),
+        choices=["claude", "codex"],
+    )
     p_eval.add_argument("--evaluator-model", default="opus")
     p_eval.add_argument("--auditor-model", default="sonnet")
+    p_eval.add_argument(
+        "--codex-evaluator-model",
+        default=os.environ.get("RENOVATE_EVAL_CODEX_EVALUATOR_MODEL", ""),
+    )
+    p_eval.add_argument(
+        "--codex-auditor-model",
+        default=os.environ.get("RENOVATE_EVAL_CODEX_AUDITOR_MODEL", ""),
+    )
+    p_eval.add_argument(
+        "--codex-reasoning-effort",
+        default=os.environ.get("RENOVATE_EVAL_CODEX_REASONING_EFFORT", ""),
+        choices=["", "low", "medium", "high", "xhigh"],
+    )
+    p_eval.add_argument(
+        "--agent-timeout",
+        type=int,
+        default=int(os.environ.get("RENOVATE_EVAL_AGENT_TIMEOUT", "600") or 600),
+        help="Agent subprocess timeout in seconds; 0 disables the timeout",
+    )
     p_eval.add_argument("--ci-timeout", type=int, default=300)
     p_eval.add_argument("--instructions", default="")
     p_eval.add_argument("--keep-artifacts", action="store_true")

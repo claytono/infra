@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir tmp helm
+
+helm_template actions-runner-controller gha-runner-scale-set-controller \
+  --include-crds \
+  --values values.yaml \
+  --namespace actions-runner-system \
+  --output-dir tmp
+
+mv tmp/*/* helm
+rmdir tmp/*
+rmdir tmp
+rm -rf helm/tests
+
+find helm -type f \( -name '*.yaml' -o -name '*.yml' \) -exec perl -0pi -e 's/\n+\z/\n/' {} +

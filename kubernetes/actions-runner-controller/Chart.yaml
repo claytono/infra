@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+name: actions-runner-controller-meta
+version: 0.1.0
+dependencies:
+- name: gha-runner-scale-set-controller
+  version: 0.14.1
+  repository: oci://ghcr.io/actions/actions-runner-controller-charts

@@ -10,13 +10,13 @@ renovate_eval.py evaluate
   ├── fetch_pr_data      # Collect PR metadata, diff, CI status
   ├── check_ci           # Check/wait for CI results
   │
-  ├── Round 1: Evaluator (claude -p, opus)
+  ├── Round 1: Evaluator (provider-backed, Claude by default)
   │   ├── Reads PR data, repo config, upstream release notes
   │   ├── Cross-references changes against local project config
   │   ├── Writes: eval-data.json (structured), eval-evidence.md
   │   └── Validated against JSON schema (retries on failure)
   │
-  ├── Round 1: Auditor (claude -p, sonnet, no tools)
+  ├── Round 1: Auditor (provider-backed, isolated/no-shell where supported)
   │   ├── Reviews rendered report against quality criteria
   │   ├── Checks evidence supports claims
   │   └── Outputs: PASS or FEEDBACK with specific issues
@@ -51,6 +51,12 @@ python3 .claude/skills/renovate-eval/renovate_eval.py evaluate --pr 1234 --dry-r
 # Post to GitHub (comment + labels)
 python3 .claude/skills/renovate-eval/renovate_eval.py evaluate --pr 1234 --post --context local
 
+# Use Codex locally
+python3 .claude/skills/renovate-eval/renovate_eval.py evaluate --pr 1234 --dry-run --context local --provider codex
+
+# Use Codex with explicit model, reasoning-effort, and timeout overrides
+python3 .claude/skills/renovate-eval/renovate_eval.py evaluate --pr 1234 --dry-run --context local --provider codex --codex-evaluator-model gpt-5.2 --codex-auditor-model gpt-5.2 --codex-reasoning-effort xhigh --agent-timeout 1800
+
 # Quick status check (live CI + existing eval)
 python3 .claude/skills/renovate-eval/renovate_eval.py status --pr 1234
 
@@ -63,9 +69,25 @@ python3 .claude/skills/renovate-eval/renovate_eval.py render path/to/eval-data.j
 
 ### GitHub Actions
 
-The workflow at `.github/workflows/renovate-eval.yaml` runs via
-`workflow_dispatch`. It uses the composite action at
-`.claude/skills/renovate-eval/action.yaml`.
+The workflow at `.github/workflows/renovate-eval.yaml` runs automatically for
+eligible Renovate PRs and can also run via `workflow_dispatch`. It uses the
+composite action at `.claude/skills/renovate-eval/action.yaml`.
+
+`workflow_dispatch` accepts `provider=claude` or `provider=codex`. Codex
+dispatches also accept `codex_runner_label` so callers can choose the runner
+label that matches their Codex environment.
+
+The composite action installs only the selected provider CLI. In Codex mode,
+`codex_version` defaults to `latest` and optional `codex_evaluator_model` /
+`codex_auditor_model` inputs can override the Codex CLI default model.
+`codex_reasoning_effort` defaults to empty so the composite action uses the
+Codex CLI default unless a caller overrides it. `agent_timeout` defaults to
+`600` seconds, and `0` disables the subprocess timeout. Callers that use higher
+reasoning effort or slower private runners can pass a larger timeout.
+
+Provisioning working Codex subscription auth, persistent `CODEX_HOME`, and
+private runner state is out of scope for the action. That infrastructure is
+managed separately.
 
 ## Labels
 

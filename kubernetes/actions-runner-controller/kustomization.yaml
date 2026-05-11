@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: actions-runner-system
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- helm/crds/actions.github.com_autoscalinglisteners.yaml
+- helm/crds/actions.github.com_autoscalingrunnersets.yaml
+- helm/crds/actions.github.com_ephemeralrunners.yaml
+- helm/crds/actions.github.com_ephemeralrunnersets.yaml
+- helm/templates/deployment.yaml
+- helm/templates/manager_cluster_role.yaml
+- helm/templates/manager_cluster_role_binding.yaml
+- helm/templates/manager_listener_role.yaml
+- helm/templates/manager_listener_role_binding.yaml
+- helm/templates/serviceaccount.yaml

@@ -1,12 +1,13 @@
-"""Build and run the evaluator via claude -p."""
+"""Build and run the evaluator through the selected agent provider."""
 
 from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
+
+from .agent_runner import run_agent
 
 
 def _read_file(path: str) -> str:
@@ -109,10 +110,13 @@ def run_evaluator(
     context: str,
     script_dir: str,
     repo_root: str,
+    provider: str = "claude",
+    reasoning_effort: str = "",
     instructions: str = "",
     session_id: str = "",
     is_revision: bool = False,
     cost_suffix: str = "",
+    timeout: int | None = 600,
 ) -> dict:
     """Run the evaluator. Returns the parsed claude JSON output.
 
@@ -140,44 +144,19 @@ def run_evaluator(
             instructions=instructions,
         )
 
-    cmd = [
-        "claude",
-        "-p",
-        "--model",
-        model,
-        "--permission-mode",
-        "bypassPermissions",
-        "--output-format",
-        "json",
-    ]
-    if (round_num > 1 or is_revision) and session_id:
-        cmd.extend(["--resume", session_id])
-
-    result = subprocess.run(
-        cmd,
-        input=prompt,
-        capture_output=True,
-        text=True,
-        timeout=600,
+    output = run_agent(
+        provider=provider,
+        role="evaluator",
+        prompt=prompt,
+        artifact_dir=artifact_dir,
+        repo_root=repo_root,
+        output_json=output_json,
+        model=model,
+        reasoning_effort=reasoning_effort,
+        session_id=session_id,
+        resume=round_num > 1 or is_revision,
+        timeout=timeout,
     )
-
-    with open(output_json, "w") as f:
-        f.write(result.stdout)
-
-    # #2: check returncode
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"claude exited with code {result.returncode}: "
-            f"{result.stderr[:500] if result.stderr else '(no stderr)'}"
-        )
-
-    # Extract and log
-    try:
-        output = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        raise RuntimeError(
-            f"Failed to parse evaluator JSON output: {result.stdout[:200]}"
-        )
 
     if output.get("result"):
         print(output["result"], file=sys.stderr)

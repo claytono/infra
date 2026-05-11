@@ -101,7 +101,7 @@ class TestRunEvaluator:
         }
 
         monkeypatch.setattr(
-            "lib.evaluator.subprocess.run",
+            "lib.agent_runner.subprocess.run",
             lambda *a, **kw: subprocess.CompletedProcess(
                 a[0],
                 0,
@@ -127,7 +127,7 @@ class TestRunEvaluator:
 
     def test_nonzero_exit_raises(self, monkeypatch, tmp_dir):
         monkeypatch.setattr(
-            "lib.evaluator.subprocess.run",
+            "lib.agent_runner.subprocess.run",
             lambda *a, **kw: subprocess.CompletedProcess(
                 a[0], 1, stdout="", stderr="error"
             ),
@@ -149,7 +149,7 @@ class TestRunEvaluator:
 
     def test_bad_json_raises(self, monkeypatch, tmp_dir):
         monkeypatch.setattr(
-            "lib.evaluator.subprocess.run",
+            "lib.agent_runner.subprocess.run",
             lambda *a, **kw: subprocess.CompletedProcess(
                 a[0], 0, stdout="not json", stderr=""
             ),
@@ -196,7 +196,7 @@ class TestRunEvaluator:
                 cmd, 0, stdout=json.dumps(output), stderr=""
             )
 
-        monkeypatch.setattr("lib.evaluator.subprocess.run", mock_run)
+        monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
         # Create validation-feedback for the revision prompt
         with open(os.path.join(tmp_dir, "validation-feedback.json"), "w") as f:
             f.write("{}")
@@ -221,7 +221,7 @@ class TestRunEvaluator:
             "usage": {},
         }
         monkeypatch.setattr(
-            "lib.evaluator.subprocess.run",
+            "lib.agent_runner.subprocess.run",
             lambda *a, **kw: subprocess.CompletedProcess(
                 a[0], 0, stdout=json.dumps(output), stderr=""
             ),
@@ -241,3 +241,35 @@ class TestRunEvaluator:
             cost_suffix="-a2",
         )
         assert os.path.isfile(os.path.join(tmp_dir, "evaluator-cost-r1-a2.json"))
+
+    def test_timeout_override(self, monkeypatch, tmp_dir):
+        output = {
+            "session_id": "abc",
+            "result": "ok",
+            "total_cost_usd": 0.1,
+            "usage": {},
+        }
+        called = {}
+
+        def mock_run(cmd, **kw):
+            called["timeout"] = kw["timeout"]
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout=json.dumps(output), stderr=""
+            )
+
+        monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
+        prompts_dir = os.path.join(tmp_dir, "prompts")
+        os.makedirs(prompts_dir)
+        with open(os.path.join(prompts_dir, "evaluator.md"), "w") as f:
+            f.write("evaluator")
+
+        run_evaluator(
+            round_num=1,
+            artifact_dir=tmp_dir,
+            model="opus",
+            context="local",
+            script_dir=tmp_dir,
+            repo_root="/tmp/repo",
+            timeout=1800,
+        )
+        assert called["timeout"] == 1800

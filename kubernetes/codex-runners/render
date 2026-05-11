@@ -1,0 +1,91 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir tmp helm
+
+manager_rbac_name="codex-runners-gha-rs-manager"
+manager_rbac_written=false
+generated_resources=()
+
+while IFS= read -r full_name; do
+  owner="${full_name%%/*}"
+  repo="${full_name#*/}"
+
+  if [[ -z "$owner" || -z "$repo" || "$owner" == "$repo" ]]; then
+    echo "Invalid repo entry in repos.yaml: $full_name" >&2
+    exit 1
+  fi
+
+  runner_scale_set="codex-$repo"
+  repo_tmp="tmp/$repo"
+  repo_values="tmp/$repo-values.yaml"
+
+  yq eval \
+    ".githubConfigUrl = \"https://github.com/$owner/$repo\" |
+     .runnerScaleSetName = \"$runner_scale_set\" |
+     .template.spec.serviceAccountName = \"codex-runner\" |
+     .template.metadata.labels.\"codex-runner-repo\" = \"$repo\"" \
+    values.yaml > "$repo_values"
+
+  helm_template "$runner_scale_set" gha-runner-scale-set \
+    --values "$repo_values" \
+    --namespace codex-runners \
+    --output-dir "$repo_tmp"
+
+  yq eval \
+    ".metadata.annotations.\"actions.github.com/cleanup-manager-role-binding\" = \"$manager_rbac_name\" |
+     .metadata.annotations.\"actions.github.com/cleanup-manager-role-name\" = \"$manager_rbac_name\" |
+     .spec.template.spec.serviceAccountName = \"codex-runner\"" \
+    "$repo_tmp"/*/templates/autoscalingrunnerset.yaml > "helm/$repo-autoscalingrunnerset.yaml"
+
+  if [[ "$manager_rbac_written" == false ]]; then
+    yq eval \
+      ".metadata.name = \"$manager_rbac_name\" |
+       .metadata.labels.\"app.kubernetes.io/name\" = \"codex-runners\" |
+       .metadata.labels.\"app.kubernetes.io/instance\" = \"codex-runners\" |
+       .metadata.labels.\"actions.github.com/scale-set-name\" = \"codex-runners\"" \
+      "$repo_tmp"/*/templates/manager_role.yaml > "helm/manager-role.yaml"
+
+    yq eval \
+      ".metadata.name = \"$manager_rbac_name\" |
+       .metadata.labels.\"app.kubernetes.io/name\" = \"codex-runners\" |
+       .metadata.labels.\"app.kubernetes.io/instance\" = \"codex-runners\" |
+       .metadata.labels.\"actions.github.com/scale-set-name\" = \"codex-runners\" |
+       .roleRef.name = \"$manager_rbac_name\"" \
+      "$repo_tmp"/*/templates/manager_role_binding.yaml > "helm/manager-role-binding.yaml"
+
+    generated_resources+=("helm/manager-role.yaml")
+    generated_resources+=("helm/manager-role-binding.yaml")
+    manager_rbac_written=true
+  fi
+
+  generated_resources+=("helm/$repo-autoscalingrunnerset.yaml")
+done < <(yq -r '.repos[]' repos.yaml)
+
+rm -rf tmp
+
+tmp_kustomization="$(mktemp)"
+awk '
+  /# BEGIN generated runner scale sets/ {
+    print
+    while ((getline line < generated) > 0) {
+      print "- " line
+    }
+    in_generated = 1
+    next
+  }
+  /# END generated runner scale sets/ {
+    in_generated = 0
+    print
+    next
+  }
+  !in_generated { print }
+' generated=<(printf '%s\n' "${generated_resources[@]}") kustomization.yaml > "$tmp_kustomization"
+mv "$tmp_kustomization" kustomization.yaml

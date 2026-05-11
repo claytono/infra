@@ -1,13 +1,13 @@
-"""Build and run the auditor via claude -p (no tool access)."""
+"""Build and run the auditor through the selected agent provider."""
 
 from __future__ import annotations
 
 import json
 import os
 import re
-import subprocess
 from pathlib import Path
 
+from .agent_runner import run_agent
 from .common import log
 
 
@@ -131,7 +131,11 @@ def run_auditor(
     artifact_dir: str,
     model: str,
     script_dir: str,
+    repo_root: str = "",
+    provider: str = "claude",
+    reasoning_effort: str = "",
     session_id: str = "",
+    timeout: int | None = 300,
 ) -> dict:
     """Run the auditor. Returns the parsed audit result."""
     report = _read_file(os.path.join(artifact_dir, "eval-report.md"))
@@ -159,46 +163,20 @@ def run_auditor(
             evidence=evidence,
         )
 
-    cmd = [
-        "claude",
-        "-p",
-        "--model",
-        model,
-        "--permission-mode",
-        "bypassPermissions",
-        "--tools",
-        "",
-        "--output-format",
-        "json",
-    ]
-    if round_num > 1 and session_id:
-        cmd.extend(["--resume", session_id])
-
-    result = subprocess.run(
-        cmd,
-        input=prompt,
-        capture_output=True,
-        text=True,
-        timeout=300,
+    output = run_agent(
+        provider=provider,
+        role="auditor",
+        prompt=prompt,
+        artifact_dir=artifact_dir,
+        repo_root=repo_root,
+        output_json=output_json,
+        model=model,
+        reasoning_effort=reasoning_effort,
+        session_id=session_id,
+        resume=round_num > 1,
+        disable_tools=True,
+        timeout=timeout,
     )
-
-    with open(output_json, "w") as f:
-        f.write(result.stdout)
-
-    # #2: check returncode
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"claude exited with code {result.returncode}: "
-            f"{result.stderr[:500] if result.stderr else '(no stderr)'}"
-        )
-
-    # Parse claude output
-    try:
-        output = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        raise RuntimeError(
-            f"Failed to parse auditor JSON output: {result.stdout[:200]}"
-        )
 
     # Extract result text and parse JSON from sentinels
     raw_text = output.get("result", "")
