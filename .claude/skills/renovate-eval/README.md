@@ -69,21 +69,17 @@ python3 .claude/skills/renovate-eval/renovate_eval.py render path/to/eval-data.j
 
 ### GitHub Actions
 
-The workflow at `.github/workflows/renovate-eval.yaml` runs automatically for
-eligible Renovate PRs and can also run via `workflow_dispatch`. It uses the
-composite action at `.claude/skills/renovate-eval/action.yaml`.
+This skill includes a composite GitHub Action in `action.yaml`. The action
+installs only the selected provider CLI.
 
-`workflow_dispatch` accepts `provider=claude` or `provider=codex`. Codex
-dispatches also accept `codex_runner_label` so callers can choose the runner
-label that matches their Codex environment.
-
-The composite action installs only the selected provider CLI. In Codex mode,
-`codex_version` defaults to `latest` and optional `codex_evaluator_model` /
-`codex_auditor_model` inputs can override the Codex CLI default model.
-`codex_reasoning_effort` defaults to empty so the composite action uses the
-Codex CLI default unless a caller overrides it. `agent_timeout` defaults to
-`600` seconds, and `0` disables the subprocess timeout. Callers that use higher
-reasoning effort or slower private runners can pass a larger timeout.
+The `provider` input accepts `claude` or `codex`. If omitted, provider
+resolution order is explicit `provider` input, then `RENOVATE_EVAL_PROVIDER`,
+then Claude. In Codex mode, `codex_version` defaults to `latest` and optional
+`codex_evaluator_model` / `codex_auditor_model` inputs can override the Codex
+CLI default model. `codex_reasoning_effort` defaults to empty so the composite
+action uses the Codex CLI default unless a caller overrides it. `agent_timeout`
+defaults to `600` seconds, and `0` disables the subprocess timeout. Callers that
+use higher reasoning effort or slower private runners can pass a larger timeout.
 
 Provisioning working Codex subscription auth, persistent `CODEX_HOME`, and
 private runner state is out of scope for the action. That infrastructure is

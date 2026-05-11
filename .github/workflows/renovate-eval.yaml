@@ -22,12 +22,12 @@ on:
         options:
         - claude
         - codex
-        default: claude
+        default: codex
       codex_runner_label:
         description: Runner label for provider=codex
         required: false
         type: string
-        default: ubuntu-latest
+        default: codex
       codex_reasoning_effort:
         description: Codex reasoning effort for provider=codex
         required: false
@@ -80,7 +80,9 @@ jobs:
         INPUT_CODEX_REASONING_EFFORT: ${{ inputs.codex_reasoning_effort }}
         INPUT_CODEX_AGENT_TIMEOUT: ${{ inputs.codex_agent_timeout }}
       run: |
-        PROVIDER="${INPUT_PROVIDER:-claude}"
+        # This repo opts into Codex by default; explicit provider=claude still
+        # routes the evaluator job to GitHub-hosted ubuntu-latest.
+        PROVIDER="${INPUT_PROVIDER:-codex}"
         CODEX_REASONING_EFFORT=""
         CODEX_AGENT_TIMEOUT=""
         case "$PROVIDER" in
@@ -88,7 +90,7 @@ jobs:
             RUNNER_LABEL="ubuntu-latest"
             ;;
           codex)
-            RUNNER_LABEL="${INPUT_CODEX_RUNNER_LABEL:-ubuntu-latest}"
+            RUNNER_LABEL="${INPUT_CODEX_RUNNER_LABEL:-codex}"
             CODEX_REASONING_EFFORT="${INPUT_CODEX_REASONING_EFFORT:-xhigh}"
             CODEX_AGENT_TIMEOUT="${INPUT_CODEX_AGENT_TIMEOUT:-1800}"
             if [[ -z "$RUNNER_LABEL" ]]; then
