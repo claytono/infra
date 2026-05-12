@@ -76,6 +76,10 @@ spec:
           - --containerd-namespace=k8s.io
           - --bootstrap-kind=dns
           - --dns-bootstrap-domain=spegel-bootstrap.spegel.svc.cluster.local.
+          - --registry-filters
+          - ".*:latest$"
+          - ".*:dev$"
+          - ".*:edge$"
           - --containerd-content-path=/var/lib/containerd/io.containerd.content.v1.content
           - --debug-web-enabled=true
           - --data-dir=/var/lib/spegel
