@@ -25,7 +25,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: decluttarr
-        image: ghcr.io/manimatter/decluttarr:v2.0.0@sha256:1e93192e9477cb01591de2ddac12d503662e2659792448e811b74bdb58e07ae4
+        image: ghcr.io/manimatter/decluttarr:v2.1.0@sha256:c06d48426b612b845f2406c2d045f266468a6390faf87aea796d497a2935ec95
         env:
         - name: TZ
           value: America/New_York
