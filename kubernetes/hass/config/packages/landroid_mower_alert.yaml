@@ -1,0 +1,48 @@
+---
+# Alert when the mower leaves expected operational states long enough to matter.
+
+template:
+
+- binary_sensor:
+  - name: Landroid WR310.1 Weird State
+    unique_id: landroid_wr310_1_weird_state
+    state: >
+      {% set ok_states = [
+        'docked',
+        'edgecut',
+        'idle',
+        'mowing',
+        'rain_delayed',
+        'returning',
+        'searching_zone',
+        'starting',
+        'zoning',
+      ] %}
+      {{ states('lawn_mower.landroid_wr310_1') not in ok_states }}
+    attributes:
+      mower_state: "{{ states('lawn_mower.landroid_wr310_1') }}"
+      mower_error: "{{ states('sensor.landroid_wr310_1_error') }}"
+      battery: "{{ states('sensor.landroid_wr310_1_battery') }}"
+      ok_states: >-
+        docked, edgecut, idle, mowing, rain_delayed, returning, searching_zone,
+        starting, zoning
+
+automation:
+- alias: Notify Slack Landroid Weird State
+  id: notify_slack_landroid_weird_state
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.landroid_wr310_1_weird_state
+    from: "off"
+    to: "on"
+    for:
+      minutes: 5
+  action:
+  - service: notify.clayton
+    data:
+      message: >-
+        Landroid WR310.1 has been in an unexpected state for at least 5 minutes.
+        Current state: {{ states('lawn_mower.landroid_wr310_1') }}.
+        Error: {{ states('sensor.landroid_wr310_1_error') }}.
+        Battery: {{ states('sensor.landroid_wr310_1_battery') }}%.
+  mode: single
