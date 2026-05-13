@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: autobrr
-        image: ghcr.io/autobrr/autobrr:v1.77.0@sha256:7274b735b23ff4d048e7706145ce5759020e4ee6d85bb1fb8cca523784d35f88
+        image: ghcr.io/autobrr/autobrr:v1.78.0@sha256:5641009f9d83b602bb455426e28a67d928960d26f173bccc886cbbb024cbfbab
         ports:
         - containerPort: 7474
         envFrom:
