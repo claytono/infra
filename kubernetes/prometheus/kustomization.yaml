@@ -29,4 +29,5 @@ configMapGenerator:
 - name: prometheus
   files:
   - config/prometheus.yml
+  - config/node-exporter-targets.yml
   - config/rules.yml

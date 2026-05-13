@@ -28,32 +28,109 @@ jobs:
         persist-credentials: false
         ref: ${{ github.event.pull_request.head.ref || github.ref }}
 
-    - name: Check for Kubernetes/Helm-related changes
+    - name: Check for render-related changes
       uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4
       id: changes
       with:
         filters: |
-          need-render-helm:
+          need-render:
             - 'kubernetes/**'
+            - 'ansible/inventory/default'
+            - 'ansible/group_vars/**'
+            - 'ansible/host_vars/**'
+            - 'ansible/ansible.cfg'
             - 'flake.nix'
             - 'flake.lock'
             - '.github/workflows/render-helm.yaml'
 
+    - name: Collect render directories
+      if: steps.changes.outputs.need-render == 'true'
+      id: render_dirs
+      env:
+        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PUSH_BEFORE_SHA: ${{ github.event.before }}
+        PUSH_HEAD_SHA: ${{ github.sha }}
+      run: |
+        find_render_dir() {
+          local path="$1"
+          local dir
+
+          if [ -d "$path" ]; then
+            dir="$path"
+          else
+            dir="$(dirname "$path")"
+          fi
+
+          while [ "$dir" != "." ] && [ "$dir" != "kubernetes" ]; do
+            if [ -f "$dir/render" ]; then
+              printf '%s\n' "$dir"
+              return
+            fi
+            dir="$(dirname "$dir")"
+          done
+        }
+
+        map_render_dir() {
+          local path="$1"
+
+          case "$path" in
+            ansible/inventory/default|ansible/group_vars/*|ansible/host_vars/*|ansible/ansible.cfg)
+              printf '%s\n' kubernetes/prometheus
+              return
+              ;;
+          esac
+
+          case "$path" in
+            kubernetes/*)
+              find_render_dir "$path"
+              ;;
+          esac
+        }
+
+        if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+          BASE_SHA=$PR_BASE_SHA
+          HEAD_SHA=$PR_HEAD_SHA
+        else
+          BASE_SHA=$PUSH_BEFORE_SHA
+          HEAD_SHA=$PUSH_HEAD_SHA
+        fi
+
+        echo "Comparing $BASE_SHA..$HEAD_SHA"
+        render_dirs="$(git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" \
+          | while IFS= read -r -d '' path; do
+              map_render_dir "$path"
+            done \
+          | sort -u)"
+
+        if [ -z "$render_dirs" ]; then
+          echo "No render scripts to run"
+          echo "has_dirs=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        {
+          echo "has_dirs=true"
+          echo "dirs<<EOF"
+          printf '%s\n' "$render_dirs"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
     - name: Install Nix
-      if: steps.changes.outputs.need-render-helm == 'true'
+      if: steps.render_dirs.outputs.has_dirs == 'true'
       uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # v31
       with:
         github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup Cachix
-      if: steps.changes.outputs.need-render-helm == 'true'
+      if: steps.render_dirs.outputs.has_dirs == 'true'
       uses: cachix/cachix-action@1eb2ef646ac0255473d23a5907ad7b04ce94065c  # v17
       with:
         name: claytono
         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
     - name: Cache pre-commit
-      if: steps.changes.outputs.need-render-helm == 'true'
+      if: steps.render_dirs.outputs.has_dirs == 'true'
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5
       with:
         path: ~/.cache/pre-commit
@@ -62,41 +139,26 @@ jobs:
           ${{ runner.os }}-precommit-
 
     - name: Install pre-commit hooks
-      if: steps.changes.outputs.need-render-helm == 'true'
+      if: steps.render_dirs.outputs.has_dirs == 'true'
       run: nix develop --command pre-commit install
 
-    - name: Render changed charts
-      if: steps.changes.outputs.need-render-helm == 'true'
+    - name: Run render scripts
+      if: steps.render_dirs.outputs.has_dirs == 'true'
       env:
-        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        PUSH_BEFORE_SHA: ${{ github.event.before }}
-        PUSH_HEAD_SHA: ${{ github.sha }}
+        RENDER_DIRS: ${{ steps.render_dirs.outputs.dirs }}
       run: |
-        if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-          BASE_SHA=$PR_BASE_SHA
-          HEAD_SHA=$PR_HEAD_SHA
-        else
-          BASE_SHA=$PUSH_BEFORE_SHA
-          HEAD_SHA=$PUSH_HEAD_SHA
-        fi
-        echo "Comparing $BASE_SHA..$HEAD_SHA"
-        git diff --name-only -z $BASE_SHA $HEAD_SHA \
-          | xargs -0 -r -n1 dirname \
-          | sort -u \
-          | while read -r dir; do
-              if [ -f "$dir/render" ]; then
-                echo "⏳ Rendering in $dir"
-                pushd "$dir"
-                nix develop --command ./render
-                popd
-              else
-                echo "⏭  Skipping $dir (no render script)"
-              fi
-            done
+        while IFS= read -r dir; do
+          if [ -z "$dir" ]; then
+            continue
+          fi
+          echo "⏳ Rendering in $dir"
+          pushd "$dir"
+          nix develop --command ./render
+          popd
+        done <<< "$RENDER_DIRS"
 
     - name: Check for changes
-      if: steps.changes.outputs.need-render-helm == 'true' && github.ref == 'refs/heads/main'
+      if: steps.render_dirs.outputs.has_dirs == 'true' && github.ref == 'refs/heads/main'
       run: |
         if ! git diff --quiet; then
           echo "Helm manifests need to be regenerated on main branch!"
@@ -105,8 +167,7 @@ jobs:
         fi
 
     - name: Commit regenerated manifests
-      if: steps.changes.outputs.need-render-helm == 'true' && github.event_name ==
-        'pull_request'
+      if: steps.render_dirs.outputs.has_dirs == 'true' && github.event_name == 'pull_request'
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -116,8 +177,7 @@ jobs:
         fi
 
     - name: Push changes via PAT
-      if: steps.changes.outputs.need-render-helm == 'true' && github.event_name ==
-        'pull_request'
+      if: steps.render_dirs.outputs.has_dirs == 'true' && github.event_name == 'pull_request'
       env:
         PAT_TOKEN: ${{ secrets.PAT }}
       run: |-

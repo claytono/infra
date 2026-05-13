@@ -24,13 +24,9 @@ scrape_configs:
   - targets: [localhost:9090]
 
 - job_name: node resources
-  static_configs:
-  - targets:
-    - k1.oneill.net:9100
-    - k2.oneill.net:9100
-    - k3.oneill.net:9100
-    - k4.oneill.net:9100
-    - k5.oneill.net:9100
+  file_sd_configs:
+  - files:
+    - /etc/prometheus/node-exporter-targets.yml
 
 # scrape szamar via http on port 10445
 - job_name: hwinfo gaming pc
