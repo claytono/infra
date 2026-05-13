@@ -17,7 +17,9 @@ resources:
 - helm/templates/proxy-rbac.yaml
 - helm/templates/proxyclass.yaml
 - helm/templates/proxygroup.yaml
+- helm/templates/proxygrouppolicy.yaml
 - helm/templates/recorder.yaml
+- helm/templates/tailnet.yaml
 
 commonAnnotations:
   argoManaged: 'true'
