@@ -276,12 +276,17 @@ jobs:
           sleep "$INTERVAL"
         done
 
+    - name: Set Codex home
+      run: |
+        CODEX_HOME="${HOME}/.codex"
+        mkdir -p "$CODEX_HOME"
+        echo "CODEX_HOME=$CODEX_HOME" >> "$GITHUB_ENV"
+
     - name: Evaluate
       uses: ./.claude/skills/renovate-eval
       env:
         EVAL_TRIGGER: ${{ needs.gate.outputs.trigger }}
         EVAL_FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
-        CODEX_HOME: /home/runner/.codex
       with:
         pr_number: ${{ matrix.pr }}
         mode: ${{ inputs.dry_run && 'dry-run' || 'post' }}
