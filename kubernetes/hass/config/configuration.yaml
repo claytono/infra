@@ -462,30 +462,6 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
-  - name: Soil Moisture WH51 0eb446 (Raspberries)
-    unique_id: wh51_0eb446_moisture
-    state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
-    value_template: '{{ value_json.moisture }}'
-    unit_of_measurement: '%'
-    device_class: moisture
-    expire_after: 3600
-    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0eb446
-    json_attributes_template: >-
-      {{
-        {
-          "battery_ok": value_json.battery_ok,
-          "battery_mV": value_json.battery_mV,
-          "boost": value_json.boost,
-          "ad_raw": value_json.ad_raw
-        } | tojson
-      }}
-    device:
-      identifiers: [wh51_0eb446]
-      name: WH51 Soil Moisture 0eb446 (Raspberries)
-      model: WH51
-      manufacturer: Ecowitt
-      via_device: rtl_433
-
   - name: Soil Moisture WH51 0eadc9 (Watermelons)
     unique_id: wh51_0eadc9_moisture
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
@@ -558,6 +534,31 @@ mqtt:
       manufacturer: Ecowitt
       via_device: rtl_433
 
+  - name: Front Yard Containers Soil Moisture (0f170c)
+    unique_id: wh51_0f170c_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0f170c_front_yard_containers_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    value_template: '{{ value_json.moisture }}'
+    unit_of_measurement: '%'
+    device_class: moisture
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    json_attributes_template: >-
+      {{
+        {
+          "battery_ok": value_json.battery_ok,
+          "battery_mV": value_json.battery_mV,
+          "boost": value_json.boost,
+          "ad_raw": value_json.ad_raw
+        } | tojson
+      }}
+    device:
+      identifiers: [wh51_0f170c]
+      name: WH51 Soil Moisture 0f170c (Front Yard Containers)
+      model: WH51
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
   - name: Soil Moisture WH51 0f519f (Verbena)
     unique_id: wh51_0f519f_moisture
     state_topic: rtl_433/devices/Fineoffset-WH51/0f519f
@@ -616,16 +617,6 @@ mqtt:
     device:
       identifiers: [wh51_0eb421]
 
-  - name: Soil Battery WH51 0eb446 (Raspberries)
-    unique_id: wh51_0eb446_battery
-    state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
-    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
-    unit_of_measurement: V
-    device_class: voltage
-    expire_after: 3600
-    device:
-      identifiers: [wh51_0eb446]
-
   - name: Soil Battery WH51 0eadc9 (Watermelons)
     unique_id: wh51_0eadc9_battery
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
@@ -655,6 +646,17 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0f1792]
+
+  - name: Front Yard Containers Soil Battery (0f170c)
+    unique_id: wh51_0f170c_battery
+    default_entity_id: sensor.wh51_soil_moisture_0f170c_front_yard_containers_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0f170c]
 
   - name: Soil Battery WH51 0f519f (Verbena)
     unique_id: wh51_0f519f_battery
@@ -744,17 +746,6 @@ mqtt:
     device:
       identifiers: [wh51_0eb421]
 
-  - name: Soil Battery Low WH51 0eb446 (Raspberries)
-    unique_id: wh51_0eb446_battery_low
-    state_topic: rtl_433/devices/Fineoffset-WH51/0eb446
-    value_template: '{{ value_json.battery_ok }}'
-    payload_on: '0'
-    payload_off: '1'
-    device_class: battery
-    expire_after: 3600
-    device:
-      identifiers: [wh51_0eb446]
-
   - name: Soil Battery Low WH51 0eadc9 (Watermelons)
     unique_id: wh51_0eadc9_battery_low
     state_topic: rtl_433/devices/Fineoffset-WH51/0eadc9
@@ -787,6 +778,18 @@ mqtt:
     expire_after: 3600
     device:
       identifiers: [wh51_0f1792]
+
+  - name: Front Yard Containers Soil Battery Low (0f170c)
+    unique_id: wh51_0f170c_battery_low
+    default_entity_id: binary_sensor.wh51_soil_moisture_0f170c_front_yard_containers_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    value_template: '{{ value_json.battery_ok }}'
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh51_0f170c]
 
   - name: Soil Battery Low WH51 0f519f (Verbena)
     unique_id: wh51_0f519f_battery_low
