@@ -56,7 +56,7 @@ spec:
         - mountPath: /config
           name: config
         - mountPath: /books
-          name: booklore-ingest
+          name: grimmory-ingest
         - mountPath: /downloads
           name: downloads
         - mountPath: /audiobooks
@@ -65,10 +65,10 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: shelfmark-config
-      - name: booklore-ingest
+      - name: grimmory-ingest
         nfs:
           server: fs2.oneill.net
-          path: /volume2/shared/downloads/booklore-ingestion
+          path: /volume2/shared/downloads/grimmory-ingestion
       - name: downloads
         nfs:
           server: fs2.oneill.net

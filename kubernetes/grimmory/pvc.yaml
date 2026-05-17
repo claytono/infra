@@ -1,12 +1,14 @@
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
+
 metadata:
-  name: booklore-data
-  namespace: booklore
+  name: grimmory-data
+  namespace: grimmory
+
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   storageClassName: nfs
   resources:
     requests:
