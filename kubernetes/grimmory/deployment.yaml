@@ -3,8 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: booklore
-  namespace: booklore
+  name: grimmory
+  namespace: grimmory
 
 spec:
   replicas: 1
@@ -12,17 +12,17 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: booklore
+      app: grimmory
   template:
     metadata:
       labels:
-        app: booklore
+        app: grimmory
     spec:
       securityContext:
         fsGroup: 10001
       containers:
-      - name: booklore
-        image: ghcr.io/claytono/booklore:v2.1.0@sha256:2dc40d2068115596807ccd650f940bb749ee4549de1b09742de02b843f76925a
+      - name: grimmory
+        image: grimmory/grimmory:v3.1.0@sha256:c83dcb59975c9a680ecdf84d60e7e5c9b05200818bab8794f4d84a7e008a549a
         ports:
         - containerPort: 6060
           name: http
@@ -30,13 +30,13 @@ spec:
         - name: BOOKLORE_PORT
           value: '6060'
         - name: DATABASE_URL
-          value: jdbc:mariadb://mariadb.booklore.svc.cluster.local:3306/booklore?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
+          value: jdbc:mariadb://grimmory-mariadb.grimmory.svc.cluster.local:3306/grimmory?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
         - name: DATABASE_USERNAME
-          value: booklore
+          value: grimmory
         - name: DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mariadb-secrets
+              name: grimmory-mariadb-secrets
               key: user-password
         - name: TZ
           value: EST5EDT
@@ -54,12 +54,12 @@ spec:
       volumes:
       - name: data
         persistentVolumeClaim:
-          claimName: booklore-data
+          claimName: grimmory-data
       - name: books
         nfs:
           server: fs2.oneill.net
-          path: /volume2/shared/books/booklore
+          path: /volume2/shared/books/grimmory
       - name: bookdrop
         nfs:
           server: fs2.oneill.net
-          path: /volume2/shared/downloads/booklore-ingestion
+          path: /volume2/shared/downloads/grimmory-ingestion

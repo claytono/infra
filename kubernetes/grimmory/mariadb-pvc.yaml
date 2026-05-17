@@ -1,12 +1,14 @@
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
+
 metadata:
-  name: mariadb-data
-  namespace: booklore
+  name: grimmory-mariadb-data
+  namespace: grimmory
+
 spec:
   accessModes:
-    - ReadWriteOncePod
+  - ReadWriteOncePod
   storageClassName: nfs
   resources:
     requests:

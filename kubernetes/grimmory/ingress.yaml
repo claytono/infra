@@ -3,16 +3,16 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: booklore
-  namespace: booklore
+  name: grimmory
+  namespace: grimmory
   annotations:
     cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: 'true'
-    gethomepage.dev/name: Booklore
+    gethomepage.dev/name: Grimmory
     gethomepage.dev/description: Book Library Manager
     gethomepage.dev/group: Media
     gethomepage.dev/icon: mdi-bookshelf
-    gethomepage.dev/pod-selector: app=booklore
+    gethomepage.dev/pod-selector: app=grimmory
     ak-type: oidc
     ak-oidc-callback: /oauth2-callback
     ak-oidc-client-type: public
@@ -21,16 +21,16 @@ metadata:
 spec:
   tls:
   - hosts:
-    - booklore.k.oneill.net
-    secretName: booklore-tls
+    - grimmory.k.oneill.net
+    secretName: grimmory-tls
   rules:
-  - host: booklore.k.oneill.net
+  - host: grimmory.k.oneill.net
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: booklore
+            name: grimmory
             port:
               number: 6060

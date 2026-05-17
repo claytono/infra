@@ -34,7 +34,6 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.alertmanager.id,
     authentik_provider_proxy.ara.id,
     authentik_provider_proxy.bazarr.id,
-    authentik_provider_proxy.bookshelf.id,
     authentik_provider_proxy.changedetection.id,
     authentik_provider_proxy.frank-syncthing.id,
     authentik_provider_proxy.frank-ui.id,
