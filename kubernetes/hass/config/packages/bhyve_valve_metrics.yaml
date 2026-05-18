@@ -1,0 +1,33 @@
+---
+template:
+
+- binary_sensor:
+  - name: Deck Raspberries Valve Open
+    unique_id: deck_raspberries_valve_open
+    state: "{{ is_state('valve.deck_raspberries_zone', 'open') }}"
+    availability: "{{ states('valve.deck_raspberries_zone') in ['open', 'opening', 'closing', 'closed'] }}"
+
+  - name: Deck Strawberries Valve Open
+    unique_id: deck_strawberries_valve_open
+    state: "{{ is_state('valve.deck_strawberries_zone', 'open') }}"
+    availability: "{{ states('valve.deck_strawberries_zone') in ['open', 'opening', 'closing', 'closed'] }}"
+
+  - name: Deck Peppers Valve Open
+    unique_id: deck_peppers_valve_open
+    state: "{{ is_state('valve.deck_peppers_zone', 'open') }}"
+    availability: "{{ states('valve.deck_peppers_zone') in ['open', 'opening', 'closing', 'closed'] }}"
+
+  - name: Deck Watermelons Valve Open
+    unique_id: deck_watermelons_valve_open
+    state: "{{ is_state('valve.deck_watermelons_zone', 'open') }}"
+    availability: "{{ states('valve.deck_watermelons_zone') in ['open', 'opening', 'closing', 'closed'] }}"
+
+  - name: Deck 2 Hanging Plants Valve Open
+    unique_id: deck_2_hanging_plants_valve_open
+    state: "{{ is_state('valve.deck_2_hanging_plants_zone', 'open') }}"
+    availability: "{{ states('valve.deck_2_hanging_plants_zone') in ['open', 'opening', 'closing', 'closed'] }}"
+
+  - name: Deck 2 Verbena Valve Open
+    unique_id: deck_2_verbena_valve_open
+    state: "{{ is_state('valve.deck_2_verbena_zone', 'open') }}"
+    availability: "{{ states('valve.deck_2_verbena_zone') in ['open', 'opening', 'closing', 'closed'] }}"
