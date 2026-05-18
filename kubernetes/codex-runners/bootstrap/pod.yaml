@@ -41,7 +41,7 @@ spec:
       mountPath: /home/runner/.codex
   containers:
   - name: codex-auth
-    image: node:24-bookworm
+    image: node:24-bookworm@sha256:050bf2bbe33c1d6754e060bec89378a79ed831f04a7bb1a53fe45e997df7b3bb
     command:
     - sleep
     - infinity
