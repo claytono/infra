@@ -105,6 +105,68 @@ runs:
       CODEX_VERSION: ${{ inputs.codex_version }}
     run: npm install -g "@openai/codex@$CODEX_VERSION"
 
+  - name: Install GitHub CLI
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      latest_url=$(curl -fsSLI \
+        --retry 5 \
+        --retry-all-errors \
+        --retry-connrefused \
+        --retry-delay 2 \
+        --retry-max-time 60 \
+        --connect-timeout 10 \
+        --max-time 60 \
+        -o /dev/null \
+        -w '%{url_effective}' \
+        https://github.com/cli/cli/releases/latest)
+      version="${latest_url##*/v}"
+      if [[ ! "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]; then
+        echo "Unable to determine latest GitHub CLI version from: $latest_url" >&2
+        exit 1
+      fi
+
+      case "$(uname -m)" in
+        x86_64|amd64)
+          arch=amd64
+          ;;
+        aarch64|arm64)
+          arch=arm64
+          ;;
+        *)
+          echo "Unsupported architecture for GitHub CLI: $(uname -m)" >&2
+          exit 1
+          ;;
+      esac
+
+      install_root=$(mktemp -d "${RUNNER_TEMP:-/tmp}/gh-cli.XXXXXX")
+      archive="$install_root/gh.tar.gz"
+      download_url="https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_${arch}.tar.gz"
+
+      echo "Installing GitHub CLI v${version} from upstream release"
+      curl -fsSL \
+        --retry 5 \
+        --retry-all-errors \
+        --retry-connrefused \
+        --retry-delay 2 \
+        --retry-max-time 120 \
+        --connect-timeout 10 \
+        -o "$archive" \
+        "$download_url"
+      tar -xzf "$archive" -C "$install_root"
+
+      gh_bin_dir=$(find "$install_root" -maxdepth 2 -type d -name bin | head -1)
+      if [[ -z "$gh_bin_dir" || ! -x "$gh_bin_dir/gh" ]]; then
+        echo "Downloaded GitHub CLI archive did not contain an executable gh" >&2
+        exit 1
+      fi
+
+      sudo cp "$gh_bin_dir/gh" /usr/local/bin/gh
+      sudo chmod 0755 /usr/local/bin/gh
+      command -v gh
+      gh --version
+
   - name: Run evaluation
     id: evaluate
     shell: bash
@@ -126,6 +188,8 @@ runs:
       INPUT_CI_TIMEOUT: ${{ inputs.ci_timeout }}
       ACTION_PATH: ${{ github.action_path }}
     run: |
+      set -euo pipefail
+
       ARGS=(
         evaluate
         --pr "$INPUT_PR_NUMBER"
