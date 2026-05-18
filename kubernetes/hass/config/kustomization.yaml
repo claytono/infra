@@ -16,6 +16,7 @@ configMapGenerator:
   - packages__basement_clock.yaml=packages/basement_clock.yaml
   - packages__basement_entertainment.yaml=packages/basement_entertainment.yaml
   - packages__basement_humidifier_alert.yaml=packages/basement_humidifier_alert.yaml
+  - packages__bhyve_valve_metrics.yaml=packages/bhyve_valve_metrics.yaml
   - packages__birdfy.yaml=packages/birdfy.yaml
   - packages__ego_charger_maintenance.yaml=packages/ego_charger_maintenance.yaml
   - packages__landroid_mower_alert.yaml=packages/landroid_mower_alert.yaml
