@@ -1,4 +1,7 @@
-{{ define "slack.devops.text" }}
-{{range .Alerts}}{{.Annotations.DESCRIPTION}}
-{{end}}
+{{ define "slack.alertmanager.title" -}}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}]{{ with .CommonLabels.alertname }} {{ . }}{{ end }}
+{{- end }}
+
+{{ define "slack.alertmanager.text" -}}
+{{ printf "*Status:* %s" (.Status | toUpper) }}{{ range .Alerts }}{{ with .Annotations.message }}{{ printf "\n%s" . }}{{ else }}{{ with .Labels.alertname }}{{ printf "\n%s" . }}{{ end }}{{ end }}{{ with .Labels.instance }}{{ printf "\nInstance: %s" . }}{{ end }}{{ with .Labels.feed }}{{ printf "\nFeed: %s" . }}{{ end }}{{ with .Labels.network }}{{ printf "\nNetwork: %s" . }}{{ end }}{{ end }}
 {{ end }}

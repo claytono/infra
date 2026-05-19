@@ -24,6 +24,8 @@ spec:
         image: ghcr.io/autobrr/autobrr:v1.78.0@sha256:5641009f9d83b602bb455426e28a67d928960d26f173bccc886cbbb024cbfbab
         ports:
         - containerPort: 7474
+        - name: metrics
+          containerPort: 9074
         envFrom:
         - secretRef:
             name: autobrr-oidc
