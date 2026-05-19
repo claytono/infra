@@ -10,6 +10,7 @@ commonAnnotations:
 resources:
 - deploy.yaml
 - service.yaml
+- service-metrics.yaml
 - ingress.yaml
 - externalsecret.yaml
 - pvc-config.yaml
@@ -21,6 +22,9 @@ configMapGenerator:
   - AUTOBRR__OIDC_DISABLE_BUILT_IN_LOGIN=false
   - AUTOBRR__OIDC_ISSUER=https://auth.k.oneill.net/application/o/autobrr/
   - AUTOBRR__OIDC_REDIRECT_URL=https://autobrr.k.oneill.net/api/auth/oidc/callback
+  - AUTOBRR__METRICS_ENABLED=true
+  - AUTOBRR__METRICS_HOST=0.0.0.0
+  - AUTOBRR__METRICS_PORT=9074
 
 labels:
 

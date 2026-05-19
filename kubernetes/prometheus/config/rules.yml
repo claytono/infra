@@ -18,6 +18,21 @@ groups:
     expr: up{job!="node resources", job!="hwinfo gaming pc", resticprofile!~".+"}
       == 0
     for: 15m
+  - alert: AutobrrIRCUnhealthy
+    expr: >
+      autobrr_irc_enabled_total{app_kubernetes_io_name="autobrr"}
+      - autobrr_irc_healthy_total{app_kubernetes_io_name="autobrr"} > 0
+    for: 10m
+    annotations:
+      message: Autobrr has {{ $value }} enabled IRC network(s) unhealthy
+  - alert: AutobrrFeedOverdue
+    expr: >
+      time() - autobrr_feed_next_run_timestamp_seconds{app_kubernetes_io_name="autobrr"}
+      > 900
+    for: 10m
+    annotations:
+      message: Autobrr feed/indexer {{ $labels.feed }} has been more than 15 minutes
+        past its next scheduled run for 10 minutes
   - alert: Outdoor_Sensor_Battery_Low
     expr: >
       (hass_sensor_voltage_v{entity=~"sensor.*(soil|rain).*battery.*"} < 1.2)

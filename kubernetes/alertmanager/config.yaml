@@ -16,7 +16,7 @@ route:
     # The labels by which incoming alerts are grouped together. For example,
     # multiple alerts coming in for cluster=A and alertname=LatencyHigh would
     # be batched into a single group.
-    # group_by: ['alertname', 'cluster', 'service']
+  group_by: ['...']
 
     # A default receiver
     # If an alert isn't caught by a route, send it to default.
@@ -30,12 +30,18 @@ route:
   - match:
       realert: daily
     repeat_interval: 1d
-  - match:
-      severity: email
-    receiver: default
 
 receivers:
 - name: default
+  slack_configs:
+  - api_url_file: /secrets/SLACK_WEBHOOK_URL
+    channel: '#alerts'
+    send_resolved: true
+    color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+    title: '{{ template "slack.alertmanager.title" . }}'
+    title_link: '{{ template "slack.default.titlelink" . }}'
+    text: '{{ template "slack.alertmanager.text" . }}'
+- name: email
   email_configs:
   - to: clayton.oneill@gmail.com
     send_resolved: true
