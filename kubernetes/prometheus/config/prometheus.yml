@@ -12,7 +12,7 @@ alerting:
   - scheme: https
     static_configs:
     - targets:
-      - alertmanager.k.oneill.net:443
+      - alertmanager.k.oneill.net
 
 scrape_configs:
 - job_name: prometheus
@@ -46,9 +46,6 @@ scrape_configs:
     module: [icmp]
   static_configs:
   - targets:
-    - left-garage-door.oneill.net
-    - right-garage-door.oneill.net
-    - veraplus.oneill.net
     - udmp.oneill.net
     - basement-guardian.oneill.net
   relabel_configs:
@@ -66,13 +63,6 @@ scrape_configs:
   static_configs:
   - targets:
     - hass-home-assistant.hass:8080
-
-- job_name: vera
-  scrape_interval: 15s
-  metrics_path: /data_request?id=lr_prometheus_metrics
-  static_configs:
-  - targets:
-    - veraplus.oneill.net:3480
 
 - job_name: kubernetes-apiservers
 
