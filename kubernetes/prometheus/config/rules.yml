@@ -25,14 +25,14 @@ groups:
     for: 10m
     annotations:
       message: Autobrr has {{ $value }} enabled IRC network(s) unhealthy
-  - alert: AutobrrFeedOverdue
+  - alert: AutobrrFeedStale
     expr: >
-      time() - autobrr_feed_next_run_timestamp_seconds{app_kubernetes_io_name="autobrr"}
-      > 900
+      time() - autobrr_feed_last_run_timestamp_seconds{app_kubernetes_io_name="autobrr"}
+      > 21600
     for: 10m
     annotations:
-      message: Autobrr feed/indexer {{ $labels.feed }} has been more than 15 minutes
-        past its next scheduled run for 10 minutes
+      message: Autobrr feed/indexer {{ $labels.feed }} has not completed successfully
+        in more than 6 hours
   - alert: Outdoor_Sensor_Battery_Low
     expr: >
       (hass_sensor_voltage_v{entity=~"sensor.*(soil|rain).*battery.*"} < 1.2)
