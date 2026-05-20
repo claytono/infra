@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: alertmanager
-        image: prom/alertmanager:v0.32.0@sha256:58e117eabccebbff04e6643a3432d6315a2cc3a8c24ab5849bc628886bf08857
+        image: prom/alertmanager:v0.32.1@sha256:51a825c2a40acc3e338fdd00d622e01ec090f72be2b3ea46be0839cd47a4d286
         args:
         - --config.file=/config/config.yaml
         - --storage.path=/alertmanager
