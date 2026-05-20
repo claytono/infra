@@ -1,0 +1,95 @@
+---
+# Makita charger notifications
+#
+# Notify when either port starts drawing charging-level power and when that
+# charging load finishes.
+
+template:
+
+- binary_sensor:
+  - name: Makita Charger Port 1 Charging
+    unique_id: makita_charger_port_1_charging
+    availability: >
+      {{ states('sensor.makita_chargers_power_1') | is_number }}
+    state: >
+      {{ states('sensor.makita_chargers_power_1') | float > 10 }}
+    delay_on:
+      seconds: 15
+    delay_off:
+      minutes: 2
+    attributes:
+      power_w: "{{ states('sensor.makita_chargers_power_1') }}"
+
+  - name: Makita Charger Port 2 Charging
+    unique_id: makita_charger_port_2_charging
+    availability: >
+      {{ states('sensor.makita_chargers_power_2') | is_number }}
+    state: >
+      {{ states('sensor.makita_chargers_power_2') | float > 10 }}
+    delay_on:
+      seconds: 15
+    delay_off:
+      minutes: 2
+    attributes:
+      power_w: "{{ states('sensor.makita_chargers_power_2') }}"
+
+automation:
+- alias: Notify Makita Charger Port 1 Started
+  id: notify_makita_charger_port_1_started
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.makita_charger_port_1_charging
+    from: "off"
+    to: "on"
+  action:
+  - service: notify.clayton
+    data:
+      message: >-
+        🔋⚡ Makita charger port 1 started charging
+        ({{ states('sensor.makita_chargers_power_1') | float(0) | round(1) }} W)
+  mode: single
+
+- alias: Notify Makita Charger Port 1 Finished
+  id: notify_makita_charger_port_1_finished
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.makita_charger_port_1_charging
+    from: "on"
+    to: "off"
+  action:
+  - service: notify.clayton
+    data:
+      message: >-
+        🔋✅ Makita charger port 1 finished charging
+        ({{ states('sensor.makita_chargers_power_1') | float(0) | round(1) }} W)
+  mode: single
+
+- alias: Notify Makita Charger Port 2 Started
+  id: notify_makita_charger_port_2_started
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.makita_charger_port_2_charging
+    from: "off"
+    to: "on"
+  action:
+  - service: notify.clayton
+    data:
+      message: >-
+        🔋⚡ Makita charger port 2 started charging
+        ({{ states('sensor.makita_chargers_power_2') | float(0) | round(1) }} W)
+  mode: single
+
+- alias: Notify Makita Charger Port 2 Finished
+  id: notify_makita_charger_port_2_finished
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.makita_charger_port_2_charging
+    from: "on"
+    to: "off"
+  action:
+  - service: notify.clayton
+    data:
+      message: >-
+        🔋✅ Makita charger port 2 finished charging
+        ({{ states('sensor.makita_chargers_power_2') | float(0) | round(1) }} W)
+  mode: single
