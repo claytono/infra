@@ -11,9 +11,16 @@ spec:
     spec:
       template:
         spec:
+          automountServiceAccountToken: false
+          securityContext:
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
           containers:
           - name: acme-sh
-            image: neilpang/acme.sh:3.1.2@sha256:3c6b40e30e2c0c79863ba6ef5545d93350a040371213058099066ccd85b46aad
+            image: neilpang/acme.sh:3.1.3@sha256:3e7593e957e16edf357655bcd89164b81cd1634849df90e6dcb54891be9cc86b
             command: [/bin/sh, /scripts/acme-renew.sh]
             securityContext:
               allowPrivilegeEscalation: false
@@ -21,6 +28,8 @@ spec:
                 drop:
                 - ALL
               readOnlyRootFilesystem: false
+              seccompProfile:
+                type: RuntimeDefault
             volumeMounts:
             - name: acme-data
               mountPath: /acme.sh
@@ -28,7 +37,7 @@ spec:
               mountPath: /scripts
               readOnly: true
             - name: ssh-key
-              mountPath: /root/.ssh
+              mountPath: /var/run/secrets/acme-sh-ssh
               readOnly: true
             - name: ssh-config
               mountPath: /etc/ssh/ssh_config
@@ -55,7 +64,7 @@ spec:
               items:
               - key: udmp-ssh-key
                 path: id_rsa
-                mode: 0600
+                mode: 0440
           - name: ssh-config
             configMap:
               name: acme-sh-ssh-config
