@@ -18,6 +18,7 @@ resources:
 configMapGenerator:
 - name: acme-sh-script
   files:
+  - acme-common.sh
   - acme-synology.sh
   - acme-udmp.sh
   - acme-renew.sh
