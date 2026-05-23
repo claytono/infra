@@ -24,7 +24,7 @@ resource "tailscale_acl" "main" {
         },
 
         // Define access control lists for users, groups, autogroups, tags,
-        // Tailscale IP addresses, and subnet ranges.
+        // Tailscale IP addresses, users, tags, and subnet ranges.
         "acls": [
             // Allow users to access their own devices and general internet
             {
@@ -78,6 +78,14 @@ resource "tailscale_acl" "main" {
                 "action": "accept",
                 "src":    ["tag:k8s-operator"],
                 "dst":    ["tag:k8s:*"],
+            },
+
+            // Allow Kubernetes egress proxies to scrape xtal node_exporter
+            {
+                "action": "accept",
+                "src":    ["tag:k8s"],
+                "proto":  "tcp",
+                "dst":    ["claytono@github:9100"],
             },
         ],
 

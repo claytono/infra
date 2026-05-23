@@ -31,6 +31,10 @@ scrape_configs:
     - k3.oneill.net:9100
     - k4.oneill.net:9100
     - k5.oneill.net:9100
+  - targets:
+    - xtal-node-exporter.tailscale.svc.cluster.local:9100
+    labels:
+      instance: xtal:9100
 
 # scrape szamar via http on port 10445
 - job_name: hwinfo gaming pc

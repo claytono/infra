@@ -20,6 +20,7 @@ resources:
 - helm/templates/proxygrouppolicy.yaml
 - helm/templates/recorder.yaml
 - helm/templates/tailnet.yaml
+- xtal-node-exporter.yaml
 
 commonAnnotations:
   argoManaged: 'true'
