@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: xtal-node-exporter
+  annotations:
+    tailscale.com/tailnet-fqdn: xtal.cow-banjo.ts.net
+
+spec:
+  type: ExternalName
+  # Required placeholder; the Tailscale operator replaces it with the generated
+  # cluster-egress proxy DNS name for the tailnet FQDN above.
+  externalName: placeholder
+  ports:
+  - name: metrics
+    port: 9100
+    protocol: TCP
