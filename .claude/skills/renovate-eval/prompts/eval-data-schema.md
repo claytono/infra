@@ -68,14 +68,15 @@ components. This renders as the first section under "The Deep Dive."
 ### performance_stability (string or null)
 
 Performance improvements, stability fixes, resource usage changes. Link each
-item to its PR or issue. Set to `null` if not applicable (section is omitted
-from rendered report).
+item to its PR or issue. Include only deployment-relevant effects; put
+non-applicable dismissals in the evidence file. Set to `null` if not applicable.
 
 ### features_ux (string or null)
 
-For EACH new feature: (1) what it does, (2) whether the user's config uses it,
-(3) how to enable it with specific config keys/commands. Set to `null` if not
-applicable.
+For EACH deployment-relevant new feature: (1) what it does, (2) whether the
+user's config uses it, (3) how to enable it with specific config keys/commands.
+Do not include disabled or unconfigured features unless they are a realistic
+operator action for this deployment. Set to `null` if not applicable.
 
 ### security (string or null)
 
@@ -84,20 +85,23 @@ on their config. Set to `null` if not applicable.
 
 ### key_fixes (string or null)
 
-Cross-reference bug fixes against actual config and usage patterns. Link each
-item to its PR or issue. Set to `null` if not applicable.
+Cross-reference bug fixes against actual config and usage patterns. Do not
+repeat items already covered in another section. Set to `null` if not
+applicable.
 
 ### newer_versions (string or null)
 
 Analysis of versions newer than what this PR proposes. Flag regressions in the
-proposed version that are fixed later. Set to `null` if not applicable (but
-document in evidence file why it was omitted).
+proposed version that are fixed later. Always include CVEs or security
+advisories introduced by the proposed version and fixed later, even when config
+relevance is unknown. Set to `null` if not applicable (but document in evidence
+file why it was omitted).
 
 ### hazards (required, string)
 
-ALWAYS required. List every breaking change, deprecation, and migration with
-deployment-specific impact assessment. If there are genuinely no hazards, write
-"None identified" with a brief explanation.
+ALWAYS required. List only breaking changes, deprecations, and migrations that
+affect configured or observed deployment paths. If there are genuinely no
+hazards, write "None identified" with a brief explanation.
 
 ### sources (required, non-empty array)
 

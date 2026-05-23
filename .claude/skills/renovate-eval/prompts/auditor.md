@@ -36,6 +36,11 @@ Check each of these against the embedded rubric:
   cross-referencing requirements?
 - **No deferrals:** Does the report follow the evaluator's rule 4 requirement to
   investigate rather than defer to the reader?
+- **Signal-to-noise:** Does the rendered report omit upstream changes that the
+  evidence says are disabled, unconfigured, pre-existing, hypothetical, or not
+  deployment-relevant? Treat evidence-only dismissals in the rendered report as
+  FEEDBACK unless they are needed to explain an actual hazard, merge blocker, or
+  operator action.
 
 Your job is to check whether the evaluator followed the rubric, not to
 substitute your own judgment for what the rubric says. If the rubric says X and
@@ -61,6 +66,25 @@ These checks verify the report is internally sound:
   - "High confidence" but Sources section is thin relative to the scope of
     claims made
   - Verdict contradicts the report's own risk discussion
+- **No release-note dumping:** Flag repeated upstream issues across multiple
+  sections, "does not affect this deployment" bullets in the rendered report,
+  and verdicts raised by evidence-only dismissals rather than actual deployed
+  behavior changes.
+
+  Common failure patterns that MUST be FEEDBACK:
+
+  - Bullets whose main point is an evidence-only dismissal, for example phrases
+    like "disabled by default", "not configured", "absent from the env block",
+    "not scraped today", "not automatically consumed", or "does not change
+    runtime behavior here". These phrases are examples, not an exhaustive or
+    hard-coded list.
+  - A section that explains how to enable a feature the PR did not enable and
+    the deployment does not currently use, unless the feature is a realistic
+    follow-up action explicitly tied to the verdict.
+  - The same upstream issue or endpoint-format change repeated in more than one
+    rendered section.
+  - A Caution or Risk verdict justified by dismissed or unconfigured upstream
+    changes instead of a deployed behavior change.
 
 ## 3. Evidence Judgment
 

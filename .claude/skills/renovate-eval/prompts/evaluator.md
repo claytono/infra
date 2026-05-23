@@ -77,6 +77,20 @@ your own independent research:
    `http.Client{Timeout: -1}` in `pkg/api/client.go:42`" not just "fixes a bug
    in the HTTP client."
 
+   **Report inclusion gate:** Only include an upstream item in `eval-data.json`
+   if it is introduced or resolved by this PR AND affects the deployed config, a
+   configured integration, or a concrete operator action. If an item is
+   disabled, unconfigured, pre-existing, hypothetical, or only useful as a
+   dismissal, document it in `eval-evidence.md` and omit it from the rendered
+   report.
+
+   This gate does NOT suppress introduced security vulnerabilities: if the
+   proposed version introduces a CVE or security advisory that was not present
+   in the current version, include it in `security` or `newer_versions` and let
+   it influence `renovate:risk` even when config relevance is unknown. If you
+   can prove the deployment cannot reach the vulnerable path, state that in the
+   impact assessment, but still report the introduced vulnerability.
+
    **CRITICAL: Verify before claiming.** When you assert that a feature is or is
    not configured (e.g., "no cron config present"), you MUST have read the
    actual config file and searched for the relevant keys. Do not guess based on
@@ -98,6 +112,10 @@ your own independent research:
    vulnerabilities. You may note pre-existing issues as context, but they must
    not drive the verdict or label.
 
+   Use `renovate:caution` only for deployment-relevant behavioral changes worth
+   validating. Disabled defaults, absent scrape config, speculative hardware
+   swaps, and irrelevant upstream fixes must not raise the label.
+
 6. **Check dependency interactions:** If related or bundled dependencies
    changed, assess version compatibility. If a bundled dependency is NOT
    changing, explicitly state that.
@@ -110,6 +128,9 @@ your own independent research:
    - If a newer version fixes bugs or regressions _introduced_ in the proposed
      version range (not present in the current version), flag this prominently —
      this should influence the verdict toward `renovate:risk`
+   - If a newer version fixes a CVE or security advisory _introduced_ in the
+     proposed version range, always flag it regardless of config relevance. This
+     should influence the verdict toward `renovate:risk`
    - Pre-existing issues (present in BOTH the current deployed version and the
      proposed version) do NOT change the risk level of this PR and must NOT
      influence the label. A CVE that exists in both versions is not a reason to
