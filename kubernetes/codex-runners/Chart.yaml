@@ -4,5 +4,5 @@ name: codex-runners-meta
 version: 0.1.0
 dependencies:
 - name: gha-runner-scale-set
-  version: 0.14.1
+  version: 0.14.2
   repository: oci://ghcr.io/actions/actions-runner-controller-charts
