@@ -12,8 +12,8 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: traefik.k.oneill.net
 spec:
-  type: LoadBalancer
   loadBalancerIP: 172.19.74.34
+  type: LoadBalancer
   selector:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik-traefik
