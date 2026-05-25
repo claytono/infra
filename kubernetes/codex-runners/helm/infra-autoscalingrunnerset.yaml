@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: "autoscaling-runner-set"
     app.kubernetes.io/name: codex-infra
     app.kubernetes.io/instance: codex-infra
-    app.kubernetes.io/version: "0.14.1"
+    app.kubernetes.io/version: "0.14.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: gha-rs
     actions.github.com/scale-set-name: codex-infra
