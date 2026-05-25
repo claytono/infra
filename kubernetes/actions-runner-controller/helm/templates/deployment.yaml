@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: gha-rs-controller
     app.kubernetes.io/namespace: actions-runner-system
     app.kubernetes.io/instance: actions-runner-controller
-    app.kubernetes.io/version: "0.14.1"
+    app.kubernetes.io/version: "0.14.2"
     app.kubernetes.io/part-of: gha-rs-controller
     app.kubernetes.io/managed-by: Helm
     actions.github.com/controller-service-account-namespace: actions-runner-system
@@ -28,7 +28,7 @@ spec:
       labels:
         app.kubernetes.io/part-of: gha-rs-controller
         app.kubernetes.io/component: controller-manager
-        app.kubernetes.io/version: 0.14.1
+        app.kubernetes.io/version: 0.14.2
         app.kubernetes.io/name: gha-rs-controller
         app.kubernetes.io/namespace: actions-runner-system
         app.kubernetes.io/instance: actions-runner-controller
@@ -36,7 +36,7 @@ spec:
       serviceAccountName: actions-runner-controller-gha-rs-controller
       containers:
       - name: manager
-        image: "ghcr.io/actions/gha-runner-scale-set-controller:0.14.1"
+        image: "ghcr.io/actions/gha-runner-scale-set-controller:0.14.2"
         imagePullPolicy: IfNotPresent
         args:
         - "--auto-scaling-runner-set-only"
@@ -51,7 +51,7 @@ spec:
         - "/manager"
         env:
         - name: CONTROLLER_MANAGER_CONTAINER_IMAGE
-          value: "ghcr.io/actions/gha-runner-scale-set-controller:0.14.1"
+          value: "ghcr.io/actions/gha-runner-scale-set-controller:0.14.2"
         - name: CONTROLLER_MANAGER_POD_NAMESPACE
           valueFrom:
             fieldRef:
