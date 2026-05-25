@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.31.0
+    app.kubernetes.io/version: 0.32.0
   namespace: karakeep
 stringData:
   MEILI_MASTER_KEY: 'bogus'
@@ -22,7 +22,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.31.0
+    app.kubernetes.io/version: 0.32.0
   namespace: karakeep
 spec:
   accessModes:
@@ -41,7 +41,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep-chrome
-    app.kubernetes.io/version: 0.31.0
+    app.kubernetes.io/version: 0.32.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -65,7 +65,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep
-    app.kubernetes.io/version: 0.31.0
+    app.kubernetes.io/version: 0.32.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -89,7 +89,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.31.0
+    app.kubernetes.io/version: 0.32.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -179,7 +179,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.31.0
+    app.kubernetes.io/version: 0.32.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -264,22 +264,18 @@ spec:
               name: karakeep-meilisearch
           - secretRef:
               name: karakeep-oidc
-          image: ghcr.io/karakeep-app/karakeep:0.31.0
+          image: ghcr.io/karakeep-app/karakeep:0.32.0
           livenessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            tcpSocket:
+            httpGet:
+              path: /api/health
               port: 3000
-            timeoutSeconds: 1
+            initialDelaySeconds: 10
           name: karakeep
           readinessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            tcpSocket:
+            httpGet:
+              path: /api/health
               port: 3000
-            timeoutSeconds: 1
+            initialDelaySeconds: 10
           volumeMounts:
           - mountPath: /data
             name: data
@@ -306,7 +302,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.31.0
+    app.kubernetes.io/version: 0.32.0
   annotations:
     ak-oidc-callback: /api/auth/callback/custom
     ak-type: oidc
