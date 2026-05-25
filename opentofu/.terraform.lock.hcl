@@ -361,20 +361,20 @@ provider "registry.opentofu.org/vultr/vultr" {
 }
 
 provider "registry.terraform.io/mkdev-me/openai" {
-  version     = "2.1.0"
+  version     = "2.2.7"
   constraints = "~> 2.0"
   hashes = [
-    "h1:+XbFgSHhN6hGn/juwfTcREzovYG02MLr3on3TNVsKxk=",
-    "h1:6Tg+eus4zIO4JilmXwAEW2zClRKgZ17yRjwQkjSoEYU=",
-    "h1:FxdRoaylrvtePnVoE6kDiHLKI+Jh0qDsagywyOhmgeM=",
-    "h1:VI0apM5z2qx+QM/swUSaPPK7hIWuF/BBqWSpbJRpbF0=",
-    "h1:kEuA28XxGfHTFW8/t3oJtWCiYmrvBEZ6QEeu8TeUoRY=",
-    "h1:u1WKU3SCD5Apq+cQ4UYjar5r8TYyjRF8ApVfI++1sCQ=",
-    "zh:2269306048eb062734f46a8f2637f24bb9dc9e75cf85394fa0d05dac5c98faa2",
-    "zh:2d312b62cf7029123de7ed5792b1036d45f5c9002ba5796c1462acd6d7fb4352",
-    "zh:75302d3f7d17e3703bba13e7f51af9b6be1613805097659190499efd3d771aa4",
-    "zh:b585eb723378921a608449f2de22ba250768f7933be086a69f55cc0cb67c1f55",
-    "zh:c11c3ba095c3b143130b400107cd2c9f2ea5aa36a1ae318137fde0c8449ed498",
-    "zh:e674251c071de6623c57f829d24a3768b4e011b02a7a16325895fada8d9cafab",
+    "h1:0rZAabXm/3NwckwRYigFzb1R9imWm98tbs9t2XQEAj4=",
+    "h1:6+9ylkGceM10sBT17gcZ1HLAg/e4Hb/WE1ia0NlSw1M=",
+    "h1:H4IxmNJDgrL8Ya7fc7s9vw3wCLPsUYFHxjqikeuehoM=",
+    "h1:ZQQzacvyBp6KNnDLLmWBtE60U1B3+QcTswzdFNxcN4w=",
+    "h1:ZtrG3nY2mkRUP5vsBhnAobeRPU48DdFGhnETibIuLd8=",
+    "h1:hMrcZk+Pbw8jWk90th2gxtXctiWnEptf/oXJjtLFJr8=",
+    "zh:0eb2c48f97ad944c4a190023203bc10a385ecc1ac4b4aad98cfd5985b139d94f",
+    "zh:29430833104c7de2f228597dcf9cb21a0854373cd07259e36afdc91c22f5a90a",
+    "zh:36abb74fa7c47d855b76963c6dffb4f5fc0421328926668d0a785da5efd29f97",
+    "zh:8217d3934210ced3e156491df6ad99bf2b7d667a9f125b523b18ef7fb8f27c5d",
+    "zh:ca0bd08699a7a9031c358b14da58d10160d682deb79c9fcae974fe82901d36aa",
+    "zh:ffcf03a578fdf59387f5056aaac486a1a239f4d33407f5e4bfb898fad5ac4437",
   ]
 }
