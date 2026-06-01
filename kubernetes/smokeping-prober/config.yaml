@@ -17,7 +17,6 @@ targets:
   - infra1.oneill.net
   - pantrypi.oneill.net
   - garagepi.oneill.net
-  - garagepi-eth.oneill.net
   - deck.oneill.net
   - fs2.oneill.net
   interval: 1s
