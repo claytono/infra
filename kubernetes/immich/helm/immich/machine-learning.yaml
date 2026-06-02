@@ -1,5 +1,17 @@
 ---
 # Source: immich/templates/machine-learning.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: immich-machine-learning
+  labels:
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: machine-learning
+    app.kubernetes.io/version: v2.6.3
+  namespace: immich
+---
+# Source: immich/templates/machine-learning.yaml
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -73,8 +85,8 @@ spec:
         app.kubernetes.io/name: machine-learning
     spec: 
       enableServiceLinks: false
-      serviceAccountName: default
-      automountServiceAccountToken: true
+      serviceAccountName: immich-machine-learning
+      automountServiceAccountToken: false
       priorityClassName: gpu-priority
       runtimeClassName: nvidia
       hostIPC: false
