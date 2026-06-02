@@ -1,6 +1,18 @@
 ---
 # Source: immich/templates/server.yaml
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: immich-server
+  labels:
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: server
+    app.kubernetes.io/version: v2.6.3
+  namespace: immich
+---
+# Source: immich/templates/server.yaml
+apiVersion: v1
 kind: Service
 metadata:
   name: immich-server
@@ -57,8 +69,8 @@ spec:
         app.kubernetes.io/name: server
     spec: 
       enableServiceLinks: false
-      serviceAccountName: default
-      automountServiceAccountToken: true
+      serviceAccountName: immich-server
+      automountServiceAccountToken: false
       hostIPC: false
       hostNetwork: false
       hostPID: false
