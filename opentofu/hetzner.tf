@@ -51,7 +51,7 @@ resource "random_password" "kopia_password" {
 
 resource "hcloud_storage_box" "backups" {
   location         = "fsn1" # Falkenstein, Germany
-  storage_box_type = "bx41" # 10 TB class
+  storage_box_type = "bx31" # 10 TB class
   name             = "homelab-backups"
   password         = random_password.storage_box_parent.result
   access_settings = {
