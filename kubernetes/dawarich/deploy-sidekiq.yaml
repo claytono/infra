@@ -24,18 +24,39 @@ spec:
     spec:
       containers:
       - name: sidekiq
-        image: freikin/dawarich:1.7.7@sha256:f7eea22def731ef98f0644b191c477917790bb0e5449b0014bac2f349ce178a7
+        image: freikin/dawarich:1.7.8@sha256:dea326d03e728cd3b8d051b72d293cf375d0db6c00e22c55f338daedfdfdb3a4
         command: [bundle, exec, sidekiq]
         args: []
         env:
         - name: RAILS_ENV
           value: production
+        - name: DOMAIN
+          value: dawarich.k.oneill.net
+        - name: SMTP_SERVER
+          value: smtp.k.oneill.net
+        - name: SMTP_PORT
+          value: "587"
+        - name: SMTP_DOMAIN
+          value: oneill.net
+        - name: SMTP_USERNAME
+          value: relay@oneill.net
+        - name: SMTP_FROM
+          value: dawarich@oneill.net
+        - name: SMTP_AUTHENTICATION
+          value: plain
+        - name: SMTP_STARTTLS
+          value: "true"
         # Secret environment variables
         - name: SECRET_KEY_BASE
           valueFrom:
             secretKeyRef:
               name: dawarich-secrets
               key: SECRET_KEY_BASE
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-smtp
+              key: SMTP_PASSWORD
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
