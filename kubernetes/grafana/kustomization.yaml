@@ -15,8 +15,6 @@ resources:
 - helm/grafana/pvc.yaml
 - helm/grafana/clusterrole.yaml
 - helm/grafana/clusterrolebinding.yaml
-- helm/grafana/role.yaml
-- helm/grafana/rolebinding.yaml
 - helm/grafana/service.yaml
 - helm/grafana/deployment.yaml
 - helm/grafana/ingress.yaml
