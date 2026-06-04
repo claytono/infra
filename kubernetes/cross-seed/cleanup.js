@@ -131,7 +131,7 @@ function parseQbitUrl(raw) {
 }
 
 const qbit = parseQbitUrl(QBITTORRENT_URL);
-let sidCookie = null;
+let qbitCookieHeader = null;
 
 function loadSeasonThreshold() {
   const abs = path.resolve(CROSS_SEED_CONFIG);
@@ -151,6 +151,15 @@ function loadSeasonThreshold() {
 
 // --- qBit HTTP ----------------------------------------------------------
 
+function getSetCookieHeaders(headers) {
+  if (typeof headers.getSetCookie === 'function') {
+    return headers.getSetCookie();
+  }
+
+  const setCookie = headers.get('set-cookie');
+  return setCookie ? [setCookie] : [];
+}
+
 async function qbitLogin() {
   const body = new URLSearchParams({
     username: qbit.user,
@@ -166,22 +175,27 @@ async function qbitLogin() {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   const text = (await resp.text()).trim();
-  if (resp.status !== 200 || text !== 'Ok.') {
+  if (!resp.ok || (text !== '' && text !== 'Ok.')) {
     throw new Error(`login failed: status=${resp.status} body=${text}`);
   }
-  const sid = resp.headers.getSetCookie().find((c) => c.startsWith('SID='));
-  if (!sid) throw new Error('login returned Ok. but no SID cookie');
-  sidCookie = sid.split(';')[0];
+
+  // Match cross-seed's qBittorrent client: keep the first Set-Cookie
+  // header and send it back verbatim as the Cookie header.
+  const cookie = getSetCookieHeaders(resp.headers)[0];
+  if (!cookie) {
+    throw new Error('login succeeded but no cookie returned');
+  }
+  qbitCookieHeader = cookie;
 }
 
 async function qbitFetch(method, apiPath, formBody) {
-  if (!sidCookie) await qbitLogin();
+  if (!qbitCookieHeader) await qbitLogin();
   const url = `${qbit.base}${apiPath}`;
 
   const buildInit = () => {
     const init = {
       method,
-      headers: { Referer: qbit.base, Cookie: sidCookie },
+      headers: { Referer: qbit.base, Cookie: qbitCookieHeader },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     };
     if (formBody) {
@@ -193,7 +207,7 @@ async function qbitFetch(method, apiPath, formBody) {
 
   let resp = await fetch(url, buildInit());
   if (resp.status === 401 || resp.status === 403) {
-    sidCookie = null;
+    qbitCookieHeader = null;
     await qbitLogin();
     resp = await fetch(url, buildInit());
     if (resp.status === 401 || resp.status === 403) {
