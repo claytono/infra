@@ -164,7 +164,7 @@ spec:
           mountPath: /var/run/secrets/kubernetes.io/serviceaccount
           readOnly: true
       - name: browser
-        image: zenika/alpine-chrome:latest@sha256:b7421e26b9cd26b44d4e3d1c791e34ab25a088ceb692ea620d803c759ffb618c
+        image: zenika/alpine-chrome:latest@sha256:6aa9e1882bf0c69b1dc001b3dc9cdb21e1da5ec8f46577b03640c2a60f181451
         args:
         - --no-sandbox
         - --disable-gpu
