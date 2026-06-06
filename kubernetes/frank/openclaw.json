@@ -68,6 +68,9 @@
     "defaults": {
       "model": "openai-codex/gpt-5.5",
       "thinkingDefault": "xhigh",
+      "compaction": {
+        "reserveTokensFloor": 40000
+      },
       "sandbox": {
         "mode": "off",
         "workspaceAccess": "rw"
