@@ -1,0 +1,26 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: minuspod
+  annotations:
+    ak-type: simple
+    cert-manager.io/cluster-issuer: letsencrypt
+
+spec:
+  tls:
+  - hosts:
+    - minuspod.k.oneill.net
+    secretName: minuspod-tls
+  rules:
+  - host: minuspod.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minuspod
+            port:
+              number: 8000

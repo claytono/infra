@@ -1,7 +1,6 @@
-# Cloudflare Tunnel for exposing internal Kubernetes services externally.
-# The tunnel connector (cloudflared) runs in Kubernetes and connects outbound
-# to Cloudflare's edge. Traffic to request.oneill.net flows through the tunnel
-# to the Seerr service inside the cluster.
+# Cloudflare Tunnel for exposing selected internal Kubernetes services
+# externally. The tunnel connector (cloudflared) runs in Kubernetes and connects
+# outbound to Cloudflare's edge.
 
 resource "cloudflare_zero_trust_tunnel_cloudflared" "homelab" {
   account_id = local.cloudflare_account_id
@@ -9,8 +8,8 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "homelab" {
   config_src = "cloudflare"
 }
 
-# Tunnel ingress configuration — routes request.oneill.net to the Seerr
-# Kubernetes service. The catch-all rule returns 404 for unmatched hostnames.
+# Tunnel ingress configuration. The catch-all rule returns 404 for unmatched
+# hostnames.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
   account_id = local.cloudflare_account_id
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homelab.id
@@ -20,6 +19,10 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
       {
         hostname = "request.oneill.net"
         service  = "http://seerr.seerr.svc.cluster.local:5055"
+      },
+      {
+        hostname = local.minuspod_feed_public_hostname
+        service  = "http://minuspod.minuspod.svc.cluster.local:8000"
       },
       {
         service = "http_status:404"
