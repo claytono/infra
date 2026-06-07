@@ -1,0 +1,117 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: minuspod
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: minuspod
+      app.kubernetes.io/instance: minuspod
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minuspod
+        app.kubernetes.io/instance: minuspod
+    spec:
+      runtimeClassName: nvidia
+      priorityClassName: gpu-priority
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: minuspod
+        image: ttlequals0/minuspod:2.7.5@sha256:ffe482c5097fa4ffab5a922478d95f56c1391a49bbfc6aac901af0997f815e37
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - SETGID
+            - SETUID
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        env:
+        - name: BASE_URL
+          value: https://minuspod-feed.oneill.net
+        - name: UI_BASE_URL
+          value: https://minuspod.k.oneill.net
+        - name: LLM_PROVIDER
+          value: openrouter
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minuspod-openrouter-env
+              key: OPENROUTER_API_KEY
+        - name: WHISPER_BACKEND
+          value: local
+        - name: WHISPER_DEVICE
+          value: cuda
+        - name: WHISPER_MODEL
+          value: small
+        - name: WHISPER_COMPUTE_TYPE
+          value: auto
+        - name: WHISPER_LANGUAGE
+          value: en
+        - name: MINUSPOD_TRUSTED_PROXY_COUNT
+          value: '1'
+        - name: SESSION_COOKIE_SECURE
+          value: 'true'
+        - name: MINUSPOD_ENABLE_HSTS
+          value: 'true'
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: all
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: compute,utility
+        envFrom:
+        - secretRef:
+            name: minuspod-env
+        startupProbe:
+          httpGet:
+            path: /api/v1/health
+            port: http
+          failureThreshold: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health/live
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: minuspod-data
