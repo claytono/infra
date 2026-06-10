@@ -1,0 +1,173 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: felix
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: felix
+      app.kubernetes.io/instance: felix
+  template:
+    metadata:
+      name: felix
+      labels:
+        app.kubernetes.io/name: felix
+        app.kubernetes.io/instance: felix
+    spec:
+      serviceAccountName: felix
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10000
+        fsGroup: 10000
+      initContainers:
+      - name: www
+        image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6
+        restartPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: www
+          protocol: TCP
+        securityContext:
+          runAsUser: 10000
+          runAsGroup: 10000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: data
+          mountPath: /data
+          subPath: workspace
+          readOnly: true
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+        - name: nginx-tmp
+          mountPath: /tmp
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+      - name: api
+        image: oven/bun:1.3.13-alpine@sha256:4de475389889577f346c636f956b42a5c31501b654664e9ae5726f94d7bb5349
+        restartPolicy: Always
+        command:
+        - /bin/sh
+        - /etc/api/api-entrypoint.sh
+        ports:
+        - containerPort: 3001
+          name: api
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: felix-db-app
+              key: uri
+        - name: PORT
+          value: '3001'
+        - name: BUN_INSTALL_CACHE_DIR
+          value: /tmp
+        - name: BUN_RUNTIME_TRANSPILER_CACHE_PATH
+          value: /tmp/bun-cache
+        securityContext:
+          runAsUser: 10000
+          runAsGroup: 10000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: data
+          mountPath: /opt/workspace
+          subPath: workspace
+          readOnly: false
+        - name: api-tmp
+          mountPath: /tmp
+        - name: api-entrypoint
+          mountPath: /etc/api
+          readOnly: true
+      containers:
+      - name: hermes
+        image: docker.io/nousresearch/hermes-agent:v2026.6.5@sha256:9ad3b04ec916ea2c2da22358fd43b024c788d74073210695af88bfc2e63869b4
+        args:
+        - gateway
+        - run
+        ports:
+        - name: gateway
+          containerPort: 8642
+        - name: dashboard
+          containerPort: 9119
+        env:
+        - name: API_SERVER_ENABLED
+          value: 'true'
+        - name: API_SERVER_HOST
+          value: 0.0.0.0
+        - name: HERMES_DASHBOARD
+          value: '1'
+        - name: HERMES_DASHBOARD_OIDC_ISSUER
+          value: https://auth.k.oneill.net/application/o/felix-dashboard/
+        - name: HERMES_DASHBOARD_OIDC_CLIENT_ID
+          value: felix-dashboard
+        - name: HERMES_DASHBOARD_PUBLIC_URL
+          value: https://felix-dashboard.k.oneill.net
+        envFrom:
+        - secretRef:
+            name: felix-secrets
+        volumeMounts:
+        - name: data
+          mountPath: /opt/data
+        - name: kube-api-access
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
+      volumes:
+      - name: kube-api-access
+        projected:
+          defaultMode: 0444
+          sources:
+          - serviceAccountToken:
+              expirationSeconds: 3600
+              path: token
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+              - key: ca.crt
+                path: ca.crt
+          - downwardAPI:
+              items:
+              - fieldRef:
+                  fieldPath: metadata.namespace
+                path: namespace
+      - name: data
+        persistentVolumeClaim:
+          claimName: felix-data
+      - name: nginx-config
+        configMap:
+          name: felix-nginx-config
+      - name: api-entrypoint
+        configMap:
+          name: felix-api-entrypoint
+          defaultMode: 0755
+      - name: nginx-tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: nginx-cache
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: api-tmp
+        emptyDir:
+          sizeLimit: 10Gi

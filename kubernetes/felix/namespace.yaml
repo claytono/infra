@@ -3,9 +3,9 @@ apiVersion: v1
 kind: Namespace
 
 metadata:
-  name: frank
+  name: felix
   labels:
-    app: frank
+    app: felix
     goldilocks.fairwinds.com/enabled: 'true'
   annotations:
     goldilocks.fairwinds.com/vpa-update-mode: InPlaceOrRecreate

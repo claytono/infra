@@ -1,13 +1,13 @@
-resource "slack-app_manifest" "frank" {
+resource "slack-app_manifest" "felix" {
   manifest = jsonencode({
     display_information = {
-      name             = "Frank"
-      description      = "Frank"
-      background_color = "#5f83b0"
+      name             = "Felix"
+      description      = "Felix"
+      background_color = "#2c5c4a"
     }
     features = {
       assistant_view = {
-        assistant_description = "Frank"
+        assistant_description = "Felix"
       }
       app_home = {
         home_tab_enabled               = false
@@ -15,7 +15,7 @@ resource "slack-app_manifest" "frank" {
         messages_tab_read_only_enabled = false
       }
       bot_user = {
-        display_name  = "Frank"
+        display_name  = "Felix"
         always_online = false
       }
     }
