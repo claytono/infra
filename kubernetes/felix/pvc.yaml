@@ -3,9 +3,10 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 
 metadata:
-  name: frank-data
+  name: felix-data
 
 spec:
+  storageClassName: nfs
   accessModes:
   - ReadWriteOncePod
   resources:

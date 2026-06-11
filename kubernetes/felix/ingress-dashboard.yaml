@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: felix-dashboard
+  namespace: felix
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    ak-type: oidc
+    ak-oidc-client-type: public
+    ak-oidc-callback: /auth/callback
+
+spec:
+  tls:
+  - hosts:
+    - felix-dashboard.k.oneill.net
+    secretName: felix-dashboard-tls
+  rules:
+  - host: felix-dashboard.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: felix-dashboard
+            port:
+              number: 9119

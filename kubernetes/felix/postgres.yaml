@@ -3,8 +3,8 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 
 metadata:
-  name: frank-db
-  namespace: frank
+  name: felix-db
+  namespace: felix
 
 spec:
   instances: 1

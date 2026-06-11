@@ -1,6 +1,6 @@
 # Slack App Manifests
 
-Manages Slack app manifests (Frank, Home) via the `change-engine/slack-app`
+Manages Slack app manifests (Felix, Home) via the `change-engine/slack-app`
 provider in an isolated tofu root.
 
 ## Why Isolated

@@ -3,31 +3,31 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: frank-www
-  namespace: frank
+  name: felix-www
+  namespace: felix
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     ak-type: simple
     gethomepage.dev/enabled: 'true'
-    gethomepage.dev/name: Frank
+    gethomepage.dev/name: Felix
     gethomepage.dev/description: Personal Assistant
     gethomepage.dev/group: Productivity
-    gethomepage.dev/icon: mdi-cash-multiple
-    gethomepage.dev/pod-selector: app.kubernetes.io/name=frank
+    gethomepage.dev/icon: mdi-robot
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=felix
 
 spec:
   tls:
   - hosts:
-    - frank.k.oneill.net
-    secretName: frank-www-tls
+    - felix.k.oneill.net
+    secretName: felix-www-tls
   rules:
-  - host: frank.k.oneill.net
+  - host: felix.k.oneill.net
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: frank-www
+            name: felix-www
             port:
               number: 8080
