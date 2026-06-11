@@ -256,19 +256,24 @@ resource "onepassword_item" "tailscale_github_actions_ssh" {
 # 2. oneill.net → UDMP via Tailscale IP (for infrastructure hosts and local services)
 #    - Includes local-only records not in Cloudflare
 
-# Resolve Cloudflare nameserver hostnames to IP addresses for k.oneill.net split DNS
-# Tailscale requires IP addresses, not hostnames
 data "dns_a_record_set" "cloudflare_oneill_net_ns" {
-  for_each = toset(module.dns.cloudflare_oneill_net_nameservers)
+  for_each = local.cloudflare_oneill_net_nameserver_slots
   host     = each.value
 }
 
-# Look up UDMP router for split DNS nameserver
 data "tailscale_device" "udmp" {
   hostname = "UDMP"
 }
 
 locals {
+  # Tailscale provider v0.29.x validates the nested split_dns.nameservers block
+  # count before data sources resolve. Keep these slot keys static so validate
+  # can see two blocks, while still deriving nameserver hosts/IPs from Cloudflare.
+  cloudflare_oneill_net_nameserver_slots = {
+    ns0 = module.dns.cloudflare_oneill_net_nameservers[0]
+    ns1 = module.dns.cloudflare_oneill_net_nameservers[1]
+  }
+
   # Extract IPv4 address (100.x.x.x) from UDMP's Tailscale addresses
   # API ordering isn't guaranteed, so filter explicitly
   udmp_ipv4 = one([
@@ -278,6 +283,13 @@ locals {
 }
 
 resource "tailscale_dns_configuration" "main" {
+  lifecycle {
+    precondition {
+      condition     = length(module.dns.cloudflare_oneill_net_nameservers) == 2
+      error_message = "oneill.net must have exactly two Cloudflare nameservers for the static split-DNS slots."
+    }
+  }
+
   # Enable MagicDNS for *.ts.net resolution
   magic_dns = true
 
@@ -304,9 +316,9 @@ resource "tailscale_dns_configuration" "main" {
       domain = "k.oneill.net"
 
       dynamic "nameservers" {
-        for_each = data.dns_a_record_set.cloudflare_oneill_net_ns
+        for_each = local.cloudflare_oneill_net_nameserver_slots
         content {
-          address            = nameservers.value.addrs[0]
+          address            = data.dns_a_record_set.cloudflare_oneill_net_ns[nameservers.key].addrs[0]
           use_with_exit_node = true
         }
       }
