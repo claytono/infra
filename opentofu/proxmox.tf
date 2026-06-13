@@ -9,7 +9,7 @@
 # - agent.enabled = true, agent.trim = true (guest agent with fstrim)
 
 # RTX 2060 Super hardware mapping for PCI passthrough
-resource "proxmox_virtual_environment_hardware_mapping_pci" "rtx2060" {
+resource "proxmox_hardware_mapping_pci" "rtx2060" {
   name = "rtx2060"
   map = [{
     id           = "10de:1f06"
@@ -115,7 +115,7 @@ resource "proxmox_virtual_environment_vm" "k2" {
   # RTX 2060 Super GPU passthrough from p1
   hostpci {
     device  = "hostpci0"
-    mapping = proxmox_virtual_environment_hardware_mapping_pci.rtx2060.name
+    mapping = proxmox_hardware_mapping_pci.rtx2060.name
     pcie    = true
   }
 

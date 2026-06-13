@@ -5,15 +5,16 @@ resource "proxmox_virtual_environment_user" "pve_exporter" {
   user_id = "pve-exporter@pve"
   comment = "Prometheus PVE exporter - managed by OpenTofu"
   enabled = true
-
-  acl {
-    path      = "/"
-    role_id   = "PVEAuditor"
-    propagate = true
-  }
 }
 
-resource "proxmox_virtual_environment_user_token" "pve_exporter" {
+resource "proxmox_acl" "pve_exporter" {
+  user_id   = proxmox_virtual_environment_user.pve_exporter.user_id
+  path      = "/"
+  role_id   = "PVEAuditor"
+  propagate = true
+}
+
+resource "proxmox_user_token" "pve_exporter" {
   user_id               = proxmox_virtual_environment_user.pve_exporter.user_id
   token_name            = "exporter"
   comment               = "Prometheus PVE exporter - managed by OpenTofu"
@@ -31,7 +32,7 @@ resource "onepassword_item" "pve_exporter" {
     field {
       label = "credential"
       type  = "CONCEALED"
-      value = split("=", proxmox_virtual_environment_user_token.pve_exporter.value)[1]
+      value = split("=", proxmox_user_token.pve_exporter.value)[1]
     }
   }
 
