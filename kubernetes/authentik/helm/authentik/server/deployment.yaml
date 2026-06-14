@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: "server"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/part-of: "authentik"
-    app.kubernetes.io/version: "2026.2.3"
+    app.kubernetes.io/version: "2026.5.2"
 spec:
   replicas: 2
   revisionHistoryLimit: 3
@@ -28,15 +28,15 @@ spec:
         app.kubernetes.io/component: "server"
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/part-of: "authentik"
-        app.kubernetes.io/version: "2026.2.3"
+        app.kubernetes.io/version: "2026.5.2"
       annotations:
-        checksum/secret: c4ba46878872ffc17ef23c35056d8d6cdcea4901d09d191a7298c3af27c78192
+        checksum/secret: 72c677a03013477726eabddd0781c6fa5c20e4592922b731e8a7be56e131ea57
         reloader.stakater.com/auto: "true"
     spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: server
-          image: ghcr.io/goauthentik/server:2026.2.3
+          image: ghcr.io/goauthentik/server:2026.5.2
           imagePullPolicy: IfNotPresent
           args:
             - server
@@ -51,12 +51,6 @@ spec:
                 secretKeyRef:
                   key: valkey-password
                   name: authentik-valkey
-            - name: AUTHENTIK_LISTEN__HTTP
-              value: "0.0.0.0:9000"
-            - name: AUTHENTIK_LISTEN__HTTPS
-              value: "0.0.0.0:9443"
-            - name: AUTHENTIK_LISTEN__METRICS
-              value: "0.0.0.0:9300"
           envFrom:
             - secretRef:
                 name: authentik
