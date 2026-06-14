@@ -79,9 +79,6 @@ rules:
 - apiGroups: ["authorization.k8s.io"]
   resources: ["subjectaccessreviews"]
   verbs: ["create"]
-- apiGroups: ["frrk8s.metallb.io"]
-  resources: ["frrconfigurations"]
-  verbs: ["get", "list", "watch","create","update","delete"]
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

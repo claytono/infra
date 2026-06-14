@@ -21,10 +21,6 @@ spec:
       app.kubernetes.io/component: controller
   template:
     metadata:
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/scheme: "https"
-        prometheus.io/port: "7472"
       labels:
         app.kubernetes.io/name: metallb
         app.kubernetes.io/instance: metallb
@@ -52,8 +48,6 @@ spec:
           value: metallb-memberlist
         - name: METALLB_DEPLOYMENT
           value: metallb-controller
-        - name: METALLB_BGP_TYPE
-          value: frr-k8s
         ports:
         - name: metricshttps
           containerPort: 7472

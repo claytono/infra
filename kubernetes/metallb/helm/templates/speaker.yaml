@@ -21,11 +21,6 @@ spec:
       app.kubernetes.io/component: speaker
   template:
     metadata:
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/scheme: "https"
-        prometheus.io/port: "7472"
-        prometheus.io/port: "7472"
       labels:
         app.kubernetes.io/name: metallb
         app.kubernetes.io/instance: metallb
@@ -73,8 +68,6 @@ spec:
           value: "7946"
         - name: METALLB_ML_SECRET_KEY_PATH
           value: "/etc/ml_secret_key"
-        - name: METALLB_BGP_TYPE
-          value: frr-k8s
         - name: METALLB_POD_NAME
           valueFrom:
             fieldRef:
