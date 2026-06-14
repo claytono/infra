@@ -263,6 +263,8 @@ scrape_configs:
 # following annotations:
 #
 # * `prometheus.io/scrape`: Only scrape pods that have a value of `true`
+# * `prometheus.io/scheme`: If the metrics endpoint is secured then set this to
+#   `https`.
 # * `prometheus.io/path`: If the metrics path is not `/metrics` override this.
 # * `prometheus.io/port`: Scrape the pod on the indicated port instead of the
 # pod's declared ports (default is a port-free target if none are declared).
@@ -275,6 +277,10 @@ scrape_configs:
   - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
     action: keep
     regex: true
+  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+    action: replace
+    target_label: __scheme__
+    regex: (https?)
   - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
     action: replace
     target_label: __metrics_path__
@@ -284,6 +290,44 @@ scrape_configs:
     regex: ([^:]+)(?::\d+)?;(\d+)
     replacement: $1:$2
     target_label: __address__
+  - action: labelmap
+    regex: __meta_kubernetes_pod_label_(.+)
+  - source_labels: [__meta_kubernetes_namespace]
+    action: replace
+    target_label: kubernetes_namespace
+  - source_labels: [__meta_kubernetes_pod_name]
+    action: replace
+    target_label: kubernetes_pod_name
+
+- job_name: metallb-pods
+  scheme: https
+  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  tls_config:
+    insecure_skip_verify: true
+
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - metallb-system
+    selectors:
+    - role: pod
+      label: app.kubernetes.io/name=metallb,app.kubernetes.io/instance=metallb
+
+  relabel_configs:
+  - source_labels: [__meta_kubernetes_namespace]
+    action: keep
+    regex: metallb-system
+  - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name, __meta_kubernetes_pod_label_app_kubernetes_io_instance,
+      __meta_kubernetes_pod_label_app_kubernetes_io_component]
+    action: keep
+    regex: metallb;metallb;(controller|speaker)
+  - source_labels: [__meta_kubernetes_pod_phase]
+    action: keep
+    regex: Running
+  - source_labels: [__meta_kubernetes_pod_container_port_name, __meta_kubernetes_pod_container_port_number]
+    action: keep
+    regex: metricshttps;7472
   - action: labelmap
     regex: __meta_kubernetes_pod_label_(.+)
   - source_labels: [__meta_kubernetes_namespace]
