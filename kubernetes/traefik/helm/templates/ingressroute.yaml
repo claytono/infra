@@ -5,13 +5,12 @@ kind: IngressRoute
 metadata:
   name: traefik-dashboard
   namespace: traefik
-  annotations:
-    kubernetes.io/ingress.class: traefik
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik-traefik
     app.kubernetes.io/managed-by: Helm
 spec:
+  ingressClassName: traefik
   entryPoints:
   - websecure
   routes:
