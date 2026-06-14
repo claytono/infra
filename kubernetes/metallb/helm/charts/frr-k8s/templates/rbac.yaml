@@ -1,0 +1,141 @@
+---
+# Source: metallb/charts/frr-k8s/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metallb-frr-k8s-controller
+  labels:
+    app.kubernetes.io/name: frr-k8s
+    app.kubernetes.io/instance: metallb
+    app.kubernetes.io/version: "v0.0.25"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups: ["frrk8s.metallb.io"]
+  resources: ["frrk8sconfigurations"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["frrk8s.metallb.io"]
+  resources: ["frrconfigurations"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["frrk8s.metallb.io"]
+  resources: ["frrnodestates"]
+  verbs: ["get", "list", "watch", "create", "delete", "patch", "update"]
+- apiGroups: ["frrk8s.metallb.io"]
+  resources: ["frrnodestates/status"]
+  verbs: ["get", "patch", "update"]
+- apiGroups: ["frrk8s.metallb.io"]
+  resources: ["bgpsessionstates"]
+  verbs: ["get", "list", "watch", "create", "delete", "patch", "update"]
+- apiGroups: ["frrk8s.metallb.io"]
+  resources: ["bgpsessionstates/status"]
+  verbs: ["get", "patch", "update"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["authentication.k8s.io"]
+  resources: ["tokenreviews"]
+  verbs: ["create"]
+- apiGroups: ["authorization.k8s.io"]
+  resources: ["subjectaccessreviews"]
+  verbs: ["create"]
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["validatingwebhookconfigurations"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["admissionregistration.k8s.io"]
+  resourceNames: ["frr-k8s-validating-webhook-configuration"]
+  resources: ["validatingwebhookconfigurations"]
+  verbs: ["update"]
+---
+# Source: metallb/charts/frr-k8s/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metallb-frr-k8s-controller
+  labels:
+    app.kubernetes.io/name: frr-k8s
+    app.kubernetes.io/instance: metallb
+    app.kubernetes.io/version: "v0.0.25"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: metallb-frr-k8s-controller
+subjects:
+- kind: ServiceAccount
+  name: metallb-frr-k8s-controller
+  namespace: "metallb-system"
+---
+# Source: metallb/charts/frr-k8s/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: metallb-frr-k8s-controller
+  namespace: "metallb-system"
+  labels:
+    app.kubernetes.io/name: frr-k8s
+    app.kubernetes.io/instance: metallb
+    app.kubernetes.io/version: "v0.0.25"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch","update"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get","list","watch"]
+---
+# Source: metallb/charts/frr-k8s/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: metallb-frr-k8s-nodestate-cleaner
+  namespace: "metallb-system"
+  labels:
+    app.kubernetes.io/name: frr-k8s
+    app.kubernetes.io/instance: metallb
+    app.kubernetes.io/version: "v0.0.25"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["frrk8s.metallb.io"]
+  resources: ["frrnodestates"]
+  verbs: ["get", "list", "watch", "delete"]
+---
+# Source: metallb/charts/frr-k8s/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: metallb-frr-k8s-controller
+  namespace: "metallb-system"
+  labels:
+    app.kubernetes.io/name: frr-k8s
+    app.kubernetes.io/instance: metallb
+    app.kubernetes.io/version: "v0.0.25"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: metallb-frr-k8s-controller
+subjects:
+- kind: ServiceAccount
+  name: metallb-frr-k8s-controller
+---
+# Source: metallb/charts/frr-k8s/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: metallb-frr-k8s-nodestate-cleaner
+  namespace: "metallb-system"
+  labels:
+    app.kubernetes.io/name: frr-k8s
+    app.kubernetes.io/instance: metallb
+    app.kubernetes.io/version: "v0.0.25"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: metallb-frr-k8s-nodestate-cleaner
+subjects:
+- kind: ServiceAccount
+  name: metallb-frr-k8s-controller
