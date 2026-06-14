@@ -1,0 +1,47 @@
+---
+# Source: metallb/charts/frr-k8s/templates/webhooks.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: frr-k8s-webhook-server-cert
+  namespace: "metallb-system"
+---
+# Source: metallb/charts/frr-k8s/templates/webhooks.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frr-k8s-webhook-service
+  namespace: "metallb-system"
+spec:
+  ports:
+  - port: 443
+    targetPort: webhook
+  selector:
+    app.kubernetes.io/component: statuscleaner
+---
+# Source: metallb/charts/frr-k8s/templates/webhooks.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: frr-k8s-validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: frr-k8s-webhook-service
+      namespace: metallb-system
+      path: /validate-frrk8s-metallb-io-v1beta1-frrconfiguration
+  failurePolicy: Fail
+  name: frrconfigurationsvalidationwebhook.metallb.io
+  rules:
+  - apiGroups:
+    - frrk8s.metallb.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - frrconfigurations
+  sideEffects: None
