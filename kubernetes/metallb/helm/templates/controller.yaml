@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.15.3"
+    app.kubernetes.io/version: "v0.16.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: controller
 spec:
@@ -23,6 +23,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "https"
         prometheus.io/port: "7472"
       labels:
         app.kubernetes.io/name: metallb
@@ -37,21 +38,24 @@ spec:
         runAsUser: 65534
       containers:
       - name: controller
-        image: quay.io/metallb/controller:v0.15.3
+        image: quay.io/metallb/controller:v0.16.1
         args:
         - --port=7472
         - --log-level=info
         - --webhook-mode=enabled
-        - --tls-min-version=VersionTLS12
         env:
+        - name: METALLB_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         - name: METALLB_ML_SECRET_NAME
           value: metallb-memberlist
         - name: METALLB_DEPLOYMENT
           value: metallb-controller
         - name: METALLB_BGP_TYPE
-          value: frr
+          value: frr-k8s
         ports:
-        - name: monitoring
+        - name: metricshttps
           containerPort: 7472
         - containerPort: 9443
           name: webhook-server
@@ -62,8 +66,8 @@ spec:
           readOnly: true
         livenessProbe:
           httpGet:
-            path: /metrics
-            port: monitoring
+            path: /healthz
+            port: 17472
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 1
@@ -71,8 +75,8 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /metrics
-            port: monitoring
+            path: /readyz
+            port: 17472
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 1
