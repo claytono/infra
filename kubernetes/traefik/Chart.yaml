@@ -4,5 +4,5 @@ name: traefik-meta
 version: 0.1.0
 dependencies:
 - name: traefik
-  version: 40.2.0
+  version: 40.3.0
   repository: https://traefik.github.io/charts
