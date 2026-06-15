@@ -4,7 +4,7 @@
   ],
   "timezone": "America/New_York",
   "schedule": [
-    "after 2am and before 8am on monday"
+    "after 12am and before 2am on monday"
   ],
   "ignorePaths": [
     "ansible/galaxy/**"
