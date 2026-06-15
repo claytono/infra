@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: freikin/dawarich:1.7.9@sha256:54329b050caab65f39367308ef7a9f2f3bd1fa3b6ba969d6a33bbf4a0f5e7e84
+        image: freikin/dawarich:1.7.11@sha256:531a649c7e96d5c182834b1628103d70f0d020d9285d2c9367d73f9e34164e1f
         command: [web-entrypoint.sh]
         args: [bin/rails, server, -p, '3000', -b, '::']
         ports:
