@@ -8,6 +8,7 @@ ARA playbook URL extraction.
 """
 
 from datetime import datetime
+from http.client import IncompleteRead
 import json
 import os
 import re
@@ -24,10 +25,34 @@ from websocket import (
 SEMAPHORE_URL = os.environ.get("SEMAPHORE_URL", "https://semaphore.k.oneill.net")
 SEMAPHORE_DISPLAY_URL = os.environ.get("SEMAPHORE_DISPLAY_URL", SEMAPHORE_URL)
 ARA_URL = "https://ara.k.oneill.net"
+TERMINAL_TASK_STATUSES = {"success", "error", "stopped"}
+TRANSIENT_HTTP_STATUSES = {502, 503, 504}
+
+
+def env_float(name: str, default: float) -> float:
+    """Read a float from the environment, falling back on invalid values."""
+    try:
+        return float(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def env_int(name: str, default: int) -> int:
+    """Read an int from the environment, falling back on invalid values."""
+    try:
+        return int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
 
 
 class DeploymentError(Exception):
     """Custom exception for deployment failures"""
+
+    pass
+
+
+class TransientSemaphoreError(DeploymentError):
+    """Semaphore request failed due to a retryable condition."""
 
     pass
 
@@ -53,9 +78,19 @@ class SemaphoreDeployer:
         self.attempts: list[dict] = []
         self.project_id: Optional[int] = None
         self.template_id: Optional[int] = None
+        self.api_retry_attempts = max(1, env_int("SEMAPHORE_API_RETRY_ATTEMPTS", 5))
+        self.api_retry_delay = max(0.1, env_float("SEMAPHORE_API_RETRY_DELAY", 2.0))
+        self.ws_reconnect_delay = max(
+            0.1, env_float("SEMAPHORE_WS_RECONNECT_DELAY", 5.0)
+        )
+        self.task_idle_timeout = max(60, env_int("SEMAPHORE_TASK_IDLE_TIMEOUT", 900))
 
     def api_request(
-        self, method: str, endpoint: str, data: Optional[dict] = None
+        self,
+        method: str,
+        endpoint: str,
+        data: Optional[dict] = None,
+        retry: Optional[bool] = None,
     ) -> Any:
         """Make an API request to Semaphore"""
         url = f"{SEMAPHORE_URL}/api{endpoint}"
@@ -67,16 +102,48 @@ class SemaphoreDeployer:
 
         body = json.dumps(data).encode("utf-8") if data else None
         request = Request(url, data=body, headers=headers, method=method)
+        retry = method == "GET" if retry is None else retry
+        attempts = self.api_retry_attempts if retry else 1
 
-        try:
-            with urlopen(request, timeout=30) as response:
-                response_data = response.read().decode("utf-8")
-                return json.loads(response_data) if response_data else {}
-        except HTTPError as e:
-            error_body = e.read().decode("utf-8") if e.fp else ""
-            raise DeploymentError(f"API error {e.code}: {error_body}")
-        except URLError as e:
-            raise DeploymentError(f"Connection error: {e.reason}")
+        for attempt in range(1, attempts + 1):
+            try:
+                with urlopen(request, timeout=30) as response:
+                    response_data = response.read().decode("utf-8")
+                    return json.loads(response_data) if response_data else {}
+            except HTTPError as e:
+                try:
+                    error_body = e.read().decode("utf-8") if e.fp else ""
+                except (IncompleteRead, UnicodeDecodeError) as body_error:
+                    error_body = f"failed to read error body: {body_error}"
+                message = f"API error {e.code}: {error_body}"
+                if e.code in TRANSIENT_HTTP_STATUSES:
+                    if retry and attempt < attempts:
+                        self.print_retry_warning(message, attempt, attempts)
+                        continue
+                    raise TransientSemaphoreError(message) from e
+                raise DeploymentError(message) from e
+            except (
+                URLError,
+                IncompleteRead,
+                UnicodeDecodeError,
+                json.JSONDecodeError,
+            ) as e:
+                reason = getattr(e, "reason", str(e))
+                message = f"Connection/read error: {reason}"
+                if retry and attempt < attempts:
+                    self.print_retry_warning(message, attempt, attempts)
+                    continue
+                raise TransientSemaphoreError(message) from e
+
+        raise DeploymentError(f"Semaphore API request failed: {method} {endpoint}")
+
+    def print_retry_warning(self, message: str, attempt: int, attempts: int) -> None:
+        delay = self.api_retry_delay * attempt
+        print(
+            f"Warning: Semaphore API request failed ({message}); "
+            f"retrying in {delay:.1f}s ({attempt}/{attempts})"
+        )
+        time.sleep(delay)
 
     def resolve_project_id(self) -> int:
         """Resolve project name to ID via API"""
@@ -156,6 +223,14 @@ class SemaphoreDeployer:
         """Get the current status of a task"""
         return self.api_request("GET", f"/project/{self.project_id}/tasks/{task_id}")
 
+    def get_task_status_name(self, task_id: int) -> str:
+        """Read task status without letting transient API failures abort monitoring."""
+        try:
+            return self.get_task_status(task_id).get("status", "unknown")
+        except TransientSemaphoreError as e:
+            print(f"Warning: Could not read task {task_id} status: {e}")
+            return "unknown"
+
     def get_task_output(self, task_id: int) -> str:
         """Get the output of a task"""
         response = self.api_request(
@@ -169,8 +244,21 @@ class SemaphoreDeployer:
     def stream_task_output_ws(self, task_id: int) -> str:
         """Stream task output via WebSocket, return final status"""
         ws_url = SEMAPHORE_URL.replace("https://", "wss://") + "/api/ws"
+        last_activity = time.monotonic()
 
         while True:
+            idle_seconds = time.monotonic() - last_activity
+            if idle_seconds >= self.task_idle_timeout:
+                status = self.get_task_status_name(task_id)
+                if status in TERMINAL_TASK_STATUSES:
+                    return status
+                print(
+                    f"Task {task_id} produced no output or status update for "
+                    f"{idle_seconds:.0f}s; Semaphore status is {status!r}, "
+                    "continuing to wait"
+                )
+                last_activity = time.monotonic()
+
             # Connect to WebSocket
             try:
                 ws = create_connection(
@@ -180,24 +268,37 @@ class SemaphoreDeployer:
                 )
             except Exception as e:
                 print(f"WebSocket connection failed: {e}")
-                status = self.get_task_status(task_id).get("status", "unknown")
-                if status in ("success", "error", "stopped"):
+                status = self.get_task_status_name(task_id)
+                if status in TERMINAL_TASK_STATUSES:
                     return status
-                time.sleep(5)
+                time.sleep(self.ws_reconnect_delay)
                 continue
 
             # Stream messages
             try:
                 ws.settimeout(60)
                 while True:
+                    idle_seconds = time.monotonic() - last_activity
+                    if idle_seconds >= self.task_idle_timeout:
+                        status = self.get_task_status_name(task_id)
+                        if status in TERMINAL_TASK_STATUSES:
+                            return status
+                        print(
+                            f"Task {task_id} produced no output or status update for "
+                            f"{idle_seconds:.0f}s; Semaphore status is {status!r}, "
+                            "reconnecting and continuing to wait"
+                        )
+                        last_activity = time.monotonic()
+                        break
+
                     try:
                         message = ws.recv()
                     except (
                         WebSocketTimeoutException,
                         WebSocketConnectionClosedException,
                     ):
-                        status = self.get_task_status(task_id).get("status", "unknown")
-                        if status in ("success", "error", "stopped"):
+                        status = self.get_task_status_name(task_id)
+                        if status in TERMINAL_TASK_STATUSES:
                             return status
                         print("WebSocket interrupted - reconnecting...")
                         break  # Reconnect
@@ -209,6 +310,8 @@ class SemaphoreDeployer:
 
                     if data.get("task_id") != task_id:
                         continue
+
+                    last_activity = time.monotonic()
 
                     if data.get("type") == "log":
                         timestamp = data.get("time", "")
@@ -223,7 +326,7 @@ class SemaphoreDeployer:
                             print(f"  > {output}")
                     elif data.get("type") == "update":
                         status = data.get("status")
-                        if status in ("success", "error", "stopped"):
+                        if status in TERMINAL_TASK_STATUSES:
                             return status
             finally:
                 ws.close()
@@ -241,7 +344,11 @@ class SemaphoreDeployer:
         success = final_status == "success"
 
         # Fetch full output for ARA extraction
-        output = self.get_task_output(task_id)
+        try:
+            output = self.get_task_output(task_id)
+        except DeploymentError as e:
+            print(f"Warning: Failed to fetch final output for task {task_id}: {e}")
+            output = ""
         ara_url = self.extract_ara_url(output)
 
         if success:
