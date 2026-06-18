@@ -138,6 +138,12 @@ locals {
       hostname = "temp-probe2.oneill.net"
       note     = "ESPHome: K-Type Thermocouple 2"
     }
+    temp-probe3 = {
+      mac      = "98:88:E0:0E:66:3C"
+      ip       = "172.20.4.115"
+      hostname = "temp-probe3.oneill.net"
+      note     = "ESPHome: K-Type Thermocouple 3"
+    }
     ups-power = {
       mac      = "48:3F:DA:2A:F4:96"
       ip       = "172.20.7.182"

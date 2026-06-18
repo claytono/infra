@@ -1,0 +1,13 @@
+---
+substitutions:
+  devicename: temp-probe3
+  device_id: temp_probe3
+  human_devicename: K-Type Thermocouple 3
+  icon: mdi:temperature
+  mac: 98:88:E0:0E:66:3C
+  ip: 172.20.4.115
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+  device_class: !include common/device-classes/m5stack_atoms3r_kmeteriso.yaml
