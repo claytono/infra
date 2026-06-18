@@ -1,0 +1,164 @@
+---
+# M5Stack AtomS3R with a KMeterISO Unit on the Grove I2C port.
+# The AtomS3R display/backlight use the internal LCD/LP5562 pins, while the
+# isolated K-type thermocouple adapter stays on the external Grove bus.
+esphome:
+  name: ${devicename}
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+external_components:
+- source: github://m5stack/esphome-yaml/components@f69508de326bdb6cda19399096b74a985830132d
+  components: [lp5562]
+
+logger:
+
+i2c:
+- id: atoms3r_internal_i2c
+  sda:
+    number: GPIO45
+    ignore_strapping_warning: true
+  scl:
+    number: GPIO0
+    ignore_strapping_warning: true
+  frequency: 100kHz
+- id: atoms3r_grove_i2c
+  sda: GPIO2
+  scl: GPIO1
+  frequency: 100kHz
+
+spi:
+  clk_pin: GPIO15
+  mosi_pin: GPIO21
+
+globals:
+- id: ${device_id}_display_fahrenheit
+  type: bool
+  restore_value: true
+  initial_value: "true"
+
+font:
+- file: fonts/Roboto-Bold.ttf
+  id: ${device_id}_temperature_font
+  size: 40
+  bpp: 4
+  glyphs: "0123456789.-"
+- file: fonts/Roboto-Regular.ttf
+  id: ${device_id}_unit_font
+  size: 22
+  bpp: 4
+  glyphs: "CF°"
+
+lp5562:
+  id: ${device_id}_lp5562
+  i2c_id: atoms3r_internal_i2c
+  use_internal_clk: true
+  white_current: 17.5
+
+output:
+- platform: lp5562
+  id: ${device_id}_backlight_output
+  lp5562_id: ${device_id}_lp5562
+  channel: white
+
+light:
+- platform: monochromatic
+  id: ${device_id}_backlight
+  name: ${human_devicename} LCD Backlight
+  output: ${device_id}_backlight_output
+  icon: mdi:television
+  restore_mode: RESTORE_DEFAULT_ON
+
+binary_sensor:
+- platform: gpio
+  id: ${device_id}_button
+  pin:
+    number: GPIO41
+    mode: INPUT_PULLUP
+    inverted: true
+  name: ${human_devicename} Button
+  entity_category: diagnostic
+  on_press:
+  - lambda: |-
+      id(${device_id}_display_fahrenheit) = !id(${device_id}_display_fahrenheit);
+  - component.update: ${device_id}_display
+
+sensor:
+- platform: kmeteriso
+  i2c_id: atoms3r_grove_i2c
+  temperature:
+    id: ${device_id}_temperature
+    name: ${human_devicename} Temperature
+    on_value:
+    - component.update: ${device_id}_display
+  internal_temperature:
+    id: ${device_id}_internal_temperature
+    name: ${human_devicename} Internal Temperature
+  update_interval: 10s
+
+display:
+- platform: mipi_spi
+  id: ${device_id}_display
+  model: ST7789V
+  dc_pin: GPIO42
+  reset_pin: GPIO48
+  cs_pin: GPIO14
+  data_rate: 40MHz
+  update_interval: 10s
+  dimensions:
+    height: 128
+    width: 128
+    offset_width: 2
+    offset_height: 1
+  invert_colors: true
+  rotation: 180°
+  lambda: |-
+    it.fill(Color::BLACK);
+
+    if (isnan(id(${device_id}_temperature).state)) {
+      it.print(
+        it.get_width() / 2,
+        50,
+        id(${device_id}_temperature_font),
+        Color::WHITE,
+        TextAlign::CENTER,
+        "--"
+      );
+      return;
+    }
+
+    const bool use_fahrenheit = id(${device_id}_display_fahrenheit);
+    const float temperature_c = id(${device_id}_temperature).state;
+    const float display_temperature = use_fahrenheit ? (temperature_c * 9.0f / 5.0f) + 32.0f : temperature_c;
+    const char *unit = use_fahrenheit ? "°F" : "°C";
+
+    it.printf(
+      it.get_width() / 2,
+      46,
+      id(${device_id}_temperature_font),
+      Color::WHITE,
+      TextAlign::CENTER,
+      "%.1f",
+      display_temperature
+    );
+    it.print(
+      it.get_width() / 2,
+      92,
+      id(${device_id}_unit_font),
+      Color(0x80, 0xC7, 0xFF),
+      TextAlign::CENTER,
+      unit
+    );
