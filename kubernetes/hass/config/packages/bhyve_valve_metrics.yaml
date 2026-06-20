@@ -31,3 +31,8 @@ template:
     unique_id: deck_2_verbena_valve_open
     state: "{{ is_state('valve.deck_2_verbena_zone', 'open') }}"
     availability: "{{ states('valve.deck_2_verbena_zone') in ['open', 'opening', 'closing', 'closed'] }}"
+
+  - name: Deck 2 Tomato Plant Valve Open
+    unique_id: deck_2_tomato_plant_valve_open
+    state: "{{ is_state('valve.deck_2_left_side_soaker_hose_zone', 'open') }}"
+    availability: "{{ states('valve.deck_2_left_side_soaker_hose_zone') in ['open', 'opening', 'closing', 'closed'] }}"
