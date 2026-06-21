@@ -147,3 +147,4 @@ spec:
         - name: workdir
           persistentVolumeClaim:
             claimName: semaphore-workdir
+
