@@ -6,5 +6,4 @@
 #
 # Regenerate with: check-deprecations --generate <logfile>
 
-"Importing 'to_native' from 'ansible.module_utils._":
-  - "TASK [common : Configure sysctl for inotify]"
+{}
