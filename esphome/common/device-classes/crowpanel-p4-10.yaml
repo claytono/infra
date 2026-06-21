@@ -18,6 +18,7 @@ psram:
   speed: 200MHz
 
 esp32:
+  board: esp32-p4_r3
   variant: esp32p4
   flash_size: 16MB
   cpu_frequency: 360MHz
