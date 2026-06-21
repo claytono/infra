@@ -434,7 +434,7 @@
     },
     {
       "description": "ESPHome: One month behind latest (auto-managed)",
-      "allowedVersions": "/^2026\\.4\\./",
+      "allowedVersions": "/^2026\\.5\\./",
       "matchDatasources": [
         "pypi"
       ],
