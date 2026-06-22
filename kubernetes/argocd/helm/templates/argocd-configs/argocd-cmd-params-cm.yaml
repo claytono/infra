@@ -35,3 +35,4 @@ data:
   server.log.format: text
   server.log.level: info
   server.repo.server.strict.tls: "false"
+

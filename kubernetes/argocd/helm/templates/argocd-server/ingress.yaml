@@ -37,3 +37,4 @@ spec:
     - hosts:
       - argocd.k.oneill.net
       secretName: argocd-server-tls
+

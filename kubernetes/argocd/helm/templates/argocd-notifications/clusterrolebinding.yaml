@@ -19,3 +19,4 @@ subjects:
 - kind: ServiceAccount
   name: argocd-notifications-controller
   namespace: argocd
+

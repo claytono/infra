@@ -21,3 +21,4 @@ spec:
   selector:
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/instance: argocd
+

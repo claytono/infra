@@ -84,3 +84,4 @@ spec:
             name: argocd-redis-health-configmap
             defaultMode: 493
       dnsPolicy: ClusterFirst
+

@@ -457,3 +457,4 @@ spec:
           - key: server.profile.enabled
             path: profiler.enabled
       dnsPolicy: ClusterFirst
+
