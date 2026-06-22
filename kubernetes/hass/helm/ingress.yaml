@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/instance: hass
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: home-assistant
-    app.kubernetes.io/version: 2026.5.4
+    app.kubernetes.io/version: 2026.6.1
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: "true"
@@ -33,3 +33,4 @@ spec:
                 name: hass-home-assistant
                 port:
                   number: 8080
+
