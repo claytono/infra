@@ -15,3 +15,4 @@ metadata:
 data:
   context: |
     argocdUrl: https://argocd.example.com
+

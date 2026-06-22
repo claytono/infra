@@ -147,3 +147,4 @@ data:
   timeout.reconciliation: 120s
   timeout.reconciliation.jitter: 60s
   url: https://argocd.k.oneill.net
+

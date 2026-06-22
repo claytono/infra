@@ -30,3 +30,4 @@ rules:
       - secrets
     verbs:
       - create
+

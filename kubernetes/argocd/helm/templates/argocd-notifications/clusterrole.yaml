@@ -47,3 +47,4 @@ rules:
     - secrets
     verbs:
     - get
+
