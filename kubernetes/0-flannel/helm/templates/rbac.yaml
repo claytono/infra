@@ -50,3 +50,4 @@ subjects:
 - kind: ServiceAccount
   name: flannel
   namespace: default
+
