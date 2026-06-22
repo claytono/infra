@@ -9,8 +9,21 @@ groups:
 - name: alert.rules
   rules:
   - alert: NodeDown
-    expr: up{job="node resources"} == 0
+    expr: up{job="node resources", instance!="xtal:9100"} == 0
     for: 5m
+  - alert: XtalNodeExporterDown
+    expr: >
+      (up{job="node resources", instance="xtal:9100"} == 0)
+      and on()
+      (
+        histogram_count(
+          increase(smokeping_response_duration_seconds{host="xtal.oneill.net"}[5m])
+        ) > 0
+      )
+    for: 35m
+    annotations:
+      message: xtal is reachable by LAN ICMP, but node_exporter over Tailscale has
+        not been scraped for 35 minutes
   - alert: ICMPUnreachable
     expr: probe_success == 0
     for: 20m
