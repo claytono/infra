@@ -12,6 +12,9 @@ metadata:
   namespace: karakeep
 stringData:
   MEILI_MASTER_KEY: 'bogus'
+
+
+
 ---
 # Source: karakeep/templates/common.yaml
 kind: PersistentVolumeClaim

@@ -21,3 +21,4 @@ spec:
   selector:
     app.kubernetes.io/name: meilisearch
     app.kubernetes.io/instance: karakeep
+

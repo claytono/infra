@@ -15,3 +15,4 @@ data:
   MEILI_ENV: "production"
   MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE: "true"
   MEILI_NO_ANALYTICS: "true"
+
