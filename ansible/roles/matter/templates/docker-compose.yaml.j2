@@ -10,7 +10,7 @@ services:
     devices:
       - {{ matter_device }}:/dev/ttyACM0
     volumes:
-      - {{ matter_thread_data_dir }}:/data/thread
+      - {{ matter_otbr_data_dir }}:/data
       - /run/udev:/run/udev:ro
     environment:
       OT_RCP_DEVICE: "spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800&uart-flow-control"

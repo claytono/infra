@@ -7,7 +7,28 @@
   loop:
     - "{{ matter_data_dir }}"
     - "{{ matter_data_dir }}/server-data"
-    - "{{ matter_thread_data_dir }}"
+    - "{{ matter_otbr_data_dir }}"
+
+- name: Configure IPv6 route learning for Thread border routers
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/99-matter-thread-routes.conf
+    reload: true
+    state: present
+  loop:
+    # 2 accepts Router Advertisements even though IPv6 forwarding is enabled.
+    - name: "net.ipv6.conf.{{ matter_backbone_interface }}.accept_ra"
+      value: "2"
+    # 0 ignores RA default routers so the static IPv6 gateway stays authoritative.
+    - name: "net.ipv6.conf.{{ matter_backbone_interface }}.accept_ra_defrtr"
+      value: "0"
+    # 64 accepts Thread border-router Route Information Options for /64 OMR routes.
+    - name: "net.ipv6.conf.{{ matter_backbone_interface }}.accept_ra_rt_info_max_plen"
+      value: "64"
+    # 0 disables SLAAC address creation so the static IPv6 address is preserved.
+    - name: "net.ipv6.conf.{{ matter_backbone_interface }}.autoconf"
+      value: "0"
 
 - name: Deploy matter docker-compose file
   ansible.builtin.template:
