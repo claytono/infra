@@ -5,4 +5,5 @@ matter_otbr_image: "openthread/border-router:latest@sha256:bc5e517a5e1cb2994d9fd
 matter_server_image: "ghcr.io/home-assistant-libs/python-matter-server:8.1.0@sha256:170aa093ce91c76cde4cc390918307590f0f5558fcec93f913af3cb019e6562a"
 
 matter_data_dir: /etc/matter
-matter_thread_data_dir: /var/lib/thread
+# OTBR stores both Thread and border-router state below /data in the container.
+matter_otbr_data_dir: /var/lib/otbr
