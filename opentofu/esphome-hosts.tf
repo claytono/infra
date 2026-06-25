@@ -127,14 +127,14 @@ locals {
       note     = "ESPHome: Szamar Power"
     }
     temp-probe1 = {
-      mac      = "4C:11:AE:0D:D3:27"
+      mac      = "AC:A7:04:00:3D:34"
       ip       = "172.20.7.109"
       hostname = "temp-probe1.oneill.net"
       note     = "ESPHome: K-Type Thermocouple 1"
     }
     temp-probe2 = {
-      mac      = "D8:F1:5B:14:71:13"
-      ip       = "172.20.5.133"
+      mac      = "AC:A7:04:00:2F:94"
+      ip       = "172.20.4.113"
       hostname = "temp-probe2.oneill.net"
       note     = "ESPHome: K-Type Thermocouple 2"
     }
