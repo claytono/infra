@@ -25,3 +25,4 @@ spec:
     app.kubernetes.io/instance: pinepods
     app.kubernetes.io/name: valkey
     app.kubernetes.io/component: primary
+
