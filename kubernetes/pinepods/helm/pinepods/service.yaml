@@ -17,3 +17,4 @@ spec:
     app.kubernetes.io/name: pinepods
     app.kubernetes.io/instance: pinepods
     app.kubernetes.io/component: main
+

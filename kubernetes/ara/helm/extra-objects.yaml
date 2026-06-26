@@ -6,3 +6,4 @@ metadata:
   annotations:
     reloader.stakater.com/match: "true"
   name: ara-reloader-trigger
+

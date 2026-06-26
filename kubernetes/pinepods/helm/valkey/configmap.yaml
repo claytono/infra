@@ -31,3 +31,4 @@ data:
     rename-command FLUSHDB ""
     rename-command FLUSHALL ""
     # End of replica configuration
+

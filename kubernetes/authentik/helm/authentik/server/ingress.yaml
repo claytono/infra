@@ -36,3 +36,4 @@ spec:
     - hosts:
       - auth.k.oneill.net
       secretName: authentik-tls
+

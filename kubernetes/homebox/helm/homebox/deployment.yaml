@@ -84,3 +84,4 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: "homebox-data"
+
