@@ -8,7 +8,7 @@ metadata:
     
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.5.0"
+    app.kubernetes.io/version: "v2.6.0"
     app.kubernetes.io/managed-by: Helm
     external-secrets.io/component: webhook
   annotations:
@@ -57,7 +57,7 @@ metadata:
     
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.5.0"
+    app.kubernetes.io/version: "v2.6.0"
     app.kubernetes.io/managed-by: Helm
     external-secrets.io/component: webhook
   annotations:
@@ -79,3 +79,4 @@ webhooks:
   sideEffects: None
   timeoutSeconds: 5
   failurePolicy: Fail
+
