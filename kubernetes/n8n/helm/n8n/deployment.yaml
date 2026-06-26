@@ -89,3 +89,4 @@ spec:
         - name: "data"
           persistentVolumeClaim:
             claimName: n8n
+

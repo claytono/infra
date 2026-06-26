@@ -21,3 +21,4 @@ spec:
   selector:
     app.kubernetes.io/instance: pinepods
     app.kubernetes.io/name: valkey
+

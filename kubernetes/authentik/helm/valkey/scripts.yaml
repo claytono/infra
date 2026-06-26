@@ -189,3 +189,4 @@ data:
     configure_valkey_base
     configure_valkey_ext
     log "Done."
+

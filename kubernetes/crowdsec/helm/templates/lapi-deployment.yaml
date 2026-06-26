@@ -152,4 +152,5 @@ spec:
       - name: crowdsec-config-local-volume
         configMap:
           name: crowdsec-config-local
-      priorityClassName:
+      priorityClassName: 
+
