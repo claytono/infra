@@ -87,13 +87,13 @@ managed separately.
 
 ## Labels
 
-| Label                | Meaning                                      |
-| -------------------- | -------------------------------------------- |
-| `renovate:safe`      | No concerns, straightforward update          |
-| `renovate:caution`   | Behavioral changes worth validating          |
-| `renovate:breaking`  | Breaking changes, needs config rework        |
-| `renovate:risk`      | Known issues, regressions, or low confidence |
-| `renovate:evaluated` | PR has been evaluated (always added)         |
+| Label                | Meaning                                                                 |
+| -------------------- | ----------------------------------------------------------------------- |
+| `renovate:safe`      | Routine for actual usage; normal validation may still be required       |
+| `renovate:caution`   | Concrete concern requiring targeted validation beyond normal validation |
+| `renovate:breaking`  | Breaking or incompatible change needing remediation                     |
+| `renovate:risk`      | Known issues, regressions, low confidence, or thin evidence             |
+| `renovate:evaluated` | PR has been evaluated (always added)                                    |
 
 ## Key Design Decisions
 

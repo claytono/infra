@@ -1,5 +1,11 @@
 # Renovate Eval Context
 
+## Role of This File
+
+This file provides repository context, discovery hints, available tools, and
+action-menu behavior. It does not redefine the shared `renovate:safe`,
+`renovate:caution`, `renovate:breaking`, or `renovate:risk` label semantics.
+
 ## Repo Layout
 
 - Kubernetes apps: `kubernetes/<app>/` with Helm values at `values.yaml` and
@@ -10,7 +16,11 @@
 - OpenTofu: `opentofu/*.tf`
 - Pre-commit hooks: `.pre-commit-config.yaml`
 
-## Deployment
+## Normal Validation and Deployment Actions
+
+These commands describe this repository's normal validation and deployment
+workflows. Needing one of these normal workflows is not, by itself, evidence for
+`renovate:caution`; the label still depends on the shared rubric.
 
 - Kubernetes deploys via ArgoCD on PR merge -- no manual deploy needed
 - Ansible deploys via Semaphore on merge to main

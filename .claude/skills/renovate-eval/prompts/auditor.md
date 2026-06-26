@@ -23,6 +23,10 @@ Check each of these against the embedded rubric:
 
 - **Verdict calibration:** Does the verdict label match the Verdict Mapping
   criteria in the Report Format Specification?
+- **Normal-validation boundary:** If the verdict is `renovate:caution`, does the
+  report identify the specific behavior introduced by this PR, why the
+  repository's actual usage reaches that behavior, and what targeted validation
+  is needed beyond normal validation?
 - **CVE handling:** Does the report follow the evaluator's Security analysis
   rules and rule 5 ("Evaluate the change, not the current state")?
 - **Evidence-based overrides:** If the evaluator claims a risk doesn't apply,
@@ -85,6 +89,10 @@ These checks verify the report is internally sound:
     rendered section.
   - A Caution or Risk verdict justified by dismissed or unconfigured upstream
     changes instead of a deployed behavior change.
+  - A Caution verdict justified only by normal validation needs, routine
+    restarts, ordinary state/config presence, internal bug fixes, generic
+    runtime changes, security fixes without a separate introduced concern, or a
+    newer version existing without an introduced-regression link.
 
 ## 3. Evidence Judgment
 

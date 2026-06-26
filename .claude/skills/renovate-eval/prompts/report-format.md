@@ -94,12 +94,16 @@ highest-risk-wins for the label.
 
 ## Verdict Mapping
 
-- 🟢 **Safe** (`renovate:safe`) — no concerns, straightforward update. Security
-  patches that fix CVEs without introducing behavioral changes are safe — the
-  change reduces risk without adding any.
-- 🟡 **Caution** (`renovate:caution`) — behavioral changes worth validating
-- 🟠 **Breaking** (`renovate:breaking`) — breaking changes, needs config rework
-- 🔴 **Risk** (`renovate:risk`) — known issues, regressions, or low confidence
+- 🟢 **Safe** (`renovate:safe`) — routine for this repository's actual usage;
+  normal validation may still be required. Security patches or CVE fixes that do
+  not introduce a separate concrete concern remain safe because they reduce risk
+  rather than adding it.
+- 🟡 **Caution** (`renovate:caution`) — concrete, evidenced repo-relevant
+  concern requiring targeted validation beyond normal validation.
+- 🟠 **Breaking** (`renovate:breaking`) — breaking or incompatible change; may
+  require config, code, workflow, or operational changes before merge.
+- 🔴 **Risk** (`renovate:risk`) — known issues, regressions, low confidence, or
+  insufficient evidence for a non-trivial change.
 
 Use Unicode emoji (not shortcodes like `:green_circle:`).
 

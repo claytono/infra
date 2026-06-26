@@ -112,9 +112,33 @@ your own independent research:
    vulnerabilities. You may note pre-existing issues as context, but they must
    not drive the verdict or label.
 
-   Use `renovate:caution` only for deployment-relevant behavioral changes worth
-   validating. Disabled defaults, absent scrape config, speculative hardware
-   swaps, and irrelevant upstream fixes must not raise the label.
+   Normal validation does not raise the label. Every repository has a normal
+   dependency-update workflow, which may include tests, builds, smoke tests,
+   plans, renders, review, staging deploys, rollout checks, or other
+   project-specific gates. Do not use `renovate:caution` merely because that
+   normal workflow should be run.
+
+   Use `renovate:safe` when the PR appears routine for the repository's actual
+   usage: no known regression, no compatibility concern, no migration concern,
+   no relevant behavior/default/API/security/access change, and no targeted
+   validation need beyond the repository's normal workflow. Security patches or
+   CVE fixes that do not introduce a separate concrete concern remain
+   `renovate:safe`; they reduce risk rather than adding it.
+
+   Use `renovate:caution` only when the PR introduces a concrete, evidenced
+   concern that is relevant to the repository's actual usage and requires
+   targeted validation beyond the normal dependency-update workflow.
+
+   Caution-worthy concerns include: data/state/schema migration; changed
+   defaults affecting actual usage; API, CLI, protocol, auth, output, or
+   file-format compatibility change; permission, access, credential, or
+   trust-boundary expansion; runtime/platform/dependency change with known
+   compatibility concerns; operational behavior changes with plausible impact
+   such as lifecycle, concurrency, retry, timeout, scheduling, or resource
+   usage; or a known issue/regression in the proposed version relevant to actual
+   usage. If compatibility cannot be established because evidence is missing,
+   thin, or inconclusive for a non-trivial change, use `renovate:risk` instead
+   of `renovate:caution`.
 
 6. **Check dependency interactions:** If related or bundled dependencies
    changed, assess version compatibility. If a bundled dependency is NOT
