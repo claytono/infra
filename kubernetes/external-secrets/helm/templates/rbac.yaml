@@ -274,6 +274,7 @@ rules:
     - "get"
     - "list"
     - "watch"
+
 ---
 # Source: external-secrets/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

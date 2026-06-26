@@ -111,3 +111,4 @@ spec:
                     app.kubernetes.io/component: "worker"
                 topologyKey: kubernetes.io/hostname
       enableServiceLinks: true
+

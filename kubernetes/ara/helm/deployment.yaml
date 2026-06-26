@@ -91,3 +91,4 @@ spec:
       - name: ara
         persistentVolumeClaim:
           claimName: ara-ara-pvc
+

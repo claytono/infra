@@ -110,3 +110,4 @@ spec:
                     app.kubernetes.io/component: "server"
                 topologyKey: kubernetes.io/hostname
       enableServiceLinks: true
+
