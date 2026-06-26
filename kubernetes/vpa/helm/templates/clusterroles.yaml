@@ -196,3 +196,4 @@ rules:
       - pods # required for patching vpaInPlaceUpdated annotations onto the pod
     verbs:
       - patch
+

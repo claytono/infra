@@ -34,3 +34,4 @@ spec:
                 name: netdata
                 port:
                   name: http
+

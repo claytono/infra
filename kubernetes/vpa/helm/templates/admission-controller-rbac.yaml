@@ -65,3 +65,4 @@ subjects:
   - kind: ServiceAccount
     name: vpa-admission-controller
     namespace: vpa
+

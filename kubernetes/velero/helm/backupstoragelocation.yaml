@@ -19,3 +19,4 @@ spec:
     region: "rclone"
     s3ForcePathStyle: "true"
     s3Url: "https://rclone-s3-velero.k.oneill.net"
+

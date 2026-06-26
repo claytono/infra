@@ -119,3 +119,4 @@ subjects:
   - kind: ServiceAccount
     name: vpa-updater
     namespace: vpa
+

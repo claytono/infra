@@ -170,3 +170,4 @@ spec:
         - emptyDir: {}
           name: stream-conf
       dnsPolicy: ClusterFirstWithHostNet
+

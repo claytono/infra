@@ -23,3 +23,4 @@ spec:
     app: netdata
     release: netdata
     role: parent
+
