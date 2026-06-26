@@ -13,3 +13,4 @@ spec:
     app.kubernetes.io/component: admission-controller
     app.kubernetes.io/name: vpa
     app.kubernetes.io/instance: vpa
+

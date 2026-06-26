@@ -13,3 +13,4 @@ spec:
   provider: aws
   config:
     region: "us-west-000"
+

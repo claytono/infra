@@ -88,3 +88,4 @@ spec:
             - name: ALIBABA_CLOUD_CREDENTIALS_FILE
               value: /credentials/cloud
           securityContext:
+
