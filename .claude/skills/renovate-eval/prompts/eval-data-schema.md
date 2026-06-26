@@ -53,12 +53,16 @@ include one.
 
 One of:
 
-- `renovate:safe` — no concerns, straightforward update. Security patches that
-  fix CVEs without introducing behavioral changes are safe — the change reduces
-  risk without adding any.
-- `renovate:caution` — behavioral changes worth validating
-- `renovate:breaking` — breaking changes, needs config rework
-- `renovate:risk` — known issues, regressions, or low confidence
+- `renovate:safe` — routine for this repository's actual usage; normal
+  validation may still be required. Security patches or CVE fixes that do not
+  introduce a separate concrete concern remain safe because they reduce risk
+  rather than adding it.
+- `renovate:caution` — concrete, evidenced repo-relevant concern requiring
+  targeted validation beyond normal validation.
+- `renovate:breaking` — breaking or incompatible change; may require config,
+  code, workflow, or operational changes before merge.
+- `renovate:risk` — known issues, regressions, low confidence, or insufficient
+  evidence for a non-trivial change.
 
 ### update_scope (required, string)
 
