@@ -110,6 +110,8 @@ spec:
         ports:
         - name: gateway
           containerPort: 8642
+        - name: webhook
+          containerPort: 8644
         - name: dashboard
           containerPort: 9119
         env:
