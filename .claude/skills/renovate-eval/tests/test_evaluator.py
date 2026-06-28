@@ -62,6 +62,24 @@ class TestBuildRoundOnePrompt:
         )
         assert "Focus on security" in prompt
 
+    def test_includes_multi_agent_guidance(self, tmp_dir):
+        prompts_dir = os.path.join(tmp_dir, "prompts")
+        os.makedirs(prompts_dir)
+        with open(os.path.join(prompts_dir, "evaluator.md"), "w") as f:
+            f.write("evaluator")
+
+        prompt = build_round_one_prompt(
+            script_dir=tmp_dir,
+            artifact_dir="/tmp/art",
+            repo_root="/tmp/repo",
+            context="local",
+        )
+
+        assert "Required Parallel Research" in prompt
+        assert "dispatching-parallel-agents" in prompt
+        assert "Spawn independent read-only subagents" in prompt
+        assert "Subagents must follow the same read-only constraints" in prompt
+
 
 class TestBuildRevisionPrompt:
     def test_uses_audit_result(self, tmp_dir):
@@ -76,6 +94,8 @@ class TestBuildRevisionPrompt:
         )
         assert "auditor" in prompt
         assert "audit-result.json" in prompt
+        assert "Required Parallel Research" in prompt
+        assert "dispatching-parallel-agents" in prompt
 
     def test_prefers_validation_feedback(self, tmp_dir):
         with open(os.path.join(tmp_dir, "validation-feedback.json"), "w") as f:

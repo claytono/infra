@@ -10,6 +10,19 @@ from pathlib import Path
 from .agent_runner import run_agent
 
 
+MULTI_AGENT_RESEARCH_BLOCK = """
+## Required Parallel Research
+
+If subagent tools are available, use them before writing the evaluation.
+
+Use the Superpowers `dispatching-parallel-agents` skill if it is available. Spawn independent read-only subagents for at least:
+- upstream release, changelog, advisory, and community-regression research
+- local repo, deployment, runtime/config, and CI impact research
+
+Subagents must follow the same read-only constraints. They must not write `eval-data.json` or `eval-evidence.md`; the evaluator synthesizes their findings and writes the final artifacts. If subagent tools are unavailable, note that in `eval-evidence.md` and continue manually.
+"""
+
+
 def _read_file(path: str) -> str:
     """Read file contents, return empty string if missing."""
     try:
@@ -58,6 +71,7 @@ Read these files for your research:
 - **Output schema:** {script_dir}/prompts/eval-data-schema.md
 {repo_context_line}
 {instructions_block}
+{MULTI_AGENT_RESEARCH_BLOCK}
 
 ## Output Files
 
@@ -91,7 +105,8 @@ def build_revision_prompt(
         feedback_file = audit_fb
         feedback_source = "auditor"
 
-    return f"""The {feedback_source} reviewed your output and found issues. Read the feedback at
+    return (
+        f"""The {feedback_source} reviewed your output and found issues. Read the feedback at
 {feedback_file} and revise your evaluation data.
 
 Read the revision guidelines at {script_dir}/prompts/revision.md for how
@@ -100,6 +115,8 @@ to approach this revision.
 Run the validation subcommand after making changes:
 python3 {script_dir}/renovate_eval.py validate {artifact_dir}/eval-data.json
 {instructions_block}"""
+        + MULTI_AGENT_RESEARCH_BLOCK
+    )
 
 
 def run_evaluator(
