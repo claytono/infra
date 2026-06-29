@@ -48,6 +48,7 @@ def run_agent(
     session_id: str = "",
     resume: bool = False,
     disable_tools: bool = False,
+    yolo: bool = False,
     timeout: int | None = 600,
 ) -> dict[str, Any]:
     """Run an agent provider and return a normalized output dict."""
@@ -56,11 +57,14 @@ def run_agent(
         return _run_claude(
             role=role,
             prompt=prompt,
+            artifact_dir=artifact_dir,
+            repo_root=repo_root,
             output_json=output_json,
             model=model,
             session_id=session_id,
             resume=resume,
             disable_tools=disable_tools,
+            yolo=yolo,
             timeout=timeout,
         )
     return _run_codex(
@@ -74,6 +78,7 @@ def run_agent(
         session_id=session_id,
         resume=resume,
         disable_tools=disable_tools,
+        yolo=yolo,
         timeout=timeout,
     )
 
@@ -82,24 +87,32 @@ def _run_claude(
     *,
     role: str,
     prompt: str,
+    artifact_dir: str,
+    repo_root: str,
     output_json: str,
     model: str,
     session_id: str,
     resume: bool,
     disable_tools: bool,
+    yolo: bool,
     timeout: int | None,
 ) -> dict[str, Any]:
     if not model:
         raise RuntimeError(f"claude {role} requires a model")
 
-    cmd = [
-        "claude",
-        "-p",
-        "--model",
-        model,
-        "--permission-mode",
-        "bypassPermissions",
-    ]
+    artifact_dir = os.path.realpath(artifact_dir)
+    repo_root = os.path.realpath(repo_root)
+
+    cmd = ["claude", "-p", "--model", model]
+    if not disable_tools:
+        cmd.extend(["--add-dir", artifact_dir])
+        plugin_dirs = os.environ.get("RENOVATE_EVAL_CLAUDE_PLUGIN_DIR", "").strip()
+        if plugin_dirs:
+            for plugin_dir in plugin_dirs.split(os.pathsep):
+                if plugin_dir:
+                    cmd.extend(["--plugin-dir", os.path.realpath(plugin_dir)])
+    if yolo:
+        cmd.extend(["--permission-mode", "bypassPermissions"])
     if disable_tools:
         cmd.extend(["--tools", ""])
     cmd.extend(["--output-format", "json"])
@@ -112,6 +125,7 @@ def _run_claude(
         capture_output=True,
         text=True,
         timeout=timeout,
+        cwd=repo_root,
     )
 
     Path(output_json).write_text(result.stdout)
@@ -143,10 +157,13 @@ def _run_codex(
     session_id: str,
     resume: bool,
     disable_tools: bool,
+    yolo: bool,
     timeout: int | None,
 ) -> dict[str, Any]:
+    artifact_dir = os.path.realpath(artifact_dir)
     last_message = os.path.join(artifact_dir, f"{role}-last-message.md")
     raw_jsonl = os.path.join(artifact_dir, f"{role}-output.jsonl")
+    codex_cwd = repo_root
 
     cmd = ["codex", "exec"]
     if disable_tools:
@@ -164,13 +181,16 @@ def _run_codex(
         )
         for feature in CODEX_MINIMAL_MODE_DISABLED_FEATURES:
             cmd.extend(["--disable", feature])
-    else:
+    elif yolo:
         cmd.append("--dangerously-bypass-approvals-and-sandbox")
+    else:
+        codex_cwd = artifact_dir
+        cmd.extend(["--sandbox", "workspace-write", "--skip-git-repo-check"])
 
     cmd.extend(
         [
             "--cd",
-            repo_root,
+            codex_cwd,
             "--json",
             "--output-last-message",
             last_message,

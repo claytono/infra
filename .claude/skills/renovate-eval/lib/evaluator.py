@@ -10,12 +10,73 @@ from pathlib import Path
 from .agent_runner import run_agent
 
 
+INITIAL_SUPERPOWERS_RESEARCH_BLOCK = """
+## Required Superpowers Usage
+
+You MUST use relevant Superpowers skills if they are available.
+
+Use subagents when they are useful and subagent tools are available, especially
+for independent research slices that can run before writing the evaluation.
+
+Subagents must follow the execution-mode write policy above. They must not write
+`eval-data.json` or `eval-evidence.md`; the evaluator synthesizes their findings
+and writes the final artifacts.
+
+Document in `eval-evidence.md` whether Superpowers was available, which
+Superpowers skill(s) you used, and whether subagents were used. If Superpowers
+or subagent tools are unavailable, note that in `eval-evidence.md` and continue
+manually.
+"""
+
+
+TARGETED_REVISION_SUPERPOWERS_BLOCK = """
+## Targeted Revision Superpowers Usage
+
+This is a revision pass. Do not redo broad research already captured in
+`eval-evidence.md`.
+
+You MUST use relevant Superpowers skills if they are available.
+
+Use subagents when they are useful for auditor or validation feedback that needs
+independent verification and subagent tools are available.
+
+Subagents must follow the execution-mode write policy above. They must not write
+`eval-data.json` or `eval-evidence.md`; the evaluator synthesizes their findings
+and writes the final artifacts.
+
+Document in `eval-evidence.md` whether Superpowers was available, which
+Superpowers skill(s) you used during the revision, and whether targeted
+subagent checks were used. If no feedback item needs independent verification,
+say that in `eval-evidence.md`. If Superpowers or subagent tools are
+unavailable, note that in `eval-evidence.md` and continue manually.
+"""
+
+
 def _read_file(path: str) -> str:
     """Read file contents, return empty string if missing."""
     try:
         return Path(path).read_text()
     except FileNotFoundError:
         return ""
+
+
+def _execution_mode_block(yolo: bool) -> str:
+    if yolo:
+        return """## Execution Mode Write Policy
+
+Yolo mode is enabled. Temporary scratch files, caches, or probes are allowed
+when needed for research. Do not mutate repository files, deploy, restart,
+apply resources, push, merge, create or modify PR/GitHub state, or change
+persistent external resources.
+"""
+
+    return """## Execution Mode Write Policy
+
+Yolo mode is disabled. Do not create, modify, or delete any files except the
+specified output files. Do not mutate repository files, deploy, restart, apply
+resources, push, merge, create or modify PR/GitHub state, or change persistent
+external resources.
+"""
 
 
 def build_round_one_prompt(
@@ -25,6 +86,7 @@ def build_round_one_prompt(
     repo_root: str,
     context: str,
     instructions: str = "",
+    yolo: bool = False,
 ) -> str:
     """Build the evaluator prompt for round 1."""
     evaluator_md = _read_file(os.path.join(script_dir, "prompts", "evaluator.md"))
@@ -49,15 +111,19 @@ def build_round_one_prompt(
 
 You are running in **{context}** mode.
 
+{_execution_mode_block(yolo)}
+
 ## Data Files
 
 Read these files for your research:
+- **Repository root:** {repo_root}
 - **PR data:** {artifact_dir}/pr-data.md (metadata, file list with change counts — read this first)
 - **Full diff:** {artifact_dir}/pr-diff.patch (read selectively based on file list — skip large vendored/generated sections)
 - **CI status:** {artifact_dir}/ci-status.md
 - **Output schema:** {script_dir}/prompts/eval-data-schema.md
 {repo_context_line}
 {instructions_block}
+{INITIAL_SUPERPOWERS_RESEARCH_BLOCK}
 
 ## Output Files
 
@@ -71,6 +137,7 @@ def build_revision_prompt(
     script_dir: str,
     artifact_dir: str,
     instructions: str = "",
+    yolo: bool = False,
 ) -> str:
     """Build the revision prompt for round 2+."""
     instructions_block = ""
@@ -91,7 +158,8 @@ def build_revision_prompt(
         feedback_file = audit_fb
         feedback_source = "auditor"
 
-    return f"""The {feedback_source} reviewed your output and found issues. Read the feedback at
+    return (
+        f"""The {feedback_source} reviewed your output and found issues. Read the feedback at
 {feedback_file} and revise your evaluation data.
 
 Read the revision guidelines at {script_dir}/prompts/revision.md for how
@@ -99,7 +167,10 @@ to approach this revision.
 
 Run the validation subcommand after making changes:
 python3 {script_dir}/renovate_eval.py validate {artifact_dir}/eval-data.json
+{_execution_mode_block(yolo)}
 {instructions_block}"""
+        + TARGETED_REVISION_SUPERPOWERS_BLOCK
+    )
 
 
 def run_evaluator(
@@ -116,6 +187,7 @@ def run_evaluator(
     session_id: str = "",
     is_revision: bool = False,
     cost_suffix: str = "",
+    yolo: bool = False,
     timeout: int | None = 600,
 ) -> dict:
     """Run the evaluator. Returns the parsed claude JSON output.
@@ -132,6 +204,7 @@ def run_evaluator(
             repo_root=repo_root,
             context=context,
             instructions=instructions,
+            yolo=yolo,
         )
     else:
         if not session_id:
@@ -142,6 +215,7 @@ def run_evaluator(
             script_dir=script_dir,
             artifact_dir=artifact_dir,
             instructions=instructions,
+            yolo=yolo,
         )
 
     output = run_agent(
@@ -155,6 +229,7 @@ def run_evaluator(
         reasoning_effort=reasoning_effort,
         session_id=session_id,
         resume=round_num > 1 or is_revision,
+        yolo=yolo,
         timeout=timeout,
     )
 

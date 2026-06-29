@@ -62,14 +62,23 @@ class TestBuildRoundOnePrompt:
             artifact_dir="/tmp/art",
             report="# Report content",
             evidence="## Evidence",
+            yolo=True,
         )
         assert "Preamble" in prompt
         assert "## Research" in prompt
         assert "## Output" not in prompt
+        assert "Evaluator yolo mode was enabled" in prompt
         assert "Format spec" in prompt
         assert "# Report content" in prompt
         assert "## Evidence" in prompt
         assert "Audit instructions" in prompt
+        assert "Required Superpowers Usage" in prompt
+        assert "Targeted Revision Superpowers Usage" in prompt
+        assert (
+            "You MUST use relevant Superpowers skills if they are available" in prompt
+        )
+        assert "Superpowers skill(s) you used" in prompt
+        assert "dispatching-parallel-agents" not in prompt
 
 
 class TestBuildRevisionPrompt:

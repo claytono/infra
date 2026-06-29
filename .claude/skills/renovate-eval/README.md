@@ -70,7 +70,8 @@ python3 .claude/skills/renovate-eval/renovate_eval.py render path/to/eval-data.j
 ### GitHub Actions
 
 This skill includes a composite GitHub Action in `action.yaml`. The action
-installs only the selected provider CLI.
+installs only the selected provider CLI and can install Superpowers for that
+provider.
 
 The `provider` input accepts `claude` or `codex`. If omitted, provider
 resolution order is explicit `provider` input, then `RENOVATE_EVAL_PROVIDER`,
@@ -80,6 +81,15 @@ CLI default model. `codex_reasoning_effort` defaults to empty so the composite
 action uses the Codex CLI default unless a caller overrides it. `agent_timeout`
 defaults to `600` seconds, and `0` disables the subprocess timeout. Callers that
 use higher reasoning effort or slower private runners can pass a larger timeout.
+The action passes `--yolo` by default through `yolo: true`; direct local script
+runs do not use yolo mode unless `--yolo` is passed.
+
+`install_superpowers` defaults to `true`. `superpowers_version` defaults to
+`latest`, which resolves the latest `obra/superpowers` GitHub release tag. Pass
+a release tag such as `v6.0.3`, a bare version such as `6.0.3`, or another git
+ref to pin the installed checkout. Claude uses the pinned checkout through
+`--plugin-dir`; Codex installs a temporary local marketplace backed by the same
+checkout.
 
 Provisioning working Codex subscription auth, persistent `CODEX_HOME`, and
 private runner state is out of scope for the action. That infrastructure is

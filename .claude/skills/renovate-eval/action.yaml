@@ -42,6 +42,20 @@ inputs:
     description: Codex CLI npm package version
     required: false
     default: latest
+  yolo:
+    description: Run the selected agent provider in yolo mode
+    required: false
+    default: 'true'
+  install_superpowers:
+    description: Install Superpowers for the selected agent provider
+    required: false
+    default: 'true'
+  superpowers_version:
+    description: >-
+      Superpowers release tag or git ref to install; latest resolves the latest
+      GitHub release
+    required: false
+    default: latest
   agent_timeout:
     description: Agent subprocess timeout in seconds; 0 disables the timeout
     required: false
@@ -104,6 +118,111 @@ runs:
     env:
       CODEX_VERSION: ${{ inputs.codex_version }}
     run: npm install -g "@openai/codex@$CODEX_VERSION"
+
+  - name: Install Superpowers
+    id: superpowers
+    shell: bash
+    env:
+      INPUT_INSTALL_SUPERPOWERS: ${{ inputs.install_superpowers }}
+      INPUT_SUPERPOWERS_VERSION: ${{ inputs.superpowers_version }}
+      INPUT_PROVIDER: ${{ steps.provider.outputs.provider }}
+    run: |
+      set -euo pipefail
+
+      case "$INPUT_INSTALL_SUPERPOWERS" in
+        true)
+          ;;
+        false|'')
+          echo "Superpowers install disabled"
+          exit 0
+          ;;
+        *)
+          echo "Unsupported install_superpowers value: $INPUT_INSTALL_SUPERPOWERS" >&2
+          exit 1
+          ;;
+      esac
+
+      superpowers_ref="$INPUT_SUPERPOWERS_VERSION"
+      if [[ -z "$superpowers_ref" || "$superpowers_ref" == "latest" ]]; then
+        latest_url=$(curl -fsSLI \
+          --retry 5 \
+          --retry-all-errors \
+          --retry-connrefused \
+          --retry-delay 2 \
+          --retry-max-time 60 \
+          --connect-timeout 10 \
+          --max-time 60 \
+          -o /dev/null \
+          -w '%{url_effective}' \
+          https://github.com/obra/superpowers/releases/latest)
+        superpowers_ref="${latest_url##*/}"
+      elif [[ "$superpowers_ref" =~ ^[0-9]+([.][0-9]+)+$ ]]; then
+        superpowers_ref="v$superpowers_ref"
+      fi
+
+      install_root=$(mktemp -d "${RUNNER_TEMP:-/tmp}/superpowers.XXXXXX")
+      checkout="$install_root/superpowers"
+      git -c advice.detachedHead=false clone \
+        --quiet \
+        --depth=1 \
+        --branch "$superpowers_ref" \
+        https://github.com/obra/superpowers \
+        "$checkout"
+
+      echo "Installed Superpowers from ref $superpowers_ref"
+
+      case "$INPUT_PROVIDER" in
+        claude)
+          if [[ ! -f "$checkout/.claude-plugin/plugin.json" ]]; then
+            echo "Superpowers checkout does not contain .claude-plugin/plugin.json" >&2
+            exit 1
+          fi
+          echo "claude_plugin_dir=$checkout" >> "$GITHUB_OUTPUT"
+          ;;
+        codex)
+          if [[ ! -f "$checkout/.codex-plugin/plugin.json" ]]; then
+            echo "Superpowers checkout does not contain .codex-plugin/plugin.json" >&2
+            exit 1
+          fi
+
+          marketplace="$install_root/codex-marketplace"
+          mkdir -p "$marketplace/.agents/plugins" "$marketplace/plugins"
+          ln -s "$checkout" "$marketplace/plugins/superpowers"
+          cat > "$marketplace/.agents/plugins/marketplace.json" <<'JSON'
+      {
+        "name": "renovate-eval-superpowers",
+        "interface": {
+          "displayName": "Renovate Eval Superpowers"
+        },
+        "plugins": [
+          {
+            "name": "superpowers",
+            "source": {
+              "source": "local",
+              "path": "./plugins/superpowers"
+            },
+            "policy": {
+              "installation": "AVAILABLE",
+              "authentication": "ON_INSTALL",
+              "products": [
+                "CODEX"
+              ]
+            },
+            "category": "Developer Tools"
+          }
+        ]
+      }
+      JSON
+          codex plugin remove superpowers@renovate-eval-superpowers --json >/dev/null 2>&1 || true
+          codex plugin marketplace remove renovate-eval-superpowers >/dev/null 2>&1 || true
+          codex plugin marketplace add "$marketplace" --json
+          codex plugin add superpowers --marketplace renovate-eval-superpowers --json
+          ;;
+        *)
+          echo "Unsupported provider for Superpowers install: $INPUT_PROVIDER" >&2
+          exit 1
+          ;;
+      esac
 
   - name: Install GitHub CLI
     shell: bash
@@ -184,8 +303,10 @@ runs:
       INPUT_CODEX_EVALUATOR_MODEL: ${{ inputs.codex_evaluator_model }}
       INPUT_CODEX_AUDITOR_MODEL: ${{ inputs.codex_auditor_model }}
       INPUT_CODEX_REASONING_EFFORT: ${{ inputs.codex_reasoning_effort }}
+      INPUT_YOLO: ${{ inputs.yolo }}
       INPUT_AGENT_TIMEOUT: ${{ inputs.agent_timeout }}
       INPUT_CI_TIMEOUT: ${{ inputs.ci_timeout }}
+      RENOVATE_EVAL_CLAUDE_PLUGIN_DIR: ${{ steps.superpowers.outputs.claude_plugin_dir }}
       ACTION_PATH: ${{ github.action_path }}
     run: |
       set -euo pipefail
@@ -210,6 +331,17 @@ runs:
       if [[ -n "$INPUT_CODEX_REASONING_EFFORT" ]]; then
         ARGS+=(--codex-reasoning-effort "$INPUT_CODEX_REASONING_EFFORT")
       fi
+      case "$INPUT_YOLO" in
+        true)
+          ARGS+=(--yolo)
+          ;;
+        false|'')
+          ;;
+        *)
+          echo "Unsupported yolo value: $INPUT_YOLO" >&2
+          exit 1
+          ;;
+      esac
       if [[ -n "$INPUT_AGENT_TIMEOUT" ]]; then
         ARGS+=(--agent-timeout "$INPUT_AGENT_TIMEOUT")
       fi

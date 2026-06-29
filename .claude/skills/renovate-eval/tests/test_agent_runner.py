@@ -93,6 +93,7 @@ def test_run_claude_writes_output(monkeypatch, tmp_dir):
     def mock_run(cmd, **kwargs):
         called["cmd"] = cmd
         called["input"] = kwargs["input"]
+        called["cwd"] = kwargs["cwd"]
         return subprocess.CompletedProcess(cmd, 0, json.dumps(output), "")
 
     monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
@@ -109,10 +110,83 @@ def test_run_claude_writes_output(monkeypatch, tmp_dir):
     )
 
     assert called["cmd"][:4] == ["claude", "-p", "--model", "opus"]
+    assert called["cmd"][called["cmd"].index("--add-dir") + 1] == os.path.realpath(
+        tmp_dir
+    )
+    assert "--permission-mode" not in called["cmd"]
     assert called["input"] == "prompt"
+    assert called["cwd"] == "/repo"
     assert result["provider"] == "claude"
     with open(output_json) as f:
         assert json.load(f)["session_id"] == "abc"
+
+
+def test_run_claude_uses_superpowers_plugin_dir(monkeypatch, tmp_dir):
+    output = {"session_id": "abc", "result": "ok", "usage": {}}
+    called = {}
+    plugin_dir = os.path.join(tmp_dir, "superpowers")
+    second_plugin_dir = os.path.join(tmp_dir, "other-plugin")
+
+    def mock_run(cmd, **kwargs):
+        called["cmd"] = cmd
+        return subprocess.CompletedProcess(cmd, 0, json.dumps(output), "")
+
+    monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
+    monkeypatch.setenv(
+        "RENOVATE_EVAL_CLAUDE_PLUGIN_DIR",
+        os.pathsep.join([plugin_dir, second_plugin_dir]),
+    )
+
+    run_agent(
+        provider="claude",
+        role="evaluator",
+        prompt="prompt",
+        artifact_dir=tmp_dir,
+        repo_root="/repo",
+        output_json=os.path.join(tmp_dir, "claude-output.json"),
+        model="opus",
+    )
+
+    plugin_dirs = [
+        called["cmd"][i + 1]
+        for i, arg in enumerate(called["cmd"])
+        if arg == "--plugin-dir"
+    ]
+    assert plugin_dirs == [
+        os.path.realpath(plugin_dir),
+        os.path.realpath(second_plugin_dir),
+    ]
+
+
+def test_run_claude_yolo_mode_uses_bypass_permissions(monkeypatch, tmp_dir):
+    output = {"session_id": "abc", "result": "ok", "usage": {}}
+    called = {}
+
+    def mock_run(cmd, **kwargs):
+        called["cmd"] = cmd
+        called["cwd"] = kwargs["cwd"]
+        return subprocess.CompletedProcess(cmd, 0, json.dumps(output), "")
+
+    monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
+
+    run_agent(
+        provider="claude",
+        role="evaluator",
+        prompt="prompt",
+        artifact_dir=tmp_dir,
+        repo_root="/repo",
+        output_json=os.path.join(tmp_dir, "claude-output.json"),
+        model="opus",
+        yolo=True,
+    )
+
+    assert called["cmd"][called["cmd"].index("--permission-mode") + 1] == (
+        "bypassPermissions"
+    )
+    assert called["cmd"][called["cmd"].index("--add-dir") + 1] == os.path.realpath(
+        tmp_dir
+    )
+    assert called["cwd"] == "/repo"
 
 
 def test_run_claude_disable_tools_and_resume(monkeypatch, tmp_dir):
@@ -121,6 +195,7 @@ def test_run_claude_disable_tools_and_resume(monkeypatch, tmp_dir):
 
     def mock_run(cmd, **kwargs):
         called["cmd"] = cmd
+        called["cwd"] = kwargs["cwd"]
         return subprocess.CompletedProcess(cmd, 0, json.dumps(output), "")
 
     monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
@@ -139,8 +214,11 @@ def test_run_claude_disable_tools_and_resume(monkeypatch, tmp_dir):
     )
 
     assert "--tools" in called["cmd"]
+    assert "--add-dir" not in called["cmd"]
+    assert "--plugin-dir" not in called["cmd"]
     assert called["cmd"][called["cmd"].index("--tools") + 1] == ""
     assert called["cmd"][-2:] == ["--resume", "session-123"]
+    assert called["cwd"] == "/repo"
 
 
 def test_run_codex_uses_thread_id_and_last_message(monkeypatch, tmp_dir):
@@ -181,13 +259,12 @@ def test_run_codex_uses_thread_id_and_last_message(monkeypatch, tmp_dir):
         output_json=output_json,
     )
 
-    assert called["cmd"][:5] == [
-        "codex",
-        "exec",
-        "--dangerously-bypass-approvals-and-sandbox",
-        "--cd",
-        "/repo",
-    ]
+    assert called["cmd"][:2] == ["codex", "exec"]
+    assert "--dangerously-bypass-approvals-and-sandbox" not in called["cmd"]
+    assert called["cmd"][called["cmd"].index("--sandbox") + 1] == "workspace-write"
+    assert "--skip-git-repo-check" in called["cmd"]
+    assert "--add-dir" not in called["cmd"]
+    assert called["cmd"][called["cmd"].index("--cd") + 1] == os.path.realpath(tmp_dir)
     assert called["cmd"][-1] == "-"
     assert called["input"] == "prompt"
     assert result["session_id"] == "thread-123"
@@ -198,6 +275,36 @@ def test_run_codex_uses_thread_id_and_last_message(monkeypatch, tmp_dir):
     assert saved["provider"] == "codex"
     assert saved["usage"]["input_tokens"] == 100
     assert saved["usage"]["cache_read_input_tokens"] == 25
+
+
+def test_run_yolo_mode_uses_codex_bypass(monkeypatch, tmp_dir):
+    raw = json.dumps({"type": "thread.started", "thread_id": "thread-123"})
+    called = {}
+
+    def mock_run(cmd, **kwargs):
+        called["cmd"] = cmd
+        last_message = cmd[cmd.index("--output-last-message") + 1]
+        with open(last_message, "w") as f:
+            f.write("final answer")
+        return subprocess.CompletedProcess(cmd, 0, raw, "")
+
+    monkeypatch.setattr("lib.agent_runner.subprocess.run", mock_run)
+
+    run_agent(
+        provider="codex",
+        role="evaluator",
+        prompt="prompt",
+        artifact_dir=tmp_dir,
+        repo_root="/repo",
+        output_json=os.path.join(tmp_dir, "codex-output.json"),
+        yolo=True,
+    )
+
+    assert "--dangerously-bypass-approvals-and-sandbox" in called["cmd"]
+    assert "--sandbox" not in called["cmd"]
+    assert "--skip-git-repo-check" not in called["cmd"]
+    assert "--add-dir" not in called["cmd"]
+    assert called["cmd"][called["cmd"].index("--cd") + 1] == "/repo"
 
 
 def test_run_codex_minimal_mode_disables_tool_surfaces(monkeypatch, tmp_dir):
@@ -223,6 +330,7 @@ def test_run_codex_minimal_mode_disables_tool_surfaces(monkeypatch, tmp_dir):
         output_json=output_json,
         model="gpt-5.2",
         disable_tools=True,
+        yolo=True,
     )
 
     assert "--dangerously-bypass-approvals-and-sandbox" not in called["cmd"]
