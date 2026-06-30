@@ -1,9 +1,9 @@
 ---
-# Copyright (C) 2021-2025 Robert Wimmer
+# Copyright (C) 2021-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # runc version to install
-runc_version: "1.4.0"
+runc_version: "1.4.2"
 
 # Where to install "runc" binaries.
 runc_bin_directory: "/usr/local/sbin"

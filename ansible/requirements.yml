@@ -3,7 +3,7 @@ roles:
   - name: githubixx.containerd
     version: "0.17.0+2.2.1"
   - name: githubixx.runc
-    version: "0.8.1+1.4.0"
+    version: "0.8.2+1.4.2"
   - src: anxs.generic-users
     version: v1.2.0
   - name: oefenweb.postfix
