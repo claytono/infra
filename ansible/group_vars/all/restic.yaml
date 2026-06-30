@@ -2,6 +2,7 @@
 restic_repo: main
 resticprofile_enabled: true
 restic_healthcheck_host: hc.k.oneill.net
+restic_template_repository: rest:https://restic-template.k.oneill.net/v1
 
 restic_config_blocks:
   - restic_global_config
@@ -23,6 +24,10 @@ restic_default_config:
     force-inactive-lock: true
     repository: "rest:https://{{ '{{' }} $repo_username {{ '}}' }}:{{ '{{' }} $repo_password {{ '}}' }}@restic.k.oneill.net/main"
     password-file: passphrase.txt
+    init:
+      copy-chunker-params: true
+      from-repository: "{{ restic_template_repository }}"
+      from-password-file: template-passphrase.txt
 
     env:
       GOGC: "10"
