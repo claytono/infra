@@ -42,8 +42,10 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         text=True,
         timeout=10,
     ).stdout.strip()
-    artifact_dir = tempfile.mkdtemp(
-        prefix=f"renovate-eval-{args.pr}.", dir=os.environ.get("TMPDIR", "/tmp")
+    artifact_dir = os.path.realpath(
+        tempfile.mkdtemp(
+            prefix=f"renovate-eval-{args.pr}.", dir=os.environ.get("TMPDIR", "/tmp")
+        )
     )
     report_dir = os.path.join(os.environ.get("TMPDIR", "/tmp"), "renovate-eval")
 
@@ -103,6 +105,7 @@ def _run_evaluate(
         args.auditor_model if provider == "claude" else args.codex_auditor_model
     )
     codex_reasoning_effort = args.codex_reasoning_effort if provider == "codex" else ""
+    yolo = bool(args.yolo)
     agent_timeout = None if args.agent_timeout == 0 else args.agent_timeout
 
     print("=== Renovate PR Evaluation ===")
@@ -116,6 +119,7 @@ def _run_evaluate(
         print(
             f"Codex reasoning effort: {codex_reasoning_effort or '(provider default)'}"
         )
+    print(f"Yolo mode: {'enabled' if yolo else 'disabled'}")
     if agent_timeout is None:
         print("Agent timeout: none")
     else:
@@ -204,6 +208,7 @@ def _run_evaluate(
                     instructions=args.instructions,
                     session_id=eval_session_id,
                     is_revision=use_revision,
+                    yolo=yolo,
                     cost_suffix=f"-a{validation_attempt}"
                     if validation_attempt > 1
                     else "",
@@ -325,6 +330,7 @@ def _run_evaluate(
                 provider=provider,
                 reasoning_effort=codex_reasoning_effort,
                 session_id=audit_session_id if auditor_has_run else "",
+                yolo=yolo,
                 timeout=agent_timeout,
             )
         except Exception as e:
@@ -477,6 +483,7 @@ def _run_evaluate(
         "rounds": final_round,
         "status": status,
         "provider": provider,
+        "yolo": yolo,
     }
     with open(os.path.join(artifact_dir, "result.json"), "w") as f:
         json.dump(result, f, indent=2)
@@ -836,6 +843,14 @@ def main() -> None:
         "--codex-reasoning-effort",
         default=os.environ.get("RENOVATE_EVAL_CODEX_REASONING_EFFORT", ""),
         choices=["", "low", "medium", "high", "xhigh"],
+    )
+    p_eval.add_argument(
+        "--yolo",
+        action="store_true",
+        help=(
+            "Run the selected agent provider in yolo mode. "
+            "Use only in externally sandboxed environments."
+        ),
     )
     p_eval.add_argument(
         "--agent-timeout",

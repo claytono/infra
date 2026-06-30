@@ -9,6 +9,10 @@ from pathlib import Path
 
 from .agent_runner import run_agent
 from .common import log
+from .evaluator import (
+    INITIAL_SUPERPOWERS_RESEARCH_BLOCK,
+    TARGETED_REVISION_SUPERPOWERS_BLOCK,
+)
 
 
 def _read_file(path: str) -> str:
@@ -49,6 +53,7 @@ def build_round_one_prompt(
     artifact_dir: str,
     report: str,
     evidence: str,
+    yolo: bool = False,
 ) -> str:
     """Build the auditor prompt for round 1."""
     auditor_md = _read_file(os.path.join(script_dir, "prompts", "auditor.md"))
@@ -64,6 +69,12 @@ def build_round_one_prompt(
 
     # Strip Output section from evaluator.md for the rubric
     evaluator_rubric = _strip_output_section(evaluator_md)
+    runtime_requirements = "\n\n".join(
+        (
+            INITIAL_SUPERPOWERS_RESEARCH_BLOCK.strip(),
+            TARGETED_REVISION_SUPERPOWERS_BLOCK.strip(),
+        )
+    )
 
     return f"""{preamble}
 
@@ -72,7 +83,11 @@ def build_round_one_prompt(
 The evaluator was given the following instructions. This is the authoritative
 reference for what rules the evaluator should have followed.
 
+Evaluator yolo mode was {"enabled" if yolo else "disabled"} for this run.
+
 {evaluator_rubric}
+
+{runtime_requirements}
 
 ---
 
@@ -135,6 +150,7 @@ def run_auditor(
     provider: str = "claude",
     reasoning_effort: str = "",
     session_id: str = "",
+    yolo: bool = False,
     timeout: int | None = 300,
 ) -> dict:
     """Run the auditor. Returns the parsed audit result."""
@@ -151,6 +167,7 @@ def run_auditor(
             artifact_dir=artifact_dir,
             report=report,
             evidence=evidence,
+            yolo=yolo,
         )
     else:
         if not session_id:
@@ -175,6 +192,7 @@ def run_auditor(
         session_id=session_id,
         resume=round_num > 1,
         disable_tools=True,
+        yolo=yolo,
         timeout=timeout,
     )
 

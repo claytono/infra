@@ -62,6 +62,48 @@ class TestBuildRoundOnePrompt:
         )
         assert "Focus on security" in prompt
 
+    def test_includes_superpowers_guidance(self, tmp_dir):
+        prompts_dir = os.path.join(tmp_dir, "prompts")
+        os.makedirs(prompts_dir)
+        with open(os.path.join(prompts_dir, "evaluator.md"), "w") as f:
+            f.write("evaluator")
+
+        prompt = build_round_one_prompt(
+            script_dir=tmp_dir,
+            artifact_dir="/tmp/art",
+            repo_root="/tmp/repo",
+            context="local",
+        )
+
+        assert "- **Repository root:** /tmp/repo" in prompt
+        assert "Yolo mode is disabled" in prompt
+        assert "Required Superpowers Usage" in prompt
+        assert (
+            "You MUST use relevant Superpowers skills if they are available" in prompt
+        )
+        assert "Use subagents when they are useful" in prompt
+        assert "Subagents must follow the execution-mode write policy above" in prompt
+        assert "Superpowers skill(s) you used" in prompt
+        assert "dispatching-parallel-agents" not in prompt
+
+    def test_yolo_prompt_allows_temp_research_files(self, tmp_dir):
+        prompts_dir = os.path.join(tmp_dir, "prompts")
+        os.makedirs(prompts_dir)
+        with open(os.path.join(prompts_dir, "evaluator.md"), "w") as f:
+            f.write("evaluator")
+
+        prompt = build_round_one_prompt(
+            script_dir=tmp_dir,
+            artifact_dir="/tmp/art",
+            repo_root="/tmp/repo",
+            context="local",
+            yolo=True,
+        )
+
+        assert "Yolo mode is enabled" in prompt
+        assert "Temporary scratch files, caches, or probes are allowed" in prompt
+        assert "Do not mutate repository files" in prompt
+
 
 class TestBuildRevisionPrompt:
     def test_uses_audit_result(self, tmp_dir):
@@ -76,6 +118,14 @@ class TestBuildRevisionPrompt:
         )
         assert "auditor" in prompt
         assert "audit-result.json" in prompt
+        assert "Targeted Revision Superpowers Usage" in prompt
+        assert "Required Superpowers Usage" not in prompt
+        assert "Do not redo broad research" in prompt
+        assert (
+            "You MUST use relevant Superpowers skills if they are available" in prompt
+        )
+        assert "targeted\nsubagent checks were used" in prompt
+        assert "dispatching-parallel-agents" not in prompt
 
     def test_prefers_validation_feedback(self, tmp_dir):
         with open(os.path.join(tmp_dir, "validation-feedback.json"), "w") as f:
@@ -89,6 +139,20 @@ class TestBuildRevisionPrompt:
         )
         assert "validation" in prompt
         assert "validation-feedback.json" in prompt
+
+    def test_yolo_revision_prompt_has_targeted_write_policy(self, tmp_dir):
+        with open(os.path.join(tmp_dir, "audit-result.json"), "w") as f:
+            f.write("{}")
+
+        prompt = build_revision_prompt(
+            script_dir="/tmp/scripts",
+            artifact_dir=tmp_dir,
+            yolo=True,
+        )
+
+        assert "Targeted Revision Superpowers Usage" in prompt
+        assert "Yolo mode is enabled" in prompt
+        assert "Temporary scratch files, caches, or probes are allowed" in prompt
 
 
 class TestRunEvaluator:
