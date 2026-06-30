@@ -3,27 +3,27 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: rest-server
+  name: restic-template-server
   labels:
     app.kubernetes.io/instance: restic
-    app.kubernetes.io/name: rest-server
-    app.kubernetes.io/component: rest-server
+    app.kubernetes.io/name: restic-template-server
+    app.kubernetes.io/component: restic-template-server
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
   tls:
   - hosts:
-    - restic.k.oneill.net
-    secretName: rest-server-tls
+    - restic-template.k.oneill.net
+    secretName: restic-template-server-tls
   rules:
-  - host: restic.k.oneill.net
+  - host: restic-template.k.oneill.net
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: rest-server
+            name: restic-template-server
             port:
               number: 8000

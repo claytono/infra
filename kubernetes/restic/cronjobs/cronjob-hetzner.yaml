@@ -4,6 +4,10 @@ kind: CronJob
 
 metadata:
   name: resticprofile-hetzner
+  labels:
+    app.kubernetes.io/instance: restic
+    app.kubernetes.io/name: resticprofile
+    app.kubernetes.io/component: resticprofile
 
 spec:
   schedule: 0 18 * * *  # Daily at 18:00 (6 PM)
@@ -17,6 +21,9 @@ spec:
         metadata:
           labels:
             resticprofile: hetzner
+            app.kubernetes.io/instance: restic
+            app.kubernetes.io/name: resticprofile
+            app.kubernetes.io/component: resticprofile
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -106,3 +113,8 @@ spec:
               path: /volume2/shared
               readOnly: true
             name: shared
+    metadata:
+      labels:
+        app.kubernetes.io/instance: restic
+        app.kubernetes.io/name: resticprofile
+        app.kubernetes.io/component: resticprofile

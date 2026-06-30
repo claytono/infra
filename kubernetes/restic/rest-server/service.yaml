@@ -4,10 +4,14 @@ kind: Service
 
 metadata:
   name: rest-server
+  labels:
+    app.kubernetes.io/instance: restic
+    app.kubernetes.io/name: rest-server
+    app.kubernetes.io/component: rest-server
 
 spec:
   selector:
-    app.kubernetes.io/name: rest-server
+    app.kubernetes.io/component: rest-server
   ports:
   - name: http
     port: 8000

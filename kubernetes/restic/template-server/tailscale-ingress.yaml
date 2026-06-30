@@ -3,11 +3,11 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: rest-server-tailscale
+  name: restic-template-server-tailscale
   labels:
     app.kubernetes.io/instance: restic
-    app.kubernetes.io/name: rest-server
-    app.kubernetes.io/component: rest-server
+    app.kubernetes.io/name: restic-template-server
+    app.kubernetes.io/component: restic-template-server
   annotations:
     tailscale.com/tags: tag:restic
 
@@ -15,9 +15,9 @@ spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: rest-server
+      name: restic-template-server
       port:
         number: 8000
   tls:
   - hosts:
-    - restic
+    - restic-template

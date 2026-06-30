@@ -7,12 +7,14 @@ namespace: restic
 resources:
 - shared
 - rest-server
+- template-server
 - cronjobs
 
 commonAnnotations:
   argoManaged: 'true'
 
 configMapGenerator:
+
 - files:
   - profiles.yaml
   - body-start.txt
@@ -21,18 +23,21 @@ configMapGenerator:
   name: resticprofile-config
   options:
     disableNameSuffixHash: true
+    labels:
+      app.kubernetes.io/instance: restic
+      app.kubernetes.io/name: resticprofile
+      app.kubernetes.io/component: resticprofile
+
 - files:
   - rclone.conf
   name: rclone-config
   options:
     disableNameSuffixHash: true
+    labels:
+      app.kubernetes.io/instance: restic
+      app.kubernetes.io/name: resticprofile
+      app.kubernetes.io/component: resticprofile
 
 images:
 - name: creativeprojects/resticprofile
   newTag: 0.33.0@sha256:12797c7d6433e312c2cf13fa4c119658190f69e569ae4ed35a64933146bdf0f4
-
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/name: restic
-    app.kubernetes.io/instance: restic

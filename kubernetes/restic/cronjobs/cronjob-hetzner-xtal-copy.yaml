@@ -4,6 +4,10 @@ kind: CronJob
 
 metadata:
   name: resticprofile-hetzner-xtal-copy
+  labels:
+    app.kubernetes.io/instance: restic
+    app.kubernetes.io/name: resticprofile
+    app.kubernetes.io/component: resticprofile
 
 spec:
   schedule: 48 5 * * *  # 05:48 daily
@@ -17,6 +21,9 @@ spec:
         metadata:
           labels:
             resticprofile: hetzner-xtal-copy
+            app.kubernetes.io/instance: restic
+            app.kubernetes.io/name: resticprofile
+            app.kubernetes.io/component: resticprofile
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -88,3 +95,8 @@ spec:
               server: fs2.oneill.net
               path: /volume2/backups/restic/repos
             name: backups
+    metadata:
+      labels:
+        app.kubernetes.io/instance: restic
+        app.kubernetes.io/name: resticprofile
+        app.kubernetes.io/component: resticprofile

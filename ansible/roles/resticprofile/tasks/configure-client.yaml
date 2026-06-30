@@ -18,6 +18,22 @@
     dest: "{{ resticprofile_user_info.home }}/.config/resticprofile/passphrase.txt"
     owner: "{{ resticprofile_client_user }}"
     mode: "0600"
+  no_log: true
+
+- name: Write template passphrase to file
+  ansible.builtin.copy:
+    content: "{{ restic_template_password }}"
+    dest: "{{ resticprofile_user_info.home }}/.config/resticprofile/template-passphrase.txt"
+    owner: "{{ resticprofile_client_user }}"
+    mode: "0600"
+  no_log: true
+  when: restic_template_password is defined
+
+- name: Remove template passphrase file when template password is undefined
+  ansible.builtin.file:
+    path: "{{ resticprofile_user_info.home }}/.config/resticprofile/template-passphrase.txt"
+    state: absent
+  when: restic_template_password is not defined
 
 - name: Deploy body template files
   ansible.builtin.copy:
@@ -37,6 +53,85 @@
     owner: "{{ resticprofile_client_user }}"
     mode: "0600"
   register: resticprofile_config_file
+  no_log: true
+
+- name: Check whether restic repository is initialized
+  ansible.builtin.command:
+    argv:
+      - "{{ resticprofile_bin_dir }}/resticprofile"
+      - -c
+      - "{{ resticprofile_user_info.home }}/.config/resticprofile/profiles.yaml"
+      - -n
+      - default
+      - cat
+      - config
+  become: true
+  become_user: "{{ resticprofile_client_user }}"
+  register: resticprofile_repository_config
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: Record restic repository initialization state
+  ansible.builtin.set_fact:
+    resticprofile_repository_missing: >-
+      {{
+        resticprofile_repository_config.rc != 0 and
+        (
+          (resticprofile_repository_config.stdout ~ resticprofile_repository_config.stderr)
+          is search('Is there a repository at the following location|repository does not exist')
+        )
+      }}
+    resticprofile_repository_check_failed: >-
+      {{
+        resticprofile_repository_config.rc != 0 and
+        not (
+          (resticprofile_repository_config.stdout ~ resticprofile_repository_config.stderr)
+          is search('Is there a repository at the following location|repository does not exist')
+        )
+      }}
+
+- name: Fail when restic repository check returned an unexpected error
+  ansible.builtin.fail:
+    msg: >-
+      resticprofile repository check failed unexpectedly with rc={{ resticprofile_repository_config.rc }}.
+  when: resticprofile_repository_check_failed
+
+- name: Fail when missing repository needs unsynced template password
+  ansible.builtin.fail:
+    msg: >-
+      Restic repository is missing, but restic_template_password is not defined.
+      Run kubernetes/restic/render-and-sync --secrets after authenticating 1Password.
+  when:
+    - resticprofile_repository_missing
+    - restic_template_password is not defined
+
+- name: Report missing restic repository in check mode
+  ansible.builtin.debug:
+    msg: Restic repository is missing and would be initialized with resticprofile init.
+  changed_when: true
+  when:
+    - ansible_check_mode
+    - resticprofile_repository_missing
+    - restic_template_password is defined
+
+- name: Initialize missing restic repository
+  ansible.builtin.command:
+    argv:
+      - "{{ resticprofile_bin_dir }}/resticprofile"
+      - -c
+      - "{{ resticprofile_user_info.home }}/.config/resticprofile/profiles.yaml"
+      - -n
+      - default
+      - init
+  become: true
+  become_user: "{{ resticprofile_client_user }}"
+  no_log: true
+  when:
+    - not ansible_check_mode
+    - resticprofile_repository_missing
+    - restic_template_password is defined
 
 - name: Check if resticprofile schedules are up to date
   ansible.builtin.command: "{{ resticprofile_bin_dir }}/resticprofile status"

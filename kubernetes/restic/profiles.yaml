@@ -17,6 +17,11 @@ hetzner:
   verbose: true
   pack-size: 64
 
+  init: &template_init
+    copy-chunker-params: true
+    from-repository: rest:https://restic-template.k.oneill.net/v1
+    from-password-file: /restic-template/password
+
   env: &rclone_env
     GOGC: '10'
     GOMAXPROCS: '1'
@@ -99,6 +104,8 @@ hetzner-main-copy:
   env: *rclone_env
 
   copy:
+    initialize: true
+    initialize-copy-chunker-params: true
     from-repository: /source/backups/restic/repos/main
     repository: 'rclone:hetzner_crypt_restic_main:'
     send-before: *send_before
@@ -119,6 +126,8 @@ hetzner-xtal-copy:
   env: *rclone_env
 
   copy:
+    initialize: true
+    initialize-copy-chunker-params: true
     from-repository: /source/backups/restic/repos/xtal
     repository: 'rclone:hetzner_crypt_restic_xtal:'
     send-before: *send_before
@@ -136,6 +145,8 @@ xtal-hetzner:
   compression: max
   verbose: true
   pack-size: 64
+
+  init: *template_init
 
   env: *rclone_env
 
@@ -167,6 +178,7 @@ main: &nfs_maintenance
   force-inactive-lock: true
   repository: /source/backups/restic/repos/main
   verbose: true
+  init: *template_init
 
   env:
     GOGC: '10'

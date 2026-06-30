@@ -2,7 +2,7 @@
 # Integration test exceptions for ansible-integration-test
 ansible_python_interpreter: /usr/bin/python3
 domain: oneill.net
-resticprofile_enabled: true
+resticprofile_enabled: false
 setup_upgrade: true
 resticprofile_enable_scheduling: false
 setup_upgrade_update_grub: false

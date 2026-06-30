@@ -4,6 +4,10 @@ kind: CronJob
 
 metadata:
   name: resticprofile-xtal-check
+  labels:
+    app.kubernetes.io/instance: restic
+    app.kubernetes.io/name: resticprofile
+    app.kubernetes.io/component: resticprofile
 
 spec:
   schedule: 24 8 * * 1
@@ -11,10 +15,18 @@ spec:
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
   jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: restic
+        app.kubernetes.io/name: resticprofile
+        app.kubernetes.io/component: resticprofile
     spec:
       template:
         metadata:
           labels:
+            app.kubernetes.io/instance: restic
+            app.kubernetes.io/name: resticprofile
+            app.kubernetes.io/component: resticprofile
             resticprofile: xtal-check
           annotations:
             prometheus.io/scrape: 'true'

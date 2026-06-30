@@ -6,13 +6,14 @@ Renders:
   - Generates forget and check cronjobs from Jinja2 template
 
 Syncs:
-  - Creates/retrieves plaintext passwords from 1Password
+  - Retrieves plaintext passwords from 1Password
   - Generates bcrypt hashes and stores in 1Password (for K8s ExternalSecrets)
   - Writes ansible-vault encrypted secrets to group_vars
 
-Prerequisites: op (1Password CLI), htpasswd, ansible-vault, jinja2
-Usage: ./render-and-sync [--cronjobs] [--secrets] [--healthchecks]
+Prerequisites: op (1Password CLI), ansible-vault, bcrypt, jinja2
+Usage: ./render-and-sync [--cronjobs] [--secrets] [--create-missing] [--healthchecks]
        With no args, runs cronjobs and secrets.
+       --create-missing allows --secrets to bootstrap absent 1Password fields.
        --healthchecks requires HEALTHCHECK_API_KEY env var.
 """
 
@@ -24,6 +25,7 @@ import sys
 import urllib.request
 from pathlib import Path
 
+import bcrypt
 from jinja2 import Environment, FileSystemLoader
 
 BASEDIR = Path(__file__).parent.resolve()
@@ -32,6 +34,8 @@ VAULT = "infra"
 OP_ITEM = "restic-rest-server"
 ANSIBLE_SECRETS_FILE = REPO_ROOT / "ansible/group_vars/all/restic-repo-secrets.yaml"
 ANSIBLE_VAULT_PASSWORD_FILE = REPO_ROOT / "ansible/ansible-vault-password"
+TEMPLATE_REPO_VERSION = "v1"
+TEMPLATE_PASSWORD_FIELD = f"template-{TEMPLATE_REPO_VERSION}-password"
 
 # Repos to manage - adding a repo here:
 # 1. Creates password in 1Password
@@ -96,14 +100,64 @@ def generate_cronjobs() -> None:
             print(f"  Generated {outfile.name} (schedule: {schedule})")
 
 
-def ensure_1password_item() -> None:
-    """Create 1Password item if it doesn't exist."""
+def op_item_get_cmd() -> list[str]:
+    """Return the safe command used to fetch the 1Password item."""
+    return ["op", "--vault", VAULT, "item", "get", OP_ITEM, "--format", "json"]
+
+
+def fetch_1password_item() -> dict:
+    """Fetch the full 1Password item JSON."""
     result = subprocess.run(
-        ["op", "--vault", VAULT, "item", "get", OP_ITEM],
+        op_item_get_cmd(),
         capture_output=True,
+        text=True,
         check=False,
     )
-    if result.returncode != 0:
+
+    if result.returncode == 0:
+        return json.loads(result.stdout)
+
+    print(result.stdout, file=sys.stderr)
+    print(result.stderr, file=sys.stderr)
+    raise subprocess.CalledProcessError(
+        result.returncode,
+        op_item_get_cmd(),
+        output=result.stdout,
+        stderr=result.stderr,
+    )
+
+
+def ensure_1password_item(*, create_missing: bool = False) -> None:
+    """Verify the 1Password item exists, optionally creating it for bootstrap."""
+    try:
+        fetch_1password_item()
+        return
+    except subprocess.CalledProcessError:
+        if not create_missing:
+            raise
+
+        result = subprocess.run(
+            ["op", "--vault", VAULT, "item", "list", "--format", "json"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            print(result.stdout, file=sys.stderr)
+            print(result.stderr, file=sys.stderr)
+            raise subprocess.CalledProcessError(
+                result.returncode,
+                ["op", "--vault", VAULT, "item", "list", "--format", "json"],
+                output=result.stdout,
+                stderr=result.stderr,
+            )
+
+        matching_items = [
+            item for item in json.loads(result.stdout) if item.get("title") == OP_ITEM
+        ]
+        if matching_items:
+            raise
+
         print(f"Creating 1Password item: {OP_ITEM}")
         run(
             [
@@ -120,33 +174,106 @@ def ensure_1password_item() -> None:
         )
 
 
-def get_or_create_password(repo: str) -> str:
-    """Get existing password from 1Password or create a new one."""
-    field = f"{repo}-password"
+def op_secret_ref(field: str) -> str:
+    """Build a 1Password secret reference for a field label."""
+    return f"op://{VAULT}/{OP_ITEM}/{field}"
 
-    # Try to get existing password
+
+def read_1password_field(field: str) -> str:
+    """Read an existing 1Password field value and fail closed on errors."""
+    cmd = ["op", "read", "--no-newline", op_secret_ref(field)]
     result = subprocess.run(
-        ["op", "--vault", VAULT, "item", "get", OP_ITEM, "--fields", field],
+        cmd,
         capture_output=True,
         text=True,
         check=False,
     )
 
-    if result.returncode == 0 and result.stdout.strip():
+    if result.returncode == 0 and result.stdout:
         return result.stdout.strip()
 
-    # Generate new password (URL-safe, no special chars)
-    print(f"  Generating password for {field}...", file=sys.stderr)
+    print(result.stdout, file=sys.stderr)
+    print(result.stderr, file=sys.stderr)
+    raise subprocess.CalledProcessError(
+        result.returncode,
+        cmd,
+        output=result.stdout,
+        stderr=result.stderr,
+    )
+
+
+def item_has_field(item: dict, field: str) -> bool:
+    """Return whether the 1Password item already has a field label."""
+    return any(existing.get("label") == field for existing in item.get("fields", []))
+
+
+def edit_1password_item(item: dict) -> None:
+    """Update the 1Password item using JSON on stdin so secrets are not in argv."""
+    cmd = ["op", "--vault", VAULT, "item", "edit", OP_ITEM]
+    result = subprocess.run(
+        cmd,
+        input=json.dumps(item),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        print("op item edit failed; output redacted", file=sys.stderr)
+        raise subprocess.CalledProcessError(
+            result.returncode,
+            cmd,
+            output="redacted",
+            stderr="redacted",
+        )
+
+
+def upsert_1password_field(field: str, value: str) -> None:
+    """Create or update a concealed 1Password field without argv secrets."""
+    item = fetch_1password_item()
+    fields = item.setdefault("fields", [])
+    for existing in fields:
+        if existing.get("label") == field:
+            existing["type"] = "CONCEALED"
+            existing["value"] = value
+            break
+    else:
+        fields.append(
+            {
+                "label": field,
+                "type": "CONCEALED",
+                "value": value,
+            }
+        )
+    edit_1password_item(item)
+
+
+def generate_password() -> str:
+    """Generate a URL-safe password."""
     password = run(
         ["openssl", "rand", "-base64", "32"],
         capture=True,
     )
-    # Remove non-URL-safe characters and truncate
-    password = password.translate(str.maketrans("", "", "/+="))[:32]
+    return password.translate(str.maketrans("", "", "/+="))[:32]
 
-    run(
-        ["op", "--vault", VAULT, "item", "edit", OP_ITEM, f"{field}={password}"],
-    )
+
+def get_or_create_password(repo: str, *, create_missing: bool = False) -> str:
+    """Get an existing password, optionally bootstrapping an absent field."""
+    field = repo if repo.endswith("-password") else f"{repo}-password"
+
+    try:
+        return read_1password_field(field)
+    except subprocess.CalledProcessError:
+        if not create_missing:
+            raise
+
+        item = fetch_1password_item()
+        if item_has_field(item, field):
+            raise
+
+    # Generate new password only when explicit bootstrap mode found no field.
+    print(f"  Generating password for {field}...", file=sys.stderr)
+    password = generate_password()
+    upsert_1password_field(field, password)
     return password
 
 
@@ -154,11 +281,14 @@ def update_htpasswd_hash(repo: str, password: str) -> None:
     """Generate bcrypt hash and update in 1Password."""
     field = f"{repo}-htpasswd"
 
-    # Generate bcrypt hash (htpasswd -nB outputs "user:hash")
-    output = run(["htpasswd", "-nbB", repo, password], capture=True)
-    hash_value = output.split(":", 1)[1]
+    # rest-server accepts $2a$/$2b$ bcrypt hashes. Some htpasswd builds emit
+    # $2y$, which rest-server rejects as an invalid htpasswd entry.
+    hash_value = bcrypt.hashpw(
+        password.encode(),
+        bcrypt.gensalt(rounds=5, prefix=b"2b"),
+    ).decode()
 
-    run(["op", "--vault", VAULT, "item", "edit", OP_ITEM, f"{field}={hash_value}"])
+    upsert_1password_field(field, hash_value)
     print(f"  Updated {field} in 1Password", file=sys.stderr)
 
 
@@ -228,11 +358,11 @@ def sync_healthchecks() -> None:
                 )
 
 
-def sync_secrets() -> None:
+def sync_secrets(*, create_missing: bool = False) -> None:
     """Sync secrets between 1Password and Ansible vault."""
     print("Syncing restic-rest-server secrets...")
 
-    ensure_1password_item()
+    ensure_1password_item(create_missing=create_missing)
 
     lines = [
         "# DO NOT EDIT - managed by kubernetes/restic/render-and-sync",
@@ -243,8 +373,8 @@ def sync_secrets() -> None:
     for repo in REPOS:
         print(f"  Processing repo: {repo}", file=sys.stderr)
 
-        # Get or create plaintext password
-        password = get_or_create_password(repo)
+        # Get plaintext password; normal sync fails closed if it is missing.
+        password = get_or_create_password(repo, create_missing=False)
 
         # Update bcrypt hash in 1Password (for K8s ExternalSecrets)
         update_htpasswd_hash(repo, password)
@@ -257,6 +387,19 @@ def sync_secrets() -> None:
         lines.append("    password: !vault |")
         lines.append(encrypted)
 
+    print(
+        f"  Processing template repo password: {TEMPLATE_PASSWORD_FIELD}",
+        file=sys.stderr,
+    )
+    template_password = get_or_create_password(
+        TEMPLATE_PASSWORD_FIELD,
+        create_missing=create_missing,
+    )
+    template_encrypted = encrypt_password(template_password)
+
+    lines.append("restic_template_password: !vault |")
+    lines.append(template_encrypted)
+
     ANSIBLE_SECRETS_FILE.write_text("\n".join(lines) + "\n")
 
     print()
@@ -266,6 +409,7 @@ def sync_secrets() -> None:
     print("1Password fields updated:")
     print("  - *-password: plaintext passwords")
     print("  - *-htpasswd: bcrypt hashes (for K8s)")
+    print(f"  - {TEMPLATE_PASSWORD_FIELD}: plaintext template repo password")
 
 
 def main() -> None:
@@ -280,12 +424,17 @@ def main() -> None:
     run_cronjobs = "--cronjobs" in args or not args
     run_secrets = "--secrets" in args or not args
     run_healthchecks = "--healthchecks" in args
+    create_missing = "--create-missing" in args
+
+    if create_missing and not run_secrets:
+        print("--create-missing is only valid with --secrets", file=sys.stderr)
+        sys.exit(2)
 
     if run_cronjobs:
         generate_cronjobs()
 
     if run_secrets:
-        sync_secrets()
+        sync_secrets(create_missing=create_missing)
 
     if run_healthchecks:
         sync_healthchecks()

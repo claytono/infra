@@ -3,50 +3,55 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: rest-server
+  name: restic-template-server
   labels:
     app.kubernetes.io/instance: restic
-    app.kubernetes.io/name: restic
-    app.kubernetes.io/component: rest-server
+    app.kubernetes.io/name: restic-template-server
+    app.kubernetes.io/component: restic-template-server
 
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/instance: restic
-      app.kubernetes.io/name: restic
+      app.kubernetes.io/name: restic-template-server
+      app.kubernetes.io/component: restic-template-server
   template:
     metadata:
       labels:
         app.kubernetes.io/instance: restic
-        app.kubernetes.io/name: restic
-        app.kubernetes.io/component: rest-server
+        app.kubernetes.io/name: restic-template-server
+        app.kubernetes.io/component: restic-template-server
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8000'
         prometheus.io/path: '/metrics'
         reloader.stakater.com/auto: 'true'
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: rest-server
         image: restic/rest-server:0.14.0@sha256:d2aff06f47eb38637dff580c3e6bce4af98f386c396a25d32eb6727ec96214a5
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
         env:
         - name: OPTIONS
-          value: --path /repos --private-repos --append-only --prometheus --prometheus-no-auth
-        - name: PASSWORD_FILE
-          value: /etc/htpasswd/.htpasswd
+          value: --path /repos/template --no-auth --prometheus --prometheus-no-auth
         ports:
         - name: http
           containerPort: 8000
         volumeMounts:
         - name: repos
           mountPath: /repos
-        - name: htpasswd
-          mountPath: /etc/htpasswd
           readOnly: true
         readinessProbe:
           httpGet:
-            path: /metrics
+            path: /v1/config
             port: http
           initialDelaySeconds: 5
           periodSeconds: 10
@@ -55,6 +60,4 @@ spec:
         nfs:
           server: fs2.oneill.net
           path: /volume2/backups/restic/repos
-      - name: htpasswd
-        secret:
-          secretName: restic-rest-server-htpasswd
+          readOnly: true

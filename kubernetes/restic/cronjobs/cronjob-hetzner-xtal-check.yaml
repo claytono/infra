@@ -4,6 +4,10 @@ kind: CronJob
 
 metadata:
   name: resticprofile-hetzner-xtal-check
+  labels:
+    app.kubernetes.io/instance: restic
+    app.kubernetes.io/name: resticprofile
+    app.kubernetes.io/component: resticprofile
 
 spec:
   schedule: 30 4 * * 0  # Weekly on Sundays at 4:30 AM
@@ -17,6 +21,9 @@ spec:
         metadata:
           labels:
             resticprofile: xtal-hetzner-check
+            app.kubernetes.io/instance: restic
+            app.kubernetes.io/name: resticprofile
+            app.kubernetes.io/component: resticprofile
           annotations:
             prometheus.io/scrape: 'true'
             prometheus.io/path: /metrics
@@ -82,3 +89,8 @@ spec:
           - name: cache
             persistentVolumeClaim:
               claimName: resticprofile-cache
+    metadata:
+      labels:
+        app.kubernetes.io/instance: restic
+        app.kubernetes.io/name: resticprofile
+        app.kubernetes.io/component: resticprofile

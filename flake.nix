@@ -54,6 +54,7 @@
       # Python environment with Ansible, ARA, and deps (shared across outputs)
       mkPythonEnv = pkgs: pkgs.python3.withPackages (ps: with ps; [
         ansible
+        bcrypt
         jinja2
         proxmoxer
         pyyaml
