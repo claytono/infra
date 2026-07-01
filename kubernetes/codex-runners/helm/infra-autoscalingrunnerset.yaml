@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-infra
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 049a7bdae8fe688b7644472f2b02da7339d3bbf93c16855a505b64ea2b0b05c
+    actions.github.com/values-hash: d5a991652c6537d0025d03abf7265646c20400b1c02e6f57d8134e17627885c
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -24,7 +24,7 @@ spec:
   runnerScaleSetName: codex-infra
   runnerScaleSetLabels:
     - codex
-  maxRunners: 1
+  maxRunners: 8
   minRunners: 0
   template:
     metadata:
@@ -46,6 +46,26 @@ spec:
           - 27
       restartPolicy: Never
       serviceAccountName: codex-runner
+      initContainers:
+        - command:
+            - python3
+            - /etc/codex-auth-tools/copy-auth-json.py
+          env:
+            - name: AUTH_SOURCE
+              value: /auth/auth.json
+            - name: CODEX_HOME
+              value: /home/runner/.codex
+          image: ghcr.io/astral-sh/uv@sha256:05bc724e74da13ad6238b9721a0e2f0f649dd2ed86b0453e7e88e63831b38dfe
+          name: copy-codex-auth
+          volumeMounts:
+            - mountPath: /auth
+              name: codex-auth
+              readOnly: true
+            - mountPath: /home/runner/.codex
+              name: codex-home
+            - mountPath: /etc/codex-auth-tools
+              name: codex-auth-tools
+              readOnly: true
       containers:
         - name: runner
           command:
@@ -65,9 +85,15 @@ spec:
               name: runner-hooks
               readOnly: true
       volumes:
-        - name: codex-home
+        - emptyDir: {}
+          name: codex-home
+        - name: codex-auth
           persistentVolumeClaim:
-            claimName: codex-home
+            claimName: codex-auth
+        - configMap:
+            defaultMode: 365
+            name: codex-auth-tools
+          name: codex-auth-tools
         - configMap:
             defaultMode: 493
             items:

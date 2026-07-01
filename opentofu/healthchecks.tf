@@ -51,6 +51,18 @@ data "healthchecksio_channel" "selfhosted_email" {
   kind     = "email"
 }
 
+# Codex runner auth refresh - hourly job, alerts after 48h without success
+resource "healthchecksio_check" "codex_auth_refresh" {
+  provider = healthchecksio.selfhosted
+
+  name     = "codex-auth-refresh"
+  desc     = "Hourly Codex runner auth refresh"
+  tags     = ["codex", "kubernetes"]
+  timeout  = 172800 # 48 hours
+  grace    = 60     # provider minimum
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
 # Got Your Back - full weekly Gmail backup
 resource "healthchecksio_check" "gyb_full" {
   provider = healthchecksio.selfhosted
