@@ -1,0 +1,53 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: codex-auth-refresh
+
+spec:
+  schedule: "17 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 900
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: refresh
+            image: ghcr.io/astral-sh/uv@sha256:05bc724e74da13ad6238b9721a0e2f0f649dd2ed86b0453e7e88e63831b38dfe
+            env:
+            - name: CODEX_HOME
+              value: /codex-home
+            - name: AUTH_SOURCE
+              value: /auth/auth.json
+            - name: SOURCE_AUTH
+              value: /codex-home/auth.json
+            - name: AUTH_DIR
+              value: /auth
+            - name: HEALTHCHECK_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: codex-auth-refresh-healthcheck
+                  key: HEALTHCHECK_PING_KEY
+            command:
+            - /etc/codex-auth-tools/refresh-auth.sh
+            volumeMounts:
+            - name: codex-auth
+              mountPath: /auth
+            - name: codex-home
+              mountPath: /codex-home
+            - name: codex-auth-tools
+              mountPath: /etc/codex-auth-tools
+              readOnly: true
+          volumes:
+          - name: codex-auth
+            persistentVolumeClaim:
+              claimName: codex-auth
+          - name: codex-home
+            emptyDir: {}
+          - name: codex-auth-tools
+            configMap:
+              name: codex-auth-tools
+              defaultMode: 0555

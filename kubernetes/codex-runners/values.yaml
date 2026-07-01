@@ -11,7 +11,7 @@ scaleSetLabels:
 - codex
 
 minRunners: 0
-maxRunners: 1
+maxRunners: 8
 
 template:
   metadata:
@@ -32,6 +32,26 @@ template:
       nameservers:
       - 1.1.1.1
       - 1.0.0.1
+    initContainers:
+    - name: copy-codex-auth
+      image: ghcr.io/astral-sh/uv@sha256:05bc724e74da13ad6238b9721a0e2f0f649dd2ed86b0453e7e88e63831b38dfe
+      command:
+      - python3
+      - /etc/codex-auth-tools/copy-auth-json.py
+      env:
+      - name: AUTH_SOURCE
+        value: /auth/auth.json
+      - name: CODEX_HOME
+        value: /home/runner/.codex
+      volumeMounts:
+      - name: codex-auth
+        mountPath: /auth
+        readOnly: true
+      - name: codex-home
+        mountPath: /home/runner/.codex
+      - name: codex-auth-tools
+        mountPath: /etc/codex-auth-tools
+        readOnly: true
     containers:
     - name: runner
       image: ghcr.io/actions/actions-runner:2.335.1@sha256:08c30b0a7105f64bddfc485d2487a22aa03932a791402393352fdf674bda2c29
@@ -52,8 +72,14 @@ template:
         readOnly: true
     volumes:
     - name: codex-home
+      emptyDir: {}
+    - name: codex-auth
       persistentVolumeClaim:
-        claimName: codex-home
+        claimName: codex-auth
+    - name: codex-auth-tools
+      configMap:
+        name: codex-auth-tools
+        defaultMode: 365
     - name: runner-hooks
       configMap:
         name: codex-runner-hooks

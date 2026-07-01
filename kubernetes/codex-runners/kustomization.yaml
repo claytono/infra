@@ -9,13 +9,27 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- pvc.yaml
+- pvc-auth.yaml
 - networkpolicy.yaml
 - serviceaccount-runner.yaml
 - runner-hooks-configmap.yaml
 - externalsecret-github.yaml
+- externalsecret-healthcheck.yaml
+- cronjob-auth-refresh.yaml
 # BEGIN generated runner scale sets
 - helm/manager-role.yaml
 - helm/manager-role-binding.yaml
 - helm/infra-autoscalingrunnerset.yaml
 # END generated runner scale sets
+
+configMapGenerator:
+- name: codex-auth-tools
+  files:
+  - auth-tools/copy-auth-json.py
+  - auth-tools/publish-auth-json.py
+  - auth-tools/refresh-auth.sh
+  options:
+    disableNameSuffixHash: true
+    labels:
+      app.kubernetes.io/name: codex-runners
+      app.kubernetes.io/part-of: codex-runners
