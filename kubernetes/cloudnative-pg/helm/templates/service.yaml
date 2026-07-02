@@ -19,6 +19,7 @@ spec:
   selector:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
+
 ---
 # Source: cloudnative-pg/templates/service.yaml
 #
