@@ -114,7 +114,7 @@ locals {
       enable_ipv6 = false
     }
     pantrypi = {
-      mac      = "dc:a6:32:9d:b7:0f"
+      mac      = "88:a2:9e:e9:f2:fe"
       ip       = "172.19.74.120"
       hostname = "pantrypi.oneill.net"
       note     = "Raspberry Pi in pantry - zwavejs, zigbee2mqtt, rtl433"
