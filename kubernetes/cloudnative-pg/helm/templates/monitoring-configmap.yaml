@@ -497,6 +497,7 @@ data:
               description: "An update is available"
         target_databases:
           - '*'
+
 ---
 # Source: cloudnative-pg/templates/monitoring-configmap.yaml
 #
