@@ -1,18 +1,147 @@
 ---
-# Copyright (C) 2024-2025 Robert Wimmer
+# Copyright (C) 2024-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 - name: Verify setup
   hosts: all
   vars:
-    expected_output: "1.4.0"
+    expected_version: "1.4.2"
+    runc_binary_path: "/usr/local/sbin/runc"
+    expected_owner: "root"
+    expected_group: "root"
+    expected_mode: "0755"
+    smoke_test_container_id: "molecule-runc-smoke"
+    smoke_test_output: "runc-smoke-test"
   tasks:
+    - name: Gather installed runc binary metadata
+      ansible.builtin.stat:
+        path: "{{ runc_binary_path }}"
+      register: runc_binary_stat
+
+    - name: Ensure runc binary is installed with the expected metadata
+      ansible.builtin.assert:
+        that:
+          - runc_binary_stat.stat.exists
+          - runc_binary_stat.stat.isreg
+          - runc_binary_stat.stat.executable
+          - runc_binary_stat.stat.pw_name == expected_owner
+          - runc_binary_stat.stat.gr_name == expected_group
+          - runc_binary_stat.stat.mode == expected_mode
+
     - name: Execute runc version to capture output
-      ansible.builtin.command: runc --version
+      ansible.builtin.command: "{{ runc_binary_path }} --version"
       register: runc_version_output
       changed_when: false
 
     - name: Ensure runc version output contains correct version string
       ansible.builtin.assert:
         that:
-          - "expected_output in runc_version_output.stdout"
+          - expected_version in runc_version_output.stdout
+
+    - name: Execute runc features to capture runtime capabilities
+      ansible.builtin.command: "{{ runc_binary_path }} features"
+      register: runc_features_output
+      changed_when: false
+
+    - name: Ensure runc features command succeeded
+      ansible.builtin.assert:
+        that:
+          - runc_features_output.rc == 0
+          - runc_features_output.stdout | length > 0
+
+    - name: Create temporary OCI bundle directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: molecule-runc-
+      register: runc_bundle_dir
+
+    - name: Run OCI smoke test with a minimal bundle
+      block:
+        - name: Create rootfs directories required by the OCI spec
+          ansible.builtin.file:
+            path: "{{ runc_bundle_dir.path }}/rootfs/{{ item }}"
+            state: directory
+            mode: "0755"
+          loop:
+            - bin
+            - dev
+            - dev/pts
+            - dev/shm
+            - dev/mqueue
+            - proc
+            - sys
+
+        - name: Copy the host shell and its runtime libraries into the smoke test rootfs
+          ansible.builtin.shell: |
+            set -euo pipefail
+            cp -L /bin/sh "{{ runc_bundle_dir.path }}/rootfs/bin/sh"
+            ldd /bin/sh | awk '{for (i = 1; i <= NF; i++) if ($i ~ /^\//) print $i}' | sort -u | while read -r library; do
+              cp --parents -L "$library" "{{ runc_bundle_dir.path }}/rootfs"
+            done
+          args:
+            executable: /bin/bash
+          changed_when: false
+
+        - name: Generate a default OCI config for the smoke test bundle
+          ansible.builtin.command: "{{ runc_binary_path }} spec --bundle {{ runc_bundle_dir.path }}"
+          changed_when: false
+
+        - name: Read the generated OCI config
+          ansible.builtin.slurp:
+            src: "{{ runc_bundle_dir.path }}/config.json"
+          register: runc_spec_raw
+
+        - name: Write a non-interactive smoke test OCI config
+          ansible.builtin.copy:
+            dest: "{{ runc_bundle_dir.path }}/config.json"
+            mode: "0644"
+            content: |
+              {{
+                (
+                  runc_spec_raw.content
+                  | b64decode
+                  | from_json
+                  | combine(
+                      {
+                        'process': {
+                          'terminal': false,
+                          'args': ['/bin/sh', '-c', 'echo ' ~ smoke_test_output],
+                          'cwd': '/',
+                          'env': ['PATH=/bin:/usr/bin:/usr/local/bin']
+                        },
+                        'root': {
+                          'path': 'rootfs',
+                          'readonly': true
+                        },
+                        'hostname': 'molecule-runc'
+                      },
+                      recursive=True
+                    )
+                ) | to_nice_json
+              }}
+
+        - name: Execute the OCI smoke test container
+          ansible.builtin.command: >-
+            {{ runc_binary_path }} run
+            --bundle {{ runc_bundle_dir.path }}
+            {{ smoke_test_container_id }}
+          register: runc_smoke_test_run
+          changed_when: false
+
+        - name: Ensure the OCI smoke test produced the expected output
+          ansible.builtin.assert:
+            that:
+              - runc_smoke_test_run.rc == 0
+              - smoke_test_output in runc_smoke_test_run.stdout
+      always:
+        - name: Force-remove the smoke test container if it still exists
+          ansible.builtin.command: "{{ runc_binary_path }} delete -f {{ smoke_test_container_id }}"
+          register: runc_delete_output
+          changed_when: false
+          failed_when: false
+
+        - name: Remove temporary OCI bundle directory
+          ansible.builtin.file:
+            path: "{{ runc_bundle_dir.path }}"
+            state: absent
+          when: runc_bundle_dir.path is defined
