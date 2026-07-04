@@ -1,0 +1,60 @@
+---
+# Source: unpoller/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpoller-config
+  labels:
+    app.kubernetes.io/name: unpoller
+    app.kubernetes.io/instance: unpoller
+    app.kubernetes.io/version: "v2.21.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unpoller
+      app.kubernetes.io/instance: unpoller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unpoller
+        app.kubernetes.io/instance: unpoller
+        app.kubernetes.io/version: "v2.21.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: default
+      securityContext:
+        {}
+      containers:
+        - name: unpoller
+          securityContext:
+            {}
+          image: "ghcr.io/unpoller/unpoller:v3.3.1@sha256:9dcccdc931a6830735f6978caf8cd67699b0dc33e37cf9ef4638611791c4df62"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9130
+              name: tcp
+              protocol: TCP
+            - containerPort: 9130
+              name: udp
+              protocol: UDP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: tcp
+          readinessProbe:
+            httpGet:
+              path: /
+              port: tcp
+          resources:
+            {}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/unpoller/up.conf
+              subPath: up.conf
+      volumes:
+        - name: config-volume
+          secret:
+            secretName: unpoller-config
+

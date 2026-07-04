@@ -1,0 +1,46 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- helm/templates/deployment.yaml
+- helm/templates/unpoller-config-secret.yaml
+- service.yaml
+- externalsecret.yaml
+
+# The upstream chart does not expose values for credentials from an existing
+# Secret. Patch only the runtime wiring that cannot be expressed in values.
+patches:
+
+- target:
+    kind: Deployment
+    name: unpoller-config
+  patch: |-
+    - op: add
+      path: /metadata/annotations
+      value:
+        reloader.stakater.com/auto: 'true'
+    - op: add
+      path: /spec/template/spec/containers/0/env
+      value:
+        - name: UP_UNIFI_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              name: unpoller
+              key: username
+        - name: UP_UNIFI_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: unpoller
+              key: password
+        - name: UP_UNIFI_DEFAULT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: unpoller
+              key: api_key
+              optional: true
