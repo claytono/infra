@@ -283,7 +283,7 @@ jobs:
         echo "CODEX_HOME=$CODEX_HOME" >> "$GITHUB_ENV"
 
     - name: Evaluate
-      uses: ./.claude/skills/renovate-eval
+      uses: claytono/github-actions/renovate-eval@5f7087d4abe0c56952e805648b7a73ff6f64f815  # main after PR 7
       env:
         EVAL_TRIGGER: ${{ needs.gate.outputs.trigger }}
         EVAL_FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
