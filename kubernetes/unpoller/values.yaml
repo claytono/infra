@@ -1,0 +1,21 @@
+---
+fullnameOverride: unpoller-config
+
+image:
+  tag: v3.3.1@sha256:9dcccdc931a6830735f6978caf8cd67699b0dc33e37cf9ef4638611791c4df62
+
+serviceAccount:
+  create: false
+
+dashboards:
+  create: false
+  grafana:
+    create: false
+
+upConfig: |-
+  [unifi.defaults]
+    url = "https://udmp.oneill.net"
+    # Non-default: the UDMP hostname presents a valid certificate.
+    verify_ssl = true
+  [influxdb]
+    disable = true
