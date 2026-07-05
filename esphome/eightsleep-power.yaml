@@ -1,8 +1,8 @@
 ---
 substitutions:
-  devicename: bedjet-power
-  device_id: bedjet_power
-  human_devicename: BedJet Power
+  devicename: eightsleep-power
+  device_id: eightsleep_power
+  human_devicename: Eight Sleep Power
   icon: mdi:power-socket-us
   mac: C8:2B:96:06:40:6D
   ip: 172.20.7.189
