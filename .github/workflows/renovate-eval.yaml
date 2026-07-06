@@ -40,7 +40,9 @@ jobs:
       issues: write
       checks: read
       statuses: read
-    uses: claytono/github-actions/.github/workflows/claytono-renovate-eval-codex.yaml@main
+    # Intentionally tracks main so evaluator workflow changes take effect immediately.
+    # Renovate pinDigest updates for this reusable workflow are disabled in .renovaterc.
+    uses: claytono/github-actions/.github/workflows/claytono-renovate-eval-codex.yaml@main  # zizmor: ignore[unpinned-uses]
     with:
       pr_number: ${{ github.event.pull_request.number || inputs.pr_number }}
       trigger: ${{ github.event_name == 'pull_request' && 'auto' || 'manual' }}
