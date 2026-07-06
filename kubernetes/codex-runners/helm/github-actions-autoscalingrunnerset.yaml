@@ -1,0 +1,105 @@
+---
+# Source: gha-runner-scale-set/templates/autoscalingrunnerset.yaml
+apiVersion: actions.github.com/v1alpha1
+kind: AutoscalingRunnerSet
+metadata:
+  name: codex-github-actions
+  namespace: codex-runners
+  labels:
+    app.kubernetes.io/component: "autoscaling-runner-set"
+    app.kubernetes.io/name: codex-github-actions
+    app.kubernetes.io/instance: codex-github-actions
+    app.kubernetes.io/version: "0.14.2"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: gha-rs
+    actions.github.com/scale-set-name: codex-github-actions
+    actions.github.com/scale-set-namespace: codex-runners
+  annotations:
+    actions.github.com/values-hash: 3019c8c7267c71f3187a65067955ae9e6dda3561a8a70ed2ba83087e6583f8d
+    actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
+    actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
+spec:
+  githubConfigUrl: https://github.com/claytono/github-actions
+  githubConfigSecret: codex-runner-github
+  runnerScaleSetName: codex-github-actions
+  runnerScaleSetLabels:
+    - codex
+  maxRunners: 8
+  minRunners: 0
+  template:
+    metadata:
+      labels:
+        codex-runner: "true"
+        codex-runner-repo: github-actions
+    spec:
+      dnsConfig:
+        nameservers:
+          - 1.1.1.1
+          - 1.0.0.1
+      dnsPolicy: None
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1001
+        runAsUser: 1001
+        supplementalGroups:
+          - 27
+      restartPolicy: Never
+      serviceAccountName: codex-runner
+      initContainers:
+        - command:
+            - python3
+            - /etc/codex-auth-tools/copy-auth-json.py
+          env:
+            - name: AUTH_SOURCE
+              value: /auth/auth.json
+            - name: CODEX_HOME
+              value: /home/runner/.codex
+          image: ghcr.io/astral-sh/uv@sha256:05bc724e74da13ad6238b9721a0e2f0f649dd2ed86b0453e7e88e63831b38dfe
+          name: copy-codex-auth
+          volumeMounts:
+            - mountPath: /auth
+              name: codex-auth
+              readOnly: true
+            - mountPath: /home/runner/.codex
+              name: codex-home
+            - mountPath: /etc/codex-auth-tools
+              name: codex-auth-tools
+              readOnly: true
+      containers:
+        - name: runner
+          command:
+            - /home/runner/run.sh
+          image: ghcr.io/actions/actions-runner:2.335.1@sha256:08c30b0a7105f64bddfc485d2487a22aa03932a791402393352fdf674bda2c29
+          env:
+            - name: CODEX_HOME
+              value: /home/runner/.codex
+            - name: USER
+              value: runner
+            - name: ACTIONS_RUNNER_HOOK_JOB_STARTED
+              value: /etc/arc/hooks/job-started.sh
+          volumeMounts:
+            - mountPath: /home/runner/.codex
+              name: codex-home
+            - mountPath: /etc/arc/hooks
+              name: runner-hooks
+              readOnly: true
+      volumes:
+        - emptyDir: {}
+          name: codex-home
+        - name: codex-auth
+          persistentVolumeClaim:
+            claimName: codex-auth
+        - configMap:
+            defaultMode: 365
+            name: codex-auth-tools
+          name: codex-auth-tools
+        - configMap:
+            defaultMode: 493
+            items:
+              - key: job-started.sh
+                path: job-started.sh
+              - key: install-runner-prerequisites.sh
+                path: job-started.d/10-install-runner-prerequisites.sh
+            name: codex-runner-hooks
+          name: runner-hooks

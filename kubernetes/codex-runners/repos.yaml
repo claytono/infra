@@ -1,3 +1,6 @@
 ---
 repos:
+- claytono/dotfiles
+- claytono/github-actions
+- claytono/go-unifi-mcp
 - claytono/infra

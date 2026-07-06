@@ -19,6 +19,9 @@ resources:
 # BEGIN generated runner scale sets
 - helm/manager-role.yaml
 - helm/manager-role-binding.yaml
+- helm/dotfiles-autoscalingrunnerset.yaml
+- helm/github-actions-autoscalingrunnerset.yaml
+- helm/go-unifi-mcp-autoscalingrunnerset.yaml
 - helm/infra-autoscalingrunnerset.yaml
 # END generated runner scale sets
 
