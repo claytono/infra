@@ -7,292 +7,46 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: PR number to evaluate (or 'all' for all unevaluated)
+        description: PR number to evaluate, or 'all' for all unevaluated
         required: true
         type: string
       dry_run:
-        description: Evaluate but don't post/label
+        description: Evaluate but do not post or label
         required: false
         type: boolean
         default: false
-      provider:
-        description: AI provider for evaluation
-        required: false
-        type: choice
-        options:
-        - claude
-        - codex
-        default: codex
       codex_runner_label:
-        description: Runner label for provider=codex
+        description: Runner label for Codex evaluation
         required: false
         type: string
         default: codex
       codex_reasoning_effort:
-        description: Codex reasoning effort for provider=codex
+        description: Codex reasoning effort
         required: false
         type: string
         default: xhigh
       codex_agent_timeout:
-        description: Codex agent subprocess timeout in seconds; 0 disables the timeout
+        description: Codex agent subprocess timeout in seconds; 0 disables it
         required: false
         type: string
-        default: '1800'
-
-concurrency:
-  group: renovate-eval-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
-  cancel-in-progress: true
+        default: '0'
 
 jobs:
-  gate:
-    runs-on: ubuntu-latest
+  renovate-eval:
     permissions:
-      contents: read
-      pull-requests: read
-      issues: write
-    outputs:
-      should_evaluate: ${{ steps.check.outputs.should_evaluate }}
-      matrix: ${{ steps.check.outputs.matrix }}
-      trigger: ${{ steps.check.outputs.trigger }}
-      fingerprint: ${{ steps.check.outputs.fingerprint }}
-      provider: ${{ steps.check.outputs.provider }}
-      runner_label: ${{ steps.check.outputs.runner_label }}
-      codex_reasoning_effort: ${{ steps.check.outputs.codex_reasoning_effort }}
-      codex_agent_timeout: ${{ steps.check.outputs.codex_agent_timeout }}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7
-      with:
-        persist-credentials: false
-        ref: ${{ github.event.pull_request.head.sha || github.ref }}
-        fetch-depth: 0
-
-    - name: Check evaluation eligibility
-      id: check
-      env:
-        GH_TOKEN: ${{ github.token }}
-        PR_NUMBER: ${{ github.event.pull_request.number }}
-        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-        PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
-        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
-        INPUT_PROVIDER: ${{ inputs.provider }}
-        INPUT_CODEX_RUNNER_LABEL: ${{ inputs.codex_runner_label }}
-        INPUT_CODEX_REASONING_EFFORT: ${{ inputs.codex_reasoning_effort }}
-        INPUT_CODEX_AGENT_TIMEOUT: ${{ inputs.codex_agent_timeout }}
-      run: |
-        # This repo opts into Codex by default; explicit provider=claude still
-        # routes the evaluator job to GitHub-hosted ubuntu-latest.
-        PROVIDER="${INPUT_PROVIDER:-codex}"
-        CODEX_REASONING_EFFORT=""
-        CODEX_AGENT_TIMEOUT=""
-        case "$PROVIDER" in
-          claude)
-            RUNNER_LABEL="ubuntu-latest"
-            ;;
-          codex)
-            RUNNER_LABEL="${INPUT_CODEX_RUNNER_LABEL:-codex}"
-            CODEX_REASONING_EFFORT="${INPUT_CODEX_REASONING_EFFORT:-xhigh}"
-            CODEX_AGENT_TIMEOUT="${INPUT_CODEX_AGENT_TIMEOUT:-1800}"
-            if [[ -z "$RUNNER_LABEL" ]]; then
-              echo "Codex runner label must not be empty" >&2
-              exit 1
-            fi
-            ;;
-          *)
-            echo "Unsupported provider: $PROVIDER" >&2
-            exit 1
-            ;;
-        esac
-        echo "provider=$PROVIDER" >> "$GITHUB_OUTPUT"
-        echo "runner_label=$RUNNER_LABEL" >> "$GITHUB_OUTPUT"
-        echo "codex_reasoning_effort=$CODEX_REASONING_EFFORT" >> "$GITHUB_OUTPUT"
-        echo "codex_agent_timeout=$CODEX_AGENT_TIMEOUT" >> "$GITHUB_OUTPUT"
-
-        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-
-          # Only evaluate Renovate PRs
-          if [[ "$PR_AUTHOR" != "renovate[bot]" ]]; then
-            echo "Skipping: PR author is $PR_AUTHOR, not renovate[bot]"
-            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Skip automerge PRs
-          LABELS=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --json labels --jq '[.labels[].name] | join(",")')
-          if [[ ",$LABELS," == *",automerge,"* ]]; then
-            echo "Skipping: PR has automerge label"
-            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Compute PR fingerprint using local git diff
-          # (avoids gh pr diff which fails on large PRs with HTTP 406)
-          FINGERPRINT=$(git diff --no-ext-diff "origin/$PR_BASE_REF"...HEAD | \
-            { grep '^[+-]' || true; } | { grep -v '^[+-][+-][+-]' || true; } | \
-            shasum -a 256 | cut -d' ' -f1)
-          echo "PR fingerprint: $FINGERPRINT"
-
-          # Check sentinel from existing comment
-          REPO_NWO="$GITHUB_REPOSITORY"
-          SENTINEL_JSON=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
-            --paginate --jq '
-            [.[] | select(.body | contains("<!-- renovate-eval-skill:"))
-            ] | last | .body' 2>/dev/null | \
-            grep -o '<!-- renovate-eval-skill:{[^}]*}' | \
-            sed 's/<!-- renovate-eval-skill://' || echo "{}")
-
-          EVAL_COUNT=$(echo "$SENTINEL_JSON" | jq -r '.eval_count // 0' 2>/dev/null || echo 0)
-          PREV_FINGERPRINT=$(echo "$SENTINEL_JSON" | jq -r '.fingerprint // empty' 2>/dev/null || echo "")
-
-          # Skip if fingerprint matches (PR content unchanged since last eval)
-          if [[ -n "$PREV_FINGERPRINT" && "$FINGERPRINT" == "$PREV_FINGERPRINT" ]]; then
-            echo "Skipping: PR content unchanged since last evaluation"
-            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [[ "$EVAL_COUNT" -ge 3 ]]; then
-            echo "Eval count is $EVAL_COUNT (>= 3), posting limit notice"
-            COMMENT_ID=$(gh api "repos/$REPO_NWO/issues/$PR_NUMBER/comments" \
-              --paginate --jq '
-              [.[] | select(.body | contains("<!-- renovate-eval-skill:"))
-              ] | last | .id' 2>/dev/null || echo "")
-            if [[ -n "$COMMENT_ID" && "$COMMENT_ID" != "null" ]]; then
-              EXISTING_BODY=$(gh api "repos/$REPO_NWO/issues/comments/$COMMENT_ID" \
-                --jq '.body')
-              if [[ "$EXISTING_BODY" != *"Automatic evaluation limit reached"* ]]; then
-                NEW_BODY=$(printf '%s\n\n---\n\n> ℹ️ **Automatic evaluation limit reached (%s/3).** Re-trigger the workflow manually to re-evaluate, or delete this comment to start fresh.' \
-                  "$EXISTING_BODY" "$EVAL_COUNT")
-                gh api --method PATCH "repos/$REPO_NWO/issues/comments/$COMMENT_ID" \
-                  -f body="$NEW_BODY"
-              fi
-            fi
-            echo "should_evaluate=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "should_evaluate=true" >> "$GITHUB_OUTPUT"
-          MATRIX=$(jq -cn --arg pr "$PR_NUMBER" '{pr: [($pr | tonumber)]}')
-          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
-          echo "trigger=auto" >> "$GITHUB_OUTPUT"
-          echo "fingerprint=$FINGERPRINT" >> "$GITHUB_OUTPUT"
-
-        else
-          # workflow_dispatch
-          if [ "$INPUT_PR_NUMBER" != "all" ]; then
-            MATRIX=$(jq -cn --arg pr "$INPUT_PR_NUMBER" \
-              '{pr: [($pr | tonumber)]}')
-            echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
-            echo "should_evaluate=true" >> "$GITHUB_OUTPUT"
-          else
-            PRS=$(gh pr list --repo "$GITHUB_REPOSITORY" \
-              --author "app/renovate" --state open \
-              --json number,labels --limit 100)
-            FILTERED=$(echo "$PRS" | jq -c '{pr: [
-              .[] | select(
-                ([.labels[].name] | index("automerge") | not) and
-                ([.labels[].name] | index("renovate:evaluated") | not)
-              ) | .number
-            ]}')
-            COUNT=$(echo "$FILTERED" | jq '.pr | length')
-            echo "matrix=$FILTERED" >> "$GITHUB_OUTPUT"
-            echo "should_evaluate=$([ "$COUNT" -gt 0 ] && echo true || echo false)" \
-              >> "$GITHUB_OUTPUT"
-          fi
-          echo "trigger=manual" >> "$GITHUB_OUTPUT"
-        fi
-
-  evaluate-pr:
-    name: 'Evaluate PR #${{ matrix.pr }}'
-    needs: gate
-    if: needs.gate.outputs.should_evaluate == 'true'
-    runs-on: ${{ needs.gate.outputs.runner_label }}
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix: ${{ fromJson(needs.gate.outputs.matrix) }}
-    permissions:
+      actions: read
       contents: read
       pull-requests: write
       issues: write
       checks: read
-    steps:
-    - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7
-      with:
-        persist-credentials: false
-        ref: ${{ github.event.pull_request.head.sha || github.ref }}
-        fetch-depth: 0
-
-    # Set up Nix BEFORE waiting so eval starts immediately when checks complete
-    - name: Install Nix
-      uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # v31
-      with:
-        github_access_token: ${{ github.token }}
-
-    - name: Setup Cachix
-      uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71  # v17
-      with:
-        name: claytono
-        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-    - name: Setup Nix environment
-      run: |
-        eval "$(nix print-dev-env)"
-        echo "PATH=$PATH" >> "$GITHUB_ENV"
-
-    # Wait for all other checks to complete (auto trigger only)
-    - name: Wait for other checks
-      if: needs.gate.outputs.trigger == 'auto'
-      env:
-        GH_TOKEN: ${{ github.token }}
-        PR_NUMBER: ${{ matrix.pr }}
-      run: |
-        OUR_WORKFLOW="Renovate PR Evaluation"
-        INTERVAL=10
-
-        echo "Waiting for other PR checks to complete..."
-        while true; do
-          # Only wait on GitHub Actions workflows (non-empty .workflow).
-          # External status checks (e.g. renovate/stability-days) have an
-          # empty .workflow and can stay pending indefinitely.
-          PENDING=$(gh pr checks "$PR_NUMBER" \
-            --json bucket,workflow 2>/dev/null | \
-            jq -r --arg ours "$OUR_WORKFLOW" '
-              [.[] | select(
-                (.workflow // "") != "" and
-                (.workflow // "") != $ours and
-                .bucket == "pending"
-              )]
-              | length' || echo 1)
-
-          if [[ "$PENDING" -eq 0 ]]; then
-            echo "All other checks complete"
-            break
-          fi
-
-          echo "Still waiting on $PENDING check(s)..."
-          sleep "$INTERVAL"
-        done
-
-    - name: Set Codex home
-      run: |
-        CODEX_HOME="${HOME}/.codex"
-        mkdir -p "$CODEX_HOME"
-        echo "CODEX_HOME=$CODEX_HOME" >> "$GITHUB_ENV"
-
-    - name: Evaluate
-      uses: claytono/github-actions/renovate-eval@5f7087d4abe0c56952e805648b7a73ff6f64f815  # main after PR 7
-      env:
-        EVAL_TRIGGER: ${{ needs.gate.outputs.trigger }}
-        EVAL_FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
-      with:
-        pr_number: ${{ matrix.pr }}
-        mode: ${{ inputs.dry_run && 'dry-run' || 'post' }}
-        context: ci
-        provider: ${{ needs.gate.outputs.provider }}
-        codex_reasoning_effort: ${{ needs.gate.outputs.codex_reasoning_effort }}
-        agent_timeout: ${{ needs.gate.outputs.codex_agent_timeout }}
-        claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        github_token: ${{ github.token }}
+      statuses: read
+    uses: claytono/github-actions/.github/workflows/claytono-renovate-eval-codex.yaml@main
+    with:
+      pr_number: ${{ github.event.pull_request.number || inputs.pr_number }}
+      trigger: ${{ github.event_name == 'pull_request' && 'auto' || 'manual' }}
+      dry_run: ${{ inputs.dry_run || false }}
+      codex_runner_label: ${{ inputs.codex_runner_label || 'codex' }}
+      codex_reasoning_effort: ${{ inputs.codex_reasoning_effort || 'xhigh' }}
+      codex_agent_timeout: ${{ inputs.codex_agent_timeout || '0' }}
+    secrets:
+      cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
