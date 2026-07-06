@@ -89,17 +89,72 @@
         state: restarted
       when: sshd_config_validation | default(true) | bool
 
-- name: Network and security roles
+- name: Network roles
   hosts: all
+  tags: network
+  any_errors_fatal: true
   pre_tasks:
-    - name: Remove NetworkManager when managing network via interfaces
-      ansible.builtin.apt:
-        name: network-manager
-        state: absent
-        purge: true
-      become: true
-      tags: network
-      when: "manage_network | default(false) | bool"
+    # Fresh Raspberry Pi OS hosts start with NetworkManager owning the active
+    # interface. Stage the normal ifupdown config with the existing network
+    # roles, then intentionally stop before handlers or NetworkManager removal.
+    # After a reboot, ifupdown owns the interface and the rerun can safely purge
+    # NetworkManager.
+    - name: Detect interfaces managed by ifupdown config
+      ansible.builtin.set_fact:
+        network_bootstrap_managed_interfaces: >-
+          {{
+            (
+              (interfaces_ether_interfaces | default([]))
+              + (interfaces_bridge_interfaces | default([]))
+              + (interfaces_bond_interfaces | default([]))
+            )
+            | map(attribute='device')
+            | list
+          }}
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+      when:
+        - manage_network | default(false) | bool
+
+    - name: Record NetworkManager service state
+      ansible.builtin.set_fact:
+        network_bootstrap_network_manager_active: >-
+          {{
+            ansible_facts.services["NetworkManager.service"] is defined
+            and ansible_facts.services["NetworkManager.service"].state == "running"
+          }}
+
+    - name: Check whether managed interfaces are already ifupdown-managed
+      ansible.builtin.command: "grep -q '^{{ item }}=' /run/network/ifstate"
+      register: network_bootstrap_ifupdown_state
+      changed_when: false
+      failed_when: false
+      loop: "{{ network_bootstrap_managed_interfaces }}"
+      when:
+        - manage_network | default(false) | bool
+        - network_bootstrap_managed_interfaces | length > 0
+
+    - name: Record ifupdown-managed interfaces
+      ansible.builtin.set_fact:
+        network_bootstrap_ifupdown_managed_interfaces: >-
+          {{
+            network_bootstrap_ifupdown_state.results | default([])
+            | selectattr('rc', 'equalto', 0)
+            | map(attribute='item')
+            | list
+          }}
+
+    - name: Decide whether network bootstrap reboot is required
+      ansible.builtin.set_fact:
+        network_bootstrap_reboot_required: >-
+          {{
+            manage_network | default(false) | bool
+            and network_bootstrap_network_manager_active | default(false) | bool
+            and network_bootstrap_managed_interfaces | length > 0
+            and network_bootstrap_ifupdown_managed_interfaces | default([]) | length < network_bootstrap_managed_interfaces | length
+          }}
+
   roles:
     - role: layereight.wifi
       when: "wifi_ssid is defined"
@@ -108,6 +163,59 @@
       become: true
       tags: network
       when: "manage_network | default(false) | bool"
+
+  tasks:
+    - name: Enable networking service for boot-time ifupdown activation
+      ansible.builtin.service:
+        name: networking
+        enabled: true
+      when:
+        - network_bootstrap_reboot_required | default(false) | bool
+
+    - name: Disable NetworkManager service on next boot
+      ansible.builtin.systemd:
+        name: NetworkManager.service
+        enabled: false
+      when:
+        - network_bootstrap_reboot_required | default(false) | bool
+
+    - name: Disable NetworkManager wait-online service on next boot
+      ansible.builtin.systemd:
+        name: NetworkManager-wait-online.service
+        enabled: false
+      failed_when: false
+      when:
+        - network_bootstrap_reboot_required | default(false) | bool
+
+    - name: Stop for required network bootstrap reboot
+      ansible.builtin.fail:
+        msg: >-
+          Network bootstrap config has been staged for {{ inventory_hostname }}.
+          Reboot the host, wait for it to return on its static ifupdown address,
+          then rerun this same playbook.
+      when: network_bootstrap_reboot_required | default(false) | bool
+
+    - name: Flush network handlers before NetworkManager removal
+      ansible.builtin.meta: flush_handlers
+
+    - name: Remove NetworkManager when managing network via interfaces
+      ansible.builtin.apt:
+        name: network-manager
+        state: absent
+        purge: true
+      become: true
+      tags: network
+      when: "manage_network | default(false) | bool"
+
+    - name: Wait for host after NetworkManager removal
+      ansible.builtin.wait_for_connection:
+        timeout: 90
+      tags: network
+      when: "manage_network | default(false) | bool"
+
+- name: Security roles
+  hosts: all
+  roles:
     - role: boutetnico.fail2ban
       tags: fail2ban
 
