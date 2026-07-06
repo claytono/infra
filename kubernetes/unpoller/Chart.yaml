@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+name: unpoller-meta
+version: 0.1.0
+dependencies:
+- name: unpoller
+  version: 2.1.0
+  repository: https://unpoller.github.io/helm-chart

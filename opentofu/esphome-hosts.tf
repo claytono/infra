@@ -18,11 +18,11 @@ locals {
       hostname = "bedjet.oneill.net"
       note     = "ESPHome: Bed Jet"
     }
-    bedjet-power = {
+    eightsleep-power = {
       mac      = "C8:2B:96:06:40:6D"
       ip       = "172.20.7.189"
-      hostname = "bedjet-power.oneill.net"
-      note     = "ESPHome: BedJet Power"
+      hostname = "eightsleep-power.oneill.net"
+      note     = "ESPHome: Eight Sleep Power"
     }
     freezer = {
       mac      = "EC:FA:BC:4F:E2:AA"
