@@ -5,7 +5,12 @@ provider "registry.opentofu.org/1password/onepassword" {
   version     = "3.2.1"
   constraints = "~> 3.0"
   hashes = [
+    "h1:2oZnlv8MoB+lr0PwRb+cVwjl5FGlYZ7fKH/swx/2Vwk=",
     "h1:Cgnzf730laGVmvSalQf3SM6bBwwm/OCZcCpOlsBBC4s=",
+    "h1:Cptwjxyu8HtBa01xURjnBBR7+rHRQ7kmrQpctYwi9nc=",
+    "h1:KzFIYHNLIU1VBpWgwtrl3MaejyVcTm0vockK3dzJoVQ=",
+    "h1:PccgMFFnAIYz9UzNpp10MCiPKusor9mallVpFdEAv8s=",
+    "h1:StnkXlda1e6zQq7njiuYOc7PetlMYDNBa4i8+lVQ8hQ=",
     "h1:hZrcwOpBicojsJA33Iv5ZvY/3rB4pf9WAuwrRWE4W5k=",
     "zh:56c142b07295608de4ef2b7915684578b384bc2b47519c6811e93184945cd161",
     "zh:785b52b0c7055deb249843063327bb25cbc952fb560681d2a84c4e32283a6eae",
@@ -80,8 +85,20 @@ provider "registry.opentofu.org/cruglobal/semaphoreui" {
   version     = "1.4.1"
   constraints = "~> 1.4"
   hashes = [
+    "h1:/pKJdEn/VhgLId8920aNr6GZaQ9n2/W8ErmwG+I2kDo=",
+    "h1:9y3ZcWfxdWPitKKi4+WMLZ64RC+HcIQcF7OOcbxJcxg=",
+    "h1:L2ueW5LiU1jhY+WVoC6uaSDrGRvDh7Pom+bqQ2aDJsA=",
     "h1:L8B3IagTwCpU0T+HBNN5oLJujxQWbCj1JT9icgzKVXg=",
+    "h1:PMZXFCIb1cq39PXwptlPyOl1jw58Olteq3WX/lnmRZs=",
     "h1:Ttm7n70yJSsuBaFlFtx5DjPvzr63UHN1bJqvFgKkMMk=",
+    "h1:U75kSRLpxYlJPGbmc7u/ciKw9qJ4jv91W/NqECZzH4A=",
+    "h1:azbb+FCFZ1ewIQYS4SWuNz/aGALMHtqyd8zWzgzxe5E=",
+    "h1:kG6DUWTijyLVT6dz8NwVMNlXICmES2J8h0LZvxXGxjE=",
+    "h1:ndC3zyTGlIV720bsSG4JspAa5XeQa4t62w7VYUjW2jE=",
+    "h1:t2bBgbNkl6L02ZI4+QDrZUxnjPlRYD8N7eEgtN8nSaU=",
+    "h1:tK+V33sTuTK3jxlSGvorcspP3iHegiRwIUHWtGUqh40=",
+    "h1:xw5lqgXyUN+0D9dN9/L6cu/xnwtAAT9WXylkC8phk5E=",
+    "h1:z4LpnM46tPbVmcPs5f0/xQFcOSn6Me5Ubc1qHi+R4ns=",
     "zh:0d325833a72e011c993ec3329db6fb65c7bd909120a8a158149f27bd426fd77c",
     "zh:67b0e03c21c6ead1c68d140f7d72563cba2b85cf310c1ebe883f6dac31aa4969",
     "zh:6f3da96ee51694cd7237c9feb45392dc0a3a1466b30c64602d946f1d662246de",
@@ -104,8 +121,20 @@ provider "registry.opentofu.org/filipowm/unifi" {
   version     = "1.0.0"
   constraints = "~> 1.0"
   hashes = [
+    "h1:/gnz20UwjyfUrodNJ8QAP0YN1W8Fqx8WupjtCR9pNj0=",
+    "h1:4vve38uotYXxHMk6SUXWNgbAQZTdNQ8e4XHijtdiT3Y=",
+    "h1:BomqlExPPMnhnqsvx3wnZT4ba7zR6hWTun0VWkbK8n0=",
+    "h1:PWJVdkpPdwEhGnxLURJ1k2uP8QG9LlkB99vjc2AKj6A=",
     "h1:TW+9bErV4fdS8k+DRk2a/6l97QI3Ui3N6zk5NG3TD0U=",
+    "h1:UtQRhghS5c4PovUwB5/AqsszLBB82jDJzF2kpRRyv3k=",
+    "h1:W1Il3doHU3rm32lXK4dYDNx7voN2KcG68K5Ae38zSok=",
+    "h1:Xk9jrHk/DgV2dDldv5F3IvssLu8tWRZe5UYosuABmLQ=",
+    "h1:aCbVe+SAxqPjXJSPwn4MFbCZCITclPicW+NPIffLZT8=",
+    "h1:aqoyVyOhdCLWg+4Pti1sNJm+zs+kTfWPxedVfBFo+Cs=",
     "h1:eI7Uku1AduNOvFIAoiPzzFTW0aM4zZb5vX2XfepjpeQ=",
+    "h1:hkgm7kRZZnhdlPWZaTDdKaxOrH6zlr7YVzzr2WHxOSk=",
+    "h1:jnvXamy7l0/5/2o4nGcRg33PMu7p12MKqY+Rnsp4fl4=",
+    "h1:w7iFidVB4iuB7uiKpHNxD4z37eIISJGLfSRN3/zeYio=",
     "zh:002a2d08c4ed02cced5178659c9f8995cbc58f6721745a5d3f9c8a907ec6f5e9",
     "zh:16459400ee198f0099da758256732ee9d3e0fd873d0fe99f92cfc3742cde62ac",
     "zh:53cfb0f2bcb248485501e182ab0273b1fa911420863ab5984b20cfea715da5aa",
@@ -301,8 +330,20 @@ provider "registry.opentofu.org/kristofferahl/healthchecksio" {
   version     = "2.3.0"
   constraints = "~> 2.0"
   hashes = [
+    "h1:5zfBlZv66Dm9+DSF4AV4v8JscFNdMqkZ2PtwI45CKzM=",
+    "h1:9IsJY3qt6uefcxvpCTITCeWf5G4+BSo3Bho/n32U0o4=",
+    "h1:CV3KylCy8ChPVrWgjPhITMIJBsD6qaPtA9EKLLTYlpk=",
+    "h1:FAXedfH5VctZjnjfIoWpqX2EpRiIwllcca7K4s6W6hs=",
+    "h1:QmnUL4jdIXj4KYv7sDPt2BcN72YC/lCLNvQDcCmCUqo=",
+    "h1:YS4YMMdYma14BJJivoDNLYhT+TWwubUH89N/C3VuDQk=",
+    "h1:Zhyv31qv6ZI3GbMDGxnCaKhmso7IkTPkNFiyhz674cA=",
     "h1:bX5eKpSSD27rXXH3buHywJxFSvhGId2EH7RcqdRqV8g=",
+    "h1:denWGRXY0ifW9t08UFIAqEeepB4P4+1jNJPCL6s6RnU=",
+    "h1:fLUvsIFmJ7D8jMElCBYr+8XwgttNnPTL+cotQZXlIEU=",
+    "h1:iFQlSKDQQhASBVSjc1JNRcwmfi5ulgZNIzC/M8+Qd8o=",
+    "h1:lPh1WULzREzZdfd5GFYT/iYTZIwSWm8ZL2dEdk23EYA=",
     "h1:lUKJPw8lof/7I2aD1p3ndubXSVDfQmilpxb+QyRs0vA=",
+    "h1:x7JQvDkmycXREUfZh/mQRqdQtnkGhKx7ch6UknxDROg=",
     "zh:031832f8ce893de3012daaa487c39a1d53fce10cdbcdf2fdf043f8bd8a21838d",
     "zh:0638c7dde38ca51b314433f7034b3d9aeeb65f9692d141b8b31057ee4a4abc8d",
     "zh:22df848f6f0c402f2a8f91815395f2dbc4c18ce5f188b8d5a8e51066dd819588",

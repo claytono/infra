@@ -1,6 +1,11 @@
 # GitHub repository secrets management
 
 locals {
+  cachix_github_repositories = toset([
+    "dotfiles",
+    "go-unifi-mcp",
+  ])
+
   tailscale_ssh_github_repositories = toset([
     "github-actions",
     "dotfiles",
@@ -16,6 +21,14 @@ resource "github_actions_secret" "infra_argocd_auth_token" {
 
 resource "github_actions_secret" "infra_cachix_auth_token" {
   repository  = "infra"
+  secret_name = "CACHIX_AUTH_TOKEN"
+  value       = data.onepassword_item.cachix_auth_token.password
+}
+
+resource "github_actions_secret" "cachix_auth_token" {
+  for_each = local.cachix_github_repositories
+
+  repository  = each.key
   secret_name = "CACHIX_AUTH_TOKEN"
   value       = data.onepassword_item.cachix_auth_token.password
 }
