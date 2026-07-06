@@ -29,4 +29,61 @@ data:
 
     sudo -n true
     sudo apt-get update
-    sudo apt-get install -y --no-install-recommends gh xz-utils
+    sudo apt-get install -y --no-install-recommends curl xz-utils
+
+    install_gh_cli() (
+      local arch archive gh_cli_tmp_dir install_dir latest_url version
+
+      case "$(uname -m)" in
+        x86_64 | amd64)
+          arch=amd64
+          ;;
+        aarch64 | arm64)
+          arch=arm64
+          ;;
+        *)
+          echo "Unsupported architecture for gh CLI: $(uname -m)" >&2
+          exit 1
+          ;;
+      esac
+
+      latest_url="$(curl -fsSLI \
+        --retry 5 \
+        --retry-all-errors \
+        --retry-connrefused \
+        --retry-delay 2 \
+        --retry-max-time 60 \
+        --connect-timeout 10 \
+        --max-time 60 \
+        -o /dev/null \
+        -w '%{url_effective}' \
+        https://github.com/cli/cli/releases/latest)"
+      version="${latest_url##*/}"
+      version="${version#v}"
+      if [[ ! "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]; then
+        echo "Could not resolve latest gh CLI version from $latest_url" >&2
+        exit 1
+      fi
+
+      archive="gh_${version}_linux_${arch}.tar.gz"
+      gh_cli_tmp_dir="$(mktemp -d)"
+      trap 'rm -rf "$gh_cli_tmp_dir"' EXIT
+
+      curl -fsSL \
+        --retry 5 \
+        --retry-all-errors \
+        --retry-connrefused \
+        --retry-delay 2 \
+        --retry-max-time 120 \
+        --connect-timeout 10 \
+        --max-time 120 \
+        -o "$gh_cli_tmp_dir/$archive" \
+        "https://github.com/cli/cli/releases/download/v${version}/${archive}"
+      tar -xzf "$gh_cli_tmp_dir/$archive" -C "$gh_cli_tmp_dir"
+
+      install_dir="$gh_cli_tmp_dir/gh_${version}_linux_${arch}"
+      sudo install -m 0755 "$install_dir/bin/gh" /usr/local/bin/gh
+      gh --version
+    )
+
+    install_gh_cli
