@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: kube-state-metrics
-    app.kubernetes.io/version: "2.19.0"
+    app.kubernetes.io/version: "2.19.1"
 spec:
   selector:
     matchLabels:      
@@ -29,7 +29,7 @@ spec:
         app.kubernetes.io/part-of: kube-state-metrics
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/instance: kube-state-metrics
-        app.kubernetes.io/version: "2.19.0"
+        app.kubernetes.io/version: "2.19.1"
     spec:
       automountServiceAccountToken: true
       hostNetwork: false
@@ -48,7 +48,7 @@ spec:
         - --port=8080
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpointslices,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
         imagePullPolicy: IfNotPresent
-        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.19.0
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.19.1
         ports:
         - containerPort: 8080
           name: http
@@ -84,3 +84,4 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: true
+
