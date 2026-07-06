@@ -288,6 +288,19 @@
       "matchManagers": [
         "github-actions"
       ],
+      "matchPackageNames": [
+        "claytono/github-actions"
+      ],
+      "matchUpdateTypes": [
+        "pinDigest"
+      ],
+      "enabled": false,
+      "description": "Do not pin the reusable Renovate evaluation workflow; it intentionally tracks main"
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
       "matchUpdateTypes": [
         "digest"
       ],
