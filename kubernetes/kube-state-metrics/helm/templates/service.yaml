@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: kube-state-metrics
-    app.kubernetes.io/version: "2.19.0"
+    app.kubernetes.io/version: "2.19.1"
   annotations:
     prometheus.io/scrape: 'true'
 spec:
@@ -25,3 +25,4 @@ spec:
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: kube-state-metrics
+
