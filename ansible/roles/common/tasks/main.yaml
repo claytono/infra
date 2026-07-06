@@ -78,6 +78,25 @@
     - ansible_facts['virtualization_role'] != 'guest'
   notify: Restart smartd
 
+- name: "Detect SMART-capable devices"
+  ansible.builtin.command: smartctl --scan-open
+  register: common_smartd_scan
+  changed_when: false
+  when:
+    - ansible_facts['virtualization_role'] != 'guest'
+    - smartd_enabled is not defined
+
+- name: "Set smartd enablement"
+  ansible.builtin.set_fact:
+    common_smartd_enabled: >-
+      {{
+        (smartd_enabled if smartd_enabled is defined else
+          (common_smartd_scan.stdout_lines | default([]) | select('match', '^/dev/') | list | length) > 0
+        ) | bool
+      }}
+  when:
+    - ansible_facts['virtualization_role'] != 'guest'
+
 - name: "Configure smartd for disk monitoring"
   ansible.builtin.template:
     src: smartd.conf.j2
@@ -87,6 +106,7 @@
     group: root
   when:
     - ansible_facts['virtualization_role'] != 'guest'
+    - common_smartd_enabled
   notify: Restart smartd
 
 - name: "Ensure smartd service is enabled and started"
@@ -96,6 +116,17 @@
     enabled: true
   when:
     - ansible_facts['virtualization_role'] != 'guest'
+    - common_smartd_enabled
+
+- name: "Disable smartd when no SMART-capable devices are found"
+  ansible.builtin.service:
+    name: smartd
+    state: stopped
+    enabled: false
+  failed_when: false
+  when:
+    - ansible_facts['virtualization_role'] != 'guest'
+    - not common_smartd_enabled
 
 - name: "Disable and stop dhcpcd"
   ansible.builtin.systemd:

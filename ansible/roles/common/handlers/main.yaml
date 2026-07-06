@@ -3,6 +3,9 @@
   ansible.builtin.service:
     name: smartd
     state: restarted
+  when:
+    - common_smartd_enabled is defined
+    - common_smartd_enabled | bool
 
 - name: Reload sysctl
   ansible.builtin.command: sysctl --system
