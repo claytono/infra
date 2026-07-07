@@ -111,7 +111,7 @@
 
 - name: "Ensure smartd service is enabled and started"
   ansible.builtin.service:
-    name: smartd
+    name: smartmontools
     state: started
     enabled: true
   when:
@@ -120,7 +120,7 @@
 
 - name: "Disable smartd when no SMART-capable devices are found"
   ansible.builtin.service:
-    name: smartd
+    name: smartmontools
     state: stopped
     enabled: false
   failed_when: false

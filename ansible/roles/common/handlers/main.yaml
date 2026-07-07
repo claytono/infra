@@ -1,7 +1,7 @@
 ---
 - name: Restart smartd
   ansible.builtin.service:
-    name: smartd
+    name: smartmontools
     state: restarted
   when:
     - common_smartd_enabled is defined
