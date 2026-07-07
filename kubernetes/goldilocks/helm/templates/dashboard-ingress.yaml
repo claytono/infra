@@ -35,3 +35,4 @@ spec:
                 name: goldilocks-dashboard
                 port:
                   name: http
+
