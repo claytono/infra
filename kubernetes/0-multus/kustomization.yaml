@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kube-system
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- upstream/multus-daemonset-thick.yaml
+
+images:
+- name: ghcr.io/k8snetworkplumbingwg/multus-cni
+  newTag: v4.3.0-thick@sha256:2b9671447f3ea4e7e56730843dbf59445b9307246f393b61386b896d56ae51c9
