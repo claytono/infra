@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: admission-controller
     app.kubernetes.io/name: vpa
     app.kubernetes.io/instance: vpa
-    app.kubernetes.io/version: "1.4.1"
+    app.kubernetes.io/version: "1.6.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     cert-manager.io/inject-ca-from: vpa/vpa-webhook-cert
