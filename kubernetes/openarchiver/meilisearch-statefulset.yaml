@@ -24,7 +24,7 @@ spec:
         runAsUser: 1000
       containers:
       - name: meilisearch
-        image: docker.io/getmeili/meilisearch:v1.45.2@sha256:271ee84030a77cfa8e60358138bb34260f69110795c2441437b44832fe865618
+        image: docker.io/getmeili/meilisearch:v1.48.2@sha256:544bdb7d1934e2dbeb02225b65f9b813221bc045d567c241a5be7319b50122b6
         imagePullPolicy: IfNotPresent
         env:
         - name: MEILI_ENV
