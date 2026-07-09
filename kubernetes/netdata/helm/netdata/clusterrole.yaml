@@ -6,7 +6,7 @@ metadata:
   name: netdata
   labels:
     app: netdata
-    chart: netdata-3.7.165
+    chart: netdata-3.7.166
     release: netdata
     heritage: Helm
 rules:
