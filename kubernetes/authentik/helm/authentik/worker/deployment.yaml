@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: "worker"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/part-of: "authentik"
-    app.kubernetes.io/version: "2026.5.2"
+    app.kubernetes.io/version: "2026.5.3"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -28,16 +28,16 @@ spec:
         app.kubernetes.io/component: "worker"
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/part-of: "authentik"
-        app.kubernetes.io/version: "2026.5.2"
+        app.kubernetes.io/version: "2026.5.3"
       annotations:
-        checksum/secret: 72c677a03013477726eabddd0781c6fa5c20e4592922b731e8a7be56e131ea57
+        checksum/secret: cd4d6282533b2a1476234b58dcef9d072b29422ab833e138e04e8dd61d2cce86
         reloader.stakater.com/auto: "true"
     spec:
       serviceAccountName: authentik
       terminationGracePeriodSeconds: 30
       containers:
         - name: worker
-          image: ghcr.io/goauthentik/server:2026.5.2
+          image: ghcr.io/goauthentik/server:2026.5.3
           imagePullPolicy: IfNotPresent
           args:
             - worker
