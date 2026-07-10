@@ -60,7 +60,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: reauth
-    image: ghcr.io/astral-sh/uv@sha256:05bc724e74da13ad6238b9721a0e2f0f649dd2ed86b0453e7e88e63831b38dfe
+    image: ghcr.io/astral-sh/uv:debian@sha256:12bcf9d33038200b3c7da0fa2b0f416482cf26ea764d0554fadf861d5d789833
     command:
     - sleep
     - infinity
