@@ -8,6 +8,7 @@ resources:
 
 - homebox-postgres-cluster.yaml
 - externalsecret-oidc.yaml
+- externalsecret-api-key-pepper.yaml
 
   # HomeBox resources
 - helm/homebox/deployment.yaml
@@ -22,7 +23,7 @@ commonAnnotations:
 
 images:
 - name: sysadminsmedia/homebox
-  newTag: 0.25.0@sha256:6506480a3dfadd2cc885fa97b32d11b0ee28ec58629fa34a76afdb4ac540c7fc
+  newTag: 0.26.2@sha256:b1ad7e3c63f732a5f6daa466e8116be4f545b3b120383a64dcb62beb00a660cc
 
 patches:
 
@@ -55,6 +56,11 @@ patches:
                 secretKeyRef:
                   name: homebox-oidc
                   key: HBOX_OIDC_CLIENT_SECRET
+            - name: HBOX_AUTH_API_KEY_PEPPER
+              valueFrom:
+                secretKeyRef:
+                  name: homebox-api-key-pepper
+                  key: HBOX_AUTH_API_KEY_PEPPER
 
 # Add labels for metrics
 labels:
