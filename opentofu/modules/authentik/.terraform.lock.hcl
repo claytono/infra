@@ -5,7 +5,12 @@ provider "registry.opentofu.org/1password/onepassword" {
   version     = "3.2.1"
   constraints = "~> 3.0"
   hashes = [
+    "h1:2oZnlv8MoB+lr0PwRb+cVwjl5FGlYZ7fKH/swx/2Vwk=",
     "h1:Cgnzf730laGVmvSalQf3SM6bBwwm/OCZcCpOlsBBC4s=",
+    "h1:Cptwjxyu8HtBa01xURjnBBR7+rHRQ7kmrQpctYwi9nc=",
+    "h1:KzFIYHNLIU1VBpWgwtrl3MaejyVcTm0vockK3dzJoVQ=",
+    "h1:PccgMFFnAIYz9UzNpp10MCiPKusor9mallVpFdEAv8s=",
+    "h1:StnkXlda1e6zQq7njiuYOc7PetlMYDNBa4i8+lVQ8hQ=",
     "h1:hZrcwOpBicojsJA33Iv5ZvY/3rB4pf9WAuwrRWE4W5k=",
     "zh:56c142b07295608de4ef2b7915684578b384bc2b47519c6811e93184945cd161",
     "zh:785b52b0c7055deb249843063327bb25cbc952fb560681d2a84c4e32283a6eae",

@@ -16,7 +16,7 @@ resource "authentik_provider_oauth2" "semaphore" {
   ]
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
-    { url = "https://semaphore.k.oneill.net/api/auth/oidc/authentik/redirect", matching_mode = "strict" },
+    { url = "https://semaphore.k.oneill.net/api/auth/oidc/authentik/redirect", matching_mode = "strict", redirect_uri_type = "authorization" },
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id
 }

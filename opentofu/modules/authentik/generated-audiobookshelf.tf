@@ -16,9 +16,9 @@ resource "authentik_provider_oauth2" "audiobookshelf" {
   ]
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
-    { url = "https://audiobookshelf.k.oneill.net/auth/openid/callback", matching_mode = "strict" },
-    { url = "shelfplayer://callback", matching_mode = "strict" },
-    { url = "https://audiobookshelf.k.oneill.net/auth/openid/mobile-redirect", matching_mode = "strict" },
+    { url = "https://audiobookshelf.k.oneill.net/auth/openid/callback", matching_mode = "strict", redirect_uri_type = "authorization" },
+    { url = "shelfplayer://callback", matching_mode = "strict", redirect_uri_type = "authorization" },
+    { url = "https://audiobookshelf.k.oneill.net/auth/openid/mobile-redirect", matching_mode = "strict", redirect_uri_type = "authorization" },
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id
 }
