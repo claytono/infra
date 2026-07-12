@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: bambuddy
+  namespace: bambuddy
+  annotations:
+    ak-type: oidc
+    ak-oidc-callback: /api/v1/auth/oidc/callback
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Bambuddy
+    gethomepage.dev/description: 3D printer management
+    gethomepage.dev/group: Smart Home
+    gethomepage.dev/icon: mdi-printer-3d
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=bambuddy
+
+spec:
+  tls:
+  - hosts:
+    - bambuddy.k.oneill.net
+    secretName: bambuddy-tls
+  rules:
+  - host: bambuddy.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bambuddy
+            port:
+              number: 8000
