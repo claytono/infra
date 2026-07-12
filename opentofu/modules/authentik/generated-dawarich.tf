@@ -3,10 +3,19 @@
 ###############################################
 
 resource "authentik_provider_oauth2" "dawarich" {
-  name               = "dawarich"
-  client_id          = local.dawarich_oidc_client_id
-  client_secret      = local.dawarich_oidc_secret
-  client_type        = "confidential"
+  name          = "dawarich"
+  client_id     = local.dawarich_oidc_client_id
+  client_secret = local.dawarich_oidc_secret
+  client_type   = "confidential"
+  grant_types = [
+    "authorization_code",
+    "hybrid",
+    "implicit",
+    "client_credentials",
+    "password",
+    "urn:ietf:params:oauth:grant-type:device_code",
+    "refresh_token",
+  ]
   authorization_flow = data.authentik_flow.default_authorization.id
   invalidation_flow  = data.authentik_flow.default_invalidation.id
   property_mappings = [
