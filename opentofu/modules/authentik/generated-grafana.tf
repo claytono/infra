@@ -3,10 +3,19 @@
 ###############################################
 
 resource "authentik_provider_oauth2" "grafana" {
-  name               = "grafana"
-  client_id          = local.grafana_oidc_client_id
-  client_secret      = local.grafana_oidc_secret
-  client_type        = "confidential"
+  name          = "grafana"
+  client_id     = local.grafana_oidc_client_id
+  client_secret = local.grafana_oidc_secret
+  client_type   = "confidential"
+  grant_types = [
+    "authorization_code",
+    "hybrid",
+    "implicit",
+    "client_credentials",
+    "password",
+    "urn:ietf:params:oauth:grant-type:device_code",
+    "refresh_token",
+  ]
   authorization_flow = data.authentik_flow.default_authorization.id
   invalidation_flow  = data.authentik_flow.default_invalidation.id
   property_mappings = [
