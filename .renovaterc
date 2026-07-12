@@ -427,7 +427,7 @@
     },
     {
       "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
-      "allowedVersions": "/^(11\\.8|11\\.4|10\\.11|10\\.6)\\./",
+      "allowedVersions": "/^(11\\.8|11\\.4|10\\.11)\\./",
       "matchDatasources": [
         "docker"
       ],
