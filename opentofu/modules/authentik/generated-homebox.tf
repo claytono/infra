@@ -16,7 +16,7 @@ resource "authentik_provider_oauth2" "homebox" {
   ]
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
-    { url = "https://homebox.k.oneill.net/api/v1/users/login/oidc/callback", matching_mode = "strict" },
+    { url = "https://homebox.k.oneill.net/api/v1/users/login/oidc/callback", matching_mode = "strict", redirect_uri_type = "authorization" },
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id
 }

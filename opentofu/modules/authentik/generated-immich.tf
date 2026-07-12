@@ -16,9 +16,9 @@ resource "authentik_provider_oauth2" "immich" {
   ]
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
-    { url = "https://immich.k.oneill.net/auth/login", matching_mode = "strict" },
-    { url = "https://immich.k.oneill.net/user-settings", matching_mode = "strict" },
-    { url = "app.immich:///oauth-callback", matching_mode = "strict" },
+    { url = "https://immich.k.oneill.net/auth/login", matching_mode = "strict", redirect_uri_type = "authorization" },
+    { url = "https://immich.k.oneill.net/user-settings", matching_mode = "strict", redirect_uri_type = "authorization" },
+    { url = "app.immich:///oauth-callback", matching_mode = "strict", redirect_uri_type = "authorization" },
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id
 }

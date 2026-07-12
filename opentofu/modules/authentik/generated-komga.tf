@@ -16,7 +16,7 @@ resource "authentik_provider_oauth2" "komga" {
   ]
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
-    { url = "https://komga.k.oneill.net/login/oauth2/code/authentik", matching_mode = "strict" },
+    { url = "https://komga.k.oneill.net/login/oauth2/code/authentik", matching_mode = "strict", redirect_uri_type = "authorization" },
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id
 }

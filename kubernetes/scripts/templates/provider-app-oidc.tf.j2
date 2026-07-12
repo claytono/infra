@@ -16,9 +16,9 @@ resource "authentik_provider_oauth2" "{{ app }}" {
   ]
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
-    { url = "{{ callback_url }}", matching_mode = "strict" },
+    { url = "{{ callback_url }}", matching_mode = "strict", redirect_uri_type = "authorization" },
 {% for uri in extra_redirects %}
-    { url = "{{ uri }}", matching_mode = "strict" },
+    { url = "{{ uri }}", matching_mode = "strict", redirect_uri_type = "authorization" },
 {% endfor %}
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id

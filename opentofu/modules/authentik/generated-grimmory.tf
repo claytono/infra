@@ -16,7 +16,7 @@ resource "authentik_provider_oauth2" "grimmory" {
   ]
   access_token_validity = "hours=1"
   allowed_redirect_uris = [
-    { url = "https://grimmory.k.oneill.net/oauth2-callback", matching_mode = "strict" },
+    { url = "https://grimmory.k.oneill.net/oauth2-callback", matching_mode = "strict", redirect_uri_type = "authorization" },
   ]
   signing_key = data.authentik_certificate_key_pair.self_signed.id
 }
