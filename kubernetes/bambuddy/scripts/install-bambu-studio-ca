@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""Install Bambuddy's virtual-printer CA into Bambu Studio on macOS."""
+
+from __future__ import annotations
+
+import hashlib
+import os
+import re
+import shutil
+import ssl
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+
+
+PEM_CERTIFICATE = re.compile(
+    rb"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----",
+    re.DOTALL,
+)
+
+
+class InstallerError(RuntimeError):
+    """An expected installation failure with a user-facing message."""
+
+
+def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[bytes]:
+    try:
+        return subprocess.run(command, check=True, **kwargs)
+    except FileNotFoundError as error:
+        raise InstallerError(f"Missing required command: {command[0]}") from error
+    except subprocess.CalledProcessError as error:
+        raise InstallerError(f"Command failed: {' '.join(command)}") from error
+
+
+def parse_bundle(data: bytes, description: str) -> list[bytes]:
+    """Validate a PEM bundle and return each certificate as DER bytes."""
+    matches = PEM_CERTIFICATE.findall(data)
+    if not matches or PEM_CERTIFICATE.sub(b"", data).strip():
+        raise InstallerError(f"{description} is not a valid PEM bundle")
+
+    try:
+        pem = data.decode("ascii")
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.load_verify_locations(cadata=pem)
+        certificates = [
+            ssl.PEM_cert_to_DER_cert(match.decode("ascii")) for match in matches
+        ]
+    except (UnicodeDecodeError, ValueError, ssl.SSLError) as error:
+        raise InstallerError(f"{description} is not a valid PEM bundle") from error
+
+    return certificates
+
+
+def fingerprint(certificate: bytes) -> str:
+    digest = hashlib.sha256(certificate).digest()
+    return ":".join(f"{byte:02X}" for byte in digest)
+
+
+def backup_bundle(bundle: Path) -> Path:
+    timestamp = datetime.now().astimezone().strftime("%Y%m%d%H%M%S")
+    backup = bundle.with_name(f"{bundle.name}.bak.{timestamp}")
+    print(f"Backing up {bundle} to {backup}")
+
+    if os.access(bundle.parent, os.W_OK):
+        shutil.copy2(bundle, backup)
+    else:
+        run(["sudo", "cp", "-p", str(bundle), str(backup)])
+
+    return backup
+
+
+def append_to_bundle(bundle: Path, payload: bytes) -> None:
+    if os.access(bundle, os.W_OK):
+        with bundle.open("ab") as output:
+            output.write(payload)
+    else:
+        run(
+            ["sudo", "tee", "-a", str(bundle)],
+            input=payload,
+            stdout=subprocess.DEVNULL,
+        )
+
+
+def main() -> None:
+    namespace = os.environ.get("BAMBUDDY_NAMESPACE", "bambuddy")
+    deployment = os.environ.get("BAMBUDDY_DEPLOYMENT", "bambuddy")
+    app_path = Path(os.environ.get("BAMBU_STUDIO_APP", "/Applications/BambuStudio.app"))
+    ca_path = os.environ.get(
+        "BAMBUDDY_VP_CA_PATH",
+        "/app/data/virtual_printer/certs/bbl_ca.crt",
+    )
+    bundle = app_path / "Contents/Resources/cert/printer.cer"
+
+    if not bundle.is_file():
+        raise InstallerError(
+            f"Bambu Studio printer trust bundle not found: {bundle}\n"
+            "Set BAMBU_STUDIO_APP=/path/to/BambuStudio.app if it is installed elsewhere."
+        )
+
+    print(
+        f"Fetching Bambuddy virtual-printer CA from {namespace}/{deployment}:{ca_path}"
+    )
+    result = run(
+        [
+            "kubectl",
+            "-n",
+            namespace,
+            "exec",
+            f"deploy/{deployment}",
+            "--",
+            "cat",
+            ca_path,
+        ],
+        stdout=subprocess.PIPE,
+    )
+    ca_certificates = parse_bundle(result.stdout, "Bambuddy virtual-printer CA")
+    if len(ca_certificates) != 1:
+        raise InstallerError(
+            "Bambuddy virtual-printer CA file must contain exactly one certificate"
+        )
+
+    ca_certificate = ca_certificates[0]
+    ca_fingerprint = fingerprint(ca_certificate)
+    print(f"Bambuddy VP CA SHA256: {ca_fingerprint}")
+
+    existing = bundle.read_bytes()
+    installed_certificates = parse_bundle(existing, "Bambu Studio printer trust bundle")
+    if ca_certificate in installed_certificates:
+        print("Bambu Studio already trusts this Bambuddy virtual-printer CA.")
+        return
+
+    backup = backup_bundle(bundle)
+    canonical_ca = ssl.DER_cert_to_PEM_cert(ca_certificate).encode("ascii")
+    separator = b"" if not existing or existing.endswith(b"\n") else b"\n"
+
+    print(f"Appending Bambuddy virtual-printer CA to {bundle}")
+    append_to_bundle(bundle, separator + canonical_ca)
+
+    try:
+        installed_certificates = parse_bundle(
+            bundle.read_bytes(), "Updated Bambu Studio trust bundle"
+        )
+    except InstallerError as error:
+        raise InstallerError(
+            f"{error}. Restore from {backup} before retrying."
+        ) from error
+    if ca_certificate not in installed_certificates:
+        raise InstallerError(
+            f"Verification failed. Restore from {backup} before retrying."
+        )
+
+    print("Installed Bambuddy virtual-printer CA into Bambu Studio.")
+    print("Fully quit and reopen Bambu Studio before reconnecting the virtual printer.")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except InstallerError as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        raise SystemExit(1) from None

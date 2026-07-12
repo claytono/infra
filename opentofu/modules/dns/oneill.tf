@@ -137,6 +137,15 @@ resource "cloudflare_dns_record" "router" {
   ttl     = 3600
 }
 
+# Static service IPs that are not DHCP-backed infrastructure hosts.
+resource "cloudflare_dns_record" "bambuddy_printer" {
+  zone_id = cloudflare_zone.oneill_net.id
+  name    = "bambuddy-printer.oneill.net"
+  type    = "A"
+  content = "172.19.74.29"
+  ttl     = 1
+}
+
 # Infrastructure hosts - automatically synced with UniFi DHCP reservations
 # Host definitions are in ../../locals.tf (infrastructure_hosts) and shared
 # with unifi_user resources to ensure DNS and DHCP stay automatically in sync.

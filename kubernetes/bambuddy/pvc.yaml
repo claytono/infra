@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: bambuddy-data
+  namespace: bambuddy
+  labels:
+    app.kubernetes.io/name: bambuddy
+    velero.io/backup: 'true'
+
+spec:
+  accessModes:
+  - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 50Gi

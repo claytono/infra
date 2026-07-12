@@ -1,0 +1,18 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: bambuddy
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- deployment.yaml
+- externalsecret.yaml
+- ingress.yaml
+- namespace.yaml
+- password-generators.yaml
+- postgres-cluster.yaml
+- pvc.yaml
+- service.yaml
