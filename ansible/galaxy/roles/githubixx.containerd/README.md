@@ -15,6 +15,14 @@ See full [CHANGELOG](https://github.com/githubixx/ansible-role-containerd/blob/m
 
 **Recent changes:**
 
+## 0.18.0+2.3.0
+
+- **UPDATE**
+  - update `containerd` to `v2.3.0`
+
+- **MOLECULE**
+  - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
+
 ## 0.17.0+2.2.1
 
 - **BREAKING**
@@ -40,31 +48,6 @@ See full [CHANGELOG](https://github.com/githubixx/ansible-role-containerd/blob/m
   - update `.yamllint`
   - fix `ansible-lint` issues
 
-## 0.15.0+2.1.3
-
-- **UPDATE**
-  - update `containerd` to `v2.1.3`
-
-- **MOLECULE**
-  - Use `generic/arch` Vagrant box instead of `archlinux/archlinux` (no longer available)
-  - Install `openssl` package for Archlinux
-  - Removed Ubuntu 20.04 because reached end of life
-
-## 0.14.0+2.0.2
-
-**Note**: This a major release update to `containerd` version `2.0.2`! Please read the [changelog of containerd v2.0.2](https://github.com/containerd/containerd/blob/main/docs/containerd-2.0.md) accordingly! In general if you haven't used any "exotic" features so far this version of the Ansible role should cover everything already and upgrading should be smooth. Nevertheless you should test the changes before!
-
-- **POTENTIALLY BREAKING**
-  - `containerd_config` variable value was adjusted to to meet `containerd` configuration requirements of version `3`. Please see [Full configuration](https://github.com/containerd/containerd/blob/main/docs/cri/config.md#full-configuration) for all possible values. If you haven't adjusted this variable then there should be no need to change anything and upgrading should be smooth.
-  - update list of containerd binaries in `containerd_binaries` variable. `containerd-shim-runc-v1` and `containerd-shim` were removed as no longer provided by upstream.
-
-- **UPDATE**
-  - update `containerd` to `v2.0.2`
-  - `templates/etc/systemd/system/containerd.service.j2`: add `dbus.service` to `After=`
-
-- **MOLECULE**
-  - adjust expected output of `ctr pull` command
-
 ## Installation
 
 - Directly download from Github (change into Ansible role directory before cloning):
@@ -81,7 +64,7 @@ See full [CHANGELOG](https://github.com/githubixx/ansible-role-containerd/blob/m
 roles:
   - name: githubixx.containerd
     src: https://github.com/githubixx/ansible-role-containerd.git
-    version: 0.17.0+2.2.1
+    version: 0.18.0+2.3.0
 ```
 
 ## Role Variables
@@ -91,7 +74,7 @@ roles:
 containerd_flavor: "base"
 
 # containerd version to install
-containerd_version: "2.2.1"
+containerd_version: "2.3.0"
 
 # Directory where to store "containerd" binaries
 containerd_binary_directory: "/usr/local/bin"
