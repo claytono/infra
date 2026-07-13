@@ -26,7 +26,7 @@ patches:
 
 images:
 - name: docker.io/recordsansible/ara-api
-  newTag: latest@sha256:1c52df15a892f691f2e57c541f944ec33ce377f160ed2d01d5aa84d37ccabddc
+  newTag: latest@sha256:9dfd6e18f474c2437081a0397310a264aa368b8364aea772c3b5b22bdd788cf5
 
 commonAnnotations:
   argoManaged: 'true'
