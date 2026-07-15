@@ -7,6 +7,7 @@ namespace: external-secrets
 resources:
 - namespace.yaml
 - helm/templates/crds/acraccesstoken.yaml
+- helm/templates/crds/beyondtrustworkloadcredentialsdynamicsecret.yaml
 - helm/templates/crds/clusterexternalsecret.yaml
 - helm/templates/crds/clustergenerator.yaml
 - helm/templates/crds/clustersecretstore.yaml
