@@ -2,7 +2,7 @@
 services:
   traefik:
     # renovate: datasource=docker
-    image: traefik:v3.7.4@sha256:fcdef599e6259359833dd2e1d49f9e964f66825d69bd3dd468f51102ce013d03
+    image: traefik:v3.7.6@sha256:21a3d83696379bac6434bb32e1dde0aff0e84ef2abd053ed3db87d3f45e749b2
     restart: unless-stopped
     ports:
       - "80:80"
