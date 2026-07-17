@@ -23,6 +23,8 @@ spec:
     spec:
       containers:
       - name: qbittorrent
+        # Before upgrading qBittorrent, verify the target version is supported by
+        # the qbit_manage image pinned in ../qbit-manage/deploy.yaml.
         image: ghcr.io/linuxserver/qbittorrent:5.2.3@sha256:352371a7242e8b4aa10958ca02076d1023758070519b89a10251475fb9f1a35a
         imagePullPolicy: Always
         ports:
