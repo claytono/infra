@@ -22,5 +22,6 @@ configMapGenerator:
   - packages__landroid_mower_alert.yaml=packages/landroid_mower_alert.yaml
   - packages__makita_charger_notifications.yaml=packages/makita_charger_notifications.yaml
   - packages__office_thermostat_gaming.yaml=packages/office_thermostat_gaming.yaml
+  - packages__rtl433_garden_sensors.yaml=packages/rtl433_garden_sensors.yaml
   - packages__temperature_alerts.yaml=packages/temperature_alerts.yaml
   - packages__ups_power.yaml=packages/ups_power.yaml
