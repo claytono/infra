@@ -1,0 +1,289 @@
+---
+mqtt:
+  sensor:
+  - name: Soil Moisture
+    <<: &wh51_moisture_defaults
+      value_template: '{{ value_json.moisture }}'
+      unit_of_measurement: '%'
+      device_class: moisture
+      expire_after: 3600
+      json_attributes_template: >-
+        {{
+          {
+            "battery_ok": value_json.battery_ok,
+            "battery_mV": value_json.battery_mV,
+            "boost": value_json.boost,
+            "ad_raw": value_json.ad_raw
+          } | tojson
+        }}
+    unique_id: wh51_0eb421_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0eb421_soil_moisture_wh51_0eb421
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    device:
+      <<: &wh51_device_defaults
+        model: WH51
+        manufacturer: Ecowitt
+        via_device: rtl_433
+      identifiers: [wh51_0eb421]
+      name: Peppers
+
+  - name: Soil Moisture
+    <<: *wh51_moisture_defaults
+    unique_id: wh51_0ff6b2_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0ff6b2_watermelons_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ff6b2
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0ff6b2
+    device:
+      <<: *wh51_device_defaults
+      identifiers: [wh51_0ff6b2]
+      name: Watermelons
+
+  - name: Soil Moisture
+    <<: *wh51_moisture_defaults
+    unique_id: wh51_0ff649_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0ff649_strawberries_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ff649
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0ff649
+    device:
+      <<: *wh51_device_defaults
+      identifiers: [wh51_0ff649]
+      name: Strawberries
+
+  - name: Soil Moisture
+    <<: *wh51_moisture_defaults
+    unique_id: wh51_0f1792_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0f1792_raspberries_soil_moisture_wh51_0f1792_raspberries
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    device:
+      <<: *wh51_device_defaults
+      identifiers: [wh51_0f1792]
+      name: Raspberries
+
+  - name: Soil Moisture
+    <<: *wh51_moisture_defaults
+    unique_id: wh51_0f41c5_moisture
+    default_entity_id: sensor.tomato_plant_soil_moisture_0f41c5
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f41c5
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0f41c5
+    device:
+      <<: *wh51_device_defaults
+      identifiers: [wh51_0f41c5]
+      name: Tomato Plant
+
+  - name: Soil Moisture
+    <<: *wh51_moisture_defaults
+    unique_id: wh51_0f170c_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0f170c_front_yard_containers_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    device:
+      <<: *wh51_device_defaults
+      identifiers: [wh51_0f170c]
+      name: Front Yard Containers
+
+  - name: Soil Moisture
+    <<: *wh51_moisture_defaults
+    unique_id: wh51_0f519f_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0f519f_verbena_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    device:
+      <<: *wh51_device_defaults
+      identifiers: [wh51_0f519f]
+      name: Verbena
+
+  - name: Soil Moisture
+    <<: *wh51_moisture_defaults
+    unique_id: wh51_0fb505_moisture
+    default_entity_id: sensor.wh51_soil_moisture_0fb505_hanging_plants_moisture
+    state_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    json_attributes_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    device:
+      <<: *wh51_device_defaults
+      identifiers: [wh51_0fb505]
+      name: Hanging Plants
+
+  - name: Battery Voltage
+    <<: &wh51_battery_defaults
+      value_template: '{{ (value_json.battery_mV / 1000) | round(3) }}'
+      unit_of_measurement: V
+      device_class: voltage
+      expire_after: 3600
+    unique_id: wh51_0eb421_battery
+    default_entity_id: sensor.wh51_soil_moisture_0eb421_soil_battery_wh51_0eb421
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    device:
+      identifiers: [wh51_0eb421]
+
+  - name: Battery Voltage
+    <<: *wh51_battery_defaults
+    unique_id: wh51_0ff6b2_battery
+    default_entity_id: sensor.wh51_soil_moisture_0ff6b2_watermelons_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ff6b2
+    device:
+      identifiers: [wh51_0ff6b2]
+
+  - name: Battery Voltage
+    <<: *wh51_battery_defaults
+    unique_id: wh51_0ff649_battery
+    default_entity_id: sensor.wh51_soil_moisture_0ff649_strawberries_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ff649
+    device:
+      identifiers: [wh51_0ff649]
+
+  - name: Battery Voltage
+    <<: *wh51_battery_defaults
+    unique_id: wh51_0f1792_battery
+    default_entity_id: sensor.wh51_soil_moisture_0f1792_raspberries_soil_battery_wh51_0f1792_raspberries
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    device:
+      identifiers: [wh51_0f1792]
+
+  - name: Battery Voltage
+    <<: *wh51_battery_defaults
+    unique_id: wh51_0f41c5_battery
+    default_entity_id: sensor.tomato_plant_soil_battery_0f41c5
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f41c5
+    device:
+      identifiers: [wh51_0f41c5]
+
+  - name: Battery Voltage
+    <<: *wh51_battery_defaults
+    unique_id: wh51_0f170c_battery
+    default_entity_id: sensor.wh51_soil_moisture_0f170c_front_yard_containers_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    device:
+      identifiers: [wh51_0f170c]
+
+  - name: Battery Voltage
+    <<: *wh51_battery_defaults
+    unique_id: wh51_0f519f_battery
+    default_entity_id: sensor.wh51_soil_moisture_0f519f_verbena_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    device:
+      identifiers: [wh51_0f519f]
+
+  - name: Battery Voltage
+    <<: *wh51_battery_defaults
+    unique_id: wh51_0fb505_battery
+    default_entity_id: sensor.wh51_soil_moisture_0fb505_hanging_plants_battery
+    state_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    device:
+      identifiers: [wh51_0fb505]
+
+  - name: Rain Meter WH40 51409
+    unique_id: wh40_51409_rain
+    state_topic: rtl_433/devices/EcoWitt-WH40/51409
+    value_template: '{{ value_json.rain_mm }}'
+    unit_of_measurement: mm
+    device_class: precipitation
+    state_class: total_increasing
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/EcoWitt-WH40/51409
+    json_attributes_template: >-
+      {{
+        {
+          "battery_V": value_json.battery_V,
+          "battery_ok": value_json.battery_ok,
+          "data": value_json.data
+        } | tojson
+      }}
+    device:
+      identifiers: [wh40_51409]
+      name: WH40 Rain Meter 51409
+      model: WH40
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Rain Meter Battery WH40 51409
+    unique_id: wh40_51409_battery
+    state_topic: rtl_433/devices/EcoWitt-WH40/51409
+    value_template: '{{ value_json.battery_V | round(3) }}'
+    unit_of_measurement: V
+    device_class: voltage
+    expire_after: 3600
+    device:
+      identifiers: [wh40_51409]
+
+  binary_sensor:
+  - name: Battery Low
+    <<: &wh51_battery_low_defaults
+      value_template: "{{ '0' if (value_json.battery_mV | int(0)) <= 1200 else '1' }}"
+      payload_on: '0'
+      payload_off: '1'
+      device_class: battery
+      expire_after: 3600
+    unique_id: wh51_0eb421_battery_low
+    default_entity_id: binary_sensor.wh51_soil_moisture_0eb421_soil_battery_low_wh51_0eb421
+    state_topic: rtl_433/devices/Fineoffset-WH51/0eb421
+    device:
+      identifiers: [wh51_0eb421]
+
+  - name: Battery Low
+    <<: *wh51_battery_low_defaults
+    unique_id: wh51_0ff6b2_battery_low
+    default_entity_id: binary_sensor.wh51_soil_moisture_0ff6b2_watermelons_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ff6b2
+    device:
+      identifiers: [wh51_0ff6b2]
+
+  - name: Battery Low
+    <<: *wh51_battery_low_defaults
+    unique_id: wh51_0ff649_battery_low
+    default_entity_id: binary_sensor.wh51_soil_moisture_0ff649_strawberries_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0ff649
+    device:
+      identifiers: [wh51_0ff649]
+
+  - name: Battery Low
+    <<: *wh51_battery_low_defaults
+    unique_id: wh51_0f1792_battery_low
+    default_entity_id: binary_sensor.none_soil_battery_low_wh51_0f1792_raspberries
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f1792
+    device:
+      identifiers: [wh51_0f1792]
+
+  - name: Battery Low
+    <<: *wh51_battery_low_defaults
+    unique_id: wh51_0f41c5_battery_low
+    default_entity_id: binary_sensor.tomato_plant_soil_battery_low_0f41c5
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f41c5
+    device:
+      identifiers: [wh51_0f41c5]
+
+  - name: Battery Low
+    <<: *wh51_battery_low_defaults
+    unique_id: wh51_0f170c_battery_low
+    default_entity_id: binary_sensor.wh51_soil_moisture_0f170c_front_yard_containers_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f170c
+    device:
+      identifiers: [wh51_0f170c]
+
+  - name: Battery Low
+    <<: *wh51_battery_low_defaults
+    unique_id: wh51_0f519f_battery_low
+    default_entity_id: binary_sensor.wh51_soil_moisture_0f519f_verbena_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0f519f
+    device:
+      identifiers: [wh51_0f519f]
+
+  - name: Battery Low
+    <<: *wh51_battery_low_defaults
+    unique_id: wh51_0fb505_battery_low
+    default_entity_id: binary_sensor.wh51_soil_moisture_0fb505_hanging_plants_battery_low
+    state_topic: rtl_433/devices/Fineoffset-WH51/0fb505
+    device:
+      identifiers: [wh51_0fb505]
+
+  - name: Rain Meter Battery Low WH40 51409
+    unique_id: wh40_51409_battery_low
+    state_topic: rtl_433/devices/EcoWitt-WH40/51409
+    value_template: "{{ '0' if (value_json.battery_V | float(0)) <= 1.2 else '1' }}"
+    payload_on: '0'
+    payload_off: '1'
+    device_class: battery
+    expire_after: 3600
+    device:
+      identifiers: [wh40_51409]
