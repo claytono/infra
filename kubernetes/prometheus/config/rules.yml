@@ -48,10 +48,10 @@ groups:
         in more than 6 hours
   - alert: Outdoor_Sensor_Battery_Low
     expr: >
-      (hass_sensor_voltage_v{entity=~"sensor.*(soil|rain).*battery.*"} < 1.2)
+      (hass_sensor_voltage_v{entity=~"sensor.*(soil|rain).*battery.*"} <= 1.2)
       or
-      ((hass_sensor_voltage_mv{entity=~"sensor.*(soil|rain).*battery.*"} / 1000) <
-      1.2)
+      ((hass_sensor_voltage_mv{entity=~"sensor.*(soil|rain).*battery.*"} / 1000)
+      <= 1.2)
     for: 1h
     annotations:
       message: '{{ $labels.friendly_name }} is at {{ $value }}V - replace battery'
