@@ -155,7 +155,7 @@ spec:
       serviceAccountName: multus
       containers:
         - name: kube-multus
-          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:25aeda00911e5c01dc24037a5f95a8031ee8165dbcd4055ef987450dd833d3d7
+          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:3441cb5b6e780894bc02331b61029d4fd42d8851d701b50a1b4235f61f48f96d
           command: [ "/usr/src/multus-cni/bin/multus-daemon" ]
           resources:
             requests:
@@ -202,7 +202,7 @@ spec:
                   fieldPath: spec.nodeName
       initContainers:
         - name: install-multus-binary
-          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:25aeda00911e5c01dc24037a5f95a8031ee8165dbcd4055ef987450dd833d3d7
+          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:3441cb5b6e780894bc02331b61029d4fd42d8851d701b50a1b4235f61f48f96d
           command:
             - "/usr/src/multus-cni/bin/install_multus"
             - "-d"
