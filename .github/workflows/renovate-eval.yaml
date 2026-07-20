@@ -24,7 +24,7 @@ on:
         description: Codex reasoning effort
         required: false
         type: string
-        default: xhigh
+        default: ''
       codex_agent_timeout:
         description: Codex agent subprocess timeout in seconds; 0 disables it
         required: false
@@ -48,7 +48,7 @@ jobs:
       trigger: ${{ github.event_name == 'pull_request' && 'auto' || 'manual' }}
       dry_run: ${{ inputs.dry_run || false }}
       codex_runner_label: ${{ inputs.codex_runner_label || 'codex' }}
-      codex_reasoning_effort: ${{ inputs.codex_reasoning_effort || 'xhigh' }}
+      codex_reasoning_effort: ${{ inputs.codex_reasoning_effort }}
       codex_agent_timeout: ${{ inputs.codex_agent_timeout || '0' }}
     secrets:
       cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
