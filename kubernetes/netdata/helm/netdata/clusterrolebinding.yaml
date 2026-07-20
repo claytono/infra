@@ -6,7 +6,7 @@ metadata:
   name: netdata
   labels:
     app: netdata
-    chart: netdata-3.7.168
+    chart: netdata-3.7.169
     release: netdata
     heritage: Helm
 roleRef:
