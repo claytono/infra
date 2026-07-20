@@ -20,3 +20,4 @@ spec:
   selector:
     app.kubernetes.io/name: valkey
     app.kubernetes.io/instance: valkey
+

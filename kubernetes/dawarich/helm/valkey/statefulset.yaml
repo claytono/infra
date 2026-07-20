@@ -103,3 +103,4 @@ spec:
         - name: valkey-data
           persistentVolumeClaim:
             claimName: valkey
+
