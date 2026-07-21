@@ -22,6 +22,7 @@ resources:
 # Generated helm resources - do not edit below this line
 - helm/templates/argocd-application-controller/clusterrole.yaml
 - helm/templates/argocd-application-controller/clusterrolebinding.yaml
+- helm/templates/argocd-application-controller/networkpolicy.yaml
 - helm/templates/argocd-application-controller/role.yaml
 - helm/templates/argocd-application-controller/rolebinding.yaml
 - helm/templates/argocd-application-controller/serviceaccount.yaml
@@ -43,10 +44,12 @@ resources:
 - helm/templates/argocd-notifications/clusterrole.yaml
 - helm/templates/argocd-notifications/clusterrolebinding.yaml
 - helm/templates/argocd-notifications/deployment.yaml
+- helm/templates/argocd-notifications/networkpolicy.yaml
 - helm/templates/argocd-notifications/role.yaml
 - helm/templates/argocd-notifications/rolebinding.yaml
 - helm/templates/argocd-notifications/serviceaccount.yaml
 - helm/templates/argocd-repo-server/deployment.yaml
+- helm/templates/argocd-repo-server/networkpolicy.yaml
 - helm/templates/argocd-repo-server/role.yaml
 - helm/templates/argocd-repo-server/rolebinding.yaml
 - helm/templates/argocd-repo-server/service.yaml
@@ -55,6 +58,7 @@ resources:
 - helm/templates/argocd-server/clusterrolebinding.yaml
 - helm/templates/argocd-server/deployment.yaml
 - helm/templates/argocd-server/ingress.yaml
+- helm/templates/argocd-server/networkpolicy.yaml
 - helm/templates/argocd-server/role.yaml
 - helm/templates/argocd-server/rolebinding.yaml
 - helm/templates/argocd-server/service.yaml
@@ -63,6 +67,7 @@ resources:
 - helm/templates/crds/crd-applicationset.yaml
 - helm/templates/crds/crd-appproject.yaml
 - helm/templates/dex/deployment.yaml
+- helm/templates/dex/networkpolicy.yaml
 - helm/templates/dex/role.yaml
 - helm/templates/dex/rolebinding.yaml
 - helm/templates/dex/service.yaml
@@ -73,4 +78,5 @@ resources:
 - helm/templates/redis-secret-init/serviceaccount.yaml
 - helm/templates/redis/deployment.yaml
 - helm/templates/redis/health-configmap.yaml
+- helm/templates/redis/networkpolicy.yaml
 - helm/templates/redis/service.yaml
