@@ -1,4 +1,8 @@
 ---
+global:
+  networkPolicy:
+    create: false
+
 server:
   containerPorts:
     server: 8443
