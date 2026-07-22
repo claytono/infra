@@ -1,0 +1,12 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+
+metadata:
+  name: redirect-root
+
+spec:
+  redirectRegex:
+    regex: ^https://minuspod\.k\.oneill\.net/?(\?.*)?$
+    replacement: https://minuspod.k.oneill.net/ui/${1}
+    permanent: true

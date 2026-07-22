@@ -7,6 +7,13 @@ metadata:
   annotations:
     ak-type: simple
     cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: MinusPod
+    gethomepage.dev/description: Podcast Ad Removal
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: mdi-podcast
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=minuspod
+    traefik.ingress.kubernetes.io/router.middlewares: minuspod-redirect-root@kubernetescrd,authentik-ak-forward-auth-simple@kubernetescrd
 
 spec:
   tls:
