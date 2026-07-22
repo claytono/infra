@@ -52,6 +52,16 @@ spec:
     app.kubernetes.io/controller: main
     app.kubernetes.io/instance: immich
     app.kubernetes.io/name: machine-learning
+
+
+
+
+
+
+
+
+
+
 ---
 # Source: immich/templates/machine-learning.yaml
 apiVersion: apps/v1
