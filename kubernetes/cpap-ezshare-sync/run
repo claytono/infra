@@ -1,0 +1,54 @@
+#!/bin/bash
+set -euo pipefail
+
+# renovate: datasource=github-releases depName=haimgel/ezshare-sync
+EZSHARE_SYNC_VERSION=1.1.2
+EZSHARE_URL=${EZSHARE_URL:-http://192.168.4.1}
+SYNC_TARGET=${SYNC_TARGET:-/mirror/card}
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates curl
+
+work_dir=$(mktemp -d /tmp/ezshare-sync.XXXXXX)
+trap 'rm -rf -- "$work_dir"' EXIT
+
+archive="ezshare-sync_${EZSHARE_SYNC_VERSION}_linux_amd64.tar.gz"
+release_url="https://github.com/haimgel/ezshare-sync/releases/download/v${EZSHARE_SYNC_VERSION}/${archive}"
+
+curl -fsSL \
+  --connect-timeout 10 \
+  --retry 5 \
+  --retry-all-errors \
+  -o "$work_dir/$archive" \
+  "$release_url"
+
+tar -xzf "$work_dir/$archive" -C "$work_dir" ezshare-sync
+chmod 0755 "$work_dir/ezshare-sync"
+
+mkdir -p -- "$SYNC_TARGET"
+
+sync_log="$work_dir/sync.log"
+set +e
+"$work_dir/ezshare-sync" -url "$EZSHARE_URL" -target "$SYNC_TARGET" \
+  2>&1 | tee "$sync_log"
+sync_status=${PIPESTATUS[0]}
+set -e
+
+error_count=$(grep -c 'ERROR:' "$sync_log" || true)
+ignored_count=$(grep -Ec \
+  'ERROR: Failed to sync directory /(\.Spotlight-V100|\.fseventsd):' \
+  "$sync_log" || true)
+
+if ((sync_status != 0 &&
+     error_count > 0 &&
+     error_count == ignored_count)) &&
+   grep -Eq \
+     "Sync complete: [0-9]+ files synced, [0-9]+ skipped, ${error_count} errors$" \
+     "$sync_log"; then
+  printf 'Ignoring %d macOS metadata directory error(s)\n' \
+    "$ignored_count" >&2
+  exit 0
+fi
+
+exit "$sync_status"
