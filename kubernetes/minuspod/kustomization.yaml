@@ -12,9 +12,7 @@ resources:
 - deploy.yaml
 - service.yaml
 - ingress.yaml
-
-components:
-- ../components/authentik
+- middleware-redirect-root.yaml
 
 commonAnnotations:
   argoManaged: 'true'
