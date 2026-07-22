@@ -9,9 +9,18 @@ commonAnnotations:
 
 resources:
 - deploy.yaml
+- externalsecret.yaml
 - pvc.yaml
 - service.yaml
 - ingress.yaml
+
+configMapGenerator:
+- name: qbittorrent-scripts
+  files:
+  - scripts/check-health.sh
+
+generatorOptions:
+  disableNameSuffixHash: true
 
 labels:
 

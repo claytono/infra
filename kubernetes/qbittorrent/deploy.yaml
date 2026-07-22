@@ -8,6 +8,7 @@ metadata:
     app: qbittorrent
   annotations:
     goldilocks.fairwinds.com/vpa-resource-policy: '{"containerPolicies":[{"containerName":"*","controlledValues":"RequestsOnly","maxAllowed":{"memory":"2Gi"}}]}'
+    reloader.stakater.com/auto: 'true'
 
 spec:
   strategy:
@@ -30,11 +31,28 @@ spec:
         ports:
         - containerPort: 8080
         - containerPort: 51414
+        startupProbe:
+          exec:
+            command:
+            - /scripts/check-health.sh
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 60
+        readinessProbe:
+          exec:
+            command:
+            - /scripts/check-health.sh
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
         volumeMounts:
         - mountPath: /config
           name: config
         - mountPath: /downloads
           name: downloads
+        - mountPath: /scripts
+          name: scripts
+          readOnly: true
         env:
         - name: PUID
           value: '10001'
@@ -42,6 +60,11 @@ spec:
           value: '10001'
         - name: TZ
           value: America/New_York
+        - name: QBITTORRENT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent
+              key: api-key
       volumes:
       - name: config
         persistentVolumeClaim:
@@ -50,3 +73,7 @@ spec:
           server: fs2.oneill.net
           path: /volume2/shared/downloads
         name: downloads
+      - name: scripts
+        configMap:
+          name: qbittorrent-scripts
+          defaultMode: 0555
