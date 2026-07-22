@@ -12,7 +12,9 @@
 
 - name: "Install wanted packages"
   ansible.builtin.apt:
-    name: "{{ common_packages_to_install }}"
+    name: >-
+      {{ common_packages_to_install
+         + (common_additional_packages | default([])) }}
     state: present
     autoremove: true
 

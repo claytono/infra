@@ -154,14 +154,13 @@
     },
     {
       "customType": "regex",
+      "description": "GitHub release versions in Kubernetes run scripts",
       "managerFilePatterns": [
-        "kubernetes/got-your-back/run"
+        "/^kubernetes\\/[^/]+\\/run$/"
       ],
       "matchStrings": [
-        "VERSION=(?<currentValue>\\d+\\.\\d+)"
-      ],
-      "depNameTemplate": "GAM-team/got-your-back",
-      "datasourceTemplate": "github-releases"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[A-Z0-9_]*VERSION=(?<currentValue>\\d+(?:\\.\\d+)+)"
+      ]
     }
   ],
   "packageRules": [

@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: data
+
+spec:
+  storageClassName: nfs
+  accessModes:
+  - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 20Gi
