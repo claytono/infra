@@ -213,11 +213,14 @@
       ]
     },
     {
-      "matchPackageNames": [
-        "ghcr.io/linuxserver/qbittorrent"
+      "matchDatasources": [
+        "docker"
       ],
-      "allowedVersions": "< 14",
-      "description": "Only allow qbittorrent versions < 14 to avoid Ubuntu LTS tags"
+      "matchPackageNames": [
+        "ghcr.io/qbittorrent/docker-qbittorrent-nox"
+      ],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<compatibility>lt2)-(?<build>\\d+)$",
+      "description": "Track LT2 qBittorrent image build revisions"
     },
     {
       "matchPackageNames": [
