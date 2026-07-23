@@ -28,6 +28,8 @@ spec:
         image: ghcr.io/autobrr/qui:v1.23.0@sha256:b1abd18f1d544cd5c63a3b8d9c8a91d097143e04df416567a8cb52040f380ca8
         ports:
         - containerPort: 7476
+        - containerPort: 9074
+          name: metrics
         envFrom:
         - secretRef:
             name: qui-oidc
@@ -42,6 +44,12 @@ spec:
           value: https://auth.k.oneill.net/application/o/qui/
         - name: QUI__OIDC_REDIRECT_URL
           value: https://qui.k.oneill.net/api/auth/oidc/callback
+        - name: QUI__METRICS_ENABLED
+          value: 'true'
+        - name: QUI__METRICS_HOST
+          value: 0.0.0.0
+        - name: QUI__METRICS_PORT
+          value: '9074'
         volumeMounts:
         - mountPath: /config
           name: config

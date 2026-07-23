@@ -11,6 +11,7 @@ commonAnnotations:
 
 resources:
 - deploy.yaml
+- externalsecret.yaml
 - service.yaml
 
 labels:

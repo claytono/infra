@@ -10,6 +10,7 @@ commonAnnotations:
 resources:
 - deploy.yaml
 - service.yaml
+- service-metrics.yaml
 - ingress.yaml
 - externalsecret.yaml
 - pvc-config.yaml

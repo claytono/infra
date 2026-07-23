@@ -25,8 +25,11 @@ groups:
       message: xtal is reachable by LAN ICMP, but node_exporter over Tailscale has
         not been scraped for 35 minutes
   - alert: ICMPUnreachable
-    expr: probe_success == 0
+    expr: probe_success{job="blackbox"} == 0
     for: 20m
+  - alert: QBittorrentAPIUnreachable
+    expr: probe_success{job=~"qbittorrent-api-(pod|ingress)"} == 0
+    for: 5m
   - alert: ExporterDown
     expr: up{job!="node resources", job!="hwinfo gaming pc", resticprofile!~".+"}
       == 0
