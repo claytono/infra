@@ -47,7 +47,7 @@ spec:
           readOnly: false
         - name: qbittorrent-config
           mountPath: /torrents
-          subPath: qBittorrent/BT_backup
+          subPath: qBittorrent/data/BT_backup
           readOnly: true
 
       volumes:
