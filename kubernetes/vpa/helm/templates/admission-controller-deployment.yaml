@@ -12,7 +12,7 @@ metadata:
     app.kubernetes.io/version: "1.6.0"
     app.kubernetes.io/managed-by: Helm
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -46,6 +46,7 @@ spec:
             - --register-webhook=false
             - --webhook-service=vpa-webhook
             - --feature-gates=InPlaceOrRecreate=true
+            - --reload-cert=true
           volumeMounts:
             - name: tls-certs
               mountPath: "/etc/tls-certs"
@@ -97,6 +98,15 @@ spec:
                 path: serverCert.pem
               - key: tls.key
                 path: serverKey.pem
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: admission-controller
+                app.kubernetes.io/instance: vpa
+                app.kubernetes.io/name: vpa
+            topologyKey: kubernetes.io/hostname
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane

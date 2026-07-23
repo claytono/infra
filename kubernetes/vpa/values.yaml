@@ -21,26 +21,42 @@ updater:
 
 admissionController:
   enabled: true  # Apply recommendations to NEW pods
+  replicaCount: 2
+  podDisruptionBudget:
+    minAvailable: 1
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: admission-controller
+            app.kubernetes.io/instance: vpa
+            app.kubernetes.io/name: vpa
+        topologyKey: kubernetes.io/hostname
   generateCertificate: false  # Use cert-manager instead of Helm hooks
   secretName: vpa-webhook-tls
   extraArgs:
     feature-gates: "InPlaceOrRecreate=true"
+    reload-cert: "true"
   tlsSecretKeys:
-    - key: ca.crt
-      path: caCert.pem
-    - key: tls.crt
-      path: serverCert.pem
-    - key: tls.key
-      path: serverKey.pem
+  - key: ca.crt
+    path: caCert.pem
+  - key: tls.crt
+    path: serverCert.pem
+  - key: tls.key
+    path: serverKey.pem
   tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Exists
-      effect: NoSchedule
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
   mutatingWebhookConfiguration:
+    # Reject pod creation if VPA mutation fails instead of silently admitting
+    # an unmodified pod without resource requests.
+    failurePolicy: Fail
     annotations:
       cert-manager.io/inject-ca-from: vpa/vpa-webhook-cert
     namespaceSelector:
       matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values: [vpa]
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values: [vpa, cert-manager]

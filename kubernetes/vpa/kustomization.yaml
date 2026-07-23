@@ -11,6 +11,7 @@ resources:
 - helm/templates/clusterroles.yaml
 - helm/templates/recommender-deployment.yaml
 - helm/templates/recommender-service-account.yaml
+- helm/templates/admission-controller-pdb.yaml
 - helm/templates/admission-controller-deployment.yaml
 - helm/templates/admission-controller-service-account.yaml
 - helm/templates/admission-controller-service.yaml
@@ -27,6 +28,7 @@ commonAnnotations:
   argoManaged: 'true'
 
 labels:
+
 - pairs:
     app: vpa
 
