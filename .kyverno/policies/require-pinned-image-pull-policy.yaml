@@ -1,0 +1,72 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+
+metadata:
+  name: require-pinned-image-pull-policy
+
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: require-if-not-present-for-pinned-images
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: >-
+        Images pinned by digest must omit imagePullPolicy or set it to
+        IfNotPresent. Images using a latest tag must set it explicitly.
+      foreach:
+      - list: request.object.spec.containers || `[]`
+        preconditions:
+          all:
+          - key: "{{ contains(element.image, '@sha256:') }}"
+            operator: Equals
+            value: true
+        deny:
+          conditions:
+            any:
+            - key: "{{ element.imagePullPolicy || 'IfNotPresent' }}"
+              operator: NotEquals
+              value: IfNotPresent
+            - key: >-
+                {{ element.imagePullPolicy ||
+                contains(element.image, ':latest@sha256:') }}
+              operator: Equals
+              value: true
+      - list: request.object.spec.initContainers || `[]`
+        preconditions:
+          all:
+          - key: "{{ contains(element.image, '@sha256:') }}"
+            operator: Equals
+            value: true
+        deny:
+          conditions:
+            any:
+            - key: "{{ element.imagePullPolicy || 'IfNotPresent' }}"
+              operator: NotEquals
+              value: IfNotPresent
+            - key: >-
+                {{ element.imagePullPolicy ||
+                contains(element.image, ':latest@sha256:') }}
+              operator: Equals
+              value: true
+      - list: request.object.spec.ephemeralContainers || `[]`
+        preconditions:
+          all:
+          - key: "{{ contains(element.image, '@sha256:') }}"
+            operator: Equals
+            value: true
+        deny:
+          conditions:
+            any:
+            - key: "{{ element.imagePullPolicy || 'IfNotPresent' }}"
+              operator: NotEquals
+              value: IfNotPresent
+            - key: >-
+                {{ element.imagePullPolicy ||
+                contains(element.image, ':latest@sha256:') }}
+              operator: Equals
+              value: true

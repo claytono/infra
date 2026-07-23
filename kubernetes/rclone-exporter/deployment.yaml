@@ -22,6 +22,7 @@ spec:
       containers:
       - name: rclone-exporter
         image: ghcr.io/crazyuploader/rclone_exporter:latest@sha256:bfed0633be29c7d14f895b578452e5356dca28644878dfa5a6eebe5021a84c5b
+        imagePullPolicy: IfNotPresent
         env:
         - name: RC_EXPORTER_RCLONE_TIMEOUT
           value: 1m50s
