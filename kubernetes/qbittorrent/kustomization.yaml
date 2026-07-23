@@ -18,6 +18,7 @@ configMapGenerator:
 - name: qbittorrent-scripts
   files:
   - scripts/check-health.sh
+  - scripts/cross-seed-hook.sh
 
 generatorOptions:
   disableNameSuffixHash: true
