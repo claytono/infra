@@ -5,3 +5,11 @@ modules:
     timeout: 5s
     icmp:
       preferred_ip_protocol: ip4
+  qbittorrent_api:
+    prober: http
+    timeout: 3s
+    http:
+      preferred_ip_protocol: ip4
+      authorization:
+        type: Bearer
+        credentials_file: /secrets/qbittorrent-api-key
