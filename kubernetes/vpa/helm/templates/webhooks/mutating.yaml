@@ -30,6 +30,8 @@ webhooks:
       values:
       - vpa
       - cert-manager
+      - kube-system
+      - kube-flannel
   objectSelector: 
     {}
   reinvocationPolicy: Never

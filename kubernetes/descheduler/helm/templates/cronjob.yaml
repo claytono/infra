@@ -19,7 +19,7 @@ spec:
         metadata:
           name: descheduler
           annotations:
-            checksum/config: e9a9ab4fceb73cd039544c1623189d0a475d066fe375b666455078932bb05531
+            checksum/config: 07cf99015c60f5e01ad8424eaf29bc767a0c9f22606320533a890e34457db7a2
           labels:
             app.kubernetes.io/name: descheduler
             app.kubernetes.io/instance: descheduler

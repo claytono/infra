@@ -26,13 +26,15 @@ admissionController:
     minAvailable: 1
   affinity:
     podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchLabels:
-            app.kubernetes.io/component: admission-controller
-            app.kubernetes.io/instance: vpa
-            app.kubernetes.io/name: vpa
-        topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: admission-controller
+              app.kubernetes.io/instance: vpa
+              app.kubernetes.io/name: vpa
+          topologyKey: kubernetes.io/hostname
   generateCertificate: false  # Use cert-manager instead of Helm hooks
   secretName: vpa-webhook-tls
   extraArgs:
@@ -59,4 +61,4 @@ admissionController:
       matchExpressions:
       - key: kubernetes.io/metadata.name
         operator: NotIn
-        values: [vpa, cert-manager]
+        values: [vpa, cert-manager, kube-system, kube-flannel]

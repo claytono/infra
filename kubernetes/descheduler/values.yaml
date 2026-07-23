@@ -27,11 +27,19 @@ deschedulerPolicy:
       args:
         podRestartThreshold: 10
         includingInitContainers: true
+    - name: RemoveDuplicates
+      args:
+        namespaces:
+          include:
+          - vpa
     plugins:
       deschedule:
         enabled:
         - PodLifeTime
         - RemovePodsHavingTooManyRestarts
+      balance:
+        enabled:
+        - RemoveDuplicates
   - name: node-utilization
     pluginConfig:
     - name: DefaultEvictor

@@ -100,13 +100,15 @@ spec:
                 path: serverKey.pem
       affinity:
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app.kubernetes.io/component: admission-controller
-                app.kubernetes.io/instance: vpa
-                app.kubernetes.io/name: vpa
-            topologyKey: kubernetes.io/hostname
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: admission-controller
+                  app.kubernetes.io/instance: vpa
+                  app.kubernetes.io/name: vpa
+              topologyKey: kubernetes.io/hostname
+            weight: 100
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane

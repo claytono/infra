@@ -39,7 +39,15 @@ data:
           includingInitContainers: true
           podRestartThreshold: 10
         name: RemovePodsHavingTooManyRestarts
+      - args:
+          namespaces:
+            include:
+            - vpa
+        name: RemoveDuplicates
       plugins:
+        balance:
+          enabled:
+          - RemoveDuplicates
         deschedule:
           enabled:
           - PodLifeTime
