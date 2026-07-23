@@ -135,7 +135,7 @@ module.exports = {
      * "2w"
      * "3 days"
      */
-    excludeOlder: "2w",
+    excludeOlder: "12w",
     /**
      * Exclude torrents which have been searched
      * more recently than this long ago.
@@ -144,7 +144,7 @@ module.exports = {
      * "2w"
      * "3 days"
      */
-    excludeRecentSearch: "3d",
+    excludeRecentSearch: "6w",
     /**
      * With "inject" you need to set up one of the below clients.
      * Options: "save", "inject"
