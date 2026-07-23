@@ -38,4 +38,4 @@ spec:
         command: [/usr/bin/mosquitto_sub]
         args: [-h, mosquitto, -t, '#', -v, -u, $(MQTT_USERNAME), -P, $(MQTT_PASSWORD),
           -F, '{"timestamp":"%I","topic":"%t","message":"%p"}']
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent

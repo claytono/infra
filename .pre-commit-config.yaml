@@ -72,10 +72,11 @@ repos:
     pass_filenames: false
   - id: kyverno-validate
     name: kyverno policy validation
-    entry: kubernetes/scripts/kyverno-wrapper
+    entry: kubernetes/scripts/kyverno-wrapper --all-pinned-images
     language: system
     pass_filenames: true
-    files: ^kubernetes/.*\.(ya?ml)$
+    always_run: true
+    files: ^(kubernetes/.*|\.kyverno/policies/.*)\.(ya?ml)$
   - id: esphome-hosts-check
     name: check ESPHome hosts terraform is up to date
     entry: scripts/gen-esphome-hosts --check

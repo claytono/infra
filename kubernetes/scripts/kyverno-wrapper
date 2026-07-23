@@ -1,25 +1,76 @@
 #!/usr/bin/env bash
-# Filter YAML files to only those with valid Kubernetes kind field
-# Pass filtered files to kyverno apply
+# Normalize Kubernetes YAML documents and pass them to kyverno apply.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASEDIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 POLICY_DIR="$BASEDIR/.kyverno/policies"
+PINNED_IMAGE_POLICY="$POLICY_DIR/require-pinned-image-pull-policy.yaml"
 
-# Use yq to filter all files at once - much faster than per-file checks
-# select(.kind) filters to documents with a kind field, filename outputs the path
-mapfile -t valid_files < <(yq 'select(.kind) | filename' "$@" 2>/dev/null | sort -u)
+validate_files() {
+  local policy_path=$1
+  local resource_file=$2
+  shift 2
 
-if [[ ${#valid_files[@]} -eq 0 ]]; then
+  if [[ $# -eq 0 ]]; then
+    return
+  fi
+
+  # First identify parseable files containing Kubernetes resources. Some
+  # values files are intentionally not standalone YAML and are ignored here.
+  local -a valid_files
+  mapfile -t valid_files < <(
+    printf '%s\0' "$@" \
+      | xargs -0 -n 1 -P 8 yq 'select(.kind) | filename' 2>/dev/null \
+      | sort -u
+  )
+
+  if [[ ${#valid_files[@]} -eq 0 ]]; then
+    return
+  fi
+
+  # Normalize multi-document input before validation. This removes empty
+  # documents and comments which the Kyverno CLI can otherwise reject.
+  yq 'select(.kind and .kind != "CustomResourceDefinition")' \
+    "${valid_files[@]}" > "$resource_file"
+
+  if [[ -s $resource_file ]]; then
+    kyverno apply "$policy_path" --resource "$resource_file"
+  fi
+}
+
+validate_all_pinned_images=false
+if [[ ${1:-} == "--all-pinned-images" ]]; then
+  validate_all_pinned_images=true
+  shift
+fi
+
+temp_dir=$(mktemp -d)
+trap 'rm -rf "$temp_dir"' EXIT
+
+# Preserve the existing behavior for changed, non-generated manifests.
+validate_files "$POLICY_DIR" "$temp_dir/changed-resources.yaml" "$@"
+
+if [[ $validate_all_pinned_images != true ]]; then
   exit 0
 fi
 
-# Build --resource args
-args=()
-for f in "${valid_files[@]}"; do
-  args+=(--resource "$f")
-done
+# Build each deployable, top-level Kustomization so the pinned-image policy
+# evaluates final resources after Helm output, patches, and components are
+# composed.
+raw_resource_file="$temp_dir/raw-rendered-resources.yaml"
+while IFS= read -r kustomization; do
+  printf '%s\n' '---' >> "$raw_resource_file"
+  kubectl kustomize "${kustomization%/*}" >> "$raw_resource_file"
+done < <(
+  find "$BASEDIR/kubernetes" -mindepth 2 -maxdepth 2 -type f \
+    \( -name 'kustomization.yaml' -o -name 'kustomization.yml' \) \
+    | sort
+)
 
-exec kyverno apply "$POLICY_DIR" "${args[@]}"
+yq 'select(.kind and .kind != "CustomResourceDefinition")' \
+  "$raw_resource_file" > "$temp_dir/rendered-resources.yaml"
+
+kyverno apply "$PINNED_IMAGE_POLICY" \
+  --resource "$temp_dir/rendered-resources.yaml"
