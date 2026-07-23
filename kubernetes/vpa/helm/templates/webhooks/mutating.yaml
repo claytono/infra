@@ -20,7 +20,7 @@ webhooks:
       name: vpa-webhook
       namespace: vpa
       port: 443
-  failurePolicy: Ignore
+  failurePolicy: Fail
   matchPolicy: Equivalent
   name: vpa.k8s.io
   namespaceSelector: 
@@ -29,6 +29,7 @@ webhooks:
       operator: NotIn
       values:
       - vpa
+      - cert-manager
   objectSelector: 
     {}
   reinvocationPolicy: Never

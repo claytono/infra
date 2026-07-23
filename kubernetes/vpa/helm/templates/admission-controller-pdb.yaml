@@ -1,0 +1,14 @@
+---
+# Source: vpa/templates/admission-controller-pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: "vpa-admission-controller-pdb"
+  namespace: vpa
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: admission-controller
+      app.kubernetes.io/name: vpa
+
