@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.29.1"
+    app.kubernetes.io/version: "1.30.0"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: cloudnative-pg/templates/rbac.yaml
@@ -19,7 +19,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.29.1"
+    app.kubernetes.io/version: "1.30.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -137,7 +137,17 @@ rules:
   verbs:
   - create
   - get
+  - list
   - update
+  - watch
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -166,6 +176,7 @@ rules:
   resources:
   - backups
   - clusters
+  - databaseroles
   - databases
   - poolers
   - publications
@@ -213,6 +224,7 @@ rules:
   - postgresql.cnpg.io
   resources:
   - clusters/finalizers
+  - databaseroles/finalizers
   - poolers/finalizers
   verbs:
   - update
@@ -220,6 +232,7 @@ rules:
   - postgresql.cnpg.io
   resources:
   - clusters/status
+  - databaseroles/status
   - poolers/status
   - failoverquorums/status
   verbs:
@@ -258,7 +271,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.29.1"
+    app.kubernetes.io/version: "1.30.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -267,6 +280,7 @@ rules:
   - backups
   - clusters
   - clusters/status
+  - databaseroles
   - databases
   - failoverquorums
   - poolers
@@ -288,7 +302,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.29.1"
+    app.kubernetes.io/version: "1.30.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -297,6 +311,7 @@ rules:
   - backups
   - clusters
   - clusters/status
+  - databaseroles
   - databases
   - failoverquorums
   - poolers
@@ -320,7 +335,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.29.1"
+    app.kubernetes.io/version: "1.30.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
