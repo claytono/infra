@@ -11,6 +11,7 @@ k5 ansible_host=k5.oneill.net domain=oneill.net
 #gasherbrum-display ansible_host=gasherbrum-display.oneill.net domain=oneill.net
 pantrypi ansible_host=pantrypi.oneill.net domain=oneill.net
 garagepi ansible_host=garagepi.oneill.net domain=oneill.net
+spoolbuddy ansible_host=spoolbuddy.oneill.net domain=oneill.net
 infra1 ansible_host=infra1.oneill.net domain=oneill.net
 p1 ansible_host=p1.oneill.net domain=oneill.net
 
@@ -45,6 +46,7 @@ k5
 #gasherbrum-display
 pantrypi
 garagepi
+spoolbuddy
 
 [pizero]
 #voron2-pizero
