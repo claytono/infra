@@ -119,6 +119,12 @@ locals {
       hostname = "pantrypi.oneill.net"
       note     = "Raspberry Pi in pantry - zwavejs, zigbee2mqtt, rtl433"
     }
+    spoolbuddy = {
+      mac      = "dc:a6:32:9d:b7:10"
+      ip       = "172.19.74.87"
+      hostname = "spoolbuddy.oneill.net"
+      note     = "Raspberry Pi 4 for BambuBuddy SpoolBuddy"
+    }
     landroid = {
       mac         = "7c:fa:80:61:08:2e"
       ip          = "172.20.6.67"
