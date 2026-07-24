@@ -23,6 +23,8 @@ including:
 
 - **GitOps for Kubernetes**: We test locally first with `kubectl apply -k`
   before creating PRs for ArgoCD deployment
+- **Kubernetes service access**: Use configured ingress by default. Use
+  `kubectl port-forward` only when direct service access is explicitly required
 - **Infrastructure as code**: All changes tracked in version control
 - **Automation first**: Prefer scripts and tooling over manual steps
 
