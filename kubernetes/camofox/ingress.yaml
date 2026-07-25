@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: camofox
+  annotations:
+    ak-type: simple
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/description: Shared Browser Automation
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/group: Infrastructure
+    gethomepage.dev/icon: firefox.png
+    gethomepage.dev/name: Camofox
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=camofox
+    traefik.ingress.kubernetes.io/router.middlewares: camofox-root-redirect@kubernetescrd,authentik-ak-forward-auth-simple@kubernetescrd
+
+spec:
+  tls:
+  - hosts:
+    - camofox.k.oneill.net
+    secretName: camofox-tls
+  rules:
+  - host: camofox.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: camofox
+            port:
+              number: 6080

@@ -1,0 +1,12 @@
+{
+  "plugins": {
+    "persistence": {
+      "enabled": true,
+      "profileDir": "/data/profiles"
+    },
+    "vnc": {
+      "enabled": true,
+      "resolution": "1920x1080"
+    }
+  }
+}

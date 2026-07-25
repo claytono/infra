@@ -1,0 +1,12 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+
+metadata:
+  name: root-redirect
+
+spec:
+  redirectRegex:
+    regex: ^https://camofox\.k\.oneill\.net/?$
+    replacement: https://camofox.k.oneill.net/vnc.html?autoconnect=true&resize=scale
+    permanent: false
