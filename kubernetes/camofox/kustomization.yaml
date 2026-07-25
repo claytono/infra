@@ -1,0 +1,33 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: camofox
+
+resources:
+- deployment.yaml
+- ingress.yaml
+- middleware-root-redirect.yaml
+- namespace.yaml
+- pvc.yaml
+- service.yaml
+- tailscale-ingress.yaml
+
+configMapGenerator:
+- name: camofox-config
+  files:
+  - camofox.config.json
+  - vnc-watcher-lib.sh
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+commonAnnotations:
+  argoManaged: 'true'
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: camofox
+    app.kubernetes.io/instance: camofox
+  includeSelectors: true

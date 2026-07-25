@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: camofox
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: camofox
+      app.kubernetes.io/instance: camofox
+  template:
+    metadata:
+      name: camofox
+      labels:
+        app.kubernetes.io/name: camofox
+        app.kubernetes.io/instance: camofox
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 0
+      containers:
+      - name: camofox
+        image: ghcr.io/jo-inc/camofox-browser:1.13.0@sha256:64b30ffdbbc4ae0e28200a66dfbd6f55ac4188229eb34ef769afcf7be40faa6e
+        ports:
+        - name: api
+          containerPort: 9377
+          protocol: TCP
+        - name: novnc
+          containerPort: 6080
+          protocol: TCP
+        env:
+        - name: CAMOFOX_PORT
+          value: '9377'
+        - name: CAMOFOX_BIND_HOST
+          value: 0.0.0.0
+        - name: CAMOFOX_PROFILE_DIR
+          value: /data/profiles
+        - name: CAMOFOX_CRASH_REPORT_ENABLED
+          value: 'false'
+        # The image defaults Node to a 128 MiB heap, which is too small for
+        # sustained browser automation and caused the API process to abort.
+        - name: MAX_OLD_SPACE_SIZE
+          value: '512'
+        # Keep the headed display available for noVNC between agent sessions.
+        - name: BROWSER_IDLE_TIMEOUT_MS
+          value: '2147483647'
+        - name: ENABLE_VNC
+          value: '1'
+        - name: VNC_BIND
+          value: 0.0.0.0
+        - name: VNC_RESOLUTION
+          value: 1920x1080
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+          runAsGroup: 0
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: api
+          failureThreshold: 3
+          periodSeconds: 10
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /app/camofox.config.json
+          subPath: camofox.config.json
+          readOnly: true
+        - name: config
+          mountPath: /app/plugins/vnc/vnc-watcher-lib.sh
+          subPath: vnc-watcher-lib.sh
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: shm
+          mountPath: /dev/shm
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: camofox-data
+      - name: config
+        configMap:
+          name: camofox-config
+      - name: tmp
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi

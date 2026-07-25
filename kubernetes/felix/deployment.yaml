@@ -127,6 +127,8 @@ spec:
           value: felix-dashboard
         - name: HERMES_DASHBOARD_PUBLIC_URL
           value: https://felix-dashboard.k.oneill.net
+        - name: CAMOFOX_URL
+          value: http://camofox.camofox.svc.cluster.local:9377
         envFrom:
         - secretRef:
             name: felix-secrets

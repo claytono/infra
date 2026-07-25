@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: camofox
+
+spec:
+  selector:
+    app.kubernetes.io/name: camofox
+    app.kubernetes.io/instance: camofox
+  ports:
+  - name: api
+    protocol: TCP
+    port: 9377
+    targetPort: api
+  - name: novnc
+    protocol: TCP
+    port: 6080
+    targetPort: novnc
