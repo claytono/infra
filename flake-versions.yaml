@@ -9,12 +9,12 @@ awscli2: 2.35.11
 bats: 1.12.0
 curl: 8.21.0
 efficient-compression-tool: 0.9.5
-go-unifi-mcp: 3f9dcd1e3d0e1e3868001b2e04cb0457e565c045
+go-unifi-mcp: 3c295607145473e9beb549eb34134f1492954a5c
 jq: 1.8.2
 kopia: 0.23.1
 kubecolor: 0.6.0
 kubeconform: 0.7.0
-kubectl: 1.36.2
+kubectl: 1.36.3
 kubernetes-helm: 4.2.3
 kustomize: 5.8.1
 kyverno: 1.18.2
@@ -28,8 +28,8 @@ pre-commit: 4.5.1
 python3: 3.14.6-env
 rclone: 1.74.4
 skopeo: 1.23.0
-tflint: 0.61.0
-uv: 0.11.28
+tflint: 0.63.1
+uv: 0.11.32
 velero: 1.18.0
 yamlfix: 1.19.1
 yq-go: 4.53.3
