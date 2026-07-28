@@ -1,0 +1,34 @@
+---
+manage_network: true
+host_ipv4: "172.19.74.89"
+
+# WiFi configuration (layereight.wifi role)
+wifi_country: "US"
+wifi_ssid: "bleh"
+wifi_psk: "{{ vault_wifi_psk_bleh }}"
+
+traefik_config_files:
+  - pifire
+traefik_conflicting_services:
+  - nginx
+traefik_network_mode: host
+pifire_backend_url: http://127.0.0.1:8000
+
+interfaces_ether_interfaces:
+  - device: wlan0
+    bootproto: static
+    address: "172.19.74.89"
+    netmask: "255.255.255.0"
+    gateway: 172.19.74.1
+    dnsnameservers: 172.19.74.1
+    dnssearch: oneill.net
+    wpaconf: /etc/wpa_supplicant/wpa_supplicant.conf
+    ip6:
+      address: "{{ infrastructure_ipv6_prefix }}::74:{{ host_ipv4.split('.')[3] }}"
+      prefix: "{{ infrastructure_ipv6_netmask }}"
+      gateway: "{{ infrastructure_ipv6_gateway }}"
+
+restic_host_config:
+  default:
+    backup:
+      schedule: "*-*-* 03:00:00"
