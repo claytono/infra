@@ -125,6 +125,12 @@ locals {
       hostname = "spoolbuddy.oneill.net"
       note     = "Raspberry Pi 4 for BambuBuddy SpoolBuddy"
     }
+    pifire = {
+      mac      = "e4:5f:01:97:25:83"
+      ip       = "172.19.74.89"
+      hostname = "pifire.oneill.net"
+      note     = "Raspberry Pi 4"
+    }
     landroid = {
       mac         = "7c:fa:80:61:08:2e"
       ip          = "172.20.6.67"

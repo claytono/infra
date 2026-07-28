@@ -1,0 +1,16 @@
+---
+http:
+  routers:
+    pifire:
+      rule: "Host(`{{ ansible_host }}`)"
+      entryPoints:
+        - websecure
+      service: pifire
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    pifire:
+      loadBalancer:
+        servers:
+          - url: "{{ pifire_backend_url }}"

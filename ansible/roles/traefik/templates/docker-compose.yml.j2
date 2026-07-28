@@ -4,10 +4,14 @@ services:
     # renovate: datasource=docker
     image: traefik:v3.7.4@sha256:fcdef599e6259359833dd2e1d49f9e964f66825d69bd3dd468f51102ce013d03
     restart: unless-stopped
+{% if traefik_network_mode | default('bridge') == 'host' %}
+    network_mode: host
+{% else %}
     ports:
       - "80:80"
       - "443:443"
       - "3443:3443"
+{% endif %}
     env_file:
       - traefik.env
     volumes:
@@ -39,6 +43,7 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=admin@oneill.net"
       - "--certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json"
+{% if traefik_network_mode | default('bridge') != 'host' %}
     networks:
       - traefik
 
@@ -46,3 +51,4 @@ networks:
   traefik:
     name: traefik
     driver: bridge
+{% endif %}

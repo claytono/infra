@@ -1,4 +1,11 @@
 ---
+- name: Stop services that conflict with Traefik
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop: "{{ traefik_conflicting_services | default([]) }}"
+
 - name: Create traefik directory
   ansible.builtin.file:
     path: /etc/traefik
@@ -43,8 +50,8 @@
   notify: Restart traefik
 
 - name: Deploy traefik docker-compose file
-  ansible.builtin.copy:
-    src: docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
     dest: /etc/traefik/docker-compose.yml
     owner: root
     group: root
