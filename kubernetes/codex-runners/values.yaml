@@ -34,7 +34,7 @@ template:
       - 1.0.0.1
     initContainers:
     - name: copy-codex-auth
-      image: ghcr.io/astral-sh/uv:debian@sha256:29ebc32bfeb4f18edf3bc87c2ed9440816857cfd7fe95ca45d66b6fade0a4688
+      image: ghcr.io/astral-sh/uv:debian@sha256:9d0071049be22e46d91d480815bbd8acefadb40bdf6807278522017d78a0369e
       command:
       - python3
       - /etc/codex-auth-tools/copy-auth-json.py
