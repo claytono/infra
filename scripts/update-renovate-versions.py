@@ -60,7 +60,7 @@ def get_mariadb_allowed_versions() -> str | None:
         print("Warning: No MariaDB LTS versions found >= 6 months old", file=sys.stderr)
         return None
 
-    return f"/^({'|'.join(lts_cycles)})\\./"
+    return f"/^({'|'.join(lts_cycles)})(?:\\.|$)/"
 
 
 def get_postgresql_allowed_versions() -> str | None:
