@@ -223,6 +223,26 @@
       "description": "Track LT2 qBittorrent image build revisions"
     },
     {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/maziggy/bambuddy"
+      ],
+      "versioning": "loose",
+      "description": "Support Bambuddy's four-part release versions"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "plexinc/pms-docker"
+      ],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-[0-9a-f]+$",
+      "description": "Track official Plex version tags"
+    },
+    {
       "matchPackageNames": [
         "linuxserver/radarr"
       ],
@@ -429,7 +449,7 @@
     },
     {
       "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
-      "allowedVersions": "/^(11\\.8|11\\.4|10\\.11)\\./",
+      "allowedVersions": "/^(11\\.8|11\\.4|10\\.11)(?:\\.|$)/",
       "matchDatasources": [
         "docker"
       ],
