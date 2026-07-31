@@ -3,11 +3,12 @@ provider:
   name: cloudflare
 
 policy: sync
-txtPrefix: extdns-
-txtOwnerId: external-dns
+registry: noop
 triggerLoopOnEvent: true
 domainFilters:
-- oneill.net
+- k.oneill.net
+extraArgs:
+- --zone-id-filter=5a8d9de1c40f089d2f98f49a4569e1cd
 env:
 - name: CF_API_TOKEN
   valueFrom:
