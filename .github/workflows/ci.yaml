@@ -15,6 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       with:
+        fetch-depth: 0
         persist-credentials: false
 
     - name: Install Nix
@@ -42,7 +43,10 @@ jobs:
         ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
 
     - name: Run lint
-      run: nix develop --command ./scripts/lint
+      run: nix develop --command ./scripts/lint --from-ref "$LINT_BASE_REF" --to-ref
+        "$LINT_HEAD_REF"
       env:
         SKIP: terraform_validate,terraform_providers_lock
         GH_TOKEN: ${{ github.token }}
+        LINT_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        LINT_HEAD_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
