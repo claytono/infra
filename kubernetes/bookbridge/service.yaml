@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: bookbridge
+
+spec:
+  selector:
+    app.kubernetes.io/name: bookbridge
+    app.kubernetes.io/instance: bookbridge
+  ports:
+  - name: http
+    port: 5757
+    targetPort: http
+  - name: kosync
+    port: 5758
+    targetPort: kosync

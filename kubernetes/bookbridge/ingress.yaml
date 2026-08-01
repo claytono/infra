@@ -1,0 +1,57 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: bookbridge
+  annotations:
+    ak-type: simple
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: BookBridge
+    gethomepage.dev/description: Reading Progress Sync
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: mdi-book-sync
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=bookbridge
+
+spec:
+  tls:
+  - hosts:
+    - bookbridge.k.oneill.net
+    secretName: bookbridge-tls
+  rules:
+  - host: bookbridge.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bookbridge
+            port:
+              number: 5757
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: bookbridge-sync
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+
+spec:
+  tls:
+  - hosts:
+    - bookbridge-sync.k.oneill.net
+    secretName: bookbridge-sync-tls
+  rules:
+  - host: bookbridge-sync.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bookbridge
+            port:
+              number: 5758

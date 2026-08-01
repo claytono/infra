@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: bookbridge
+
+components:
+- ../components/authentik
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- pvc.yaml
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+
+labels:
+- pairs:
+    app.kubernetes.io/name: bookbridge
+    app.kubernetes.io/instance: bookbridge
+  includeSelectors: true
