@@ -4,6 +4,8 @@ kind: PersistentVolumeClaim
 
 metadata:
   name: bookbridge-data
+  labels:
+    velero.io/backup: 'true'
 
 spec:
   accessModes:
