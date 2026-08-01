@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: bookbridge-data
+
+spec:
+  accessModes:
+  - ReadWriteOncePod
+  storageClassName: synology-iscsi
+  resources:
+    requests:
+      storage: 10Gi

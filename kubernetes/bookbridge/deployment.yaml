@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: bookbridge
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bookbridge
+      app.kubernetes.io/instance: bookbridge
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bookbridge
+        app.kubernetes.io/instance: bookbridge
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: bookbridge
+        image: ghcr.io/cporcellijr/bookbridge:v7.3.2@sha256:0ddabea4e9dd282d7ddea0cd8e7758631be92103adee6960bd481046a6fd8e0b
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 5757
+        - name: kosync
+          containerPort: 5758
+        env:
+        - name: DATA_DIR
+          value: /data
+        - name: KOSYNC_PORT
+          value: '5758'
+        - name: SESSION_COOKIE_SECURE
+          value: 'true'
+        - name: TZ
+          value: America/New_York
+        startupProbe:
+          httpGet:
+            path: /setup
+            port: http
+          periodSeconds: 5
+          failureThreshold: 30
+        readinessProbe:
+          httpGet:
+            path: /setup
+            port: http
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /setup
+            port: http
+          periodSeconds: 30
+          failureThreshold: 3
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: bookbridge-data
+      - name: tmp
+        emptyDir: {}
