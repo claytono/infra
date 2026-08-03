@@ -1,0 +1,44 @@
+{
+  "libraryName": "Storyteller",
+  "webUrl": "https://storyteller.k.oneill.net",
+  "readaloudLocationType": "INTERNAL",
+  "readaloudLocation": "",
+  "transcriptionEngine": "openai-cloud",
+  "openAiApiKey": "unused-internal-service",
+  "openAiBaseUrl": "http://whisperx.speakr.svc.cluster.local:9000/v1",
+  "openAiModelName": "large-v3",
+  "authProviders": [
+    {
+      "kind": "custom",
+      "name": "Authentik",
+      "type": "oidc",
+      "issuer": "https://auth.k.oneill.net/application/o/storyteller/",
+      "clientId_file": "/run/secrets/storyteller/oidc-client-id",
+      "clientSecret_file": "/run/secrets/storyteller/oidc-client-secret",
+      "allowRegistration": true,
+      "groupPermissions": {
+        "basic-auth": ["bookRead", "bookDownload", "bookList"],
+        "homelab-admin": [
+          "bookCreate",
+          "bookDelete",
+          "bookRead",
+          "bookProcess",
+          "bookDownload",
+          "bookUpdate",
+          "bookList",
+          "collectionCreate",
+          "inviteList",
+          "inviteDelete",
+          "userCreate",
+          "userList",
+          "userRead",
+          "userDelete",
+          "userUpdate",
+          "userPasswordReset",
+          "settingsUpdate"
+        ]
+      }
+    }
+  ],
+  "disablePasswordLogin": true
+}
