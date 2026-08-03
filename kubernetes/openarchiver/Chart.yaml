@@ -4,5 +4,5 @@ name: openarchiver-meta
 version: 0.1.0
 dependencies:
 - name: valkey
-  version: 2.3.0
+  version: 2.3.2
   repository: https://groundhog2k.github.io/helm-charts/
