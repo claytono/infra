@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: loki
     app.kubernetes.io/instance: loki
-    app.kubernetes.io/version: "3.6.7"
+    app.kubernetes.io/version: "3.6.8"
 data:
   config.yaml: |
     
@@ -95,3 +95,4 @@ data:
       use_thanos_objstore: false
     tracing:
       enabled: false
+
