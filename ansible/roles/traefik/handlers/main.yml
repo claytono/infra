@@ -2,6 +2,8 @@
 - name: Restart traefik
   community.docker.docker_compose_v2:
     project_src: /etc/traefik
+    files:
+      - docker-compose.yaml
     state: present
     recreate: always
     wait: true

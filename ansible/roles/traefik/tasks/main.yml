@@ -1,10 +1,15 @@
 ---
+- name: Gather service facts for conflicting services
+  ansible.builtin.service_facts:
+  when: traefik_conflicting_services | default([]) | length > 0
+
 - name: Stop services that conflict with Traefik
   ansible.builtin.systemd:
     name: "{{ item }}"
     enabled: false
     state: stopped
   loop: "{{ traefik_conflicting_services | default([]) }}"
+  when: item in ansible_facts.services
 
 - name: Create traefik directory
   ansible.builtin.file:
@@ -32,7 +37,7 @@
 
 - name: Deploy traefik dynamic configuration files
   ansible.builtin.template:
-    src: "conf.d/{{ item }}.yml.j2"
+    src: "conf.d/{{ item }}.yaml.j2"
     dest: "/etc/traefik/conf.d/{{ item }}.yml"
     owner: root
     group: root
@@ -51,8 +56,8 @@
 
 - name: Deploy traefik docker-compose file
   ansible.builtin.template:
-    src: docker-compose.yml.j2
-    dest: /etc/traefik/docker-compose.yml
+    src: docker-compose.yaml.j2
+    dest: /etc/traefik/docker-compose.yaml
     owner: root
     group: root
     mode: "0644"
@@ -61,5 +66,7 @@
 - name: Start traefik
   community.docker.docker_compose_v2:
     project_src: /etc/traefik
+    files:
+      - docker-compose.yaml
     state: present
     wait: true

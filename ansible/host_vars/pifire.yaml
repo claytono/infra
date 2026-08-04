@@ -10,8 +10,9 @@ wifi_psk: "{{ vault_wifi_psk_bleh }}"
 traefik_config_files:
   - pifire
 traefik_conflicting_services:
-  - nginx
+  - nginx.service
 traefik_network_mode: host
+pifire_hostname: pifire.oneill.net
 pifire_backend_url: http://127.0.0.1:8000
 
 interfaces_ether_interfaces:
