@@ -2,7 +2,7 @@
 http:
   routers:
     pifire:
-      rule: "Host(`{{ ansible_host }}`)"
+      rule: "Host(`{{ pifire_hostname }}`)"
       entryPoints:
         - websecure
       service: pifire
