@@ -35,9 +35,9 @@ http:
     otbr-web:
       loadBalancer:
         servers:
-          - url: "http://{{ ansible_docker0.ipv4.address }}:8080"
+          - url: "http://{{ ansible_facts['docker0']['ipv4']['address'] }}:8080"
 
     otbr-api:
       loadBalancer:
         servers:
-          - url: "http://{{ ansible_docker0.ipv4.address }}:8081"
+          - url: "http://{{ ansible_facts['docker0']['ipv4']['address'] }}:8081"
