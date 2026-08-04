@@ -57,7 +57,6 @@ spec:
         livenessProbe:
           failureThreshold: 3
           httpGet:
-            httpHeaders:
             path: /livez
             port: http
             scheme: HTTP
@@ -68,7 +67,6 @@ spec:
         readinessProbe:
           failureThreshold: 3
           httpGet:
-            httpHeaders:
             path: /readyz
             port: metrics
             scheme: HTTP
