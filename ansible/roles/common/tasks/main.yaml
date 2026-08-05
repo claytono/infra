@@ -31,6 +31,10 @@
     dest: /etc/timezone
     mode: "0644"
 
+- name: Configure persistent journal
+  ansible.builtin.include_tasks: journald.yaml
+  when: "'pi' in group_names"
+
 - name: "Check if Proxmox is installed"
   ansible.builtin.stat:
     path: /usr/bin/pvesh
