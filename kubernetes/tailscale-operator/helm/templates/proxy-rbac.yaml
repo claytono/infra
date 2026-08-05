@@ -37,3 +37,4 @@ roleRef:
   kind: Role
   name: proxies
   apiGroup: rbac.authorization.k8s.io
+

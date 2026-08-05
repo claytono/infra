@@ -8,3 +8,4 @@ metadata:
 spec:
   controller: tailscale.com/ts-ingress # controller name currently can not be changed
   # parameters: {} # currently no parameters are supported
+
