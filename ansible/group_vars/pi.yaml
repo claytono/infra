@@ -1,5 +1,6 @@
 ---
 node_exporter_enabled: true
+persistent_journal_enabled: true
 
 # Map Ansible architecture to restic release names (arm covers armv6/armv7)
 restic_arch: >-

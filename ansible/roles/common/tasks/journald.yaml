@@ -1,0 +1,84 @@
+---
+- name: Find root filesystem source
+  ansible.builtin.command:
+    argv:
+      - findmnt
+      - --noheadings
+      - --output
+      - SOURCE
+      - --target
+      - /
+  register: common_pi_root_source
+  changed_when: false
+  failed_when: false
+
+- name: Resolve root filesystem source
+  ansible.builtin.command:
+    argv:
+      - readlink
+      - --canonicalize-existing
+      - "{{ common_pi_root_source.stdout | trim }}"
+  register: common_pi_root_device
+  changed_when: false
+  failed_when: false
+  when:
+    - common_pi_root_source.rc == 0
+    - common_pi_root_source.stdout | trim | length > 0
+
+- name: Find root filesystem backing devices
+  ansible.builtin.command:
+    argv:
+      - lsblk
+      - --noheadings
+      - --raw
+      - --paths
+      - --output
+      - NAME
+      - --inverse
+      - "{{ common_pi_root_device.stdout | trim }}"
+  register: common_pi_root_backing_devices
+  changed_when: false
+  failed_when: false
+  when:
+    - common_pi_root_device.rc | default(1) == 0
+    - common_pi_root_device.stdout | default('') | trim | length > 0
+
+- name: Determine whether journal storage should be persistent
+  ansible.builtin.set_fact:
+    common_pi_journal_should_persist: >-
+      {{
+        persistent_journal_enabled | default(false) | bool
+        and common_pi_root_backing_devices.rc | default(1) == 0
+        and common_pi_root_backing_devices.stdout_lines | default([]) | length > 0
+        and common_pi_root_backing_devices.stdout_lines
+          | default([])
+          | select('match', '^/dev/mmcblk')
+          | list
+          | length == 0
+      }}
+
+- name: Create journald configuration directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: common_pi_journal_should_persist
+
+- name: Configure journal storage
+  ansible.builtin.template:
+    src: journald-storage.conf.j2
+    dest: /etc/systemd/journald.conf.d/90-ansible-storage.conf
+    mode: "0644"
+    owner: root
+    group: root
+  when: common_pi_journal_should_persist
+  notify: Restart journald
+
+- name: Remove persistent journal configuration
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d/90-ansible-storage.conf
+    state: absent
+  when: not common_pi_journal_should_persist
+  notify: Restart journald
