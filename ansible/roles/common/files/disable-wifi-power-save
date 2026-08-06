@@ -1,0 +1,49 @@
+#!/bin/sh
+
+set -eu
+
+report_change=false
+case "${1:-}" in
+	"") ;;
+	--report-change) report_change=true ;;
+	*)
+		echo "Usage: $0 [--report-change]" >&2
+		exit 2
+		;;
+esac
+
+set --
+for wireless_path in /sys/class/net/*/wireless; do
+	[ -d "${wireless_path}" ] || continue
+	interface=${wireless_path%/wireless}
+	set -- "$@" "${interface##*/}"
+done
+
+if [ "$#" -eq 0 ]; then
+	echo "no wireless interfaces found"
+fi
+
+changed=false
+for interface in "$@"; do
+	[ -d "/sys/class/net/${interface}/wireless" ] || continue
+	state=$(/usr/sbin/iw dev "${interface}" get power_save)
+
+	case "${state}" in
+		"Power save: on")
+			/usr/sbin/iw dev "${interface}" set power_save off
+			printf 'wireless iface %s: disabled\n' "${interface}"
+			changed=true
+			;;
+		"Power save: off")
+			printf 'wireless iface %s: already disabled\n' "${interface}"
+			;;
+		*)
+			printf 'wireless iface %s: unexpected state: %s\n' "${interface}" "${state}" >&2
+			exit 1
+			;;
+	esac
+done
+
+if [ "${report_change}" = true ] && [ "${changed}" = true ]; then
+	exit 10
+fi
