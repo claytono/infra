@@ -1,6 +1,7 @@
 ---
 node_exporter_enabled: true
 persistent_journal_enabled: true
+disable_wifi_power_save: true
 
 # Map Ansible architecture to restic release names (arm covers armv6/armv7)
 restic_arch: >-

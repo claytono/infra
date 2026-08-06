@@ -35,6 +35,18 @@
   ansible.builtin.include_tasks: journald.yaml
   when: "'pi' in group_names"
 
+- name: Remove Wi-Fi power-saving hook when disabled
+  ansible.builtin.file:
+    path: /etc/network/if-up.d/disable-wifi-power-save
+    state: absent
+  when: not (disable_wifi_power_save | default(false) | bool)
+  tags: wifi_power_save
+
+- name: Disable Wi-Fi power saving
+  ansible.builtin.import_tasks: wifi_power_save.yaml
+  when: disable_wifi_power_save | default(false) | bool
+  tags: wifi_power_save
+
 - name: "Check if Proxmox is installed"
   ansible.builtin.stat:
     path: /usr/bin/pvesh

@@ -1,0 +1,30 @@
+---
+- name: Install Wi-Fi configuration tools
+  ansible.builtin.apt:
+    name: iw
+    state: present
+
+- name: Create network interface hook directory
+  ansible.builtin.file:
+    path: /etc/network/if-up.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install Wi-Fi power-saving hook
+  ansible.builtin.copy:
+    src: disable-wifi-power-save
+    dest: /etc/network/if-up.d/disable-wifi-power-save
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Disable Wi-Fi power saving immediately
+  ansible.builtin.command:
+    argv:
+      - /etc/network/if-up.d/disable-wifi-power-save
+      - --report-change
+  register: common_wifi_power_save_result
+  changed_when: common_wifi_power_save_result.rc == 10
+  failed_when: common_wifi_power_save_result.rc not in [0, 10]
