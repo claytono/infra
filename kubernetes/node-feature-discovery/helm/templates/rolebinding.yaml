@@ -18,3 +18,5 @@ subjects:
 - kind: ServiceAccount
   name: node-feature-discovery-worker
   namespace: node-feature-discovery
+
+

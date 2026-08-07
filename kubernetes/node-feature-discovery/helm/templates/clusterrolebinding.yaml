@@ -36,3 +36,4 @@ subjects:
 - kind: ServiceAccount
   name: node-feature-discovery-gc
   namespace: node-feature-discovery
+

@@ -19,3 +19,4 @@ parameters:
   archiveOnDelete: "false"
   pathPattern: "${.PVC.namespace}-${.PVC.name}"
   onDelete: "retain"
+

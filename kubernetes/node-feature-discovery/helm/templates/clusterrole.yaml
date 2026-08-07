@@ -98,3 +98,4 @@ rules:
   verbs:
   - delete
   - list
+
