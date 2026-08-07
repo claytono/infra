@@ -27,6 +27,23 @@ workflows. Needing one of these normal workflows is not, by itself, evidence for
 - For pre-merge testing: `kubectl apply -k kubernetes/<app>/` for Kubernetes,
   `ansible-playbook` for Ansible (run from `ansible/` directory)
 
+## Pre-commit Hook Security Review
+
+For every Renovate update to `.pre-commit-config.yaml`, check out or fetch the
+upstream hook repository and inspect the exact diff between the old and new
+revisions before recommending a merge. Do not rely only on the Renovate PR diff,
+release notes, or changelog.
+
+Review executable hook entrypoints and any changed dependencies, build files,
+generated artifacts, or release workflows that can affect installed code. Look
+specifically for new access to the network, filesystem, environment variables,
+credentials, subprocesses, or downloaded executables, as well as obfuscated or
+unexpected binary content and changes in maintainer or release provenance.
+
+Record the inspected revisions and security-relevant findings in the evaluation.
+If the exact upstream diff cannot be inspected, record that limitation as an
+unresolved hazard and do not recommend merging the update.
+
 ## Available Tools
 
 - `skopeo` -- container image inspection (list tags, inspect manifests)

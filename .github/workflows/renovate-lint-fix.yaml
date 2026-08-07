@@ -16,8 +16,7 @@ on:
     - reopened
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   fix-linting:
@@ -52,10 +51,41 @@ jobs:
         path: ~/.cache/pre-commit
         key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
 
-    - name: Run pre-commit hooks on changed files
+    # A hook update can change how any supported file is formatted. Detect it
+    # from the trusted revision range so the updated hooks audit the whole tree.
+    - name: Check for pre-commit configuration changes
+      id: pre-commit-changes
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       run: |
-        # Run pre-commit hooks and capture the exit code
-        nix develop --command pre-commit run || true
+        if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .pre-commit-config.yaml; then
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        else
+          status=$?
+          if [ "$status" -ne 1 ]; then
+            exit "$status"
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    # A plain `pre-commit run` checks staged files, but an Actions checkout has
+    # none. Hook updates need an all-files audit; other updates only need the
+    # Renovate PR's changed files. Continue so generated fixes can be committed.
+    - name: Run pre-commit hooks
+      run: |
+        if [[ "$PRE_COMMIT_CONFIG_CHANGED" == "true" ]]; then
+          nix develop --command ./scripts/lint --all-files || true
+        else
+          nix develop --command ./scripts/lint --from-ref "$LINT_BASE_REF" \
+            --to-ref "$LINT_HEAD_REF" || true
+        fi
+      env:
+        SKIP: terraform_validate,terraform_providers_lock
+        GH_TOKEN: ${{ github.token }}
+        LINT_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        LINT_HEAD_REF: ${{ github.event.pull_request.head.sha }}
+        PRE_COMMIT_CONFIG_CHANGED: ${{ steps.pre-commit-changes.outputs.changed }}
 
     - name: Check for changes
       id: check-changes
@@ -76,15 +106,12 @@ jobs:
       run: |-
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add .
-        git commit -m "chore: fix linting issues
+        # Auto-fix hooks only modify tracked input files. Stage those paths
+        # explicitly instead of sweeping unrelated files into the commit.
+        git diff --name-only -z | xargs -0 git add --
+        git commit -m "Fix linting issues
 
-        Auto-fixed by pre-commit hooks:
-        - yamlfix formatting
-        - yamllint compliance
-        - prettier formatting
-        - trailing whitespace
-        - end-of-file fixes"
+        Apply fixes produced by the repository's pre-commit hooks."
 
         echo "Pushing fixes to branch: $BRANCH_NAME"
         git push "https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}" "HEAD:$BRANCH_NAME"

@@ -256,12 +256,8 @@
       "schedule": [
         "after 2am and before 8am on thursday"
       ],
-      "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "automerge"
-      ],
-      "description": "Auto-merge pre-commit hook updates if CI passes"
+      "automerge": false,
+      "description": "Require manual review of pre-commit hook updates"
     },
     {
       "matchUpdateTypes": [
