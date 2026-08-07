@@ -96,3 +96,4 @@ spec:
         secret:
           defaultMode: 420
           secretName: metallb-webhook-cert
+

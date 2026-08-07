@@ -135,3 +135,4 @@ spec:
             - name: credentials
               mountPath: /home/opuser/.op/1password-credentials.json
               subPath: 1password-credentials.json
+

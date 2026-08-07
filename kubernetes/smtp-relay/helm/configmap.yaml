@@ -25,3 +25,4 @@ data:
     do_postconf -e 'smtpd_tls_note_starttls_offer=yes'
     do_postconf -e 'smtpd_tls_cert_file=/var/run/certs/tls.crt'
     do_postconf -e 'smtpd_tls_key_file=/var/run/certs/tls.key'
+
