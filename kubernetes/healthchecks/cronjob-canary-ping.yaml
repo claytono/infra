@@ -1,8 +1,10 @@
 ---
 apiVersion: batch/v1
 kind: CronJob
+
 metadata:
   name: canary-ping
+
 spec:
   # Run hourly - canary has 50min timeout, so it goes DOWN ~10min before next ping
   # Each DOWN transition sends email to cloud healthchecks.io, verifying full stack

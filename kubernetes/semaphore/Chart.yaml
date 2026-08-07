@@ -4,6 +4,6 @@ name: semaphore
 version: 1.0.0
 
 dependencies:
-  - name: semaphore
-    version: 16.2.2
-    repository: https://semaphoreui.github.io/charts
+- name: semaphore
+  version: 16.2.2
+  repository: https://semaphoreui.github.io/charts
