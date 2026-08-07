@@ -26,6 +26,7 @@ patches:
     name: smtp
 
 labels:
+
 - pairs:
     argoManaged: 'true'
   includeSelectors: false

@@ -1,9 +1,11 @@
 ---
 apiVersion: batch/v1
 kind: CronJob
+
 metadata:
   name: vpa-updater-enable
   namespace: vpa
+
 spec:
   schedule: "0 1 * * *"
   timeZone: America/New_York

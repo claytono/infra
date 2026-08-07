@@ -2,6 +2,7 @@
 service:
   registry:
     usePreferSameNodeTrafficDistribution: true
+
 spegel:
   registryFilters:
   - ".*:latest$"

@@ -18,6 +18,7 @@ resources:
 - ingress.yaml
 
 labels:
+
 - pairs:
     app.kubernetes.io/name: bookbridge
     app.kubernetes.io/instance: bookbridge

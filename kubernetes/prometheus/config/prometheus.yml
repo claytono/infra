@@ -78,7 +78,8 @@ scrape_configs:
   - source_labels: [__meta_kubernetes_pod_phase]
     action: keep
     regex: Running
-  - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app, __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_number]
+  - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app,
+      __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_number]
     action: keep
     regex: default;qbittorrent;qbittorrent;8080
   - source_labels: [__meta_kubernetes_pod_ip]
