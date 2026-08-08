@@ -52,10 +52,26 @@ jobs:
         path: ~/.cache/pre-commit
         key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
 
-    - name: Run pre-commit hooks on changed files
+    # ansible-lint performs a project-wide syntax check even when fixing one
+    # changed file, so it needs the configured password to read vaulted vars.
+    - name: Write vault password file
       run: |
-        # Run pre-commit hooks and capture the exit code
-        nix develop --command pre-commit run || true
+        umask 077
+        printf '%s\n' "$ANSIBLE_VAULT_PASSWORD" > ansible/ansible-vault-password
+      env:
+        ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+    # A plain `pre-commit run` checks staged files, but an Actions checkout has
+    # none. Select the Renovate PR's changed files using the same range as CI.
+    # Hooks exit nonzero after applying fixes, so continue and commit the diff.
+    - name: Run pre-commit hooks on changed files
+      run: nix develop --command ./scripts/lint --from-ref "$LINT_BASE_REF" --to-ref
+        "$LINT_HEAD_REF" || true
+      env:
+        SKIP: terraform_validate,terraform_providers_lock
+        GH_TOKEN: ${{ github.token }}
+        LINT_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        LINT_HEAD_REF: ${{ github.event.pull_request.head.sha }}
 
     - name: Check for changes
       id: check-changes
@@ -76,15 +92,12 @@ jobs:
       run: |-
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add .
-        git commit -m "chore: fix linting issues
+        # Auto-fix hooks only modify tracked input files. Stage those paths
+        # explicitly instead of sweeping unrelated files into the commit.
+        git diff --name-only -z | xargs -0 git add --
+        git commit -m "Fix linting issues
 
-        Auto-fixed by pre-commit hooks:
-        - yamlfix formatting
-        - yamllint compliance
-        - prettier formatting
-        - trailing whitespace
-        - end-of-file fixes"
+        Apply fixes produced by the repository's pre-commit hooks."
 
         echo "Pushing fixes to branch: $BRANCH_NAME"
         git push "https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}" "HEAD:$BRANCH_NAME"
