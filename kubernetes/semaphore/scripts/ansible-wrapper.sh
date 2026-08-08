@@ -24,10 +24,10 @@ fi
 # Set CA bundle for Python requests library
 export REQUESTS_CA_BUNDLE=/etc/ssl/cert.pem
 
-# Enable ARA callback and action plugins using nix Python environment
-NIX_PYTHON=$(find /nix/store -maxdepth 1 -name "*python3-*-env" -type d 2>/dev/null | head -1)/bin/python3
+# Enable ARA callback and action plugins using the repository's Nix environment
+NIX_PYTHON=/infra/ansible-bins/python3
 if [ ! -x "$NIX_PYTHON" ]; then
-  echo "WARNING: Could not find executable nix Python environment at $NIX_PYTHON" >&2
+  echo "WARNING: Could not find repository Nix Python at $NIX_PYTHON" >&2
   echo "ARA integration will be disabled" >&2
   NIX_PYTHON=""
 fi
