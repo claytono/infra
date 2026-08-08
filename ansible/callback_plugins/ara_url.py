@@ -6,6 +6,7 @@ playbooks run concurrently.
 """
 
 import os
+
 from ansible.plugins.callback import CallbackBase
 
 
@@ -43,8 +44,11 @@ class CallbackModule(CallbackBase):
             self._playbook = playbook
 
         except ImportError:
-            self._display.warning("ara_url: ARA package not installed, URL reporting disabled")
-        except Exception as e:
+            self._display.warning(
+                "ara_url: ARA package not installed, URL reporting disabled"
+            )
+        # URL reporting is best-effort and must never abort the Ansible run.
+        except Exception as e:  # noqa: BLE001
             self._display.warning(f"ara_url: Failed to initialize ARA client: {e}")
 
     def v2_playbook_on_stats(self, stats):
@@ -66,5 +70,6 @@ class CallbackModule(CallbackBase):
                 playbook_id = response["results"][0]["playbook"]
                 url = f"{api_server}/playbooks/{playbook_id}.html"
                 self._display.display(f"ARA Playbook URL: {url}")
-        except Exception as e:
+        # URL reporting is best-effort and must never abort the Ansible run.
+        except Exception as e:  # noqa: BLE001
             self._display.warning(f"ara_url: Failed to retrieve playbook URL: {e}")

@@ -6,19 +6,21 @@ including task creation, status polling, WebSocket output streaming, and
 ARA playbook URL extraction.
 """
 
-from datetime import datetime
-from http.client import IncompleteRead
 import json
 import os
 import re
 import time
-from typing import Any, Optional
-from urllib.request import Request, urlopen
+from datetime import datetime
+from http.client import IncompleteRead
+from typing import Any
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
 from websocket import (
-    create_connection,
     WebSocketConnectionClosedException,
+    WebSocketException,
     WebSocketTimeoutException,
+    create_connection,
 )
 
 SEMAPHORE_URL = os.environ.get("SEMAPHORE_URL", "https://semaphore.k.oneill.net")
@@ -47,13 +49,9 @@ def env_int(name: str, default: int) -> int:
 class DeploymentError(Exception):
     """Custom exception for deployment failures"""
 
-    pass
-
 
 class TransientSemaphoreError(DeploymentError):
     """Semaphore request failed due to a retryable condition."""
-
-    pass
 
 
 class SemaphoreDeployer:
@@ -65,7 +63,7 @@ class SemaphoreDeployer:
         hosts: str,
         project: str,
         template: str,
-        tags: Optional[str] = None,
+        tags: str | None = None,
         max_attempts: int = 3,
     ):
         self.token = token
@@ -75,8 +73,8 @@ class SemaphoreDeployer:
         self.tags = tags
         self.max_attempts = max_attempts
         self.attempts: list[dict] = []
-        self.project_id: Optional[int] = None
-        self.template_id: Optional[int] = None
+        self.project_id: int | None = None
+        self.template_id: int | None = None
         self.api_retry_attempts = max(1, env_int("SEMAPHORE_API_RETRY_ATTEMPTS", 5))
         self.api_retry_delay = max(0.1, env_float("SEMAPHORE_API_RETRY_DELAY", 2.0))
         self.ws_reconnect_delay = max(
@@ -88,8 +86,8 @@ class SemaphoreDeployer:
         self,
         method: str,
         endpoint: str,
-        data: Optional[dict] = None,
-        retry: Optional[bool] = None,
+        data: dict | None = None,
+        retry: bool | None = None,
     ) -> Any:
         """Make an API request to Semaphore"""
         url = f"{SEMAPHORE_URL}/api{endpoint}"
@@ -172,7 +170,7 @@ class SemaphoreDeployer:
         self.template_id = self.resolve_template_id(self.project_id)
         print(f"  Found template ID: {self.template_id}")
 
-    def build_arguments(self) -> Optional[str]:
+    def build_arguments(self) -> str | None:
         """Build CLI arguments as JSON string for the Semaphore task"""
         args = []
 
@@ -265,7 +263,7 @@ class SemaphoreDeployer:
                     header={"Authorization": f"Bearer {self.token}"},
                     timeout=30,
                 )
-            except Exception as e:
+            except (OSError, WebSocketException) as e:
                 print(f"WebSocket connection failed: {e}")
                 status = self.get_task_status_name(task_id)
                 if status in TERMINAL_TASK_STATUSES:
@@ -330,12 +328,12 @@ class SemaphoreDeployer:
             finally:
                 ws.close()
 
-    def extract_ara_url(self, output: str) -> Optional[str]:
+    def extract_ara_url(self, output: str) -> str | None:
         """Extract ARA playbook URL from task output"""
         match = re.search(rf"ARA Playbook URL: ({ARA_URL}/playbooks/\d+\.html)", output)
         return match.group(1) if match else None
 
-    def wait_for_task(self, task_id: int) -> tuple[bool, Optional[str]]:
+    def wait_for_task(self, task_id: int) -> tuple[bool, str | None]:
         """Wait for task using WebSocket streaming"""
         print(f"Streaming output for task {task_id}...")
 
@@ -357,7 +355,7 @@ class SemaphoreDeployer:
 
         return success, ara_url
 
-    def deploy_single_attempt(self) -> tuple[bool, Optional[str], str, int]:
+    def deploy_single_attempt(self) -> tuple[bool, str | None, str, int]:
         """Run a single deployment attempt. Returns (success, ara_url, task_url, task_id)"""
         task_id = self.create_task()
         task_url = self.get_task_url(task_id)

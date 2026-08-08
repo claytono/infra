@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Storage Benchmark Test Runner
 
@@ -10,9 +9,8 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
 class Config:
@@ -25,7 +23,7 @@ class Config:
         self.fast_mode = os.getenv("FAST_MODE", "false").lower() == "true"
         self.dev_mode = os.getenv("DEV_MODE", "false").lower() == "true"
         self.node_name = os.getenv("NODE_NAME", "unknown")
-        self.timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         self.iterations = 1 if (self.fast_mode or self.dev_mode) else 3
         self.fio_jobs_dir = Path("/fio-jobs")
 
@@ -70,8 +68,8 @@ class FioRunner:
         self.config = config
 
     def run_test(
-        self, test_name: str, iteration: Optional[int] = None
-    ) -> Tuple[Path, Path]:
+        self, test_name: str, iteration: int | None = None
+    ) -> tuple[Path, Path]:
         """
         Run a single fio test.
 
@@ -237,7 +235,7 @@ class MetricsExtractor:
             return 0.0
 
     @staticmethod
-    def calculate_stats(values: List[float]) -> Dict[str, float]:
+    def calculate_stats(values: list[float]) -> dict[str, float]:
         """Calculate avg, min, max from a list of values."""
         non_zero = [v for v in values if v != 0]
         if not non_zero:
@@ -264,7 +262,7 @@ class ReportGenerator:
 
     def _get_metrics_for_test(
         self, test_name: str, metric_type: str
-    ) -> Dict[str, List[float]]:
+    ) -> dict[str, list[float]]:
         """Get all metrics for a test across iterations."""
         metrics = {"iops": [], "bw_mbps": []}
 
@@ -324,7 +322,7 @@ class ReportGenerator:
             # Footer
             f.write("\n---\n")
             f.write(
-                f"Report generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                f"Report generated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')} UTC\n"
             )
 
         print(f"Report generated: {report_file}")
@@ -412,7 +410,7 @@ class ReportGenerator:
 
         print(f"CSV report generated: {csv_file}")
 
-    def _get_csv_rows(self, test_name: str, metric_type: str) -> List[Dict[str, str]]:
+    def _get_csv_rows(self, test_name: str, metric_type: str) -> list[dict[str, str]]:
         """Get CSV rows for a test as a list of dicts."""
         metrics = self._get_metrics_for_test(test_name, metric_type)
 
@@ -515,6 +513,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    # Present benchmark failures consistently instead of emitting a traceback.
+    except Exception as e:  # noqa: BLE001
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
