@@ -75,6 +75,18 @@ resource "healthchecksio_check" "ezshare_sync" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
+# Daily safeguard: alerts if any main-project check has no notification channel
+resource "healthchecksio_check" "channel_audit" {
+  provider = healthchecksio.selfhosted
+
+  name     = "healthchecks-channel-audit"
+  desc     = "Daily audit for checks without a notification channel"
+  tags     = ["healthchecks", "kubernetes"]
+  timeout  = 93600 # 26 hours
+  grace    = 7200  # 2 hours
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
 # Got Your Back - full weekly Gmail backup
 resource "healthchecksio_check" "gyb_full" {
   provider = healthchecksio.selfhosted

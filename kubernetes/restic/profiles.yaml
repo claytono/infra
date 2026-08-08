@@ -64,6 +64,9 @@ hetzner:
       headers:
       - name: Content-Type
         value: text/plain; charset=UTF-8
+    # Intentionally use /log instead of /fail: individual failed backup runs
+    # are tolerated. Alert only when no later success arrives before the
+    # Healthchecks dead-man timeout.
     send-after-fail: &send_after_fail
       method: POST
       url: https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/kube-restic-${PROFILE_NAME}-${PROFILE_COMMAND}/log

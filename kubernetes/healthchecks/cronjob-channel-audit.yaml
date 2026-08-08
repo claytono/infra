@@ -1,0 +1,46 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: channel-audit
+
+spec:
+  # The Healthchecks dead-man check alerts after 28 hours without a success.
+  schedule: "15 6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 120
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: audit
+            image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
+            command:
+            - /usr/local/bin/python3
+            - /scripts/audit-channels
+            env:
+            - name: HEALTHCHECK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: HEALTHCHECK_API_KEY
+            - name: HEALTHCHECK_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: HEALTHCHECK_PING_KEY
+            volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+          volumes:
+          - name: script
+            configMap:
+              name: channel-audit-script
+              defaultMode: 0555

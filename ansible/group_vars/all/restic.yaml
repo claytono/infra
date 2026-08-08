@@ -81,6 +81,9 @@ restic_default_config:
         headers:
           - name: Content-Type
             value: text/plain; charset=UTF-8
+      # Intentionally use /log instead of /fail: individual failed backup runs
+      # are tolerated. Alert only when no later success arrives before the
+      # Healthchecks dead-man timeout.
       send-after-fail:
         method: POST
         url: "https://{{ restic_healthcheck_host }}/ping/{% raw %}{{ $healthcheck_ping_key }}/restic-{{ .Hostname }}-{{ .Profile.Name }}{% endraw %}/log"
