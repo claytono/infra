@@ -36,8 +36,8 @@ jobs:
       id: detect
       uses: ./trusted-main/.github/actions/detect-apps
       with:
-        base_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.event.before }}
-        head_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.sha }}
+        base_ref: ${{ github.event.before }}
+        head_ref: ${{ github.sha }}
         action_type: deploy
 
     - name: Setup ArgoCD environment

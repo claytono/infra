@@ -40,8 +40,8 @@ jobs:
       id: detect
       uses: ./trusted-main/.github/actions/detect-hosts
       with:
-        base_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.event.before }}
-        head_ref: ${{ github.event_name == 'workflow_dispatch' && '' || github.sha }}
+        base_ref: ${{ github.event.before }}
+        head_ref: ${{ github.sha }}
 
     - name: Override hosts for workflow_dispatch
       id: hosts
