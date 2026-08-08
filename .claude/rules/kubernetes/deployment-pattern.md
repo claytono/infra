@@ -4,7 +4,8 @@ paths: ["kubernetes/**/*"]
 
 # Kubernetes Application Deployment Pattern
 
-**Critical**: This repository uses a GitOps approach with pre-rendered Helm templates, NOT direct Helm installations.
+**Critical**: This repository uses a GitOps approach with pre-rendered Helm
+templates, NOT direct Helm installations.
 
 ## Application Structure
 
@@ -23,11 +24,15 @@ app-name/
 
 ## Helm Chart Workflow
 
-1. **Define Dependencies**: Update `Chart.yaml` with chart name, version, and repository
+1. **Define Dependencies**: Update `Chart.yaml` with chart name, version, and
+   repository
 2. **Configure Values**: Set application configuration in `values.yaml`
-3. **Render Templates**: Run `./render` script to generate static YAML in `helm/` directory
-4. **Reference in Kustomize**: List rendered templates in `kustomization.yaml` resources
-5. **Deploy**: ArgoCD deploys the kustomized manifests (note `argoManaged: 'true'` annotation is set via kustomize)
+3. **Render Templates**: Run `./render` script to generate static YAML in
+   `helm/` directory
+4. **Reference in Kustomize**: List rendered templates in `kustomization.yaml`
+   resources
+5. **Deploy**: ArgoCD deploys the kustomized manifests (note
+   `argoManaged: 'true'` annotation is set via kustomize)
 
 ## Deployment and Testing
 
@@ -40,9 +45,13 @@ kubectl apply -k <directory>      # Deploy using kustomize (standard approach)
 Do NOT use `kubectl apply -f <file>` directly.
 
 **Testing workflow:**
-- Apply changes locally with `kubectl apply -k <directory>` to test during development
-- ArgoCD manages deployments from main branch, but apply locally first to verify changes work before committing
-- For cronjobs, trigger a manual run with: `kubectl create job --from=cronjob/<name> <test-name>`
+
+- Apply changes locally with `kubectl apply -k <directory>` to test during
+  development
+- ArgoCD manages deployments from main branch, but apply locally first to verify
+  changes work before committing
+- For cronjobs, trigger a manual run with:
+  `kubectl create job --from=cronjob/<name> <test-name>`
 
 ## ConfigMap and Secret Reload
 
@@ -60,4 +69,7 @@ triggers a rolling restart when referenced ConfigMaps or Secrets change.
 
 ## Rendering Helm Charts
 
-Render scripts for Kubernetes applications are standardized across this repository. Refer to [helm-rendering.md](./helm-rendering.md) for the canonical render script pattern, helper usage, and best practices that apply to all applications.
+Render scripts for Kubernetes applications are standardized across this
+repository. Refer to [helm-rendering.md](./helm-rendering.md) for the canonical
+render script pattern, helper usage, and best practices that apply to all
+applications.

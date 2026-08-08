@@ -1,10 +1,11 @@
+---
 services:
   rpi-vm:
     build: .
     privileged: true  # Required for losetup
     environment:
-      - IMAGE=/images/rpi.img
+    - IMAGE=/images/rpi.img
     volumes:
-      - ${RPI_IMAGE}:/images/rpi.img:ro
+    - ${RPI_IMAGE}:/images/rpi.img:ro
     ports:
-      - "2222:22"
+    - "2222:22"

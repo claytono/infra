@@ -17,4 +17,5 @@ The following directories are excluded from most hooks:
 
 ## Usage
 
-Do not run pre-commit or linting tools manually - they run automatically on commit.
+Do not run pre-commit or linting tools manually - they run automatically on
+commit.
