@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Update Renovate version constraints based on endoflife.date and PyPI data.
 
@@ -13,10 +12,10 @@ Rules:
 import json
 import re
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from urllib.request import urlopen
 from urllib.error import URLError
+from urllib.request import urlopen
 
 
 def fetch_json(url: str) -> dict | list | None:
@@ -35,7 +34,7 @@ def get_mariadb_allowed_versions() -> str | None:
     if not data:
         return None
 
-    now = datetime.now()
+    now = datetime.now(UTC)
     six_months_ago = now - timedelta(days=180)
     lts_cycles = []
 
@@ -47,10 +46,12 @@ def get_mariadb_allowed_versions() -> str | None:
         if eol is True:
             continue
         if eol:
-            eol_date = datetime.strptime(eol, "%Y-%m-%d")
+            eol_date = datetime.strptime(eol, "%Y-%m-%d").replace(tzinfo=UTC)
             if eol_date < now:
                 continue
-        release_date = datetime.strptime(release["releaseDate"], "%Y-%m-%d")
+        release_date = datetime.strptime(release["releaseDate"], "%Y-%m-%d").replace(
+            tzinfo=UTC
+        )
         if release_date <= six_months_ago:
             # Escape dots for regex
             cycle = release["cycle"].replace(".", "\\.")
@@ -69,7 +70,7 @@ def get_postgresql_allowed_versions() -> str | None:
     if not data:
         return None
 
-    now = datetime.now()
+    now = datetime.now(UTC)
     six_months_ago = now - timedelta(days=180)
     cycles = []
 
@@ -79,10 +80,12 @@ def get_postgresql_allowed_versions() -> str | None:
         if eol is True:
             continue
         if eol:
-            eol_date = datetime.strptime(eol, "%Y-%m-%d")
+            eol_date = datetime.strptime(eol, "%Y-%m-%d").replace(tzinfo=UTC)
             if eol_date < now:
                 continue
-        release_date = datetime.strptime(release["releaseDate"], "%Y-%m-%d")
+        release_date = datetime.strptime(release["releaseDate"], "%Y-%m-%d").replace(
+            tzinfo=UTC
+        )
         if release_date <= six_months_ago:
             cycles.append(release["cycle"])
 
@@ -123,7 +126,7 @@ def get_pypi_latest_stable(package: str) -> str | None:
 
     # Get all versions, filter out pre-releases
     versions = []
-    for version in data.get("releases", {}).keys():
+    for version in data.get("releases", {}):
         # Skip pre-releases (alpha, beta, rc, dev)
         if re.search(r"(a|b|rc|dev|alpha|beta)\d*$", version, re.IGNORECASE):
             continue
