@@ -28,6 +28,11 @@ spec:
               value: http://192.168.4.1
             - name: SYNC_TARGET
               value: /mirror/card
+            - name: HEALTHCHECK_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: HEALTHCHECK_PING_KEY
             volumeMounts:
             - name: script
               mountPath: /scripts

@@ -39,16 +39,36 @@ error_count=$(grep -c 'ERROR:' "$sync_log" || true)
 ignored_count=$(grep -Ec \
   'ERROR: Failed to sync directory /(\.Spotlight-V100|\.fseventsd):' \
   "$sync_log" || true)
+deferred_count=$(grep -Ec \
+  'ERROR: Failed to sync file /DATALOG/[0-9]{8}/[0-9]{8}_[0-9]{6}_(BRP|PLD|SAD)\.edf: failed to download: failed to write file: unexpected EOF$' \
+  "$sync_log" || true)
+expected_error_count=$((ignored_count + deferred_count))
 
-if ((sync_status != 0 &&
-     error_count > 0 &&
-     error_count == ignored_count)) &&
+if ((sync_status == 0 && error_count == 0)); then
+  :
+elif ((sync_status != 0 &&
+       error_count > 0 &&
+       error_count == expected_error_count)) &&
    grep -Eq \
      "Sync complete: [0-9]+ files synced, [0-9]+ skipped, ${error_count} errors$" \
-     "$sync_log"; then
-  printf 'Ignoring %d macOS metadata directory error(s)\n' \
-    "$ignored_count" >&2
+   "$sync_log"; then
+  if ((ignored_count > 0)); then
+    printf 'Ignoring %d macOS metadata directory error(s)\n' \
+      "$ignored_count" >&2
+  fi
+else
+  exit "$sync_status"
+fi
+
+if ((deferred_count > 0)); then
+  printf 'Deferring %d active CPAP waveform file(s) until a later sync\n' \
+    "$deferred_count" >&2
   exit 0
 fi
 
-exit "$sync_status"
+curl -fsS \
+  --connect-timeout 10 \
+  --max-time 30 \
+  --retry 5 \
+  -o /dev/null \
+  "https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/ezshare-sync"
