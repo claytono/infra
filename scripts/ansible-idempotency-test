@@ -23,9 +23,8 @@ import json
 import os
 import re
 import sys
-from typing import Optional
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 # Force line-buffered output for real-time logging when piped/teed
 if not sys.stdout.isatty():
@@ -34,13 +33,11 @@ if not sys.stdout.isatty():
 # Add scripts directory to path for lib imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib.semaphore import SemaphoreDeployer, DeploymentError, ARA_URL
+from lib.semaphore import ARA_URL, DeploymentError, SemaphoreDeployer
 
 
 class IdempotencyError(Exception):
     """Custom exception for idempotency check failures"""
-
-    pass
 
 
 class AraClient:
@@ -49,8 +46,8 @@ class AraClient:
     def __init__(
         self,
         endpoint: str,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        username: str | None = None,
+        password: str | None = None,
         timeout: int = 30,
     ):
         self.endpoint = endpoint.rstrip("/")
@@ -154,7 +151,7 @@ def is_idempotent(host_results: dict[str, dict]) -> tuple[bool, str]:
     return True, "All hosts idempotent"
 
 
-def extract_playbook_id(ara_url: str) -> Optional[int]:
+def extract_playbook_id(ara_url: str) -> int | None:
     """Extract playbook ID from ARA URL like https://ara.k.oneill.net/playbooks/123.html"""
     match = re.search(r"/playbooks/(\d+)\.html", ara_url)
     return int(match.group(1)) if match else None
@@ -183,9 +180,7 @@ def report_healthcheck(
     max_host_len = 0
     for a in attempts:
         if a.get("host_results"):
-            max_host_len = max(
-                max_host_len, max(len(h) for h in a["host_results"].keys())
-            )
+            max_host_len = max(max_host_len, max(len(h) for h in a["host_results"]))
 
     lines = ["--- Idempotency Test Summary ---"]
     lines.append(f"Status: {'✅ PASS' if success else '❌ FAIL'}")
@@ -229,11 +224,11 @@ class IdempotencyTester:
         hosts: str,
         project: str,
         template: str,
-        tags: Optional[str] = None,
-        warmup_tags: Optional[str] = None,
-        ara_username: Optional[str] = None,
-        ara_password: Optional[str] = None,
-        healthcheck_key: Optional[str] = None,
+        tags: str | None = None,
+        warmup_tags: str | None = None,
+        ara_username: str | None = None,
+        ara_password: str | None = None,
+        healthcheck_key: str | None = None,
         min_attempts: int = 2,
         max_attempts: int = 3,
     ):
@@ -256,14 +251,14 @@ class IdempotencyTester:
         self.max_attempts = max_attempts
         self.attempts: list[dict] = []
 
-    def run_single_attempt(self) -> tuple[bool, Optional[str], Optional[str], dict]:
+    def run_single_attempt(self) -> tuple[bool, str | None, str | None, dict]:
         """Run a single deploy and check idempotency. Returns (idempotent, ara_url, task_url, host_results)"""
         # Resolve IDs if not already done
         if self.deployer.project_id is None:
             self.deployer.resolve_ids()
 
         # Run deployment
-        success, ara_url, task_url, task_id = self.deployer.deploy_single_attempt()
+        success, ara_url, task_url, _task_id = self.deployer.deploy_single_attempt()
 
         if not success:
             return False, ara_url, task_url, {}
@@ -302,7 +297,9 @@ class IdempotencyTester:
         self.deployer.tags = self.warmup_tags
 
         try:
-            success, ara_url, task_url, task_id = self.deployer.deploy_single_attempt()
+            success, _ara_url, task_url, _task_id = (
+                self.deployer.deploy_single_attempt()
+            )
         finally:
             self.deployer.tags = original_tags
 
