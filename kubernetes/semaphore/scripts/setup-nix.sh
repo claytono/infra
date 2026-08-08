@@ -25,17 +25,29 @@ curl -fL https://install.determinate.systems/nix \
 cd /infra
 eval "$(nix print-dev-env .#semaphore)"
 
-# Create ansible-bins directory and populate with symlinks
-PYTHON_ENV_DIR=$(find /nix/store -maxdepth 1 -name "*python3-*-env" -type d 2>/dev/null | head -1)
-if [ -z "$PYTHON_ENV_DIR" ]; then
-  echo "ERROR: Could not find Python environment in /nix/store" >&2
+# Preserve the tools from the repository's Nix environment before init-tools.sh
+# replaces Semaphore's bundled Ansible executables with wrappers.
+NIX_ANSIBLE=$(command -v ansible) || {
+  echo "ERROR: ansible not found in the repository Nix environment" >&2
   exit 1
-fi
+}
+NIX_ENV_BIN=$(dirname "$NIX_ANSIBLE")
+case "$NIX_ENV_BIN" in
+  /nix/store/*-python3-*-env/bin) ;;
+  *)
+    echo "ERROR: ansible resolved outside the repository Nix environment: $NIX_ANSIBLE" >&2
+    exit 1
+    ;;
+esac
+
 mkdir -p /infra/ansible-bins
-for tool in ansible ansible-playbook ansible-galaxy ansible-vault; do
-  if [ -x "$PYTHON_ENV_DIR/bin/$tool" ]; then
-    ln -sf "$PYTHON_ENV_DIR/bin/$tool" "/infra/ansible-bins/$tool"
+for tool in python3 ansible ansible-playbook ansible-galaxy ansible-vault; do
+  tool_path="$NIX_ENV_BIN/$tool"
+  if [ ! -x "$tool_path" ]; then
+    echo "ERROR: $tool not found in the repository Nix environment" >&2
+    exit 1
   fi
+  ln -sf "$tool_path" "/infra/ansible-bins/$tool"
 done
 
 echo "Nix setup complete"
