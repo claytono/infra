@@ -25,10 +25,11 @@ import subprocess
 import sys
 import urllib.parse
 import urllib.request
+from collections.abc import Sequence
+from pathlib import Path
+
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-from pathlib import Path
-from typing import Optional, Sequence
 
 # Port name to number mapping for Kubernetes service ports
 PORT_MAPPING = {"http": 80, "https": 443}
@@ -43,14 +44,14 @@ OP_FIELD_TOKEN = os.environ.get("AK_OP_FIELD_TOKEN", "api_token")
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
 
-def run(cmd: list[str], env: Optional[dict] = None) -> int:
+def run(cmd: list[str], env: dict | None = None) -> int:
     print("$", " ".join(shlex.quote(c) for c in cmd))
     if env:
         os.environ.update(env)
     os.execvp(cmd[0], cmd)
 
 
-def op_item_get_field(vault: str, item: str, label: str) -> Optional[str]:
+def op_item_get_field(vault: str, item: str, label: str) -> str | None:
     try:
         out = subprocess.check_output(
             ["op", "item", "get", item, "--vault", vault, "--format", "json"],
@@ -61,7 +62,8 @@ def op_item_get_field(vault: str, item: str, label: str) -> Optional[str]:
             if f.get("label") == label:
                 return f.get("value")
         return None
-    except Exception:
+    # 1Password is an optional fallback; any lookup failure means unavailable.
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -123,12 +125,13 @@ def parse_ingress_file(file_path) -> list:
                     ingresses.append(doc)
 
         return ingresses
-    except Exception as e:
+    # One malformed candidate must not abort the repository-wide ingress scan.
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Could not parse {file_path}: {e}", file=sys.stderr)
         return []
 
 
-def _read_kustomization_namespace(file_path) -> Optional[str]:
+def _read_kustomization_namespace(file_path) -> str | None:
     """Read namespace from kustomization.yaml in the same directory as file_path."""
     kust_path = Path(file_path).parent / "kustomization.yaml"
     try:
@@ -136,7 +139,8 @@ def _read_kustomization_namespace(file_path) -> Optional[str]:
             data = yaml.safe_load(f)
         ns = data.get("namespace") if data else None
         return ns if ns and ns != "default" else None
-    except Exception:
+    # Namespace discovery is optional; failures fall back to the default namespace.
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -204,7 +208,7 @@ def build_app_info_from_ingress(ingress, file_path):
                 f"Service port specification missing both 'number' and 'name' in ingress {metadata.get('name')}"
             )
     else:
-        raise ValueError(
+        raise TypeError(
             f"Invalid service port specification in ingress {metadata.get('name')}: expected dict, got {type(service_port)}"
         )
 
@@ -321,7 +325,7 @@ def collect_app_infos_from_ingresses(base_dir):
             try:
                 app_info = build_app_info_from_ingress(ingress, file_path)
                 raw_app_infos.append(app_info)
-            except ValueError as e:
+            except (TypeError, ValueError) as e:
                 errors.append(str(e))
                 print(f"Warning: {e}", file=sys.stderr)
 
@@ -595,7 +599,7 @@ def generate_oidc_1p_file_from_titles(titles: list[str]) -> bool:
 
     changed = False
     for title in sorted(titles):
-        app = title[:-5] if title.endswith("-oidc") else title
+        app = title.removesuffix("-oidc")
         ident = tf_ident_from_title(title)
         hcl = tmpl.render(app=app, ident=ident, title=title)
         hcl = hcl.rstrip() + "\n"
@@ -653,7 +657,8 @@ def cmd_generate(_: argparse.Namespace) -> int:
         finally:
             os.chdir(original_cwd)
 
-    except Exception as e:
+    # This command boundary reports generation failures without a traceback.
+    except Exception as e:  # noqa: BLE001
         print(f"Error generating files: {e}", file=sys.stderr)
         return 2
 
@@ -694,7 +699,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     return cmd_apply(args)
 
 
-def get_authentik_resource_id(resource_type: str, resource_name: str) -> Optional[str]:
+def get_authentik_resource_id(resource_type: str, resource_name: str) -> str | None:
     """Get the actual Authentik resource ID for a given resource type and name."""
     try:
         url, token = resolve_auth()
@@ -755,7 +760,8 @@ def get_authentik_resource_id(resource_type: str, resource_name: str) -> Optiona
                     pk = results[0].get("pk")
                     return str(pk) if pk is not None else None
 
-    except Exception as e:
+    # A failed lookup skips only this resource so the remaining imports can proceed.
+    except Exception as e:  # noqa: BLE001
         print(f"  ⚠️  API lookup failed for {resource_type}.{resource_name}: {e}")
         return None
 
@@ -778,7 +784,7 @@ def cmd_import(_: argparse.Namespace) -> int:
                 tf_config = json.load(f)
 
             for resource_type, resources in tf_config.get("resource", {}).items():
-                for resource_name in resources.keys():
+                for resource_name in resources:
                     expected_resources.append((resource_type, resource_name))
 
         if not expected_resources:
@@ -864,7 +870,7 @@ def cmd_import(_: argparse.Namespace) -> int:
                     print(f"  ✗ Failed to import {resource_name}: {error_msg}")
                     failed_imports.append((resource_name, error_msg))
 
-            except Exception as e:
+            except OSError as e:
                 print(f"  ✗ Error importing {resource_name}: {e}")
                 failed_imports.append((resource_name, str(e)))
 
@@ -882,7 +888,8 @@ def cmd_import(_: argparse.Namespace) -> int:
 
         return 0
 
-    except Exception as e:
+    # This command boundary reports import failures without a traceback.
+    except Exception as e:  # noqa: BLE001
         print(f"Error during import: {e}", file=sys.stderr)
         return 1
 
@@ -940,7 +947,7 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     args, unknown_args = build_parser().parse_known_args(argv)
     args.unknown_args = unknown_args
     try:

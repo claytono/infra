@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import json
 import sys
 
@@ -32,6 +31,6 @@ except KeyError as e:
     print(f"Error: Missing expected field in JSON: {e}", file=sys.stderr)
     print(f"File: {json_file}", file=sys.stderr)
     sys.exit(1)
-except Exception as e:
+except (OSError, TypeError, ValueError) as e:
     print(f"Error: {e}", file=sys.stderr)
     sys.exit(1)
