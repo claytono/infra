@@ -57,9 +57,9 @@ LOGS_PID=$!
 echo "Waiting for VM to boot and cloud-init to complete (this takes ~8 minutes)..."
 MAX_WAIT=900  # 15 minutes
 WAITED=0
-SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5 -p 2222"
+SSH_OPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5 -p 2222)
 
-while ! ssh $SSH_OPTS root@localhost 'test -f /run/cloud-init-complete' 2>&1; do
+while ! ssh "${SSH_OPTS[@]}" root@localhost 'test -f /run/cloud-init-complete' 2>&1; do
     if ! docker compose ps --format json | jq -e 'select(.State == "running")' >/dev/null 2>&1; then
         kill $LOGS_PID 2>/dev/null || true
         echo "ERROR: Container stopped unexpectedly"
