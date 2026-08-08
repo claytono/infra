@@ -8,11 +8,14 @@ metadata:
   labels:
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.18.3"
+    app.kubernetes.io/version: "v0.19.0"
     app.kubernetes.io/managed-by: Helm
     role: worker
 spec:
   revisionHistoryLimit: 
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 10%
   selector:
     matchLabels:
       app.kubernetes.io/name: node-feature-discovery
@@ -25,7 +28,7 @@ spec:
         app.kubernetes.io/instance: node-feature-discovery
         role: worker
       annotations:
-        checksum/config: 01cca2259c69683ee6d76199ee31cf7a4a1173571ec835916bebf145ed3cc4c6
+        checksum/config: 39985d9704e5da6f4053d5f5ab0c2a7bffeda518299a9dd6185bec135a0797da
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       imagePullSecrets: 
@@ -42,7 +45,7 @@ spec:
               - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-        image: "registry.k8s.io/nfd/node-feature-discovery:v0.18.3"
+        image: "registry.k8s.io/nfd/node-feature-discovery:v0.19.0"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -78,7 +81,7 @@ spec:
         - "nfd-worker"
         args:
         # Go over featureGate and add the feature-gate flag
-        - "-feature-gates=NodeFeatureGroupAPI=false"
+        - "-owner-refs=pod,ds"
         - "-port=8080"
         ports:
           - containerPort: 8080
