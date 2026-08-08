@@ -41,49 +41,49 @@ logger:
 #   - Timeout: Cap at 450cm
 #   - Filter: Median of 15 readings
 sensor:
-  - platform: ultrasonic
-    trigger_pin: 12
-    echo_pin: 14
-    name: "${human_devicename} Distance"
-    id: ${device_id}_distance
-    update_interval: 500ms
-    timeout: 4.5m
-    unit_of_measurement: cm
-    accuracy_decimals: 1
-    icon: mdi:ruler
-    filters:
-      - multiply: 100
-      - median:
-          window_size: 15
-          send_every: 1
-      - sliding_window_moving_average:
-          window_size: 5
-          send_every: 1
-      - round: 1  # Round to nearest 0.1cm
-      - delta: 1  # Only report changes >= 1cm
+- platform: ultrasonic
+  trigger_pin: 12
+  echo_pin: 14
+  name: "${human_devicename} Distance"
+  id: ${device_id}_distance
+  update_interval: 500ms
+  timeout: 4.5m
+  unit_of_measurement: cm
+  accuracy_decimals: 1
+  icon: mdi:ruler
+  filters:
+  - multiply: 100
+  - median:
+      window_size: 15
+      send_every: 1
+  - sliding_window_moving_average:
+      window_size: 5
+      send_every: 1
+  - round: 1  # Round to nearest 0.1cm
+  - delta: 1  # Only report changes >= 1cm
 
 # Door trigger button - exposed to Home Assistant for template cover control
 button:
-  - platform: template
-    name: "${human_devicename} Trigger"
-    id: ${device_id}_trigger_button
-    icon: mdi:garage
-    on_press:
-      - script.execute: ${device_id}_trigger_door
+- platform: template
+  name: "${human_devicename} Trigger"
+  id: ${device_id}_trigger_button
+  icon: mdi:garage
+  on_press:
+  - script.execute: ${device_id}_trigger_door
 
 # Relay for door trigger (internal - controlled via script)
 switch:
-  - platform: gpio
-    pin: 15
-    id: ${device_id}_relay
-    internal: true
-    restore_mode: ALWAYS_OFF
+- platform: gpio
+  pin: 15
+  id: ${device_id}_relay
+  internal: true
+  restore_mode: ALWAYS_OFF
 
 # Buzzer output for RTTTL alarm tones
 output:
-  - platform: esp8266_pwm
-    pin: 13
-    id: ${device_id}_buzzer_output
+- platform: esp8266_pwm
+  pin: 13
+  id: ${device_id}_buzzer_output
 
 # RTTTL component for playing alarm tones before door action
 rtttl:
@@ -93,57 +93,57 @@ rtttl:
 # Configurable alarm duration before door action (stock OpenGarage behavior)
 # Minimum 5 seconds enforced by stock firmware for auto-close
 number:
-  - platform: template
-    name: "${human_devicename} Alarm Duration"
-    id: ${device_id}_alarm_duration
-    icon: mdi:timer
-    min_value: 0
-    max_value: 30
-    step: 1
-    initial_value: 5
-    unit_of_measurement: s
-    optimistic: true
-    restore_value: true
+- platform: template
+  name: "${human_devicename} Alarm Duration"
+  id: ${device_id}_alarm_duration
+  icon: mdi:timer
+  min_value: 0
+  max_value: 30
+  step: 1
+  initial_value: 5
+  unit_of_measurement: s
+  optimistic: true
+  restore_value: true
 
 # Door trigger script - plays alarm then pulses relay
 script:
-  - id: ${device_id}_trigger_door
-    then:
-      - if:
-          condition:
-            lambda: 'return id(${device_id}_alarm_duration).state > 0;'
-          then:
-            - rtttl.play:
-                rtttl: 'alarm:d=4,o=5,b=120:d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p'
-            - delay: !lambda 'return id(${device_id}_alarm_duration).state * 1000;'
-            - rtttl.stop:
-      - switch.turn_on: ${device_id}_relay
-      - delay: 500ms
-      - switch.turn_off: ${device_id}_relay
+- id: ${device_id}_trigger_door
+  then:
+  - if:
+      condition:
+        lambda: 'return id(${device_id}_alarm_duration).state > 0;'
+      then:
+      - rtttl.play:
+          rtttl: 'alarm:d=4,o=5,b=120:d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p'
+      - delay: !lambda 'return id(${device_id}_alarm_duration).state * 1000;'
+      - rtttl.stop:
+  - switch.turn_on: ${device_id}_relay
+  - delay: 500ms
+  - switch.turn_off: ${device_id}_relay
 
 # Physical button on device
 binary_sensor:
-  - platform: gpio
-    pin:
-      number: 0
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "${human_devicename} Button"
-    id: ${device_id}_button
-    internal: true
-    filters:
-      - delayed_on: 50ms
-      - delayed_off: 50ms
-    on_press:
-      - script.execute: ${device_id}_trigger_door
+- platform: gpio
+  pin:
+    number: 0
+    mode: INPUT_PULLUP
+    inverted: true
+  name: "${human_devicename} Button"
+  id: ${device_id}_button
+  internal: true
+  filters:
+  - delayed_on: 50ms
+  - delayed_off: 50ms
+  on_press:
+  - script.execute: ${device_id}_trigger_door
 
   # Door state from ultrasonic sensor (informational only, not authoritative)
-  - platform: template
-    name: "${human_devicename} Door State"
-    id: ${device_id}_door_state
-    device_class: garage_door
-    lambda: |-
-      return id(${device_id}_distance).state <= 75;
+- platform: template
+  name: "${human_devicename} Door State"
+  id: ${device_id}_door_state
+  device_class: garage_door
+  lambda: |-
+    return id(${device_id}_distance).state <= 75;
 
 # Status LED
 status_led:

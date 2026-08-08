@@ -23,7 +23,7 @@ runs:
 
   - name: Verify Semaphore connectivity
     shell: bash
-    run: |
+    run: |-
       set -euo pipefail
       curl -sf --max-time 10 "https://semaphore.cow-banjo.ts.net/api/ping" || {
         echo "Failed to reach Semaphore API"; exit 1
