@@ -390,11 +390,13 @@ jobs:
       if: needs.resolve-provider.outputs.provider == 'codex'
       env:
         CODEX_VERSION: ${{ needs.resolve-provider.outputs.codex_version }}
-      run: npm install -g "@openai/codex@$CODEX_VERSION"
+      # The workflow input selects the CLI version at runtime on an ephemeral runner.
+      run: npm install -g "@openai/codex@$CODEX_VERSION"  # zizmor: ignore[adhoc-packages]
 
     - name: Install Claude CLI
       if: needs.resolve-provider.outputs.provider == 'claude'
-      run: npm install -g @anthropic-ai/claude-code
+      # This optional provider intentionally uses the current CLI on an ephemeral runner.
+      run: npm install -g @anthropic-ai/claude-code  # zizmor: ignore[adhoc-packages]
 
     - name: Run Codex Issue Triage
       if: needs.resolve-provider.outputs.provider == 'codex'
