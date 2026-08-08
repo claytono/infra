@@ -42,11 +42,8 @@ jobs:
       env:
         ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
 
-    - name: Run lint
-      run: nix develop --command ./scripts/lint --from-ref "$LINT_BASE_REF" --to-ref
-        "$LINT_HEAD_REF"
+    - name: Run lint on all files
+      run: nix develop --command ./scripts/lint --all-files --show-diff-on-failure
       env:
         SKIP: terraform_validate,terraform_providers_lock
         GH_TOKEN: ${{ github.token }}
-        LINT_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-        LINT_HEAD_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
