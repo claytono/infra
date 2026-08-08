@@ -95,9 +95,11 @@ def normalize_blank_lines(doc: str) -> str:
             curr_key = m.group("key").strip("'\"")
 
             # Insert a single blank line between sections, except apiVersion -> kind
-            if last_key and not (last_key == "apiVersion" and curr_key == "kind"):
-                if out and out[-1] != "\n":
-                    out.append("\n")
+            needs_spacing = last_key is not None and (
+                last_key != "apiVersion" or curr_key != "kind"
+            )
+            if needs_spacing and out and out[-1] != "\n":
+                out.append("\n")
 
             # Emit pending top-level comments then the key line
             out.extend(lines[start:i])
@@ -189,7 +191,8 @@ def main():
             elif changed:
                 any_changed = True
                 print(f"Formatted: {p}")
-        except Exception as e:
+        # Isolate formatter failures so every requested file is checked.
+        except Exception as e:  # noqa: BLE001
             ok = False
             print(f"Error formatting {p}: {e}", file=sys.stderr)
             traceback.print_exc()

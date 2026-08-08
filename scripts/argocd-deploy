@@ -27,13 +27,10 @@ import os
 import subprocess
 import sys
 import time
-from typing import List, Optional
 
 
 class DeploymentError(Exception):
     """Custom exception for deployment failures"""
-
-    pass
 
 
 class ArgoCDDeployer:
@@ -41,10 +38,10 @@ class ArgoCDDeployer:
 
     def __init__(
         self,
-        apps: List[str],
+        apps: list[str],
         target_revision: str,
-        pr_number: Optional[str] = None,
-        action_run_url: Optional[str] = None,
+        pr_number: str | None = None,
+        action_run_url: str | None = None,
         sync_timeout: int = 300,
         max_retries: int = 3,
     ):
@@ -56,7 +53,7 @@ class ArgoCDDeployer:
         self.max_retries = max_retries
 
     def run_command(
-        self, cmd: List[str], capture_output: bool = True
+        self, cmd: list[str], capture_output: bool = True
     ) -> subprocess.CompletedProcess:
         """Run a command and return the result"""
         print(f"Running command: {' '.join(cmd)}")
@@ -79,8 +76,8 @@ class ArgoCDDeployer:
                     if result.stderr:
                         print(f"stderr: {result.stderr}")
             return result
-        except Exception as e:
-            raise DeploymentError(f"Failed to run command {' '.join(cmd)}: {e}")
+        except OSError as e:
+            raise DeploymentError(f"Failed to run command {' '.join(cmd)}: {e}") from e
 
     def sync_app_to_revision(self, app: str) -> None:
         """Sync a single application to the target revision"""
