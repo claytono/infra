@@ -6,3 +6,6 @@ metadata:
   name: immich
   labels:
     goldilocks.fairwinds.com/enabled: 'true'
+  annotations:
+    goldilocks.fairwinds.com/vpa-update-mode: InPlaceOrRecreate
+    goldilocks.fairwinds.com/vpa-resource-policy: '{"containerPolicies":[{"containerName":"*","controlledValues":"RequestsOnly"}]}'
