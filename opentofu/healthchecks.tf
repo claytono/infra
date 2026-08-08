@@ -63,6 +63,18 @@ resource "healthchecksio_check" "codex_auth_refresh" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
+# ezShare CPAP sync - hourly job, alerts after 48h without a complete sync
+resource "healthchecksio_check" "ezshare_sync" {
+  provider = healthchecksio.selfhosted
+
+  name     = "ezshare-sync"
+  desc     = "Hourly ezShare CPAP data sync"
+  tags     = ["cpap", "kubernetes", "ezshare"]
+  timeout  = 172800 # 48 hours
+  grace    = 3600   # 1 hour
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
 # Got Your Back - full weekly Gmail backup
 resource "healthchecksio_check" "gyb_full" {
   provider = healthchecksio.selfhosted

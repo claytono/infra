@@ -6,6 +6,7 @@ namespace: cpap-ezshare-sync
 
 resources:
 - namespace.yaml
+- externalsecret-healthcheck.yaml
 - pvc.yaml
 - cronjob.yaml
 
