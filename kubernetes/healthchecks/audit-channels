@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+import json
+import os
+import sys
+import urllib.request
+
+
+def main() -> int:
+    base_url = os.environ.get(
+        "HEALTHCHECK_BASE_URL", "https://hc.k.oneill.net"
+    ).rstrip("/")
+    api_key = os.environ["HEALTHCHECK_API_KEY"]
+    ping_key = os.environ["HEALTHCHECK_PING_KEY"]
+
+    request = urllib.request.Request(
+        f"{base_url}/api/v1/checks/",
+        headers={"X-Api-Key": api_key},
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        checks = json.load(response)["checks"]
+
+    missing = sorted(
+        check["name"] for check in checks if not check.get("channels")
+    )
+    ping_url = f"{base_url}/ping/{ping_key}/healthchecks-channel-audit"
+
+    if missing:
+        body = (
+            f"Found {len(missing)} Healthchecks checks without notification "
+            f"channels:\n{'\n'.join(missing)}\n"
+        ).encode()
+        request = urllib.request.Request(f"{ping_url}/fail", data=body, method="POST")
+        with urllib.request.urlopen(request, timeout=30):
+            pass
+        return 1
+
+    with urllib.request.urlopen(ping_url, timeout=30):
+        pass
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

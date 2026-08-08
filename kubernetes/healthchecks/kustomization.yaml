@@ -13,7 +13,13 @@ resources:
 - postgres-cluster.yaml
 - helm/healthchecks/common.yaml
 - cronjob-canary-ping.yaml
+- cronjob-channel-audit.yaml
 - tailscale-ingress.yaml
+
+configMapGenerator:
+- name: channel-audit-script
+  files:
+  - audit-channels
 
 commonAnnotations:
   argoManaged: 'true'

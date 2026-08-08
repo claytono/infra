@@ -322,6 +322,8 @@ def sync_healthchecks() -> None:
         print("  HEALTHCHECK_API_KEY not set, skipping", file=sys.stderr)
         return
 
+    failures = 0
+
     for repo in REPOS:
         for i, command in enumerate(COMMANDS):
             slug = f"kube-restic-{repo}-{command}"
@@ -334,6 +336,7 @@ def sync_healthchecks() -> None:
                 "tz": "America/New_York",
                 "tags": "backup kubernetes restic",
                 "grace": 86400,
+                "channels": "*",
                 "unique": ["slug"],
             }
 
@@ -348,14 +351,28 @@ def sync_healthchecks() -> None:
             )
 
             try:
-                with urllib.request.urlopen(req) as resp:
-                    resp.read()  # Ensure request completes
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    check = json.load(resp)
+                    if not check.get("channels"):
+                        print(
+                            f"  Healthcheck sync returned no channels for {slug}",
+                            file=sys.stderr,
+                        )
+                        failures += 1
+                        continue
                     print(f"  Created/updated: {slug} (schedule: {schedule})")
             except urllib.error.HTTPError as e:
                 body = e.read().decode()
                 print(
                     f"  Error for {slug}: {e.code} {e.reason}: {body}", file=sys.stderr
                 )
+                failures += 1
+            except urllib.error.URLError as e:
+                print(f"  Error for {slug}: {e}", file=sys.stderr)
+                failures += 1
+
+    if failures:
+        raise RuntimeError(f"Healthcheck sync failed for {failures} check(s)")
 
 
 def sync_secrets(*, create_missing: bool = False) -> None:
