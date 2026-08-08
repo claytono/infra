@@ -23,7 +23,7 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 STATE_DIR = Path("/var/lib/iscsi-cleanup")
@@ -100,6 +100,12 @@ def save_state(state):
     STATE_FILE.write_text(json.dumps(state, indent=2) + "\n")
 
 
+def parse_state_timestamp(value):
+    """Parse state timestamps, treating legacy naive values as local time."""
+    timestamp = datetime.fromisoformat(value)
+    return timestamp.astimezone() if timestamp.tzinfo is None else timestamp
+
+
 def is_stale(session):
     """Check if a session looks stale (REOPEN + offline/missing disk)."""
     if session["session_state"] != "REOPEN":
@@ -118,6 +124,7 @@ def run_iscsiadm(args):
         ["iscsiadm"] + args,
         capture_output=True,
         text=True,
+        check=False,
     )
     return result.returncode, result.stdout, result.stderr
 
@@ -221,7 +228,7 @@ def main():
 
     # Load state and apply grace period
     state = load_state()
-    now = datetime.now()
+    now = datetime.now(UTC)
     grace = timedelta(minutes=args.grace_minutes)
     total_cleaned = 0
 
@@ -238,7 +245,7 @@ def main():
                 }
                 continue
 
-            first_seen = datetime.fromisoformat(state[iqn]["first_seen"])
+            first_seen = parse_state_timestamp(state[iqn]["first_seen"])
             if now - first_seen < grace:
                 continue
 
@@ -292,7 +299,7 @@ def main():
                 }
                 continue
 
-            first_seen = datetime.fromisoformat(state[state_key]["first_seen"])
+            first_seen = parse_state_timestamp(state[state_key]["first_seen"])
             if now - first_seen < grace:
                 continue
 
