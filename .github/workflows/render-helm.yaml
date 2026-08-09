@@ -81,7 +81,7 @@ jobs:
           HEAD_SHA=$PUSH_HEAD_SHA
         fi
         echo "Comparing $BASE_SHA..$HEAD_SHA"
-        git diff --name-only -z $BASE_SHA $HEAD_SHA \
+        git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" \
           | xargs -0 -r -n1 dirname \
           | sort -u \
           | while read -r dir; do

@@ -62,7 +62,7 @@ jobs:
       run: |
         # Query PR base dynamically instead of assuming 'main'
         BASE=$(gh pr view "$ISSUE_NUMBER" --json baseRefName -q .baseRefName)
-        echo "base=$BASE" >> $GITHUB_OUTPUT
+        echo "base=$BASE" >> "$GITHUB_OUTPUT"
         git fetch origin "$BASE:$BASE"
 
     - name: Get PR head SHA
@@ -73,7 +73,7 @@ jobs:
         ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |
         PR_HEAD=$(gh pr view "$ISSUE_NUMBER" --json headRefOid -q .headRefOid)
-        echo "sha=$PR_HEAD" >> $GITHUB_OUTPUT
+        echo "sha=$PR_HEAD" >> "$GITHUB_OUTPUT"
 
     - name: Detect Changed Apps
       if: steps.diff.outputs.command-name
@@ -102,7 +102,7 @@ jobs:
         ISSUE_NUMBER: ${{ github.event.issue.number }}
       run: |
         PR_BRANCH=$(gh pr view "$ISSUE_NUMBER" --json headRefName -q .headRefName)
-        echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+        echo "branch=$PR_BRANCH" >> "$GITHUB_OUTPUT"
 
     - name: ArgoCD Diff
       if: steps.diff.outputs.command-name && steps.detect.outputs.apps != ''
