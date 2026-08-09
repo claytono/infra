@@ -1,28 +1,74 @@
 #!/bin/bash
 
-set -eu -o pipefail
+set -euo pipefail
 
-# Set Ansible temp directory to avoid sandbox permission issues with ~/.ansible/tmp
-export ANSIBLE_LOCAL_TEMP="${PWD}/.tmp/ansible"
-
-# Change to the ansible directory
-cd ansible
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
 
 # Filter files to only include YAML files under ansible/ directory
 # and convert paths to be relative to the ansible directory
-filtered_files=()
+fix_files=()
+lint_only_files=()
 for file in "$@"; do
     if [[ "$file" =~ ^ansible/.*\.(yaml|yml)$ ]]; then
         # Remove the ansible/ prefix to make paths relative to ansible directory
         relative_file="${file#ansible/}"
-        filtered_files+=("$relative_file")
+        # Never copy a sanitized vault value back into the real checkout. Lint
+        # those files without --fix so violations remain visible for a human.
+        if grep -q '!vault' "$file"; then
+            lint_only_files+=("$relative_file")
+        else
+            fix_files+=("$relative_file")
+        fi
     fi
 done
 
 # Only run ansible-lint if we have files to process
-if [ ${#filtered_files[@]} -gt 0 ]; then
-    exec ansible-lint --fix "${filtered_files[@]}"
-else
+if ((${#fix_files[@]} == 0 && ${#lint_only_files[@]} == 0)); then
     echo "No YAML files under ansible/ directory to lint"
     exit 0
 fi
+
+# ansible-lint evaluates the whole project even when passed specific files. Use
+# a disposable copy so it can parse vaulted variables without receiving the
+# production vault password or rewriting encrypted values during --fix.
+work_dir=$(mktemp -d)
+trap 'rm -rf "$work_dir"' EXIT
+cp -a ansible "$work_dir/ansible"
+ansible/scripts/sanitize-vault-values "$work_dir/ansible"
+sed -i.bak '/^vault_password_file=/d' "$work_dir/ansible/ansible.cfg"
+rm "$work_dir/ansible/ansible.cfg.bak"
+
+# Keep Ansible's temporary files inside the disposable tree.
+export ANSIBLE_LOCAL_TEMP="$work_dir/ansible/.tmp"
+
+lint_status=0
+if ((${#fix_files[@]} > 0)); then
+    set +e
+    (
+        cd "$work_dir/ansible"
+        ansible-lint --fix "${fix_files[@]}"
+    )
+    lint_status=$?
+    set -e
+
+    for relative_file in "${fix_files[@]}"; do
+        cp "$work_dir/ansible/$relative_file" "$repo_root/ansible/$relative_file"
+    done
+fi
+
+if ((${#lint_only_files[@]} > 0)); then
+    set +e
+    (
+        cd "$work_dir/ansible"
+        ansible-lint "${lint_only_files[@]}"
+    )
+    lint_only_status=$?
+    set -e
+
+    if ((lint_status == 0)); then
+        lint_status=$lint_only_status
+    fi
+fi
+
+exit "$lint_status"

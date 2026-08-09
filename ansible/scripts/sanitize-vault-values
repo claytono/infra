@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <ansible-directory>" >&2
+    exit 2
+fi
+
+target_dir=$1
+if [[ ! -d "$target_dir" ]]; then
+    echo "Error: directory not found: $target_dir" >&2
+    exit 1
+fi
+
+sanitized_count=0
+while IFS= read -r -d '' yaml_file; do
+    if ! grep -q '!vault' "$yaml_file"; then
+        continue
+    fi
+
+    vault_count=$(yq '[.. | select(tag == "!vault")] | length' "$yaml_file")
+    if ((vault_count == 0)); then
+        continue
+    fi
+
+    yq -i '
+      (.. | select(tag == "!vault")) = "bogus-vault-value" |
+      (.. | select(tag == "!vault")) tag = "!!str"
+    ' "$yaml_file"
+
+    remaining_count=$(yq '[.. | select(tag == "!vault")] | length' "$yaml_file")
+    if ((remaining_count != 0)); then
+        echo "Error: failed to sanitize all vault values in $yaml_file" >&2
+        exit 1
+    fi
+
+    sanitized_count=$((sanitized_count + vault_count))
+done < <(find "$target_dir" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0)
+
+echo "Replaced $sanitized_count Ansible vault values with test placeholders"

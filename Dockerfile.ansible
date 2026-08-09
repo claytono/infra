@@ -53,6 +53,13 @@ RUN su ansible -c 'cd /workspace && nix develop --command true'
 # Now copy ansible directory (changes frequently, but layers above are cached)
 COPY --chown=ansible:ansible ansible /workspace/ansible
 
+# Integration tests exercise playbook behavior without production credentials.
+# Replace inline vault values only inside this disposable image, then remove the
+# password-file setting so Ansible cannot attempt to load a real vault secret.
+RUN su ansible -c \
+    'cd /workspace && nix develop --command ansible/scripts/sanitize-vault-values ansible' && \
+    sed -i '/^vault_password_file=/d' /workspace/ansible/ansible.cfg
+
 WORKDIR /workspace/ansible
 
 # Ensure the Nix wrapper is executable before using it
