@@ -37,11 +37,6 @@ jobs:
         restore-keys: |
           precommit-
 
-    - name: Write vault password file
-      run: echo "$ANSIBLE_VAULT_PASSWORD" > ansible/ansible-vault-password
-      env:
-        ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
-
     - name: Run lint on all files
       run: nix develop --command ./scripts/lint --all-files --show-diff-on-failure
       env:

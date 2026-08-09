@@ -9,13 +9,6 @@ set -e
 
 cd "$(dirname "$0")/../.."
 
-# Check if vault password file exists
-if [[ $# -eq 0 ]] && [[ ! -f "ansible/ansible-vault-password" ]]; then
-    echo "Error: ansible/ansible-vault-password file not found"
-    echo "Please ensure the vault password file exists before running the integration test"
-    exit 1
-fi
-
 echo "Building Ansible integration test image..."
 docker build --load -t ansible-integration-test -f Dockerfile.ansible .
 
@@ -27,7 +20,6 @@ if [[ $# -eq 0 ]]; then
       --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
       --cgroupns=host \
       --hostname ansible-integration-test \
-      -v "$(pwd)/ansible/ansible-vault-password:/var/lib/ansible-vault-password:ro" \
       --entrypoint /lib/systemd/systemd \
       ansible-integration-test)
 
@@ -63,10 +55,6 @@ if [[ $# -eq 0 ]]; then
         docker rm "$CONTAINER_ID" > /dev/null
         exit 1
     fi
-
-    # Copy vault password to workspace and execute the playbook inside the running container
-    # Note: Mount to /var/lib/ because systemd mounts tmpfs over /tmp and /run
-    docker exec "$CONTAINER_ID" cp /var/lib/ansible-vault-password /workspace/ansible/ansible-vault-password
 
     # Run playbook and capture output for deprecation analysis
     ANSIBLE_LOG="/var/lib/ansible-output.log"

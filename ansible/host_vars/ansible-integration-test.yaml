@@ -9,3 +9,23 @@ setup_upgrade_update_grub: false
 hostname_manage_etc_hosts: false
 sshd_config_validation: false
 qemu_guest_agent_enabled: false
+
+# Exercise user management without decrypting or changing production hashes.
+genericusers_users:
+  - name: root
+    comment: Root user
+    shell: /bin/bash
+    groups: []
+    ssh_keys: []
+  - name: coneill
+    comment: Integration test user
+    shell: /bin/bash
+    uid: 10001
+    groups: [sudo, audio, video, dialout]
+    append: true
+    ssh_keys: []
+  - name: ansible
+    comment: Ansible role user
+    uid: 9000
+    groups: [sudo]
+    ssh_keys: []

@@ -35,12 +35,6 @@ jobs:
             - 'Dockerfile.ansible'
             - '.github/workflows/ansible-integration-test.yaml'
 
-    - name: Write vault password file
-      if: steps.changes.outputs.ansible == 'true'
-      run: echo "$ANSIBLE_VAULT_PASSWORD" > ansible/ansible-vault-password
-      env:
-        ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
-
     - name: Run Ansible integration test
       if: steps.changes.outputs.ansible == 'true'
       run: ansible/scripts/docker-integration-test
