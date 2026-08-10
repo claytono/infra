@@ -7,12 +7,10 @@ alloy:
   - name: TZ
     value: America/New_York
 
-  # Persist Alloy state so DaemonSet rollouts do not replay old logs.
+  # Persist Alloy cursor state across DaemonSet pod replacements on each node.
   storagePath: /var/lib/alloy
 
-  # Enable log file mounts
   mounts:
-    varlog: true
     extra:
     - name: alloy-storage
       mountPath: /var/lib/alloy
@@ -28,6 +26,11 @@ alloy:
 
       discovery.kubernetes "pods" {
         role = "pod"
+        // Each DaemonSet pod should collect logs only from its own node.
+        selectors {
+          role  = "pod"
+          field = "spec.nodeName=" + sys.env("K8S_NODE_NAME")
+        }
       }
 
       discovery.relabel "pods" {
@@ -54,7 +57,7 @@ alloy:
           action = "replace"
         }
         rule {
-          source_labels = ["__meta_kubernetes_node_name"]
+          source_labels = ["__meta_kubernetes_pod_node_name"]
           target_label = "node"
           action = "replace"
         }

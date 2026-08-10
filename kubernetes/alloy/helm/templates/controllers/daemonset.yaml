@@ -66,9 +66,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
-            - name: varlog
-              mountPath: /var/log
-              readOnly: true
             - mountPath: /var/lib/alloy
               name: alloy-storage
         - name: config-reloader
@@ -93,9 +90,6 @@ spec:
         - name: config
           configMap:
             name: alloy
-        - name: varlog
-          hostPath:
-            path: /var/log
         - hostPath:
             path: /var/lib/alloy
             type: DirectoryOrCreate
