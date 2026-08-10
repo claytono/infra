@@ -21,6 +21,11 @@ data:
     
     discovery.kubernetes "pods" {
       role = "pod"
+      // Each DaemonSet pod should collect logs only from its own node.
+      selectors {
+        role  = "pod"
+        field = "spec.nodeName=" + sys.env("K8S_NODE_NAME")
+      }
     }
     
     discovery.relabel "pods" {
@@ -47,7 +52,7 @@ data:
         action = "replace"
       }
       rule {
-        source_labels = ["__meta_kubernetes_node_name"]
+        source_labels = ["__meta_kubernetes_pod_node_name"]
         target_label = "node"
         action = "replace"
       }
