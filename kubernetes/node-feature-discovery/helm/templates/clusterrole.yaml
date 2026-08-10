@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.18.3"
+    app.kubernetes.io/version: "v0.19.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -68,7 +68,7 @@ metadata:
   labels:
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.18.3"
+    app.kubernetes.io/version: "v0.19.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -78,12 +78,6 @@ rules:
   verbs:
   - list
   - watch
-- apiGroups:
-  - ""
-  resources:
-  - nodes/proxy
-  verbs:
-  - get
 - apiGroups:
   - topology.node.k8s.io
   resources:
