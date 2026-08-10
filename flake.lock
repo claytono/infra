@@ -5,11 +5,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1785558345,
-        "narHash": "sha256-ULXyglGb9KQI9PPLDFsXXmL//dS3t6gD9m/9uRjNuR0=",
+        "lastModified": 1786293011,
+        "narHash": "sha256-wm+F5hPLh4cKp1Vg7rWvAJMy0eQJE4DO5R19QWrVlfc=",
         "owner": "claytono",
         "repo": "go-unifi-mcp",
-        "rev": "c28ad5c5e635ec899951618bd23d83b45ca9d752",
+        "rev": "f96cc26ecb1afa44cee265c5aeb3c5c361021598",
         "type": "github"
       },
       "original": {
@@ -36,11 +36,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1785571196,
-        "narHash": "sha256-KoTsyMQqnXQZq8deCEnu4QkyldkwH/bpMMhUcfMdGIw=",
+        "lastModified": 1786106723,
+        "narHash": "sha256-zDSUbpoeo/9ZmD2+wXnzxoo1+uhL8vxc0b8yuYMKYq0=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "148bab9c1c3c53136ecb44a6ea356a0ed5b39b06",
+        "rev": "f13ff45afd1bb73e640eaa08a7066dbed07e3238",
         "type": "github"
       },
       "original": {
