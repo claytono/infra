@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["cert-manager.io"]
@@ -37,7 +37,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["cert-manager.io"]
@@ -64,7 +64,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["cert-manager.io"]
@@ -100,7 +100,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["acme.cert-manager.io"]
@@ -142,7 +142,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   # Use to update challenge resource status
@@ -203,7 +203,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["cert-manager.io"]
@@ -241,7 +241,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
 rules:
@@ -259,7 +259,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-view: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
@@ -283,7 +283,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
@@ -312,7 +312,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cert-manager"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["cert-manager.io"]
@@ -335,7 +335,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cert-manager"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["certificates.k8s.io"]
@@ -362,7 +362,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -383,7 +383,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -404,7 +404,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -425,7 +425,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -446,7 +446,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -467,7 +467,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -488,7 +488,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cert-manager"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -509,7 +509,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cert-manager"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -532,7 +532,7 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["coordination.k8s.io"]
@@ -541,25 +541,6 @@ rules:
     verbs: ["get", "update", "patch"]
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
-    verbs: ["create"]
----
-# Source: cert-manager/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: cert-manager-tokenrequest
-  namespace: cert-manager
-  labels:
-    app: cert-manager
-    app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/instance: cert-manager
-    app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
-    app.kubernetes.io/managed-by: Helm
-rules:
-  - apiGroups: [""]
-    resources: ["serviceaccounts/token"]
-    resourceNames: ["cert-manager"]
     verbs: ["create"]
 ---
 # Source: cert-manager/templates/rbac.yaml
@@ -575,35 +556,12 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: cert-manager:leaderelection
-subjects:
-  - kind: ServiceAccount
-    name: cert-manager
-    namespace: cert-manager
----
-# Source: cert-manager/templates/rbac.yaml
-# grant cert-manager permission to create tokens for the serviceaccount
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: cert-manager-tokenrequest
-  namespace: cert-manager
-  labels:
-    app: cert-manager
-    app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/instance: cert-manager
-    app.kubernetes.io/component: "controller"
-    app.kubernetes.io/version: "v1.20.3"
-    app.kubernetes.io/managed-by: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: cert-manager-tokenrequest
 subjects:
   - kind: ServiceAccount
     name: cert-manager
