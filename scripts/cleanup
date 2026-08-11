@@ -8,10 +8,15 @@
 Cross-repo convention: every repo can have a scripts/cleanup that removes
 project-local caches and build artifacts. Run it, it cleans up, it reports
 what it did.
+
+Callers run this script through the repository's default Nix development shell
+when flake.nix exists. The script must explicitly invoke direnv itself for any
+cleanup step that needs .envrc behavior.
 """
 
 import argparse
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -28,7 +33,6 @@ TARGETS = [
     "platformio",
     "tmp",
     "ansible",
-    "direnv",
     "pycache",
     "ruff",
 ]
@@ -154,6 +158,27 @@ def should_run(target: str) -> bool:
     return target in args.targets
 
 
+def require_nix_development_shell() -> None:
+    """Require this repository's default Nix development environment."""
+    if (REPO_ROOT / "flake.nix").is_file() and os.environ.get(
+        "INFRA_DEFAULT_DEV_SHELL"
+    ) != "1":
+        retry_command = [
+            "nix",
+            "develop",
+            "--no-update-lock-file",
+            str(REPO_ROOT),
+            "--command",
+            str(REPO_ROOT / "scripts" / "cleanup"),
+            *sys.argv[1:],
+        ]
+        sys.exit(
+            "Error: cleanup must run through the repository's default Nix "
+            "development shell. Run:\n"
+            f"  {shlex.join(retry_command)}"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Cleanup targets
 # ---------------------------------------------------------------------------
@@ -176,7 +201,7 @@ def clean_terraform() -> None:
             rel = d.relative_to(REPO_ROOT)
             print(f"Reinitializing {rel}/...")
             rc = run_cmd(
-                ["tofu", "init", "-input=false"],
+                ["tofu", "init", "-input=false", "-lockfile=readonly"],
                 _cwd=str(d),
             )
             if rc != 0:
@@ -262,41 +287,6 @@ def clean_ansible() -> None:
         clean("Ansible runtime cache", [p])
 
 
-def clean_direnv() -> None:
-    """Delete .direnv/ and rebuild via direnv exec."""
-    direnv_dir = REPO_ROOT / ".direnv"
-    if not direnv_dir.exists():
-        return
-
-    if not args.dry_run:
-        # Pre-flight: verify direnv can evaluate .envrc before we delete anything.
-        # direnv exec checks that .envrc is allowed and evaluates it — if this
-        # fails, we bail out with the cache still intact.
-        print("Verifying direnv can rebuild cache...")
-        rc = run_cmd(["direnv", "exec", str(REPO_ROOT), "true"])
-        if rc != 0:
-            _errors.append(
-                "direnv pre-flight failed — is .envrc allowed? "
-                "Run 'direnv allow'. Skipping direnv cleanup."
-            )
-            return
-
-    clean("direnv cache (rebuilt after cleanup)", [direnv_dir])
-
-    if not args.dry_run:
-        print("Rebuilding direnv cache...")
-        # direnv exec evaluates .envrc and rebuilds .direnv/ cache in one step.
-        # Unlike direnv reload, this works without needing the shell hook active.
-        rc = run_cmd(["direnv", "exec", str(REPO_ROOT), "true"])
-        if rc != 0:
-            _errors.append("direnv rebuild failed after deleting cache")
-        elif direnv_dir.exists():
-            global total_rebuilt
-            rebuilt_size = dir_size(direnv_dir)
-            total_rebuilt += rebuilt_size
-            print(f"Rebuilt direnv cache ({format_size(rebuilt_size)})")
-
-
 def clean_pycache() -> None:
     """Delete all __pycache__/ dirs recursively."""
     pycache_dirs = find_dirs(REPO_ROOT, "__pycache__")
@@ -321,7 +311,6 @@ TARGET_FUNCS = {
     "platformio": clean_platformio,
     "tmp": clean_tmp,
     "ansible": clean_ansible,
-    "direnv": clean_direnv,
     "pycache": clean_pycache,
     "ruff": clean_ruff,
 }
@@ -351,6 +340,8 @@ def main() -> None:
         help=f"Targets to clean (all if none specified): {', '.join(TARGETS)}",
     )
     args = parser.parse_args()
+
+    require_nix_development_shell()
 
     # Clean working tree check
     if not args.force:
