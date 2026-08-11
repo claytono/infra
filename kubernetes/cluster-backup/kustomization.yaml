@@ -6,6 +6,7 @@ namespace: kube-system
 
 resources:
 - cronjob.yaml
+- externalsecret-healthcheck.yaml
 
 commonAnnotations:
   argoManaged: 'true'
