@@ -199,6 +199,8 @@
         in
         {
           default = pkgs.mkShell {
+            INFRA_DEFAULT_DEV_SHELL = "1";
+
             # Pinned packages available in the environment
             packages = with pkgs; [
               act
@@ -236,6 +238,8 @@
           };
 
           semaphore = pkgs.mkShell {
+            INFRA_DEFAULT_DEV_SHELL = "";
+
             packages = with pkgs; [
               pythonEnv
               opentofu
