@@ -68,7 +68,13 @@ controllers:
           INFERENCE_TEXT_MODEL: gpt-5-mini
           INFERENCE_USE_MAX_COMPLETION_TOKENS: 'true'
           OLLAMA_BASE_URL: http://ollama.ollama.svc.cluster.local:11434
+          EMBEDDING_OPENAI_BASE_URL: http://ollama.ollama.svc.cluster.local:11434/v1
+          EMBEDDING_OPENAI_API_KEY: ollama
           EMBEDDING_TEXT_MODEL: snowflake-arctic-embed2
+          EMBEDDING_DIMENSIONS: '1024'
+          EMBEDDING_TEXT_MODEL_DIMENSION_OVERRIDE: '1024'
+          EMBEDDING_CONTEXT_LENGTH: '6000'
+          EMBEDDING_ENABLE_AUTO_INDEXING: 'true'
           SEARCH_NUM_WORKERS: '3'
         envFrom:
         - secretRef:
@@ -77,6 +83,19 @@ controllers:
             name: karakeep-meilisearch
         - secretRef:
             name: karakeep-oidc
+
+  chrome:
+    containers:
+      chrome:
+        # Match Karakeep v0.33.2's documented Chrome crawler settings. The
+        # image entrypoint owns the remote-debugging address and port.
+        # https://github.com/karakeep-app/karakeep/blob/v0.33.2/docs/docs/06-administration/09-chrome-image-migration.md
+        args:
+        - --disable-gpu
+        - --disable-dev-shm-usage
+        - --hide-scrollbars
+        - --disable-blink-features=AutomationControlled
+        - --window-size=1440,900
 
 meilisearch:
   enabled: true

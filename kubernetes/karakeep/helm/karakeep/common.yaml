@@ -122,12 +122,11 @@ spec:
       dnsPolicy: ClusterFirst
       containers: 
         - args:
-          - --remote-debugging-address=0.0.0.0
-          - --remote-debugging-port=9222
-          - --headless
-          - --hide-scrollbars
           - --disable-gpu
           - --disable-dev-shm-usage
+          - --hide-scrollbars
+          - --disable-blink-features=AutomationControlled
+          - --window-size=1440,900
           image: gcr.io/zenika-hub/alpine-chrome:124
           livenessProbe:
             failureThreshold: 3
@@ -232,8 +231,20 @@ spec:
             value: /data
           - name: DISABLE_PASSWORD_AUTH
             value: "true"
+          - name: EMBEDDING_CONTEXT_LENGTH
+            value: "6000"
+          - name: EMBEDDING_DIMENSIONS
+            value: "1024"
+          - name: EMBEDDING_ENABLE_AUTO_INDEXING
+            value: "true"
+          - name: EMBEDDING_OPENAI_API_KEY
+            value: ollama
+          - name: EMBEDDING_OPENAI_BASE_URL
+            value: http://ollama.ollama.svc.cluster.local:11434/v1
           - name: EMBEDDING_TEXT_MODEL
             value: snowflake-arctic-embed2
+          - name: EMBEDDING_TEXT_MODEL_DIMENSION_OVERRIDE
+            value: "1024"
           - name: INFERENCE_CONTEXT_LENGTH
             value: "16384"
           - name: INFERENCE_ENABLE_AUTO_SUMMARIZATION
