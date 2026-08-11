@@ -1,38 +1,204 @@
-#!/bin/sh -xveu
+#!/bin/sh -veu
 
 # renovate: datasource=github-releases depName=etcd-io/etcd
 ETCD_VERSION=3.5.16
 
 TIMESTAMP=$(date -u -Isec | sed -e 's/UTC/Z/' | sed -e 's/+00:00/Z/')
 BACKUPDIR=/backups/$TIMESTAMP
+INCOMPLETE_BACKUPDIR=/backups/.cluster-backup-$TIMESTAMP.incomplete
 ETCD_ENDPOINTS=https://127.0.0.1:2379
 CACERT=/etc/kubernetes/pki/etcd/ca.crt
 CERT=/etc/kubernetes/pki/etcd/healthcheck-client.crt
 KEY=/etc/kubernetes/pki/etcd/healthcheck-client.key
+HEALTHCHECK_URL=https://hc.k.oneill.net/ping/${HEALTHCHECK_PING_KEY}/cluster-backup
+RUN_STARTED=$(date +%s)
 
-apk add --no-cache wget rsync
+log() {
+  printf '%s %s\n' "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$*"
+}
+
+human_bytes() {
+  numfmt --to=iec-i --suffix=B "$1"
+}
+
+cleanup() {
+  if [ -n "${INCOMPLETE_BACKUPDIR:-}" ] && [ -d "$INCOMPLETE_BACKUPDIR" ]; then
+    log "Removing incomplete backup $INCOMPLETE_BACKUPDIR"
+    rm -rf "$INCOMPLETE_BACKUPDIR"
+  fi
+}
+
+handle_signal() {
+  signal=$1
+  status=$2
+  log "Received $signal; terminating backup"
+  exit "$status"
+}
+
+healthcheck_ping() {
+  event=$1
+  suffix=$2
+
+  if curl -fsS --connect-timeout 10 --max-time 30 --retry 5 \
+    -o /dev/null "${HEALTHCHECK_URL}${suffix}"; then
+    log "Healthchecks $event ping sent"
+  else
+    log "WARNING: Healthchecks $event ping failed; continuing"
+  fi
+}
+
+trap cleanup 0
+trap 'handle_signal HUP 129' HUP
+trap 'handle_signal INT 130' INT
+trap 'handle_signal TERM 143' TERM
+
+log "Starting cluster backup"
+
+log "Installing backup dependencies"
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  ca-certificates curl rsync wget xz-utils
+rm -rf /var/lib/apt/lists/*
+log "Backup dependencies installed"
+
+healthcheck_ping start /start
 
 # Download etcd tools
+log "Downloading etcd $ETCD_VERSION tools"
 wget "https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz"
 tar xvf etcd-v${ETCD_VERSION}-linux-amd64.tar.gz
+log "Etcd tools ready"
 
-mkdir -p "$BACKUPDIR"
+# Remove staging directories left by ungraceful termination. Their contents were
+# never published as complete backups and must not enter the archive loop.
+stale_count=0
+for stale_backup in /backups/.cluster-backup-*.incomplete; do
+  if [ -d "$stale_backup" ]; then
+    log "Removing stale incomplete backup $stale_backup"
+    rm -rf "$stale_backup"
+    stale_count=$((stale_count + 1))
+  fi
+done
+log "Removed $stale_count stale incomplete backups"
+
+mkdir -p "$INCOMPLETE_BACKUPDIR"
 
 # Modern snapshot using ETCDCTL_API=3
+log "Creating etcd snapshot"
 ETCDCTL_API=3 ./etcd-v${ETCD_VERSION}-linux-amd64/etcdctl \
   --endpoints=$ETCD_ENDPOINTS \
   --cacert=$CACERT \
   --cert=$CERT \
   --key=$KEY \
-  snapshot save "$BACKUPDIR/etcd-snapshot.db"
+  snapshot save "$INCOMPLETE_BACKUPDIR/etcd-snapshot.db"
 
 # Verify snapshot integrity
 ./etcd-v${ETCD_VERSION}-linux-amd64/etcdutl \
-  snapshot status "$BACKUPDIR/etcd-snapshot.db" \
+  snapshot status "$INCOMPLETE_BACKUPDIR/etcd-snapshot.db" \
   --write-out=table
+log "Etcd snapshot verified"
 
 # Backup Kubernetes configs
-rsync -av --exclude tmp /etc/kubernetes/ "$BACKUPDIR/kubernetes/"
+log "Copying Kubernetes configuration"
+rsync -av --exclude tmp /etc/kubernetes/ "$INCOMPLETE_BACKUPDIR/kubernetes/"
+log "Kubernetes configuration copied"
 
-# Prune backups older than 180 days (6 months)
-find /backups -maxdepth 1 -type d -mtime +180 -exec rm -rf {} \;
+# Publish the directory only after both backup phases complete successfully.
+mv "$INCOMPLETE_BACKUPDIR" "$BACKUPDIR"
+INCOMPLETE_BACKUPDIR=
+log "Published backup ${BACKUPDIR##*/}"
+
+# Compress each completed backup independently so interrupted runs can resume.
+# Only remove a source directory after both the XZ stream and tar archive verify.
+completed_count=0
+compressed_count=0
+existing_count=0
+total_source_bytes=0
+total_archive_bytes=0
+
+for backup_dir in /backups/????-??-??T??:??:??Z; do
+  if [ -d "$backup_dir" ]; then
+    completed_count=$((completed_count + 1))
+  fi
+done
+log "Found $completed_count completed directories to compress"
+
+for backup_dir in /backups/????-??-??T??:??:??Z; do
+  if [ ! -d "$backup_dir" ]; then
+    continue
+  fi
+
+  backup_name=${backup_dir##*/}
+  archive="/backups/$backup_name.tar.xz"
+  temporary_archive="$archive.tmp"
+  source_bytes=$(du -sb "$backup_dir" | cut -f1)
+  source_size=$(human_bytes "$source_bytes")
+
+  if [ -e "$archive" ]; then
+    if [ ! -s "$archive" ]; then
+      log "Removing empty archive $archive"
+      rm -f "$archive"
+    else
+      log "Validating existing archive $archive"
+      xz -t "$archive"
+      tar -tJf "$archive" "$backup_name/" > /dev/null
+      archive_bytes=$(stat -c %s "$archive")
+      archive_size=$(human_bytes "$archive_bytes")
+      log "Existing archive verified (source: $source_size, archive: $archive_size); removing source directory"
+      rm -rf "$backup_dir"
+      existing_count=$((existing_count + 1))
+      total_source_bytes=$((total_source_bytes + source_bytes))
+      total_archive_bytes=$((total_archive_bytes + archive_bytes))
+      continue
+    fi
+  fi
+
+  archive_started=$(date +%s)
+  log "Compressing $backup_name (source: $source_size)"
+  rm -f "$temporary_archive"
+  XZ_OPT=-9 tar -C /backups -cJf "$temporary_archive" "$backup_name"
+  xz -t "$temporary_archive"
+  tar -tJf "$temporary_archive" "$backup_name/" > /dev/null
+  archive_bytes=$(stat -c %s "$temporary_archive")
+  archive_size=$(human_bytes "$archive_bytes")
+  if [ "$source_bytes" -gt 0 ]; then
+    compression_ratio=$(awk -v source="$source_bytes" -v archive="$archive_bytes" \
+      'BEGIN { printf "%.1f", (1 - archive / source) * 100 }')
+  else
+    compression_ratio=0.0
+  fi
+  touch -r "$backup_dir" "$temporary_archive"
+  mv "$temporary_archive" "$archive"
+  rm -rf "$backup_dir"
+  archive_duration=$(($(date +%s) - archive_started))
+  log "Archive verified (archive: $archive_size, ratio: ${compression_ratio}%, duration: ${archive_duration}s); removed source directory"
+  compressed_count=$((compressed_count + 1))
+  total_source_bytes=$((total_source_bytes + source_bytes))
+  total_archive_bytes=$((total_archive_bytes + archive_bytes))
+done
+
+if [ "$total_source_bytes" -gt 0 ]; then
+  total_source_size=$(human_bytes "$total_source_bytes")
+  total_archive_size=$(human_bytes "$total_archive_bytes")
+  total_ratio=$(awk -v source="$total_source_bytes" -v archive="$total_archive_bytes" \
+    'BEGIN { printf "%.1f", (1 - archive / source) * 100 }')
+  log "Compression totals (source: $total_source_size, archive: $total_archive_size, ratio: ${total_ratio}%)"
+fi
+
+# Prune compressed backups older than 180 days (6 months).
+pruned_count=$(find /backups -maxdepth 1 -type f -name '*.tar.xz' -mtime +180 \
+  -print | wc -l | tr -d ' ')
+find /backups -maxdepth 1 -type f -name '*.tar.xz' -mtime +180 \
+  -exec rm -f {} \;
+log "Pruned $pruned_count archives older than 180 days"
+
+# Bound storage growth when an old source directory survived failed compression.
+pruned_directory_count=$(find /backups -maxdepth 1 -type d \
+  -name '????-??-??T??:??:??Z' -mtime +180 -print | wc -l | tr -d ' ')
+find /backups -maxdepth 1 -type d -name '????-??-??T??:??:??Z' -mtime +180 \
+  -exec rm -rf {} \;
+log "Pruned $pruned_directory_count uncompressed directories older than 180 days"
+
+healthcheck_ping success ''
+run_duration=$(($(date +%s) - RUN_STARTED))
+log "Backup completed (compressed: $compressed_count, existing: $existing_count, archives pruned: $pruned_count, directories pruned: $pruned_directory_count, duration: ${run_duration}s)"

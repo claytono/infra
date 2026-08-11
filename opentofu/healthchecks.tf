@@ -159,6 +159,19 @@ resource "healthchecksio_check" "velero_daily" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
+# Kubernetes control-plane backup - runs daily
+resource "healthchecksio_check" "cluster_backup" {
+  provider = healthchecksio.selfhosted
+
+  name     = "cluster-backup"
+  slug     = "cluster-backup"
+  desc     = "Daily Kubernetes control-plane backup"
+  tags     = ["backup", "kubernetes", "etcd"]
+  timeout  = 129600 # 36 hours
+  grace    = 3600   # 1 hour
+  channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
 # =============================================================================
 # kube-restic checks
 # =============================================================================

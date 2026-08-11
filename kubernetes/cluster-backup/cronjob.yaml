@@ -5,9 +5,12 @@ kind: CronJob
 metadata:
   name: cluster-backup
   namespace: kube-system
+  annotations:
+    goldilocks.fairwinds.com/vpa-update-mode: 'Off'
 
 spec:
-  schedule: 0 */12 * * *
+  schedule: 0 4 * * *
+  timeZone: America/New_York
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 5
   failedJobsHistoryLimit: 10
@@ -20,10 +23,21 @@ spec:
           hostNetwork: true
           containers:
           - name: cluster-backup
-            image: alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+            image: debian:stable-slim@sha256:328d16499860ae6cb9b345e2e4cebca08c2a36e4f7278482c7bd1f39d71e5bfd
             imagePullPolicy: IfNotPresent
+            resources:
+              requests:
+                cpu: 250m
+              limits:
+                cpu: 250m
             command:
             - /script/backup
+            env:
+            - name: HEALTHCHECK_PING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthchecks
+                  key: HEALTHCHECK_PING_KEY
             volumeMounts:
             - name: script
               mountPath: /script
@@ -48,7 +62,7 @@ spec:
             name: k8s
           - nfs:
               server: fs2.oneill.net
-              path: /volume1/k8s-pv/backups
+              path: /volume2/backups/cluster-backup
             name: backups
           restartPolicy: OnFailure
           nodeSelector:
