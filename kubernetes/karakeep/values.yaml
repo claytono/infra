@@ -100,7 +100,7 @@ controllers:
 meilisearch:
   enabled: true
   environment:
-    MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE: 'true'
+    MEILI_UPGRADE_DB: 'true'
   auth:
     existingMasterKeySecret: karakeep-meilisearch
   persistence:
