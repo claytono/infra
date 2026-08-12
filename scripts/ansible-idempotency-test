@@ -6,11 +6,12 @@ Triggers Semaphore deploy, checks ARA for 0 changed/0 failed per host,
 retries until idempotent, reports to healthchecks.io.
 
 HOW IT WORKS:
-1. Triggers Semaphore deployment to specified hosts
-2. Extracts playbook ID from ARA URL in task output
-3. Queries ARA API for per-host changed/failed counts
-4. If any host has changed>0 or failed>0, retries (up to max attempts)
-5. Reports final status to healthchecks.io with per-host breakdown
+1. Runs a non-fatal warmup deployment to prime caches
+2. Triggers Semaphore deployments to specified hosts
+3. Extracts playbook IDs from ARA URLs in task output
+4. Queries ARA for per-host changed/failed/unreachable counts
+5. Succeeds when one attempt reaches every host with no changes or failures
+6. Reports final status to healthchecks.io with per-host breakdown
 
 EXAMPLES:
 ./ansible-idempotency-test --project Infra --template ansible-deploy --hosts all
@@ -102,22 +103,40 @@ def get_host_results(ara_client: AraClient, playbook_id: int) -> dict[str, dict]
     # Query results for the playbook
     results = ara_client.get(f"/api/v1/results?playbook={playbook_id}&limit=10000")
 
-    host_stats: dict[str, dict] = {}
+    # Initialize every playbook host so a host with no task results cannot be
+    # mistaken for a complete, idempotent attempt.
+    host_stats: dict[str, dict] = {
+        hostname: {
+            "changed": 0,
+            "failed": 0,
+            "unreachable": 0,
+            "ok": 0,
+            "skipped": 0,
+        }
+        for hostname in host_id_to_name.values()
+    }
     for result in results.get("results", []):
         hostname = get_hostname_from_result(result, host_id_to_name)
-
-        if hostname not in host_stats:
-            host_stats[hostname] = {"changed": 0, "failed": 0, "ok": 0, "skipped": 0}
 
         status = result.get("status", "")
         if status == "changed":
             host_stats[hostname]["changed"] += 1
         elif status == "failed":
             host_stats[hostname]["failed"] += 1
+        elif status == "unreachable":
+            host_stats[hostname]["unreachable"] += 1
         elif status == "ok":
             host_stats[hostname]["ok"] += 1
         elif status == "skipped":
             host_stats[hostname]["skipped"] += 1
+
+    # ARA creates an empty localhost host when tasks use delegate_to: localhost.
+    # It is controller bookkeeping, not an inventory target that the playbook
+    # failed to reach. Preserve localhost when it has results so explicitly
+    # targeted localhost runs are still validated normally.
+    localhost = host_stats.get("localhost")
+    if localhost is not None and sum(localhost.values()) == 0:
+        del host_stats["localhost"]
 
     return host_stats
 
@@ -129,21 +148,36 @@ def format_host_summary(host_results: dict[str, dict], indent: str = "") -> str:
 
     lines = []
     for host, counts in sorted(host_results.items()):
-        status = "✅" if counts["changed"] == 0 and counts["failed"] == 0 else "❌"
+        complete = sum(counts.values()) > 0
+        status = (
+            "✅"
+            if complete
+            and counts["changed"] == 0
+            and counts["failed"] == 0
+            and counts["unreachable"] == 0
+            else "❌"
+        )
         lines.append(
             f"{indent}{status} {host}: {counts['changed']} changed, "
-            f"{counts['failed']} failed, {counts['ok']} ok"
+            f"{counts['failed']} failed, {counts['unreachable']} unreachable, "
+            f"{counts['ok']} ok"
         )
     return "\n".join(lines)
 
 
 def is_idempotent(host_results: dict[str, dict]) -> tuple[bool, str]:
-    """Check if all hosts have 0 changed and 0 failed"""
+    """Check that every playbook host ran with no changes or failures."""
+    if not host_results:
+        return False, "No hosts found in ARA results"
+
     non_idempotent = []
     for host, counts in sorted(host_results.items()):
-        if counts["changed"] > 0 or counts["failed"] > 0:
+        if sum(counts.values()) == 0:
+            non_idempotent.append(f"{host}: no task results")
+        elif counts["changed"] > 0 or counts["failed"] > 0 or counts["unreachable"] > 0:
             non_idempotent.append(
-                f"{host}: {counts['changed']} changed, {counts['failed']} failed"
+                f"{host}: {counts['changed']} changed, {counts['failed']} failed, "
+                f"{counts['unreachable']} unreachable"
             )
 
     if non_idempotent:
@@ -197,14 +231,23 @@ def report_healthcheck(
         if a.get("host_results"):
             lines.append("    Hosts:")
             for host, counts in sorted(a["host_results"].items()):
+                complete = sum(counts.values()) > 0
                 host_icon = (
-                    "✅" if counts["changed"] == 0 and counts["failed"] == 0 else "❌"
+                    "✅"
+                    if complete
+                    and counts["changed"] == 0
+                    and counts["failed"] == 0
+                    and counts["unreachable"] == 0
+                    else "❌"
                 )
                 changed = str(counts["changed"]).rjust(2)
                 failed = str(counts["failed"]).rjust(2)
+                unreachable = str(counts["unreachable"]).rjust(2)
                 ok = str(counts["ok"]).rjust(3)
                 lines.append(
-                    f"      {host_icon} {host.ljust(max_host_len)}: {changed} changed, {failed} failed, {ok} ok"
+                    f"      {host_icon} {host.ljust(max_host_len)}: "
+                    f"{changed} changed, {failed} failed, "
+                    f"{unreachable} unreachable, {ok} ok"
                 )
         lines.append("")
 
@@ -285,8 +328,8 @@ class IdempotencyTester:
 
         return idempotent, ara_url, task_url, host_results
 
-    def run_warmup(self) -> None:
-        """Run a warmup deploy to prime caches before testing"""
+    def run_warmup(self) -> bool:
+        """Run a non-fatal warmup deploy to prime caches before testing."""
         print(f"\n--- Warmup deploy (tags: {self.warmup_tags}) ---")
 
         if self.deployer.project_id is None:
@@ -304,9 +347,11 @@ class IdempotencyTester:
             self.deployer.tags = original_tags
 
         if not success:
-            raise DeploymentError(f"Warmup deploy failed (task: {task_url})")
+            print(f"Warning: Warmup deploy failed; continuing (task: {task_url})")
+            return False
 
         print("Warmup deploy completed successfully")
+        return True
 
     def run(self) -> bool:
         """Run idempotency test with retries"""
@@ -345,9 +390,13 @@ class IdempotencyTester:
                 }
             )
 
-            # Check if this is the final attempt (success after min_attempts, or last retry)
+            if idempotent:
+                final_success = True
+
+            # A complete, clean attempt makes the run successful, but always
+            # collect the configured minimum number of measured attempts.
             is_final = (
-                idempotent and attempt >= self.min_attempts
+                final_success and attempt >= self.min_attempts
             ) or attempt == self.max_attempts
 
             # Print host summary for non-final attempts (final summary shows all)
@@ -355,11 +404,8 @@ class IdempotencyTester:
                 print("\nHost Summary:")
                 print(format_host_summary(host_results, indent="  "))
 
-            if idempotent:
-                final_success = True
-                # Only stop early if we've reached min_attempts
-                if attempt >= self.min_attempts:
-                    break
+            if is_final:
+                break
 
         # Report to healthcheck
         if self.healthcheck_key:
@@ -424,7 +470,7 @@ def main():
         "--min-attempts",
         type=int,
         default=2,
-        help="Minimum test attempts even if idempotent (default: 2)",
+        help="Minimum measured attempts before success (default: 2)",
     )
     parser.add_argument(
         "--max-attempts",
