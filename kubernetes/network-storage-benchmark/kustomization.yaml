@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: network-storage-benchmark
 
+commonAnnotations:
+  argoManaged: 'false'
+
 resources:
 - namespace.yaml
 - pvc-iscsi.yaml

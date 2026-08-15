@@ -1,0 +1,23 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+
+metadata:
+  name: require-explicit-argo-management
+
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: require-argo-managed-annotation
+    match:
+      any:
+      - resources:
+          kinds:
+          - Kustomization
+    validate:
+      message: >-
+        Top-level application Kustomizations must set
+        commonAnnotations.argoManaged to either 'true' or 'false'.
+      pattern:
+        commonAnnotations:
+          argoManaged: true | false
