@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: smtp-relay
 
+commonAnnotations:
+  argoManaged: 'true'
+
 resources:
 - namespace.yaml
 - certificate.yaml
@@ -24,9 +27,3 @@ patches:
   target:
     kind: StatefulSet
     name: smtp
-
-labels:
-
-- pairs:
-    argoManaged: 'true'
-  includeSelectors: false

@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASEDIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 POLICY_DIR="$BASEDIR/.kyverno/policies"
 PINNED_IMAGE_POLICY="$POLICY_DIR/require-pinned-image-pull-policy.yaml"
+ARGO_MANAGEMENT_POLICY="$POLICY_DIR/require-explicit-argo-management.yaml"
 
 validate_files() {
   local policy_path=$1
@@ -50,7 +51,26 @@ temp_dir=$(mktemp -d)
 trap 'rm -rf "$temp_dir"' EXIT
 
 # Preserve the existing behavior for changed, non-generated manifests.
-validate_files "$POLICY_DIR" "$temp_dir/changed-resources.yaml" "$@"
+for policy in "$POLICY_DIR"/*.yaml; do
+  if [[ $policy == "$ARGO_MANAGEMENT_POLICY" ]]; then
+    continue
+  fi
+
+  validate_files "$policy" "$temp_dir/changed-resources.yaml" "$@"
+done
+
+# The normal policy path validates only changed manifests, which can include
+# nested Kustomizations. This policy must instead mirror the ApplicationSet's
+# repository-wide kubernetes/*/kustomization.yaml scope: unchanged apps must be
+# checked, while nested Kustomizations must not require app-level intent.
+mapfile -t top_level_kustomizations < <(
+  find "$BASEDIR/kubernetes" -mindepth 2 -maxdepth 2 -type f \
+    \( -name 'kustomization.yaml' -o -name 'kustomization.yml' \) \
+    | sort
+)
+validate_files "$ARGO_MANAGEMENT_POLICY" \
+  "$temp_dir/top-level-kustomizations.yaml" \
+  "${top_level_kustomizations[@]}"
 
 if [[ $validate_all_pinned_images != true ]]; then
   exit 0
