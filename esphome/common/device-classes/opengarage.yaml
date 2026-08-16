@@ -70,6 +70,18 @@ button:
   icon: mdi:garage
   on_press:
   - script.execute: ${device_id}_trigger_door
+- platform: template
+  name: "${human_devicename} Open"
+  id: ${device_id}_open_button
+  icon: mdi:garage-open
+  on_press:
+  - script.execute: ${device_id}_pulse_relay
+- platform: template
+  name: "${human_devicename} Close"
+  id: ${device_id}_close_button
+  icon: mdi:garage
+  on_press:
+  - script.execute: ${device_id}_trigger_door
 
 # Relay for door trigger (internal - controlled via script)
 switch:
@@ -105,8 +117,15 @@ number:
   optimistic: true
   restore_value: true
 
-# Door trigger script - plays alarm then pulses relay
+# Relay pulse shared by immediate open and warning-delayed actions
 script:
+- id: ${device_id}_pulse_relay
+  then:
+  - switch.turn_on: ${device_id}_relay
+  - delay: 500ms
+  - switch.turn_off: ${device_id}_relay
+
+# Warning-delayed trigger used for closing and the physical button
 - id: ${device_id}_trigger_door
   then:
   - if:
@@ -117,9 +136,7 @@ script:
           rtttl: 'alarm:d=4,o=5,b=120:d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p,d,p'
       - delay: !lambda 'return id(${device_id}_alarm_duration).state * 1000;'
       - rtttl.stop:
-  - switch.turn_on: ${device_id}_relay
-  - delay: 500ms
-  - switch.turn_off: ${device_id}_relay
+  - script.execute: ${device_id}_pulse_relay
 
 # Physical button on device
 binary_sensor:

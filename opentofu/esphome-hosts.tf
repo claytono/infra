@@ -12,12 +12,6 @@ locals {
       hostname = "basement-clock.oneill.net"
       note     = "ESPHome: Basement Clock"
     }
-    bedjet = {
-      mac      = "24:0A:C4:C0:69:E8"
-      ip       = "172.20.7.111"
-      hostname = "bedjet.oneill.net"
-      note     = "ESPHome: Bed Jet"
-    }
     eightsleep-power = {
       mac      = "C8:2B:96:06:40:6D"
       ip       = "172.20.7.189"
