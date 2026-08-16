@@ -167,11 +167,17 @@ template:
     open_cover:
       action: button.press
       target:
-        entity_id: button.opengarage_left_door_opengarage_left_door_trigger
+        entity_id: >-
+          {{ 'button.opengarage_left_door_opengarage_left_door_open'
+             if state_attr('button.opengarage_left_door_opengarage_left_door_open', 'friendly_name') is not none
+             else 'button.opengarage_left_door_opengarage_left_door_trigger' }}
     close_cover:
       action: button.press
       target:
-        entity_id: button.opengarage_left_door_opengarage_left_door_trigger
+        entity_id: >-
+          {{ 'button.opengarage_left_door_opengarage_left_door_close'
+             if state_attr('button.opengarage_left_door_opengarage_left_door_close', 'friendly_name') is not none
+             else 'button.opengarage_left_door_opengarage_left_door_trigger' }}
   - name: Right Garage Door
     unique_id: right_garage_door_template_cover
     device_class: garage
@@ -180,11 +186,17 @@ template:
     open_cover:
       action: button.press
       target:
-        entity_id: button.opengarage_right_door_opengarage_right_door_trigger
+        entity_id: >-
+          {{ 'button.opengarage_right_door_opengarage_right_door_open'
+             if state_attr('button.opengarage_right_door_opengarage_right_door_open', 'friendly_name') is not none
+             else 'button.opengarage_right_door_opengarage_right_door_trigger' }}
     close_cover:
       action: button.press
       target:
-        entity_id: button.opengarage_right_door_opengarage_right_door_trigger
+        entity_id: >-
+          {{ 'button.opengarage_right_door_opengarage_right_door_close'
+             if state_attr('button.opengarage_right_door_opengarage_right_door_close', 'friendly_name') is not none
+             else 'button.opengarage_right_door_opengarage_right_door_trigger' }}
 
 - switch:
   - name: Basement Humidifiers

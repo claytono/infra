@@ -6,7 +6,7 @@
 set -Eeuo pipefail
 
 # ESPHome version
-ESPHOME_VERSION="2026.5.3"
+ESPHOME_VERSION="2026.6.5"
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,4 +22,4 @@ cd "$ESPHOME_DIR" || exit 1
 export PLATFORMIO_CORE_DIR="${ESPHOME_DIR}/.platformio"
 
 # Run ESPHome via uv with pip included (required by PlatformIO)
-exec uv run --with pip --with "esphome==${ESPHOME_VERSION}" esphome "$@"
+exec uv run --no-managed-python --with pip --with "esphome==${ESPHOME_VERSION}" esphome "$@"
