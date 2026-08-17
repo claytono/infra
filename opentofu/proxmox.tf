@@ -99,7 +99,7 @@ resource "proxmox_virtual_environment_vm" "k2" {
   disk {
     interface    = "scsi0"
     datastore_id = "local-zfs"
-    size         = 150
+    size         = 500
     file_format  = "raw"
     iothread     = true
     discard      = "on"
