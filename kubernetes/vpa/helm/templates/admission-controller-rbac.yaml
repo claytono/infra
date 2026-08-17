@@ -51,6 +51,7 @@ rules:
       - get
       - list
       - watch
+
 ---
 # Source: vpa/templates/admission-controller-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
