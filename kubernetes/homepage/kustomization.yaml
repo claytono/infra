@@ -26,6 +26,7 @@ configMapGenerator:
   - docker.yaml=""
   - bookmarks.yaml=""
   files:
+  - custom.js
   - kubernetes.yaml
   - settings.yaml
   - widgets.yaml
@@ -41,3 +42,9 @@ patches:
       path: /metadata/annotations
       value:
         reloader.stakater.com/auto: "true"
+    - op: add
+      path: /spec/template/spec/containers/0/volumeMounts/-
+      value:
+        name: homepage-config
+        subPath: custom.js
+        mountPath: /app/config/custom.js
