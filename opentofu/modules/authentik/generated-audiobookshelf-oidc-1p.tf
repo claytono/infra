@@ -8,7 +8,7 @@ resource "random_password" "audiobookshelf_oidc" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   audiobookshelf_oidc_client_id = "audiobookshelf"
   audiobookshelf_oidc_secret    = random_password.audiobookshelf_oidc.result
 }

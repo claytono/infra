@@ -8,7 +8,7 @@ resource "random_password" "shelfmark_comics_oidc" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   shelfmark_comics_oidc_client_id = "shelfmark-comics"
   shelfmark_comics_oidc_secret    = random_password.shelfmark_comics_oidc.result
 }

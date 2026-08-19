@@ -4,14 +4,14 @@ kind: Kustomization
 
 namespace: default
 
-components:
-- ../components/authentik
-
 commonAnnotations:
   argoManaged: 'true'
 
 resources:
 - helm/templates/common.yaml
+- externalsecret-auth.yaml
+- externalsecret-oidc.yaml
+- password-generator.yaml
 
 labels:
 
@@ -39,9 +39,8 @@ patches:
     name: homepage
   patch: |-
     - op: add
-      path: /metadata/annotations
-      value:
-        reloader.stakater.com/auto: "true"
+      path: /metadata/annotations/reloader.stakater.com~1auto
+      value: "true"
     - op: add
       path: /spec/template/spec/containers/0/volumeMounts/-
       value:

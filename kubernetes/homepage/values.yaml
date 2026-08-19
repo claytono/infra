@@ -14,14 +14,38 @@ enableRbac: true
 # Environment variables
 env:
 - name: HOMEPAGE_ALLOWED_HOSTS
-  value: '*'
+  value: homepage.k.oneill.net
+- name: HOMEPAGE_AUTH_ENABLED
+  value: 'true'
+- name: HOMEPAGE_AUTH_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: homepage-auth
+      key: HOMEPAGE_AUTH_SECRET
+- name: HOMEPAGE_EXTERNAL_URL
+  value: https://homepage.k.oneill.net
+- name: HOMEPAGE_OIDC_ISSUER
+  value: https://auth.k.oneill.net/application/o/homepage/
+- name: HOMEPAGE_OIDC_CLIENT_ID
+  valueFrom:
+    secretKeyRef:
+      name: homepage-oidc
+      key: HOMEPAGE_OIDC_CLIENT_ID
+- name: HOMEPAGE_OIDC_CLIENT_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: homepage-oidc
+      key: HOMEPAGE_OIDC_CLIENT_SECRET
+- name: HOMEPAGE_OIDC_NAME
+  value: Authentik
 
 ingress:
   main:
     enabled: true
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
-      ak-type: simple
+      ak-type: oidc
+      ak-oidc-callback: /api/auth/callback/homepage-oidc
     tls:
     - hosts:
       - homepage.k.oneill.net

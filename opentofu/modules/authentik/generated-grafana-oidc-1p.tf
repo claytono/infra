@@ -8,7 +8,7 @@ resource "random_password" "grafana_oidc" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   grafana_oidc_client_id = "grafana"
   grafana_oidc_secret    = random_password.grafana_oidc.result
 }
