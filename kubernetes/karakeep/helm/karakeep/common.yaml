@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/version: 0.33.1
   namespace: karakeep
 stringData:
   MEILI_MASTER_KEY: 'bogus'
@@ -25,7 +25,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/version: 0.33.1
   namespace: karakeep
 spec:
   accessModes:
@@ -33,6 +33,13 @@ spec:
   resources:
     requests:
       storage: "20Gi"
+
+
+
+
+
+
+
 ---
 # Source: karakeep/templates/common.yaml
 apiVersion: v1
@@ -44,7 +51,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep-chrome
-    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/version: 0.33.1
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -57,6 +64,7 @@ spec:
     app.kubernetes.io/component: chrome
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/name: karakeep
+
 ---
 # Source: karakeep/templates/common.yaml
 apiVersion: v1
@@ -68,7 +76,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep
-    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/version: 0.33.1
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -81,6 +89,8 @@ spec:
     app.kubernetes.io/component: karakeep
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/name: karakeep
+
+
 ---
 # Source: karakeep/templates/common.yaml
 apiVersion: apps/v1
@@ -92,7 +102,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/version: 0.33.1
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -170,6 +180,7 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: karakeep-data
+
 ---
 # Source: karakeep/templates/common.yaml
 apiVersion: apps/v1
@@ -181,7 +192,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/version: 0.33.1
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -278,7 +289,7 @@ spec:
               name: karakeep-meilisearch
           - secretRef:
               name: karakeep-oidc
-          image: ghcr.io/karakeep-app/karakeep:0.32.0
+          image: ghcr.io/karakeep-app/karakeep:0.33.1
           livenessProbe:
             httpGet:
               path: /api/health
@@ -306,6 +317,8 @@ spec:
         resources:
           requests:
             storage: 2Gi
+
+
 ---
 # Source: karakeep/templates/common.yaml
 apiVersion: networking.k8s.io/v1
@@ -316,7 +329,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/version: 0.33.1
   annotations:
     ak-oidc-callback: /api/auth/callback/custom
     ak-type: oidc
@@ -343,3 +356,7 @@ spec:
                 name: karakeep
                 port:
                   number: 3000
+
+
+
+
