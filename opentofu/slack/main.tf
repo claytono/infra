@@ -4,7 +4,7 @@ terraform {
   required_providers {
     slack-app = {
       source  = "change-engine/slack-app"
-      version = "~> 0.1"
+      version = "~> 0.2"
     }
   }
 
