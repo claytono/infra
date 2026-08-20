@@ -10,7 +10,7 @@ metadata:
     gethomepage.dev/description: Shared Browser Automation
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/group: Infrastructure
-    gethomepage.dev/icon: firefox.png
+    gethomepage.dev/icon: https://raw.githubusercontent.com/jo-inc/camofox-browser/e5a36f5cd0332fde6597de474329a308a53a0716/fox.png
     gethomepage.dev/name: Camofox
     gethomepage.dev/pod-selector: app.kubernetes.io/name=camofox
     traefik.ingress.kubernetes.io/router.middlewares: camofox-root-redirect@kubernetescrd,authentik-ak-forward-auth-simple@kubernetescrd

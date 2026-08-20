@@ -19,7 +19,7 @@ metadata:
     gethomepage.dev/description: "GitOps Continuous Delivery"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Infrastructure"
-    gethomepage.dev/icon: "mdi-git"
+    gethomepage.dev/icon: "argo-cd.png"
     gethomepage.dev/name: "Argo CD"
 spec:
   rules:

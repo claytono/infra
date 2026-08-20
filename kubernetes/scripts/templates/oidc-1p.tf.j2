@@ -8,7 +8,7 @@ resource "random_password" "{{ ident }}" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   {{ ident }}_client_id = "{{ app }}"
   {{ ident }}_secret    = random_password.{{ ident }}.result
 }

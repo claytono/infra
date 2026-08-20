@@ -8,7 +8,7 @@ resource "random_password" "felix_dashboard_oidc" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   felix_dashboard_oidc_client_id = "felix-dashboard"
   felix_dashboard_oidc_secret    = random_password.felix_dashboard_oidc.result
 }
