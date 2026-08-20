@@ -8,7 +8,7 @@ resource "random_password" "argocd_oidc" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   argocd_oidc_client_id = "argocd"
   argocd_oidc_secret    = random_password.argocd_oidc.result
 }

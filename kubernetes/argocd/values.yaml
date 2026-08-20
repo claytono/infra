@@ -21,7 +21,7 @@ server:
       gethomepage.dev/enabled: 'true'
       gethomepage.dev/name: Argo CD
       gethomepage.dev/description: GitOps Continuous Delivery
-      gethomepage.dev/icon: mdi-git
+      gethomepage.dev/icon: argo-cd.png
       gethomepage.dev/group: Infrastructure
       ak-type: oidc
       ak-oidc-callback: /api/dex/callback

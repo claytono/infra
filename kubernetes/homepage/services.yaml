@@ -3,38 +3,38 @@
   - NUT WebGUI:
       href: https://nut.oneill.net
       description: UPS Monitoring
-      icon: mdi-battery-charging
+      icon: nut-webgui.png
   - Z-Wave JS:
       href: https://zwavejs.oneill.net/
-      icon: mdi-z-wave
+      icon: z-wave-js-ui.png
   - Zigbee2MQTT:
       href: https://zigbee2mqtt.oneill.net/
-      icon: mdi-zigbee
+      icon: zigbee2mqtt.png
   - Matter Server:
       href: https://matter.oneill.net/
       description: Matter/Thread Bridge
-      icon: mdi-home-automation
+      icon: matter.png
   - Thread/OTBR:
       href: https://thread.oneill.net/
       description: OpenThread Border Router
-      icon: mdi-access-point-network
+      icon: thread.png
 
 - Server Power:
   - Infra1:
       href: http://infra1-power.oneill.net
-      icon: mdi-flash
+      icon: esphome.png
   - P1:
       href: http://p1-power.oneill.net
-      icon: mdi-flash
+      icon: esphome.png
   - K5:
       href: http://k5-power.oneill.net
-      icon: mdi-flash
+      icon: esphome.png
   - K3:
       href: http://k3-power.oneill.net
-      icon: mdi-flash
+      icon: esphome.png
   - K4:
       href: http://k4-power.oneill.net
-      icon: mdi-flash
+      icon: esphome.png
 
 - AMT Management:
   - K5:

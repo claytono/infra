@@ -8,7 +8,7 @@ resource "random_password" "qui_oidc" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   qui_oidc_client_id = "qui"
   qui_oidc_secret    = random_password.qui_oidc.result
 }

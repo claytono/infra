@@ -40,7 +40,6 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.felix-www.id,
     authentik_provider_proxy.goldilocks.id,
     authentik_provider_proxy.healthchecks.id,
-    authentik_provider_proxy.homepage.id,
     authentik_provider_proxy.minuspod.id,
     authentik_provider_proxy.netdata.id,
     authentik_provider_proxy.prometheus.id,

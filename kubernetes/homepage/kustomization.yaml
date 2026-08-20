@@ -4,14 +4,14 @@ kind: Kustomization
 
 namespace: default
 
-components:
-- ../components/authentik
-
 commonAnnotations:
   argoManaged: 'true'
 
 resources:
 - helm/templates/common.yaml
+- externalsecret-auth.yaml
+- externalsecret-oidc.yaml
+- password-generator.yaml
 
 labels:
 
@@ -26,6 +26,7 @@ configMapGenerator:
   - docker.yaml=""
   - bookmarks.yaml=""
   files:
+  - custom.js
   - kubernetes.yaml
   - settings.yaml
   - widgets.yaml
@@ -38,6 +39,11 @@ patches:
     name: homepage
   patch: |-
     - op: add
-      path: /metadata/annotations
+      path: /metadata/annotations/reloader.stakater.com~1auto
+      value: "true"
+    - op: add
+      path: /spec/template/spec/containers/0/volumeMounts/-
       value:
-        reloader.stakater.com/auto: "true"
+        name: homepage-config
+        subPath: custom.js
+        mountPath: /app/config/custom.js

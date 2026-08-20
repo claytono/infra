@@ -25,7 +25,7 @@ dashboard:
       gethomepage.dev/enabled: 'true'
       gethomepage.dev/name: Goldilocks
       gethomepage.dev/description: VPA generation and web UI
-      gethomepage.dev/icon: mdi-eye-outline
+      gethomepage.dev/icon: goldilocks.png
       gethomepage.dev/group: Monitoring
       gethomepage.dev/pod-selector: app.kubernetes.io/name=goldilocks
 

@@ -8,7 +8,7 @@ resource "random_password" "komga_oidc" {
 }
 
 locals {
-  # Terraform is the source of truth for OIDC client credentials
+  # OpenTofu is the source of truth for OIDC client credentials
   komga_oidc_client_id = "komga"
   komga_oidc_secret    = random_password.komga_oidc.result
 }
