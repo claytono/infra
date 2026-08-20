@@ -40,6 +40,12 @@ This avoids newline escaping issues entirely.
 
 ## Renovate PR Lifecycle
 
+**Never modify a Renovate-owned branch or PR.** Do not commit to, push to,
+force-push, or otherwise change a Renovate branch. When an update needs
+additional changes, create a feature branch from `origin/main`, include the
+dependency upgrade when appropriate, and open a separate PR. Allow Renovate to
+close its superseded PR automatically.
+
 **Never close a Renovate PR** to supersede it with a newer version. Closing
 tells Renovate to ignore that update permanently. Instead, create a new
 branch/PR with the target version — Renovate will auto-close its PR when it
