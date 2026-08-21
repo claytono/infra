@@ -267,6 +267,9 @@
         "kustomize",
         "kubernetes"
       ],
+      "matchPackageNames": [
+        "!ttlequals0/minuspod"
+      ],
       "minimumReleaseAge": "0 days",
       "schedule": [
         "after 2am and before 8am on thursday"
@@ -277,6 +280,27 @@
         "automerge"
       ],
       "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "matchManagers": [
+        "kustomize",
+        "kubernetes"
+      ],
+      "matchPackageNames": [
+        "ttlequals0/minuspod"
+      ],
+      "minimumReleaseAge": "0 days",
+      "schedule": [
+        "at any time"
+      ],
+      "automerge": false,
+      "description": "Evaluate MinusPod published edge digest updates"
     },
     {
       "matchDatasources": [
