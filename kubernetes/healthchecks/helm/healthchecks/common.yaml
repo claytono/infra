@@ -22,6 +22,8 @@ spec:
   selector:
     app.kubernetes.io/instance: healthchecks
     app.kubernetes.io/name: healthchecks
+
+
 ---
 # Source: healthchecks/charts/healthchecks/templates/common.yaml
 apiVersion: apps/v1
@@ -136,6 +138,9 @@ spec:
             tcpSocket:
               port: 8000
             timeoutSeconds: 1
+
+
+
 ---
 # Source: healthchecks/charts/healthchecks/templates/common.yaml
 apiVersion: networking.k8s.io/v1
