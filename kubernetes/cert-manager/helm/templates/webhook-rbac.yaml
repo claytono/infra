@@ -9,12 +9,13 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "webhook"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.1"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: ["authorization.k8s.io"]
   resources: ["subjectaccessreviews"]
   verbs: ["create"]
+
 ---
 # Source: cert-manager/templates/webhook-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -26,7 +27,7 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "webhook"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -49,7 +50,7 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "webhook"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.1"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: [""]
@@ -61,6 +62,7 @@ rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["create"]
+
 ---
 # Source: cert-manager/templates/webhook-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -73,7 +75,7 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "webhook"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -83,3 +85,5 @@ subjects:
 - kind: ServiceAccount
   name: cert-manager-webhook
   namespace: cert-manager
+
+

@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/name: startupapicheck
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "startupapicheck"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
     helm.sh/hook: post-install
@@ -21,6 +21,7 @@ rules:
   - apiGroups: ["cert-manager.io"]
     resources: ["certificaterequests"]
     verbs: ["create"]
+
 ---
 # Source: cert-manager/templates/startupapicheck-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -33,7 +34,7 @@ metadata:
     app.kubernetes.io/name: startupapicheck
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "startupapicheck"
-    app.kubernetes.io/version: "v1.20.3"
+    app.kubernetes.io/version: "v1.21.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
     helm.sh/hook: post-install
