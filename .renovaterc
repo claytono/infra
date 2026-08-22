@@ -300,7 +300,7 @@
         "at any time"
       ],
       "automerge": false,
-      "description": "Evaluate MinusPod published edge digest updates"
+      "description": "Evaluate MinusPod stable digest updates"
     },
     {
       "matchDatasources": [
