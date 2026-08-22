@@ -44,11 +44,11 @@ Record the inspected revisions and security-relevant findings in the evaluation.
 If the exact upstream diff cannot be inspected, record that limitation as an
 unresolved hazard and do not recommend merging the update.
 
-## MinusPod Published Edge Digest Updates
+## MinusPod Stable Digest Updates
 
 `kubernetes/minuspod/deploy.yaml` tracks
-`ttlequals0/minuspod:latest@sha256:<digest>`. MinusPod defines `latest` as its
-published edge channel, while the committed digest keeps the deployed image
+`ttlequals0/minuspod:stable@sha256:<digest>`. MinusPod defines `stable` as its
+promoted stable channel, while the committed digest keeps the deployed image
 immutable.
 
 For every MinusPod digest update:
@@ -56,12 +56,17 @@ For every MinusPod digest update:
 - Resolve both the current and proposed digests to their numeric MinusPod image
   tags. Report and evaluate the numeric version change, not merely a Docker
   digest change.
-- Confirm that the proposed digest equals the current Docker Hub `latest` digest
-  and that its numeric tag is the newest published GitHub Release, including
-  GitHub pre-releases. If either check fails, treat the proposal as stale and do
-  not recommend merging it.
-- Treat numeric Docker tags without a corresponding GitHub Release as
-  unpublished build artifacts, not as newer release candidates.
+- Confirm that the proposed digest equals the current Docker Hub `stable` digest
+  and that its numeric tag is the newest non-prerelease GitHub Release. If
+  either check fails, treat the proposal as stale and do not recommend merging
+  it.
+- Treat numeric Docker tags that are absent from GitHub Releases or still marked
+  as prereleases as unpublished or unpromoted build artifacts, not as stable
+  release candidates.
+- Compare the resolved numeric versions. If the proposed stable version is lower
+  than the current deployed version, treat it as a downgrade and do not
+  recommend merging it. Leave the PR open for Renovate to refresh when the
+  stable channel advances to the same or a newer version.
 - Evaluate the complete release and configuration delta between the resolved
   current and proposed versions. Do not recommend switching to a different
   release that is not represented by the proposed digest.
