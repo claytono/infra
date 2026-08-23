@@ -20,11 +20,13 @@ spec:
     spec:
       containers:
       - name: grimmory-mariadb
-        image: mariadb:11.7@sha256:fcc7fcd7114adb5d41f14d116b8aac45f94280d2babfbbb71b4782922ee6d8d4
+        image: mariadb:11.8@sha256:d9f7eb2637296652f24b484afd5d246f759f49f5babcadc6a9e344c9acb75fbf
         ports:
         - containerPort: 3306
           name: mysql
         env:
+        - name: MARIADB_AUTO_UPGRADE
+          value: '1'
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -39,6 +41,15 @@ spec:
             secretKeyRef:
               name: grimmory-mariadb-secrets
               key: user-password
+        readinessProbe:
+          exec:
+            command:
+            - healthcheck.sh
+            - --connect
+            - --innodb_initialized
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 6
         volumeMounts:
         - name: data
           mountPath: /var/lib/mysql
