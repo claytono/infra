@@ -18,6 +18,8 @@ resources:
 - helm/valkey/statefulset.yaml
 - meilisearch-service.yaml
 - meilisearch-statefulset.yaml
+- tika-service.yaml
+- tika-deployment.yaml
 - service.yaml
 - deploy.yaml
 - ingress.yaml
