@@ -36,7 +36,6 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.bazarr.id,
     authentik_provider_proxy.bookbridge.id,
     authentik_provider_proxy.camofox.id,
-    authentik_provider_proxy.changedetection.id,
     authentik_provider_proxy.felix-www.id,
     authentik_provider_proxy.goldilocks.id,
     authentik_provider_proxy.healthchecks.id,
