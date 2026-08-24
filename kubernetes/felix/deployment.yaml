@@ -30,6 +30,27 @@ spec:
         runAsGroup: 10000
         fsGroup: 10000
       initContainers:
+      # Work around the image's startup hook calling s6-setuidgid when already
+      # non-root by running its config migration directly before Hermes.
+      - name: hermes-config-migrate
+        image: docker.io/nousresearch/hermes-agent:v2026.8.19@sha256:3811ed13da874fba2ac99b6d492db9a203d34cb6dccf90d886948c00d0ccec09
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        command:
+        - /opt/hermes/.venv/bin/python
+        - /opt/hermes/scripts/docker_config_migrate.py
+        env:
+        - name: HERMES_HOME
+          value: /opt/data
+        volumeMounts:
+        - name: data
+          mountPath: /opt/data
       - name: www
         image: nginxinc/nginx-unprivileged:1.30-alpine@sha256:44e36330f74d4f3a1d4e222acca9e23b401fb87811a7597024502bb759c4dd49
         restartPolicy: Always
@@ -103,7 +124,7 @@ spec:
           readOnly: true
       containers:
       - name: hermes
-        image: docker.io/nousresearch/hermes-agent:v2026.8.13@sha256:68e15ae2a6d894d0ccbd9f8aacbbe13d4d28fa5dc9b6a303970b67bb2499b1a6
+        image: docker.io/nousresearch/hermes-agent:v2026.8.19@sha256:3811ed13da874fba2ac99b6d492db9a203d34cb6dccf90d886948c00d0ccec09
         args:
         - gateway
         - run
