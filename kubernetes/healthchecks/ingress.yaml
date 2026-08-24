@@ -1,0 +1,32 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: healthchecks
+  annotations:
+    ak-type: simple
+    ak-namespace: healthchecks
+    ak-path-exclude: /api,/ping
+    cert-manager.io/cluster-issuer: letsencrypt
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Healthchecks
+    gethomepage.dev/group: Monitoring
+    gethomepage.dev/icon: healthchecks.png
+
+spec:
+  tls:
+  - secretName: healthchecks-tls
+    hosts:
+    - hc.k.oneill.net
+  rules:
+  - host: hc.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: healthchecks
+            port:
+              number: 8000
