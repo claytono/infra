@@ -11,7 +11,9 @@ resources:
 - namespace.yaml
 - externalsecret.yaml
 - postgres-cluster.yaml
-- helm/healthchecks/common.yaml
+- deployment.yaml
+- service.yaml
+- ingress.yaml
 - cronjob-canary-ping.yaml
 - cronjob-channel-audit.yaml
 - tailscale-ingress.yaml

@@ -1,0 +1,97 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: healthchecks
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: healthchecks
+      app.kubernetes.io/instance: healthchecks
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: healthchecks
+        app.kubernetes.io/instance: healthchecks
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: healthchecks
+        image: healthchecks/healthchecks:v3.9@sha256:886de7af8116580d31dafb7ed5cb9dc93146a3e0564788999c8ab7658f0380ad
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        env:
+        - name: ALLOWED_HOSTS
+          value: hc.k.oneill.net,hc.cow-banjo.ts.net
+        - name: DB
+          value: postgres
+        - name: DB_HOST
+          value: healthchecks-postgres-rw
+        - name: DB_NAME
+          value: healthchecks
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: healthchecks-postgres-app
+              key: password
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: healthchecks-postgres-app
+              key: username
+        - name: DEBUG
+          value: 'False'
+        - name: DEFAULT_FROM_EMAIL
+          value: healthchecks@oneill.net
+        - name: EMAIL_HOST
+          value: smtp.k.oneill.net
+        - name: EMAIL_HOST_USER
+          value: relay@oneill.net
+        - name: EMAIL_HOST_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: healthchecks
+              key: EMAIL_HOST_PASSWORD
+        - name: EMAIL_PORT
+          value: '587'
+        - name: EMAIL_USE_TLS
+          value: 'True'
+        - name: REGISTRATION_OPEN
+          value: 'False'
+        - name: REMOTE_USER_HEADER
+          value: HTTP_X_AUTHENTIK_EMAIL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: healthchecks
+              key: SECRET_KEY
+        - name: SITE_NAME
+          value: Healthchecks
+        - name: SITE_ROOT
+          value: https://hc.k.oneill.net
+        - name: TZ
+          value: America/New_York
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 5
+          failureThreshold: 30
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          failureThreshold: 3
