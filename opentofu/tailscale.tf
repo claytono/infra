@@ -255,16 +255,13 @@ resource "onepassword_item" "tailscale_github_actions_ssh" {
 # Split DNS configuration:
 # 1. k.oneill.net → Cloudflare authoritative NS (for Kubernetes ingresses)
 #    - Direct resolution avoids backhauling to UDMP when traveling
-# 2. oneill.net → UDMP via Tailscale IP (for infrastructure hosts and local services)
+# 2. oneill.net → UDMP via LAN IP (for infrastructure hosts and local services)
 #    - Includes local-only records not in Cloudflare
+#    - Remains reachable through infra1 if Tailscale is unavailable on the UDMP
 
 data "dns_a_record_set" "cloudflare_oneill_net_ns" {
   for_each = local.cloudflare_oneill_net_nameserver_slots
   host     = each.value
-}
-
-data "tailscale_device" "udmp" {
-  hostname = "UDMP"
 }
 
 locals {
@@ -275,13 +272,6 @@ locals {
     ns0 = module.dns.cloudflare_oneill_net_nameservers[0]
     ns1 = module.dns.cloudflare_oneill_net_nameservers[1]
   }
-
-  # Extract IPv4 address (100.x.x.x) from UDMP's Tailscale addresses
-  # API ordering isn't guaranteed, so filter explicitly
-  udmp_ipv4 = one([
-    for addr in data.tailscale_device.udmp.addresses : addr
-    if can(regex("^100\\.", addr))
-  ])
 }
 
 resource "tailscale_dns_configuration" "main" {
@@ -328,11 +318,12 @@ resource "tailscale_dns_configuration" "main" {
   }
 
   # Split DNS for oneill.net parent domain (infrastructure hosts + local services)
-  # Uses router's Tailscale IP so it's reachable from all tailnet nodes
+  # Uses the router's LAN IP so infra1 can provide a backup subnet route when
+  # Tailscale is unavailable on the UDMP after a UniFi OS upgrade.
   split_dns {
     domain = "oneill.net"
     nameservers {
-      address            = local.udmp_ipv4
+      address            = "172.19.74.1"
       use_with_exit_node = true
     }
   }
