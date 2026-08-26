@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-dotfiles
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 5e499db42df11894157c9d8bc01011f6a800ae83691db4f5bec9ccc7bd10654
+    actions.github.com/values-hash: e80871f37c03c4425bc74f684d6e0a3c9dd0eb0a009c51f0d8f118fde63393d
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -24,7 +24,7 @@ spec:
   runnerScaleSetName: codex-dotfiles
   runnerScaleSetLabels:
     - codex
-  maxRunners: 8
+  maxRunners: 4
   minRunners: 0
   template:
     metadata:

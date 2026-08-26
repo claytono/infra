@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-infra
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 471cb33186debc09cdd2ca5164ea2c33fcb91d8e191353dee264911c4e28f45
+    actions.github.com/values-hash: ed2f1c04f76c5fe7c8fa45296356231b651a3411365af738b5b8e6c96bde87c
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -24,7 +24,7 @@ spec:
   runnerScaleSetName: codex-infra
   runnerScaleSetLabels:
     - codex
-  maxRunners: 8
+  maxRunners: 4
   minRunners: 0
   template:
     metadata:
