@@ -17,6 +17,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
+
 ---
 # Source: netdata/templates/parent/persistentvolumeclaim.yaml
 apiVersion: v1
