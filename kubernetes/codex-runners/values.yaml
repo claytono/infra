@@ -11,7 +11,7 @@ scaleSetLabels:
 - codex
 
 minRunners: 0
-maxRunners: 8
+maxRunners: 4
 
 template:
   metadata:

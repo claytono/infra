@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-go-unifi-mcp
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: ad0944e1abfdb7a018843289e510d905885110b1b4681192aec2cf366acc47b
+    actions.github.com/values-hash: 192ba8695fb3c370dd9ef10bd3ebdc9b3e3349883a1acaa26c1118af473a670
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -24,7 +24,7 @@ spec:
   runnerScaleSetName: codex-go-unifi-mcp
   runnerScaleSetLabels:
     - codex
-  maxRunners: 8
+  maxRunners: 4
   minRunners: 0
   template:
     metadata:
