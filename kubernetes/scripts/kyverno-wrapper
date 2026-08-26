@@ -31,9 +31,34 @@ validate_files() {
     return
   fi
 
-  # Normalize multi-document input before validation. This removes empty
-  # documents and comments which the Kyverno CLI can otherwise reject.
-  yq 'select(.kind and .kind != "CustomResourceDefinition")' \
+  # Normalize multi-document input before validation. Kyverno 1.19 seeds a
+  # fake Kubernetes client with every input document, but Kustomizations do not
+  # require metadata.name. Batching multiple valid, unnamed Kustomizations then
+  # gives them the same empty identity and panics with `"" already exists`.
+  # Give every Kustomization a readable, unique identity in this temporary
+  # validation stream. Replacing even existing names prevents them from
+  # colliding with generated ones; the file and document indexes prevent
+  # collisions between identically named nested directories. The source files
+  # and rendered manifests remain unchanged.
+  yq '
+    select(.kind and .kind != "CustomResourceDefinition") |
+    (
+      select(
+        .kind == "Kustomization"
+      ) |
+      .metadata.name
+    ) = (
+      "kyverno-" +
+      ((filename | split("/") | .[-2]) |
+        downcase |
+        sub("[^a-z0-9-]+"; "-") |
+        sub("^[^a-z0-9]+"; "") |
+        sub("[^a-z0-9]+$"; "") |
+        .[0:24]) + "-" +
+      (fileIndex | tostring) + "-" +
+      (documentIndex | tostring)
+    )
+  ' \
     "${valid_files[@]}" > "$resource_file"
 
   if [[ -s $resource_file ]]; then
