@@ -76,6 +76,9 @@ repos:
     language: system
     pass_filenames: true
     always_run: true
+    # The wrapper parallelizes rendered applications internally. Keep
+    # pre-commit from starting multiple full repository validations at once.
+    require_serial: true
     files: ^(kubernetes/.*|\.kyverno/policies/.*)\.(ya?ml)$
   - id: esphome-hosts-check
     name: check ESPHome hosts terraform is up to date

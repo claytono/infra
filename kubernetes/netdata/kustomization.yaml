@@ -37,6 +37,25 @@ patches:
 - path: patch-child-stream-init.yaml
 - path: patch-k8s-state-stream-init.yaml
 
+# The Netdata chart does not expose labels for its parent PVCs. Mark the
+# database and alarm state for Velero after rendering so their backup intent is
+# explicit and the rendered-resource policy can enforce it.
+- target:
+    kind: PersistentVolumeClaim
+    name: netdata-parent-database
+  patch: |-
+    - op: add
+      path: /metadata/labels/velero.io~1backup
+      value: 'true'
+
+- target:
+    kind: PersistentVolumeClaim
+    name: netdata-parent-alarms
+  patch: |-
+    - op: add
+      path: /metadata/labels/velero.io~1backup
+      value: 'true'
+
 labels:
 
 - pairs:

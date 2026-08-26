@@ -6,24 +6,92 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASEDIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 POLICY_DIR="$BASEDIR/.kyverno/policies"
-PINNED_IMAGE_POLICY="$POLICY_DIR/require-pinned-image-pull-policy.yaml"
 ARGO_MANAGEMENT_POLICY="$POLICY_DIR/require-explicit-argo-management.yaml"
+mapfile -t NON_ARGO_POLICIES < <(
+  find "$POLICY_DIR" -maxdepth 1 -type f \
+    \( -name '*.yaml' -o -name '*.yml' \) \
+    ! -path "$ARGO_MANAGEMENT_POLICY" \
+    | sort
+)
 
-validate_files() {
-  local policy_path=$1
-  local resource_file=$2
-  shift 2
+validate_rendered_app() {
+  local kustomization=$1
+  local app_dir=${kustomization%/*}
+  local output
+
+  # Kyverno 1.19 loads every supplied resource into one fake Kubernetes
+  # client. Keep each application's rendered resources together so policies
+  # see a coherent deployment without unrelated applications colliding on
+  # common resource names. The parent xargs process runs up to eight isolated
+  # applications concurrently to avoid paying the CLI startup cost serially.
+  if output=$(
+    kubectl kustomize "$app_dir" \
+      | yq 'select(.kind and .kind != "CustomResourceDefinition")' \
+      | kyverno apply \
+        "${NON_ARGO_POLICIES[@]}" \
+        --resource - 2>&1
+  ); then
+    printf 'Validated rendered application: %s\n' "${app_dir##*/}"
+  else
+    printf 'Rendered policy validation failed for %s:\n%s\n' \
+      "${app_dir##*/}" "$output" >&2
+    return 1
+  fi
+}
+
+validate_source_runtime_file() {
+  local resource_file=$1
+  local output
+
+  # Validate each supplied source file in its own Kyverno process. Combining
+  # unrelated applications recreates the fake-client identity collisions this
+  # wrapper avoids, while silently dropping runtime documents lets standalone
+  # invocations report success without evaluating them.
+  if output=$(
+    yq \
+      'select(.kind and .kind != "Kustomization" and .kind != "CustomResourceDefinition")' \
+      "$resource_file" \
+      | kyverno apply \
+        "${NON_ARGO_POLICIES[@]}" \
+        --resource - 2>&1
+  ); then
+    return
+  fi
+
+  printf 'Source policy validation failed for %s:\n%s\n' \
+    "$resource_file" "$output" >&2
+  return 1
+}
+
+# xargs starts a fresh wrapper process for each application. Handle this
+# private worker mode before creating the parent process's temporary directory
+# or running the source-file validations again.
+if [[ ${1:-} == "--rendered-app" ]]; then
+  validate_rendered_app "$2"
+  exit
+fi
+
+if [[ ${1:-} == "--source-runtime-file" ]]; then
+  validate_source_runtime_file "$2"
+  exit
+fi
+
+write_normalized_kustomizations() {
+  local resource_file=$1
+  shift
 
   if [[ $# -eq 0 ]]; then
     return
   fi
 
-  # First identify parseable files containing Kubernetes resources. Some
-  # values files are intentionally not standalone YAML and are ignored here.
+  # First identify parseable files containing Kustomizations. Runtime
+  # resources are validated after rendering each application below, so do not
+  # seed Kyverno's fake client with unrelated raw manifests here.
   local -a valid_files
   mapfile -t valid_files < <(
     printf '%s\0' "$@" \
-      | xargs -0 -n 1 -P 8 yq 'select(.kind) | filename' 2>/dev/null \
+      | xargs -0 -n 1 -P 8 yq \
+        'select(.kind == "Kustomization") | filename' 2>/dev/null \
       | sort -u
   )
 
@@ -41,7 +109,7 @@ validate_files() {
   # collisions between identically named nested directories. The source files
   # and rendered manifests remain unchanged.
   yq '
-    select(.kind and .kind != "CustomResourceDefinition") |
+    select(.kind == "Kustomization") |
     (
       select(
         .kind == "Kustomization"
@@ -61,9 +129,6 @@ validate_files() {
   ' \
     "${valid_files[@]}" > "$resource_file"
 
-  if [[ -s $resource_file ]]; then
-    kyverno apply "$policy_path" --resource "$resource_file"
-  fi
 }
 
 validate_all_pinned_images=false
@@ -75,14 +140,36 @@ fi
 temp_dir=$(mktemp -d)
 trap 'rm -rf "$temp_dir"' EXIT
 
-# Preserve the existing behavior for changed, non-generated manifests.
-for policy in "$POLICY_DIR"/*.yaml; do
-  if [[ $policy == "$ARGO_MANAGEMENT_POLICY" ]]; then
-    continue
-  fi
+# Preserve the existing validation-only identity normalization for changed
+# Kustomization source files. Apply every general policy to both source
+# Kustomizations and rendered resources so newly added policies cannot be
+# silently omitted from one validation stream.
+write_normalized_kustomizations \
+  "$temp_dir/changed-kustomizations.yaml" "$@"
+if [[ -s $temp_dir/changed-kustomizations.yaml ]]; then
+  kyverno apply "${NON_ARGO_POLICIES[@]}" \
+    --resource "$temp_dir/changed-kustomizations.yaml"
+fi
 
-  validate_files "$policy" "$temp_dir/changed-resources.yaml" "$@"
-done
+# Keep the earlier validation of supplied runtime manifests, but isolate files
+# so resources from unrelated applications cannot collide in Kyverno 1.19's
+# fake client. Checked-in Helm output is deliberately excluded: it is an
+# intermediate input which Kustomize patches may bring into compliance, so only
+# the final rendered application is authoritative for those resources.
+mapfile -t source_runtime_files < <(
+  if [[ $# -gt 0 ]]; then
+    printf '%s\0' "$@" \
+      | xargs -0 -n 1 -P 8 yq \
+        'select(.kind and .kind != "Kustomization" and .kind != "CustomResourceDefinition") | filename' \
+        2>/dev/null \
+      | sort -u \
+      | awk '!/(^|\/)helm\//'
+  fi
+)
+if [[ ${#source_runtime_files[@]} -gt 0 ]]; then
+  printf '%s\0' "${source_runtime_files[@]}" \
+    | xargs -0 -n 1 -P 8 "$0" --source-runtime-file
+fi
 
 # The normal policy path validates only changed manifests, which can include
 # nested Kustomizations. This policy must instead mirror the ApplicationSet's
@@ -93,29 +180,19 @@ mapfile -t top_level_kustomizations < <(
     \( -name 'kustomization.yaml' -o -name 'kustomization.yml' \) \
     | sort
 )
-validate_files "$ARGO_MANAGEMENT_POLICY" \
+write_normalized_kustomizations \
   "$temp_dir/top-level-kustomizations.yaml" \
   "${top_level_kustomizations[@]}"
+kyverno apply "$ARGO_MANAGEMENT_POLICY" \
+  --resource "$temp_dir/top-level-kustomizations.yaml"
 
 if [[ $validate_all_pinned_images != true ]]; then
   exit 0
 fi
 
-# Build each deployable, top-level Kustomization so the pinned-image policy
-# evaluates final resources after Helm output, patches, and components are
-# composed.
-raw_resource_file="$temp_dir/raw-rendered-resources.yaml"
-while IFS= read -r kustomization; do
-  printf '%s\n' '---' >> "$raw_resource_file"
-  kubectl kustomize "${kustomization%/*}" >> "$raw_resource_file"
-done < <(
-  find "$BASEDIR/kubernetes" -mindepth 2 -maxdepth 2 -type f \
-    \( -name 'kustomization.yaml' -o -name 'kustomization.yml' \) \
-    | sort
-)
-
-yq 'select(.kind and .kind != "CustomResourceDefinition")' \
-  "$raw_resource_file" > "$temp_dir/rendered-resources.yaml"
-
-kyverno apply "$PINNED_IMAGE_POLICY" \
-  --resource "$temp_dir/rendered-resources.yaml"
+# Render every deployable, top-level Kustomization and validate each
+# application independently. This evaluates final resources after Helm output,
+# patches, and components are composed while avoiding fake-client identity
+# collisions between unrelated applications.
+printf '%s\0' "${top_level_kustomizations[@]}" \
+  | xargs -0 -n 1 -P 8 "$0" --rendered-app
