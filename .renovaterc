@@ -2,9 +2,10 @@
   "extends": [
     "config:best-practices"
   ],
+  "description": "Run manually reviewed Renovate updates from midnight through 3:59 AM Eastern on the first and third Mondays of each month.",
   "timezone": "America/New_York",
   "schedule": [
-    "after 12am and before 2am on monday"
+    "* 0-3 1-7,15-21 * 1"
   ],
   "ignorePaths": [
     "ansible/galaxy/**"
@@ -171,7 +172,8 @@
         "docker"
       ],
       "matchPackageNames": [
-        "getmeili/meilisearch"
+        "getmeili/meilisearch",
+        "docker.io/getmeili/meilisearch"
       ]
     },
     {
@@ -253,9 +255,6 @@
       "matchManagers": [
         "pre-commit"
       ],
-      "schedule": [
-        "after 2am and before 8am on thursday"
-      ],
       "automerge": false,
       "description": "Require manual review of pre-commit hook updates"
     },
@@ -296,9 +295,6 @@
         "ttlequals0/minuspod"
       ],
       "minimumReleaseAge": "0 days",
-      "schedule": [
-        "at any time"
-      ],
       "automerge": false,
       "description": "Evaluate MinusPod stable digest updates"
     },
@@ -456,16 +452,6 @@
         "automerge"
       ],
       "description": "Auto-merge digest updates for CI/test Dockerfiles"
-    },
-    {
-      "description": "OpenClaw: no stabilization delay, updates via weekly schedule",
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "ghcr.io/openclaw/openclaw"
-      ],
-      "minimumReleaseAge": "0 days"
     },
     {
       "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
