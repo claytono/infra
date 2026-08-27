@@ -28,7 +28,7 @@ spec:
       priorityClassName: gpu-priority
       containers:
       - name: plexmediaserver
-        image: plexinc/pms-docker:1.43.3.10828-00f62d37d@sha256:a2b03d75aa16f422488c692935cab476d966b75f2af3c93bb6d910c6051906f5
+        image: plexinc/pms-docker:1.43.3.10861-07dfddaeb@sha256:5bc1d13f48da6366f46aaf2a3ce1a6292897eadc1f8efcbbd7321d30e94f2ed4
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
