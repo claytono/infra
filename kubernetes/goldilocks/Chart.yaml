@@ -4,5 +4,5 @@ name: goldilocks-meta
 version: 0.1.0
 dependencies:
 - name: goldilocks
-  version: 10.4.1
+  version: 10.5.0
   repository: https://charts.fairwinds.com/stable
