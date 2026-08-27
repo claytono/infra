@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
-    app.kubernetes.io/version: "v1.18.0"
+    app.kubernetes.io/version: "v1.18.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -125,6 +125,7 @@ rules:
     - /metrics
     verbs:
     - get
+
 ---
 # Source: alloy/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -134,7 +135,7 @@ metadata:
   labels:
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
-    app.kubernetes.io/version: "v1.18.0"
+    app.kubernetes.io/version: "v1.18.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
