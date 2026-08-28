@@ -16,7 +16,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: refresh
-            image: ghcr.io/astral-sh/uv:debian@sha256:a78827c9cbce1f8973a2892de60877dc0cf17c5d389c6b02b9c1562c9d33739f
+            image: ghcr.io/astral-sh/uv:debian@sha256:1ea89b6d3a9649531f8b5d8b101de92ed3ed96ab10668eccbd1afc4550cc8ec5
             env:
             - name: CODEX_HOME
               value: /codex-home
