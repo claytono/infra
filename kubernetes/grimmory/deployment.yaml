@@ -22,13 +22,11 @@ spec:
         fsGroup: 10001
       containers:
       - name: grimmory
-        image: grimmory/grimmory:v3.2.4@sha256:dfa7afdfcf25d649fd664497a62385dd00cd9678c37546e182c172e41c8e80cb
+        image: grimmory/grimmory:v3.3.3@sha256:fffd0ae0bfccd64ca00441e8fa58a14e286b9115e5df1cb47eecf294ad09e6ff
         ports:
         - containerPort: 6060
           name: http
         env:
-        - name: BOOKLORE_PORT
-          value: '6060'
         - name: DATABASE_URL
           value: jdbc:mariadb://grimmory-mariadb.grimmory.svc.cluster.local:3306/grimmory?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
         - name: DATABASE_USERNAME
@@ -38,6 +36,9 @@ spec:
             secretKeyRef:
               name: grimmory-mariadb-secrets
               key: user-password
+        # Allow the trusted in-cluster Authentik issuer through Grimmory's OIDC filter.
+        - name: OIDC_ALLOW_UNSAFE_HOSTS
+          value: 'true'
         - name: TZ
           value: EST5EDT
         - name: USER_ID

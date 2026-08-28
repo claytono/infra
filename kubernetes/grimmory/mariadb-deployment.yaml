@@ -27,16 +27,16 @@ spec:
         env:
         - name: MARIADB_AUTO_UPGRADE
           value: '1'
-        - name: MYSQL_ROOT_PASSWORD
+        - name: MARIADB_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               name: grimmory-mariadb-secrets
               key: root-password
-        - name: MYSQL_DATABASE
+        - name: MARIADB_DATABASE
           value: grimmory
-        - name: MYSQL_USER
+        - name: MARIADB_USER
           value: grimmory
-        - name: MYSQL_PASSWORD
+        - name: MARIADB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: grimmory-mariadb-secrets
