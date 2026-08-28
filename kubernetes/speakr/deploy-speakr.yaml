@@ -42,8 +42,12 @@ spec:
               name: speakr-postgres-app
               key: uri
         # ASR (WhisperX) configuration
+        - name: TRANSCRIPTION_CONNECTOR
+          value: asr_endpoint
+        - name: TRANSCRIPTION_MODEL
+          value: large-v3
         - name: ASR_BASE_URL
-          value: http://whisperx:9000
+          value: http://whisperx.whisperx.svc.cluster.local:9000
         - name: ASR_DIARIZE
           value: 'true'
         - name: ASR_RETURN_SPEAKER_EMBEDDINGS

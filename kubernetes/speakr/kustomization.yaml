@@ -10,10 +10,7 @@ resources:
 - externalsecret.yaml
 - externalsecret-oidc.yaml
 - pvc-uploads.yaml
-- pvc-whisperx-cache.yaml
-- deploy-whisperx.yaml
 - deploy-speakr.yaml
-- service-whisperx.yaml
 - service-speakr.yaml
 - ingress.yaml
 
