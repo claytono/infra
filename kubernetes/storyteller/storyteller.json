@@ -5,7 +5,7 @@
   "readaloudLocation": "",
   "transcriptionEngine": "openai-cloud",
   "openAiApiKey": "unused-internal-service",
-  "openAiBaseUrl": "http://whisperx.speakr.svc.cluster.local:9000/v1",
+  "openAiBaseUrl": "http://whisperx.whisperx.svc.cluster.local:9000/v1",
   "openAiModelName": "large-v3",
   "authProviders": [
     {

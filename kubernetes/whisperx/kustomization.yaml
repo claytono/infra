@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: whisperx
+
+resources:
+- namespace.yaml
+- externalsecret.yaml
+- pvc-cache.yaml
+- deployment.yaml
+- service.yaml
+
+commonAnnotations:
+  argoManaged: 'true'
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: whisperx
+    app.kubernetes.io/instance: whisperx
+  includeSelectors: true

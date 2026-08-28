@@ -4,12 +4,11 @@ kind: PersistentVolumeClaim
 
 metadata:
   name: whisperx-cache
-  namespace: speakr
 
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      # Stores Whisper model (~1.5GB for medium) + pyannote diarization models (~1-2GB)
+      # Stores large-v3 and the pyannote diarization models.
       storage: 10Gi

@@ -22,8 +22,6 @@ spec:
         app.kubernetes.io/instance: minuspod
     spec:
       enableServiceLinks: false
-      runtimeClassName: nvidia
-      priorityClassName: gpu-priority
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -61,25 +59,21 @@ spec:
               name: minuspod-openrouter-env
               key: OPENROUTER_API_KEY
         - name: WHISPER_BACKEND
-          value: local
-        - name: WHISPER_DEVICE
-          value: cuda
-        - name: WHISPER_MODEL
-          value: small
-        - name: WHISPER_COMPUTE_TYPE
-          value: auto
+          value: openai-api
+        - name: WHISPER_API_BASE_URL
+          value: http://whisperx.whisperx.svc.cluster.local:9000/v1
+        - name: WHISPER_API_MODEL
+          value: large-v3
         - name: WHISPER_LANGUAGE
           value: en
+        - name: TRANSCRIBE_CONCURRENT_CHUNKS
+          value: '1'
         - name: MINUSPOD_TRUSTED_PROXY_COUNT
           value: '1'
         - name: SESSION_COOKIE_SECURE
           value: 'true'
         - name: MINUSPOD_ENABLE_HSTS
           value: 'true'
-        - name: NVIDIA_VISIBLE_DEVICES
-          value: all
-        - name: NVIDIA_DRIVER_CAPABILITIES
-          value: compute,utility
         envFrom:
         - secretRef:
             name: minuspod-env
@@ -106,9 +100,6 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 6
-        resources:
-          limits:
-            nvidia.com/gpu: 1
         volumeMounts:
         - name: data
           mountPath: /app/data
