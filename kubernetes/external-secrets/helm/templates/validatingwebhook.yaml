@@ -8,7 +8,7 @@ metadata:
     
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
     external-secrets.io/component: webhook
   annotations:
@@ -47,6 +47,7 @@ webhooks:
   sideEffects: None
   timeoutSeconds: 5
   failurePolicy: Fail
+
 ---
 # Source: external-secrets/templates/validatingwebhook.yaml
 apiVersion: admissionregistration.k8s.io/v1
@@ -57,7 +58,7 @@ metadata:
     
     app.kubernetes.io/name: external-secrets-webhook
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
     external-secrets.io/component: webhook
   annotations:
