@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: tika
-        image: docker.io/apache/tika:3.2.2.0@sha256:031530a4b81f37454631ce9352b07cedfd03d83c875b05677d80bff6958d11ff
+        image: docker.io/apache/tika:3.3.1.0@sha256:90b7fa1dc018434075fce9e1d9b88b1e3d0ea6979d0cf86e116c79a8073ae973
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
