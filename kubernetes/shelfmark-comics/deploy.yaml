@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: shelfmark-comics
-        image: ghcr.io/calibrain/shelfmark:v1.3.10@sha256:33955508fedbda5aaedc5f6f6d0451c4cda73d3fc4707058c350ee30e5539bb3
+        image: ghcr.io/calibrain/shelfmark:v1.3.12@sha256:e22413551ab647388f0279f1d7b7db3ff4a6fe1151337b5b234d3747cc09f5a3
         ports:
         - containerPort: 8084
           name: http
