@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -151,6 +151,7 @@ rules:
     - "create"
     - "update"
     - "delete"
+
 ---
 # Source: external-secrets/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -160,7 +161,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-view: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
@@ -203,6 +204,7 @@ rules:
       - "get"
       - "watch"
       - "list"
+
 ---
 # Source: external-secrets/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -212,7 +214,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
@@ -258,6 +260,7 @@ rules:
       - "deletecollection"
       - "patch"
       - "update"
+
 ---
 # Source: external-secrets/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -268,7 +271,7 @@ metadata:
     servicebinding.io/controller: "true"
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -290,7 +293,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -300,6 +303,7 @@ subjects:
   - name: external-secrets
     namespace: external-secrets
     kind: ServiceAccount
+
 ---
 # Source: external-secrets/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -310,7 +314,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -338,6 +342,7 @@ rules:
     - "create"
     - "update"
     - "patch"
+
 ---
 # Source: external-secrets/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -348,7 +353,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.8.0"
+    app.kubernetes.io/version: "v2.9.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -358,3 +363,4 @@ subjects:
   - kind: ServiceAccount
     name: external-secrets
     namespace: external-secrets
+
