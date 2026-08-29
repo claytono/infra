@@ -188,11 +188,11 @@ for f in "${files[@]}"; do
   printf "Queued %s\n" "$cfg"
   throttle
   (
-    "$ESPHOME_CMD" "$COMMAND" "$cfg" "${ESPHOME_ARGS[@]}" >"$log_file" 2>&1
-    rc=$?
-    if [ $rc -eq 0 ]; then
+    if "$ESPHOME_CMD" "$COMMAND" "$cfg" "${ESPHOME_ARGS[@]}" >"$log_file" 2>&1; then
+      rc=0
       echo OK >"$status_file"
     else
+      rc=$?
       echo FAIL >"$status_file"
     fi
     exit $rc
