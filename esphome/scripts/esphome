@@ -22,4 +22,5 @@ cd "$ESPHOME_DIR" || exit 1
 export PLATFORMIO_CORE_DIR="${ESPHOME_DIR}/.platformio"
 
 # Run ESPHome via uv with pip included (required by PlatformIO)
+unset PYTHONPATH
 exec uv run --no-managed-python --with pip --with "esphome==${ESPHOME_VERSION}" esphome "$@"
