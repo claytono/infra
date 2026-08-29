@@ -77,6 +77,9 @@ spec:
             - mountPath: /source/k8s-pv
               name: k8s-pv
               readOnly: true
+            - mountPath: /source/k8s-pv-slow
+              name: k8s-pv-slow
+              readOnly: true
             - mountPath: /source/backups
               name: backups
               readOnly: true
@@ -103,6 +106,11 @@ spec:
               path: /volume1/k8s-pv
               readOnly: true
             name: k8s-pv
+          - nfs:
+              server: fs2.oneill.net
+              path: /volume2/k8s-pv-slow
+              readOnly: true
+            name: k8s-pv-slow
           - nfs:
               server: fs2.oneill.net
               path: /volume2/backups
