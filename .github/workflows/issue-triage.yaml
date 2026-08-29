@@ -179,10 +179,10 @@ jobs:
     - name: Install investigation skills
       run: |
         git clone --depth 1 https://github.com/obra/superpowers .tmp/superpowers
-        mkdir -p .claude/skills
-        cp -r .tmp/superpowers/skills/systematic-debugging .claude/skills/
-        cp -r .tmp/superpowers/skills/verification-before-completion .claude/skills/
-        ls -la .claude/skills/
+        mkdir -p .agents/skills
+        cp -r .tmp/superpowers/skills/systematic-debugging .agents/skills/
+        cp -r .tmp/superpowers/skills/verification-before-completion .agents/skills/
+        ls -la .agents/skills/
 
     - name: Generate issue triage prompt
       env:
@@ -210,8 +210,8 @@ jobs:
           **STOP. Before doing ANYTHING else, you MUST read these skill files:**
 
           ```
-          .claude/skills/systematic-debugging/SKILL.md
-          .claude/skills/verification-before-completion/SKILL.md
+          .agents/skills/systematic-debugging/SKILL.md
+          .agents/skills/verification-before-completion/SKILL.md
           ```
 
           **This is NOT optional.** Read BOTH skill files NOW and follow their methodology:

@@ -5,20 +5,20 @@
 This is a homelab infrastructure monorepo managed with automation,
 repeatability, and infrastructure as code principles.
 
-**Detailed documentation is organized in [.claude/rules/](.claude/rules/)**
+**Detailed documentation is organized in [.agents/rules/](.agents/rules/)**
 including:
 
-- **[overview.md](.claude/rules/overview.md)** - Development environment (Nix)
-- **[workflow.md](.claude/rules/workflow.md)** - Development workflow principles
-- **[backups.md](.claude/rules/backups.md)** - Restic backup architecture for
+- **[overview.md](.agents/rules/overview.md)** - Development environment (Nix)
+- **[workflow.md](.agents/rules/workflow.md)** - Development workflow principles
+- **[backups.md](.agents/rules/backups.md)** - Restic backup architecture for
   hosts and Kubernetes storage
-- **[kubernetes/](.claude/rules/kubernetes/)** - Kubernetes deployment patterns
+- **[kubernetes/](.agents/rules/kubernetes/)** - Kubernetes deployment patterns
   (GitOps, Helm rendering, External Secrets)
-- **[ansible/](.claude/rules/ansible/)** - Ansible usage guidelines
-- **[opentofu/](.claude/rules/opentofu/)** - OpenTofu/Terraform usage
-- **[tooling/](.claude/rules/tooling/)** - Pre-commit hooks, CI/CD, and
+- **[ansible/](.agents/rules/ansible/)** - Ansible usage guidelines
+- **[opentofu/](.agents/rules/opentofu/)** - OpenTofu/Terraform usage
+- **[tooling/](.agents/rules/tooling/)** - Pre-commit hooks, CI/CD, and
   Authentik integration
-- **[integrations/](.claude/rules/integrations/)** - Home Assistant and other
+- **[integrations/](.agents/rules/integrations/)** - Home Assistant and other
   integrations
 
 ## Architecture Principles

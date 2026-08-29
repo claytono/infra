@@ -35,4 +35,4 @@ scripts/tofu-slack plan
 scripts/tofu-slack apply
 ```
 
-See `.claude/rules/opentofu/slack.md` for details.
+See `.agents/rules/opentofu/slack.md` for details.
