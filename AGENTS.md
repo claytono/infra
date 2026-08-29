@@ -10,6 +10,8 @@ including:
 
 - **[overview.md](.claude/rules/overview.md)** - Development environment (Nix)
 - **[workflow.md](.claude/rules/workflow.md)** - Development workflow principles
+- **[backups.md](.claude/rules/backups.md)** - Restic backup architecture for
+  hosts and Kubernetes storage
 - **[kubernetes/](.claude/rules/kubernetes/)** - Kubernetes deployment patterns
   (GitOps, Helm rendering, External Secrets)
 - **[ansible/](.claude/rules/ansible/)** - Ansible usage guidelines
