@@ -36,6 +36,7 @@ rules:
   verbs:
   - list
   - watch
+
 ---
 # Source: flannel/templates/rbac.yaml
 kind: ClusterRoleBinding
