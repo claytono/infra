@@ -1,0 +1,27 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: soju
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- certificate.yaml
+- deploy.yaml
+- pvc.yaml
+- service.yaml
+
+labels:
+
+- pairs:
+    app.kubernetes.io/name: soju
+    app.kubernetes.io/instance: soju
+  includeSelectors: true
+
+configMapGenerator:
+- name: soju-config
+  files:
+  - config

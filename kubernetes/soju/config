@@ -1,0 +1,12 @@
+hostname soju.k.oneill.net
+title "oneill.net IRC bouncer"
+
+listen ircs://:6697
+listen unix+admin:///run/soju/admin.sock
+tls /tls/tls.crt /tls/tls.key
+
+auth internal
+db sqlite3 /db/main.db
+message-store db
+# TODO: Uncomment after upgrading past v0.10.1; this directive is not yet released.
+# message-expiry 90d

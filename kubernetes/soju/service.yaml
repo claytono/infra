@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: soju
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: soju.k.oneill.net
+    metallb.io/allow-shared-ip: plexmediaserver
+
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 172.19.74.21
+  selector:
+    app.kubernetes.io/name: soju
+    app.kubernetes.io/instance: soju
+  ports:
+  - name: ircs
+    port: 6697
+    targetPort: ircs
+    protocol: TCP
