@@ -35,7 +35,7 @@ spec:
       serviceAccountName: flannel
       initContainers:
       - name: install-cni-plugin
-        image: ghcr.io/flannel-io/flannel-cni-plugin:v1.9.1-flannel2
+        image: ghcr.io/flannel-io/flannel-cni-plugin:v1.9.1-flannel3
         command:
         - cp
         args:
@@ -46,7 +46,7 @@ spec:
         - name: cni-plugin
           mountPath: /opt/cni/bin
       - name: install-cni
-        image: ghcr.io/flannel-io/flannel:v0.28.8
+        image: ghcr.io/flannel-io/flannel:v0.28.9
         command:
         - /opt/bin/install-conf
         args:
@@ -59,15 +59,32 @@ spec:
           mountPath: /etc/kube-flannel/
       containers:
       - name: kube-flannel
-        image: ghcr.io/flannel-io/flannel:v0.28.8
+        image: ghcr.io/flannel-io/flannel:v0.28.9
         command:
         - "/opt/bin/flanneld"
         - "--ip-masq"
         - "--kube-subnet-mgr"
+        - "--healthz-port=8081"
         resources:
           requests:
             cpu: 100m
             memory: 50Mi
+        ports:
+        - name: healthz
+          containerPort: 8081
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: healthz
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: healthz
+          initialDelaySeconds: 5
+          periodSeconds: 10
         securityContext:
           privileged: false
           capabilities:
