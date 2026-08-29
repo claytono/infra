@@ -1,0 +1,14 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+
+metadata:
+  name: soju-tls
+
+spec:
+  secretName: soju-tls
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+  - soju.k.oneill.net

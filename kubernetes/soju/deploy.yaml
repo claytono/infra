@@ -1,0 +1,87 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: soju
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: soju
+      app.kubernetes.io/instance: soju
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: soju
+        app.kubernetes.io/instance: soju
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: soju
+        image: codeberg.org/emersion/soju:v0.10.1@sha256:c0473d8f19554a03790f2a475d59646600f2f384b07b296afa782aec4c40253d
+        imagePullPolicy: IfNotPresent
+        args:
+        - -config
+        - /config/config
+        ports:
+        - name: ircs
+          containerPort: 6697
+          protocol: TCP
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65532
+          seccompProfile:
+            type: RuntimeDefault
+        startupProbe:
+          tcpSocket:
+            port: ircs
+          failureThreshold: 30
+          periodSeconds: 2
+        readinessProbe:
+          tcpSocket:
+            port: ircs
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: ircs
+          periodSeconds: 30
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: data
+          mountPath: /db
+        - name: runtime
+          mountPath: /run/soju
+        - name: tls
+          mountPath: /tls
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: soju-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: soju-data
+      - name: runtime
+        emptyDir: {}
+      - name: tls
+        secret:
+          secretName: soju-tls
