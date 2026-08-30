@@ -32,6 +32,9 @@ esp32:
       CONFIG_ESP32P4_DATA_CACHE_64KB: y
       CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
       CONFIG_SPIRAM_RODATA: y
+      # ESP-IDF 5.5.5's P4 bootloader exceeds the default 0x6000 space at INFO.
+      # Retest without this after future ESP-IDF upgrades and remove it once the default fits.
+      CONFIG_BOOTLOADER_LOG_LEVEL_WARN: y
       # ESP32-C6 WiFi coprocessor via SDIO
       CONFIG_ESP_HOSTED_ENABLED: y
       CONFIG_ESP_HOSTED_PRIV_SDIO_OPTION: y
