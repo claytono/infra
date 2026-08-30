@@ -5,11 +5,10 @@
 
 set -Eeuo pipefail
 
-# ESPHome version
-ESPHOME_VERSION="2026.6.5"
-
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+source "${SCRIPT_DIR}/versions"
 
 # Set the ESPHome config directory (parent of scripts directory)
 ESPHOME_DIR="${ESPHOME_DIR:-$(dirname "$SCRIPT_DIR")}"
