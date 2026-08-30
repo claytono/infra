@@ -121,7 +121,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "esphome/scripts/esphome"
+        "esphome/scripts/versions"
       ],
       "matchStrings": [
         "ESPHOME_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""

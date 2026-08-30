@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# ESPHome Device Builder wrapper script
+# Serves this repository's ESPHome configs on the local machine only.
+
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ESPHOME_DIR="${ESPHOME_DIR:-$(dirname "$SCRIPT_DIR")}"
+
+source "${SCRIPT_DIR}/versions"
+
+cd "$ESPHOME_DIR" || exit 1
+ESPHOME_DIR="$(pwd -P)"
+
+export PLATFORMIO_CORE_DIR="${ESPHOME_DIR}/.platformio"
+
+unset PYTHONPATH
+exec uv run --no-managed-python \
+  --with pip \
+  --with "esphome==${ESPHOME_VERSION}" \
+  --with "esphome-device-builder[esphome]" \
+  esphome-device-builder "$@" --host 127.0.0.1 "$ESPHOME_DIR"
