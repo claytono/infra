@@ -6,9 +6,10 @@ cd "$(dirname "$0")/.." || exit 1
 
 usage() {
   cat >&2 <<'USAGE'
-Usage: ./esphome-all COMMAND [-j [JOBS]] [--shard N/TOTAL] [-- [ESPHOME_ARGS]]
+Usage: ./esphome-all COMMAND [-j [JOBS]] [--shard N/TOTAL] [--logs-dir DIR] [-- [ESPHOME_ARGS]]
 
-Runs an ESPHome command on all top-level YAML configs in this directory (excluding secrets).
+Runs an ESPHome command on all top-level device YAML configs in this directory
+(excluding secrets and warning-catalog.yaml).
 Runs sequentially by default. With -j, runs in parallel and saves logs to logs/<name>.log.
 
   COMMAND         ESPHome command to run (e.g., compile, upload, clean, logs)
@@ -16,6 +17,7 @@ Runs sequentially by default. With -j, runs in parallel and saves logs to logs/<
                   passed without a value, uses the number of CPUs on this host.
   --shard N/TOTAL Only process a subset of configs for CI sharding.
                   N is 1-based shard index; TOTAL is shard count.
+  --logs-dir DIR  Write per-config logs to DIR. Parallel mode defaults to logs/.
   -- [ARGS]       Additional arguments to pass to esphome
 
 Examples:
@@ -49,6 +51,7 @@ shift
 
 SHARD_INDEX=""; SHARD_TOTAL=""
 JOBS=""
+LOGS_DIR=""
 ESPHOME_ARGS=()
 
 while (( "$#" )); do
@@ -70,6 +73,11 @@ while (( "$#" )); do
       val="${1:-}"
       [ -n "$val" ] || { echo "--shard requires N/TOTAL" >&2; usage; exit 2; }
       SHARD_INDEX="${val%%/*}"; SHARD_TOTAL="${val##*/}"; shift ;;
+    --logs-dir)
+      shift
+      LOGS_DIR="${1:-}"
+      [ -n "$LOGS_DIR" ] || { echo "--logs-dir requires DIR" >&2; usage; exit 2; }
+      shift ;;
     -h|--help)
       usage; exit 0 ;;
     --)
@@ -102,6 +110,7 @@ mapfile -t files < <(
   find . -maxdepth 1 -type f -name '*.yaml' \
     ! -name 'secrets.yaml' \
     ! -name '*secrets*' \
+    ! -name 'warning-catalog.yaml' \
     -print | sort
 )
 
@@ -137,10 +146,30 @@ fi
 # If -j was not provided, run sequentially (streaming output)
 if [ -z "$JOBS" ]; then
   failures=()
+  if [ -n "$LOGS_DIR" ]; then
+    mkdir -p "$LOGS_DIR"
+  fi
   for f in "${files[@]}"; do
     cfg=${f#./}
     echo "==> Running 'esphome $COMMAND' on ${cfg}"
-    if "$ESPHOME_CMD" "$COMMAND" "$cfg" "${ESPHOME_ARGS[@]}"; then
+    if [ -n "$LOGS_DIR" ]; then
+      base="${cfg%.yaml}"
+      log_file="$LOGS_DIR/${base}.log"
+      status_file="$LOGS_DIR/${base}.status"
+      if "$ESPHOME_CMD" "$COMMAND" "$cfg" "${ESPHOME_ARGS[@]}" >"$log_file" 2>&1; then
+        result=0
+        echo OK >"$status_file"
+      else
+        result=$?
+        echo FAIL >"$status_file"
+      fi
+    elif "$ESPHOME_CMD" "$COMMAND" "$cfg" "${ESPHOME_ARGS[@]}"; then
+      result=0
+    else
+      result=$?
+    fi
+
+    if [ "$result" -eq 0 ]; then
       echo "✅ ${cfg} succeeded"
     else
       echo "❌ ${cfg} failed" >&2
@@ -162,7 +191,7 @@ if [ -z "$JOBS" ]; then
 fi
 
 # Parallel mode
-logs_dir="logs"
+logs_dir="${LOGS_DIR:-logs}"
 mkdir -p "${logs_dir}"
 if [ "$JOBS" = "auto" ] || [ -z "$JOBS" ]; then
   JOBS="$(default_jobs)"

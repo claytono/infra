@@ -1,0 +1,298 @@
+#!/usr/bin/env python3
+"""Generate and check the ESPHome warning catalog."""
+
+from __future__ import annotations
+
+import argparse
+import difflib
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+ESPHOME_DIR = Path(__file__).resolve().parent.parent
+CATALOG_PATH = ESPHOME_DIR / "warning-catalog.yaml"
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+LOG_RECORD = re.compile(r"^(?:DEBUG|INFO|WARNING|ERROR|CRITICAL) ")
+
+
+class CatalogError(Exception):
+    """Raised when warning catalog input is incomplete or invalid."""
+
+
+class CatalogDumper(yaml.SafeDumper):
+    """Render multiline warning messages as readable YAML blocks."""
+
+
+def represent_string(dumper: yaml.SafeDumper, value: str) -> yaml.Node:
+    style = "|" if "\n" in value else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
+
+
+CatalogDumper.add_representer(str, represent_string)
+
+
+def active_configs() -> list[str]:
+    return sorted(
+        path.name
+        for path in ESPHOME_DIR.glob("*.yaml")
+        if path.name not in {"secrets.yaml", CATALOG_PATH.name}
+        and "secrets" not in path.name
+    )
+
+
+def normalize_warning(lines: list[str]) -> str:
+    normalized = [line.rstrip() for line in lines]
+    while normalized and not normalized[-1]:
+        normalized.pop()
+    return "\n".join(normalized)
+
+
+def extract_warnings(log_path: Path) -> list[str]:
+    text = ANSI_ESCAPE.sub("", log_path.read_text(errors="replace")).replace("\r", "")
+    warnings: list[str] = []
+    current: list[str] | None = None
+
+    for line in text.splitlines():
+        if line.startswith("WARNING "):
+            if current is not None:
+                warnings.append(normalize_warning(current))
+            current = [line.removeprefix("WARNING ")]
+        elif current is not None and LOG_RECORD.match(line):
+            warnings.append(normalize_warning(current))
+            current = None
+        elif current is not None:
+            current.append(line)
+
+    if current is not None:
+        warnings.append(normalize_warning(current))
+
+    return warnings
+
+
+def warnings_from_logs(logs_dir: Path) -> dict[str, list[str]]:
+    if not logs_dir.is_dir():
+        raise CatalogError(f"Log directory does not exist: {logs_dir}")
+
+    results: dict[str, list[str]] = {}
+    status_paths = sorted(logs_dir.glob("*.status"))
+    if not status_paths:
+        raise CatalogError(f"No ESPHome status files found in {logs_dir}")
+
+    for status_path in status_paths:
+        config = f"{status_path.stem}.yaml"
+        status = status_path.read_text().strip()
+        if status != "OK":
+            raise CatalogError(f"Cannot catalog warnings for failed config: {config}")
+
+        log_path = logs_dir / f"{status_path.stem}.log"
+        if not log_path.is_file():
+            raise CatalogError(f"Missing compile log for {config}: {log_path}")
+        results[config] = extract_warnings(log_path)
+
+    return results
+
+
+def validate_warning_mapping(value: Any) -> dict[str, list[str]]:
+    if not isinstance(value, dict):
+        raise CatalogError("Catalog 'warnings' must be a mapping")
+
+    result: dict[str, list[str]] = {}
+    for config, messages in value.items():
+        if not isinstance(config, str) or not isinstance(messages, list):
+            raise CatalogError("Catalog entries must map config names to warning lists")
+        if not all(isinstance(message, str) for message in messages):
+            raise CatalogError(f"Catalog warnings for {config} must all be strings")
+        result[config] = messages
+    return result
+
+
+def load_catalog() -> dict[str, list[str]]:
+    if not CATALOG_PATH.is_file():
+        raise CatalogError(f"Warning catalog does not exist: {CATALOG_PATH}")
+
+    document = yaml.safe_load(CATALOG_PATH.read_text())
+    if not isinstance(document, dict) or document.get("schema") != 1:
+        raise CatalogError("Warning catalog must use schema 1")
+    return validate_warning_mapping(document.get("warnings"))
+
+
+def dump_yaml(document: dict[str, Any], *, explicit_start: bool = False) -> str:
+    return yaml.dump(
+        document,
+        Dumper=CatalogDumper,
+        allow_unicode=True,
+        default_flow_style=False,
+        explicit_start=explicit_start,
+        sort_keys=False,
+        width=80,
+    )
+
+
+def render_catalog(warnings: dict[str, list[str]]) -> str:
+    rendered = dump_yaml({"schema": 1, "warnings": warnings}, explicit_start=True)
+    return rendered.replace("schema: 1\nwarnings:", "schema: 1\n\nwarnings:", 1)
+
+
+def validate_catalog_configs(catalog: dict[str, list[str]]) -> None:
+    active = active_configs()
+    catalog_configs = sorted(catalog)
+    if catalog_configs == active:
+        return
+
+    missing = sorted(set(active) - set(catalog_configs))
+    stale = sorted(set(catalog_configs) - set(active))
+    details = []
+    if missing:
+        details.append(f"missing active configs: {', '.join(missing)}")
+    if stale:
+        details.append(f"stale configs: {', '.join(stale)}")
+    raise CatalogError(
+        "Warning catalog config list is out of date (" + "; ".join(details) + ")"
+    )
+
+
+def yaml_fragment(config: str, messages: list[str]) -> list[str]:
+    return dump_yaml({"warnings": {config: messages}}).splitlines(keepends=True)
+
+
+def check_catalog(logs_dir: Path) -> int:
+    catalog = load_catalog()
+    validate_catalog_configs(catalog)
+    current = warnings_from_logs(logs_dir)
+
+    unknown = sorted(set(current) - set(catalog))
+    if unknown:
+        raise CatalogError(f"Logs contain unknown configs: {', '.join(unknown)}")
+
+    changed = False
+    for config, messages in current.items():
+        expected = catalog[config]
+        if expected == messages:
+            continue
+        changed = True
+        sys.stderr.writelines(
+            difflib.unified_diff(
+                yaml_fragment(config, expected),
+                yaml_fragment(config, messages),
+                fromfile=f"catalog/{config}",
+                tofile=f"current/{config}",
+            )
+        )
+
+    if changed:
+        print(
+            "ESPHome warning catalog is out of date. Inspect or fix the warnings, "
+            "then run ./scripts/esphome-warnings update.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(f"ESPHome warning catalog matches {len(current)} compiled config(s).")
+    return 0
+
+
+def print_failed_logs(logs_dir: Path) -> None:
+    for status_path in sorted(logs_dir.glob("*.status")):
+        if status_path.read_text().strip() == "OK":
+            continue
+        log_path = logs_dir / f"{status_path.stem}.log"
+        if not log_path.is_file():
+            continue
+        print(f"\n==> Last 200 lines from {log_path.name}", file=sys.stderr)
+        lines = log_path.read_text(errors="replace").splitlines()
+        print("\n".join(lines[-200:]), file=sys.stderr)
+
+
+def update_catalog() -> int:
+    with tempfile.TemporaryDirectory(prefix="esphome-warnings-") as temp_dir:
+        logs_dir = Path(temp_dir)
+        command = [
+            str(ESPHOME_DIR / "scripts" / "esphome-all"),
+            "compile",
+            "--logs-dir",
+            str(logs_dir),
+        ]
+
+        result = subprocess.run(command, cwd=ESPHOME_DIR, check=False)
+        if result.returncode != 0:
+            print_failed_logs(logs_dir)
+            print(
+                "Compilation failed; warning-catalog.yaml was not changed.",
+                file=sys.stderr,
+            )
+            return result.returncode
+
+        current = warnings_from_logs(logs_dir)
+        active = active_configs()
+        if sorted(current) != active:
+            missing = sorted(set(active) - set(current))
+            raise CatalogError(
+                "Full catalog update did not compile every active config"
+                + (f"; missing: {', '.join(missing)}" if missing else "")
+            )
+
+        new_text = render_catalog({config: current[config] for config in active})
+        old_text = CATALOG_PATH.read_text() if CATALOG_PATH.exists() else ""
+        if new_text == old_text:
+            print("ESPHome warning catalog is already current.")
+            return 0
+
+        sys.stdout.writelines(
+            difflib.unified_diff(
+                old_text.splitlines(keepends=True),
+                new_text.splitlines(keepends=True),
+                fromfile=str(CATALOG_PATH),
+                tofile=str(CATALOG_PATH),
+            )
+        )
+
+        file_descriptor, temporary_name = tempfile.mkstemp(
+            dir=CATALOG_PATH.parent, prefix=f".{CATALOG_PATH.name}.", text=True
+        )
+        try:
+            with os.fdopen(file_descriptor, "w") as temporary_file:
+                temporary_file.write(new_text)
+            os.replace(temporary_name, CATALOG_PATH)
+        finally:
+            if os.path.exists(temporary_name):
+                os.unlink(temporary_name)
+
+        print(f"Updated {CATALOG_PATH.name} from {len(active)} compiled config(s).")
+        return 0
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    check_parser = subparsers.add_parser(
+        "check", help="compare compile logs with the catalog"
+    )
+    check_parser.add_argument("--logs-dir", type=Path, default=ESPHOME_DIR / "logs")
+
+    subparsers.add_parser(
+        "update", help="compile all configs sequentially and regenerate the catalog"
+    )
+
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        if args.command == "check":
+            return check_catalog(args.logs_dir.resolve())
+        return update_catalog()
+    except CatalogError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
