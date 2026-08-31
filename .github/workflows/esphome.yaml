@@ -66,6 +66,12 @@ jobs:
       run: nix develop ..#default --command ./scripts/esphome-all compile -j 1 --shard
         ${{ matrix.shard_index }}/${{ matrix.shard_total }}
 
+    - name: Check ESPHome warning catalog
+      if: hashFiles('esphome/logs/*.status') != ''
+      working-directory: esphome
+      run: nix develop ..#default --command ./scripts/esphome-warnings check --logs-dir
+        logs
+
     - name: Collect failed logs
       if: always()
       run: |
