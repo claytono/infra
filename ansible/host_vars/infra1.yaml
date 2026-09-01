@@ -9,6 +9,15 @@ traefik_config_files:
 tailscale_args: --advertise-routes=172.19.74.0/23,172.20.4.0/22 --advertise-exit-node --accept-dns=false
 ip_forwarding_enabled: true
 
+# Serial consoles captured by Conserver. The client certificate is readable
+# only by root, so connect with: ssh -t infra1 sudo console fs2
+conserver_consoles:
+  - name: fs2
+    device: /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A9CXTVTH-if00-port0
+    baud: 115200
+    rw_users:
+      - root
+
 # Static network configuration
 manage_network: true
 interfaces_ether_interfaces:

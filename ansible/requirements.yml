@@ -24,6 +24,8 @@ roles:
     version: "3.0.0"
 
 collections:
+  - name: community.crypto
+    version: "3.3.0"
   - name: https://github.com/artis3n/ansible-collection-tailscale.git
     type: git
     version: v1.2.1

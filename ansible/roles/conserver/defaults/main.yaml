@@ -1,0 +1,8 @@
+---
+# Debian runs Conserver as the unprivileged conservr user, so its listener must
+# stay above the privileged-port boundary (1024).
+conserver_port: 3109
+conserver_log_retention_days: 365
+conserver_tls_directory: /etc/conserver/tls
+conserver_tls_validity_days: 36500
+conserver_consoles: []

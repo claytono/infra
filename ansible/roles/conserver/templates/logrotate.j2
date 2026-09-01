@@ -1,0 +1,13 @@
+/var/log/conserver/*.log {
+    daily
+    rotate {{ conserver_log_retention_days }}
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 conservr adm
+    sharedscripts
+    postrotate
+        service conserver-server rotate >/dev/null 2>&1 || true
+    endscript
+}

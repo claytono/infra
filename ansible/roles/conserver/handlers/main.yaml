@@ -1,0 +1,5 @@
+---
+- name: Restart Conserver
+  ansible.builtin.systemd_service:
+    name: conserver-server
+    state: restarted
