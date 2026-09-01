@@ -7,6 +7,7 @@ age: 1.3.1
 ansible-lint: 25.8.2
 awscli2: 2.35.11
 bats: 1.14.0
+ccache: 4.13.6
 curl: 8.21.0
 efficient-compression-tool: 0.9.5
 go-unifi-mcp: d96b3c4bbe6b639f298bd230ec5adc9d5854b3bc
