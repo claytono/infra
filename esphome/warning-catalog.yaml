@@ -2,32 +2,88 @@
 schema: 1
 
 warnings:
-  basement-clock.yaml: []
+  basement-clock.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
   eightsleep-power.yaml: []
-  freezer-door.yaml: []
-  freezer.yaml: []
+  freezer-door.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
+  freezer.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
   garage-bme280.yaml: []
-  infra1-power.yaml: []
-  k3-power.yaml: []
-  k4-power.yaml: []
-  k5-power.yaml: []
+  infra1-power.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
+  k3-power.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
+  k4-power.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
+  k5-power.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
   living-room-bme280.yaml: []
   office-bme280.yaml: []
-  office-closet-lamp.yaml: []
+  office-closet-lamp.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
   office-foot-warmer.yaml: []
   office-heater.yaml: []
   officedesk.yaml: []
-  opengarage-left-door.yaml: []
-  opengarage-right-door.yaml: []
-  p1-power.yaml: []
+  opengarage-left-door.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
+  opengarage-right-door.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
+  p1-power.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
   szamar-power.yaml: []
-  temp-probe1.yaml:
-  - GPIO35 is used by the PSRAM interface on ESP32-S3R8 / ESP32-S3R8V and should be
-    avoided on these models
-  temp-probe2.yaml:
-  - GPIO35 is used by the PSRAM interface on ESP32-S3R8 / ESP32-S3R8V and should be
-    avoided on these models
+  temp-probe1.yaml: []
+  temp-probe2.yaml: []
   temp-probe3.yaml: []
-  ups-power.yaml: []
+  ups-power.yaml:
+  - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
+    the password over the network in an easily reversible form. The default will change
+    to ''digest'' in ESPHome 2027.1.0. To keep using basic authentication, set ''type:
+    basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
+    the more secure scheme.'
   x1c-ams1-monitor.yaml: []
   x1c-ams2-monitor.yaml: []

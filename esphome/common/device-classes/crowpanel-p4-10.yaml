@@ -3,22 +3,20 @@
 # EK79007 display driver, GT911 touch, ESP32-C6 WiFi coprocessor
 esphome:
   name: ${devicename}
-  min_version: 2026.1.0
+  min_version: 2026.6.0
+  build_flags: -DBOARD_HAS_PSRAM
   on_boot:
     priority: 600
     then:
     - output.turn_on: backlight_power
-  platformio_options:
-    board_build.flash_mode: qio
-    board_build.psram_type: opi
-    build_flags: -DBOARD_HAS_PSRAM
 
 psram:
   mode: hex
   speed: 200MHz
 
 esp32:
-  board: esp32-p4_r3
+  # This CrowPanel has pre-v3 P4 silicon (the device reports revision 1.3).
+  board: esp32-p4
   variant: esp32p4
   flash_size: 16MB
   cpu_frequency: 360MHz
@@ -35,31 +33,16 @@ esp32:
       # ESP-IDF 5.5.5's P4 bootloader exceeds the default 0x6000 space at INFO.
       # Retest without this after future ESP-IDF upgrades and remove it once the default fits.
       CONFIG_BOOTLOADER_LOG_LEVEL_WARN: y
-      # ESP32-C6 WiFi coprocessor via SDIO
-      CONFIG_ESP_HOSTED_ENABLED: y
-      CONFIG_ESP_HOSTED_PRIV_SDIO_OPTION: y
-      CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET: esp32c6
-      CONFIG_ESP_HOSTED_SDIO_RESET_ACTIVE_HIGH: y
-      CONFIG_ESP_HOSTED_SDIO_SLOT_1: y
-      CONFIG_ESP_HOSTED_SDIO_1_BIT_BUS: y
-      CONFIG_ESP_HOSTED_SDIO_CLOCK_FREQ_KHZ: '40000'
-      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_CLK_SLOT_1: '18'
-      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_CMD_SLOT_1: '19'
-      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D0_SLOT_1: '14'
-      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D1_4BIT_BUS_SLOT_1: '15'
-      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D2_4BIT_BUS_SLOT_1: '16'
-      CONFIG_ESP_HOSTED_PRIV_SDIO_PIN_D3_4BIT_BUS_SLOT_1: '17'
-      CONFIG_ESP_HOSTED_SDIO_GPIO_RESET_SLAVE: '32'
 
 esp32_hosted:
   variant: ESP32C6
+  use_psram: true
+  bus_width: 1
+  sdio_frequency: 40MHz
   reset_pin: 32
   cmd_pin: 19
   clk_pin: 18
   d0_pin: 14
-  d1_pin: 15
-  d2_pin: 16
-  d3_pin: 17
   active_high: true
 
 external_components:
