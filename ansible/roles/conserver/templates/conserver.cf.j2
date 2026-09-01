@@ -1,0 +1,28 @@
+config * {
+    defaultaccess rejected;
+    sslcredentials {{ conserver_tls_directory }}/server.pem;
+    sslcacertificatefile {{ conserver_tls_directory }}/ca.crt;
+    sslrequired yes;
+    sslreqclientcert yes;
+}
+
+default * {
+    logfile /var/log/conserver/&.log;
+    timestamp 1ha;
+    options !ixon,!ixoff,!crtscts,!cstopb,!hupcl,autoreinit,reinitoncc;
+}
+
+{% for console in conserver_consoles %}
+console {{ console.name }} {
+    master localhost;
+    type device;
+    device {{ console.device }};
+    baud {{ console.baud }};
+    parity none;
+    rw {{ console.rw_users | join(',') }};
+}
+
+{% endfor %}
+access * {
+    trusted 127.0.0.1;
+}

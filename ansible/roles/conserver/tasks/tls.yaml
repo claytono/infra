@@ -1,0 +1,142 @@
+---
+- name: Create Conserver TLS directory
+  ansible.builtin.file:
+    path: "{{ conserver_tls_directory }}"
+    state: directory
+    owner: root
+    group: root
+    # The directory is searchable so conservr can open its explicitly named
+    # credential, but not listable; individual files enforce read access.
+    mode: "0711"
+
+- name: Generate Conserver TLS private keys
+  community.crypto.openssl_privatekey:
+    path: "{{ item.path }}"
+    type: RSA
+    size: 3072
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - name: CA
+      path: "{{ conserver_tls_directory }}/ca.key"
+    - name: server
+      path: "{{ conserver_tls_directory }}/server-20-key.pem"
+    - name: client
+      path: "{{ conserver_tls_directory }}/client-20-key.pem"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Restart Conserver
+
+- name: Generate Conserver TLS certificate requests
+  community.crypto.openssl_csr:
+    path: "{{ item.csr }}"
+    privatekey_path: "{{ item.key }}"
+    common_name: "{{ item.name }}"
+    basic_constraints: "{{ item.basic_constraints | default(omit) }}"
+    basic_constraints_critical: "{{ item.basic_constraints is defined }}"
+    key_usage: "{{ item.key_usage }}"
+    key_usage_critical: true
+    extended_key_usage: "{{ item.extended_key_usage | default(omit) }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - name: Conserver local CA
+      key: "{{ conserver_tls_directory }}/ca.key"
+      csr: "{{ conserver_tls_directory }}/ca.csr"
+      basic_constraints:
+        - CA:TRUE
+      key_usage:
+        - keyCertSign
+        - cRLSign
+    - name: infra1 Conserver server
+      key: "{{ conserver_tls_directory }}/server-20-key.pem"
+      csr: "{{ conserver_tls_directory }}/server.csr"
+      key_usage:
+        - digitalSignature
+        - keyEncipherment
+      extended_key_usage:
+        - serverAuth
+    - name: infra1 root console client
+      key: "{{ conserver_tls_directory }}/client-20-key.pem"
+      csr: "{{ conserver_tls_directory }}/client.csr"
+      key_usage:
+        - digitalSignature
+      extended_key_usage:
+        - clientAuth
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Restart Conserver
+
+- name: Generate Conserver CA certificate
+  community.crypto.x509_certificate:
+    path: "{{ conserver_tls_directory }}/ca.crt"
+    csr_path: "{{ conserver_tls_directory }}/ca.csr"
+    privatekey_path: "{{ conserver_tls_directory }}/ca.key"
+    provider: selfsigned
+    selfsigned_not_after: "+{{ conserver_tls_validity_days }}d"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Conserver
+
+- name: Generate Conserver TLS certificates
+  community.crypto.x509_certificate:
+    path: "{{ item.certificate }}"
+    csr_path: "{{ item.csr }}"
+    provider: ownca
+    ownca_path: "{{ conserver_tls_directory }}/ca.crt"
+    ownca_privatekey_path: "{{ conserver_tls_directory }}/ca.key"
+    ownca_not_after: "+{{ conserver_tls_validity_days }}d"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - csr: "{{ conserver_tls_directory }}/server.csr"
+      certificate: "{{ conserver_tls_directory }}/server-10-certificate.pem"
+    - csr: "{{ conserver_tls_directory }}/client.csr"
+      certificate: "{{ conserver_tls_directory }}/client-10-certificate.pem"
+  loop_control:
+    label: "{{ item.certificate | basename }}"
+  notify: Restart Conserver
+
+- name: Assemble Conserver TLS credentials
+  ansible.builtin.assemble:
+    src: "{{ conserver_tls_directory }}"
+    dest: "{{ item.dest }}"
+    regexp: "^{{ item.name }}-[0-9]+-.*[.]pem$"
+    owner: "{{ item.owner }}"
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - name: server
+      dest: "{{ conserver_tls_directory }}/server.pem"
+      owner: conservr
+      mode: "0400"
+    - name: client
+      dest: "{{ conserver_tls_directory }}/client.pem"
+      owner: root
+      mode: "0600"
+  loop_control:
+    label: "{{ item.dest | basename }}"
+  notify: Restart Conserver
+
+- name: Remove superseded Conserver TLS fragments
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ conserver_tls_directory }}/server-credentials.d"
+    - "{{ conserver_tls_directory }}/client-credentials.d"
+
+- name: Validate Conserver TLS certificate chains
+  ansible.builtin.command:
+    argv:
+      - openssl
+      - verify
+      - -CAfile
+      - "{{ conserver_tls_directory }}/ca.crt"
+      - "{{ conserver_tls_directory }}/server-10-certificate.pem"
+      - "{{ conserver_tls_directory }}/client-10-certificate.pem"
+  changed_when: false

@@ -1,0 +1,7 @@
+config * {
+    master 127.0.0.1;
+    port {{ conserver_port }};
+    sslcredentials {{ conserver_tls_directory }}/client.pem;
+    sslcacertificatefile {{ conserver_tls_directory }}/ca.crt;
+    sslrequired yes;
+}

@@ -64,6 +64,9 @@ p1
 [nut_server]
 infra1
 
+[conserver]
+infra1
+
 [docker]
 infra1
 luser

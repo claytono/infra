@@ -1,0 +1,97 @@
+---
+- name: Validate Conserver settings
+  ansible.builtin.assert:
+    that:
+      - conserver_consoles | length > 0
+      - conserver_port | int >= 1024
+      - conserver_port | int <= 65535
+      - conserver_tls_directory is match('^/')
+      - conserver_tls_validity_days | int >= 36500
+    fail_msg: >-
+      Conserver requires at least one console and an unprivileged TCP port
+      between 1024 and 65535.
+
+- name: Validate serial console definitions
+  ansible.builtin.assert:
+    that:
+      - item.name is match('^[A-Za-z0-9][A-Za-z0-9_.-]*$')
+      - item.device is match('^/dev/')
+      - item.baud | int > 0
+      - item.rw_users is sequence
+      - item.rw_users is not string
+      - item.rw_users | length > 0
+    fail_msg: "Invalid serial console definition: {{ item }}"
+  loop: "{{ conserver_consoles }}"
+  loop_control:
+    label: "{{ item.name | default('unnamed') }}"
+
+- name: Install Conserver without starting its package defaults
+  ansible.builtin.apt:
+    name:
+      - conserver-client
+      - conserver-server
+      - python3-cryptography
+    state: present
+    # Debian policy-rc.d exit code 101 denies service starts. The apt module
+    # installs this policy only for this task and restores any prior policy
+    # afterward, so Conserver starts below with our configuration in place.
+    policy_rc_d: 101
+
+- name: Allow Conserver to access serial devices
+  ansible.builtin.user:
+    name: conservr
+    groups: dialout
+    append: true
+  notify: Restart Conserver
+
+- name: Create Conserver log directory
+  ansible.builtin.file:
+    path: /var/log/conserver
+    state: directory
+    owner: conservr
+    group: adm
+    mode: "0750"
+
+- name: Configure Conserver TLS
+  ansible.builtin.import_tasks: tls.yaml
+
+- name: Configure Conserver
+  ansible.builtin.template:
+    src: conserver.cf.j2
+    dest: /etc/conserver/conserver.cf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/conserver -S -C %s
+  notify: Restart Conserver
+
+- name: Restrict Conserver to loopback
+  ansible.builtin.template:
+    src: server.local.j2
+    dest: /etc/conserver/server.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Conserver
+
+- name: Configure the local Conserver client
+  ansible.builtin.template:
+    src: console.cf.j2
+    dest: /etc/conserver/console.cf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure Conserver log retention
+  ansible.builtin.template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/conserver-server
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and start Conserver
+  ansible.builtin.systemd_service:
+    name: conserver-server
+    enabled: true
+    state: started

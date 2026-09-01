@@ -259,6 +259,12 @@
     - role: nut
       tags: nut
 
+- name: Conserver
+  hosts: conserver
+  roles:
+    - role: conserver
+      tags: conserver
+
 - name: OS install server
   hosts: infra1
   roles:
