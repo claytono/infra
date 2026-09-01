@@ -209,6 +209,7 @@
               ansible-lint
               pythonEnv
               awscli2
+              ccache
               curl
               efficient-compression-tool
               jq
