@@ -4,8 +4,9 @@
 #   weather_entity_id, sun_entity_id
 # Cross-references LVGL widget: bg_image (must be defined in main config)
 
-online_image:
-- url: ${weather_bg_base}/sunny-day.png
+image:
+- platform: online_image
+  url: ${weather_bg_base}/sunny-day.png
   id: weather_bg_a
   format: png
   resize: ${weather_bg_width}x${weather_bg_height}
@@ -19,7 +20,8 @@ online_image:
   on_error:
   - lambda: id(current_bg_url) = "";
   - logger.log: Failed to download weather background
-- url: ${weather_bg_base}/sunny-day.png
+- platform: online_image
+  url: ${weather_bg_base}/sunny-day.png
   id: weather_bg_b
   format: png
   resize: ${weather_bg_width}x${weather_bg_height}
