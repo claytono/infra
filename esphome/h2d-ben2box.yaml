@@ -1,0 +1,156 @@
+---
+substitutions:
+  devicename: h2d-ben2box
+  human_devicename: H2D Ben2Box
+  mac: 70:04:1D:1F:16:8C
+  ip: 172.20.7.28
+
+packages:
+  wifi: !include common/wifi.yaml
+  base: !include common/base.yaml
+
+wifi:
+  output_power: 8.5dB
+
+esphome:
+  name: ${devicename}
+  on_boot:
+  - priority: -100
+    then:
+    - script.execute: fan_off_heartbeat
+
+esp32:
+  board: lolin_c3_mini
+  framework:
+    type: esp-idf
+
+logger:
+
+output:
+- platform: ledc
+  pin: GPIO3
+  id: fan_pwm
+  frequency: 25000 Hz
+  zero_means_zero: true
+
+light:
+- platform: esp32_rmt_led_strip
+  pin: GPIO7
+  num_leds: 1
+  rgb_order: GRB
+  chipset: ws2812
+  id: status_led
+  internal: true
+  restore_mode: ALWAYS_OFF
+  gamma_correct: 2.8
+  default_transition_length: 0s
+
+switch:
+- platform: gpio
+  pin: GPIO4
+  id: fan_power
+  internal: true
+  restore_mode: ALWAYS_OFF
+
+script:
+- id: update_fan_led
+  mode: restart
+  then:
+  - if:
+      condition:
+        fan.is_on: fan_controller
+      then:
+      - lambda: |-
+          const float red = id(fan_controller).speed / 100.0f;
+          const float inverse_gamma = 1.0f / 2.8f;
+          const float brightness = id(led_brightness).state / 100.0f;
+          auto call = id(status_led).turn_on();
+          call.set_brightness(brightness);
+          call.set_rgb(powf(red, inverse_gamma), 0.0f,
+                       powf(1.0f - red, inverse_gamma));
+          call.perform();
+- id: fan_off_heartbeat
+  mode: restart
+  then:
+  - while:
+      condition:
+        fan.is_off: fan_controller
+      then:
+      - if:
+          condition:
+            not:
+              wifi.connected:
+          then:
+          - light.turn_on:
+              id: status_led
+              brightness: !lambda return id(led_brightness).state / 100.0f;
+              red: 100%
+              green: 0%
+              blue: 0%
+          - delay: 250ms
+          - light.turn_off: status_led
+          - delay: 750ms
+          else:
+          - if:
+              condition:
+                api.connected:
+                  state_subscription_only: true
+              then:
+              - light.turn_on:
+                  id: status_led
+                  brightness: !lambda return id(led_brightness).state / 100.0f;
+                  red: 0%
+                  green: 100%
+                  blue: 0%
+              - delay: 250ms
+              - light.turn_off: status_led
+              - delay: 1.75s
+              else:
+              - lambda: |-
+                  const float inverse_gamma = 1.0f / 2.8f;
+                  const float brightness = id(led_brightness).state / 100.0f;
+                  auto call = id(status_led).turn_on();
+                  call.set_brightness(brightness);
+                  call.set_rgb(1.0f, powf(0.5f, inverse_gamma), 0.0f);
+                  call.perform();
+              - delay: 250ms
+              - light.turn_off: status_led
+              - delay: 1.75s
+
+number:
+- platform: template
+  name: ${human_devicename} LED Brightness
+  id: led_brightness
+  icon: mdi:brightness-percent
+  entity_category: config
+  min_value: 0
+  max_value: 100
+  step: 5
+  initial_value: 25
+  restore_value: true
+  optimistic: true
+  unit_of_measurement: "%"
+  mode: slider
+  on_value:
+    then:
+    - script.execute: update_fan_led
+
+fan:
+- platform: speed
+  output: fan_pwm
+  name: ${human_devicename} Fan
+  id: fan_controller
+  restore_mode: ALWAYS_OFF
+  on_turn_on:
+    then:
+    - script.stop: fan_off_heartbeat
+    - switch.turn_on: fan_power
+    - script.execute: update_fan_led
+  on_turn_off:
+    then:
+    - switch.turn_off: fan_power
+    - light.turn_off: status_led
+    - script.execute: fan_off_heartbeat
+  on_speed_set:
+    then:
+    - script.execute: update_fan_led
