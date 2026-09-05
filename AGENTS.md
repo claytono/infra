@@ -20,6 +20,8 @@ including:
   Authentik integration
 - **[integrations/](.agents/rules/integrations/)** - Home Assistant and other
   integrations
+- **[integrations/synology.md](.agents/rules/integrations/synology.md)** -
+  Synology troubleshooting resources
 
 ## Architecture Principles
 
