@@ -22,6 +22,7 @@ warnings:
     basic'' under ''auth:'' explicitly; otherwise set ''type: digest'' now to adopt
     the more secure scheme.'
   garage-bme280.yaml: []
+  h2d-ben2box.yaml: []
   infra1-power.yaml:
   - 'The ''web_server'' ''auth'' scheme currently defaults to ''basic'', which sends
     the password over the network in an easily reversible form. The default will change

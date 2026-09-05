@@ -36,6 +36,12 @@ locals {
       hostname = "garage-bme280.oneill.net"
       note     = "ESPHome: Garage BME280"
     }
+    h2d-ben2box = {
+      mac      = "70:04:1D:1F:16:8C"
+      ip       = "172.20.7.28"
+      hostname = "h2d-ben2box.oneill.net"
+      note     = "ESPHome: H2D Ben2Box"
+    }
     infra1-power = {
       mac      = "C4:5B:BE:E4:AB:22"
       ip       = "172.20.5.218"
