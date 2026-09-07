@@ -99,7 +99,7 @@ repos:
     args: [-i, '2', -ci]
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.16.1
+  rev: v0.16.4
   hooks:
   - id: ruff
     args: [--fix]
