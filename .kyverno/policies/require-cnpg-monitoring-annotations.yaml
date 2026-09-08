@@ -1,0 +1,27 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+
+metadata:
+  name: require-cnpg-monitoring-annotations
+
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: require-prometheus-scrape-annotations
+    match:
+      any:
+      - resources:
+          kinds:
+          - postgresql.cnpg.io/v1/Cluster
+    validate:
+      message: >-
+        Database clusters must set prometheus.io/scrape to 'true' and
+        prometheus.io/port to '9187' under spec.inheritedMetadata.annotations
+        so Prometheus monitors their pods.
+      pattern:
+        spec:
+          inheritedMetadata:
+            annotations:
+              prometheus.io/scrape: 'true'
+              prometheus.io/port: '9187'

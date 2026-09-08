@@ -1,0 +1,64 @@
+---
+groups:
+- name: cnpg.rules
+  rules:
+  - alert: CNPGReplicationDisconnected
+    expr: >
+      (cnpg_pg_replication_is_wal_receiver_up{job="kubernetes-pods", cnpg_io_podRole="instance"}
+      == 0)
+      and on(kubernetes_namespace,kubernetes_pod_name)
+      (cnpg_pg_replication_in_recovery{job="kubernetes-pods", cnpg_io_podRole="instance"}
+      == 1)
+    for: 30m
+    annotations:
+      message: Database replica {{ $labels.kubernetes_namespace }}/{{ $labels.kubernetes_pod_name
+        }} has not been receiving updates for 30 minutes
+  - alert: CNPGReplicationLag
+    expr: >
+      (cnpg_pg_replication_lag{job="kubernetes-pods", cnpg_io_podRole="instance"}
+      > 300)
+      and on(kubernetes_namespace,kubernetes_pod_name)
+      (cnpg_pg_replication_is_wal_receiver_up{job="kubernetes-pods", cnpg_io_podRole="instance"}
+      == 1)
+    for: 30m
+    annotations:
+      message: Database replica {{ $labels.kubernetes_namespace }}/{{ $labels.kubernetes_pod_name
+        }} has remained more than five minutes behind for 30 minutes while connected
+  - alert: CNPGMonitoringUnavailable
+    expr: >
+      (up{job="kubernetes-pods", cnpg_io_podRole="instance"} == 0)
+      or (cnpg_collector_up{job="kubernetes-pods", cnpg_io_podRole="instance"} ==
+      0)
+      or (cnpg_collector_last_collection_error{job="kubernetes-pods", cnpg_io_podRole="instance"}
+      == 1)
+    for: 1h
+    annotations:
+      message: Database monitoring is failing for {{ $labels.kubernetes_namespace }}/{{
+        $labels.kubernetes_pod_name }}
+  - alert: CNPGReplicationMetricsMissing
+    expr: >
+      ((up{job="kubernetes-pods", cnpg_io_podRole="instance"} == 1) unless on(kubernetes_namespace,kubernetes_pod_name)
+        cnpg_pg_replication_in_recovery{job="kubernetes-pods", cnpg_io_podRole="instance"})
+      or ((up{job="kubernetes-pods", cnpg_io_podRole="instance"} == 1) unless on(kubernetes_namespace,kubernetes_pod_name)
+        cnpg_pg_replication_is_wal_receiver_up{job="kubernetes-pods", cnpg_io_podRole="instance"})
+    for: 1h
+    annotations:
+      message: Database {{ $labels.kubernetes_namespace }}/{{ $labels.kubernetes_pod_name
+        }} responds to monitoring but its replication metrics are missing
+  - alert: CNPGDatabaseInstancesMissing
+    # Use Kubernetes' desired count, including when every scrape target disappears.
+    expr: >
+      (
+        count by(namespace,cnpg_io_cluster) (
+          label_replace(up{job="kubernetes-pods", cnpg_io_podRole="instance"} == 1,
+            "namespace", "$1", "kubernetes_namespace", "(.+)")
+        )
+        or on(namespace,cnpg_io_cluster)
+        (0 * max by(namespace,cnpg_io_cluster) (kube_customresource_cnpg_instances))
+      )
+      < on(namespace,cnpg_io_cluster)
+      max by(namespace,cnpg_io_cluster) (kube_customresource_cnpg_instances)
+    for: 1h
+    annotations:
+      message: Database cluster {{ $labels.namespace }}/{{ $labels.cnpg_io_cluster
+        }} has had fewer monitored instances than configured for one hour

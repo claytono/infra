@@ -5,6 +5,7 @@ global:
 
 rule_files:
 - /etc/prometheus/rules.yml
+- /etc/prometheus/cnpg-rules.yml
 
 alerting:
   alertmanagers:
@@ -254,6 +255,10 @@ scrape_configs:
   - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
     action: keep
     regex: true
+  # CNPG inherits pod scrape annotations onto Services too; collect each pod once.
+  - source_labels: [__meta_kubernetes_service_label_cnpg_io_cluster]
+    action: drop
+    regex: .+
   - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
     action: replace
     target_label: __scheme__
