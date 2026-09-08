@@ -11,6 +11,7 @@
     "ansible/galaxy/**"
   ],
   "rebaseWhen": "behind-base-branch",
+  "branchTopic": "{{{depNameSanitized}}}-{{{newVersion}}}{{#if isLockfileUpdate}}-lockfile{{/if}}",
   "automergeStrategy": "rebase",
   "minimumReleaseAge": "14 days",
   "prHourlyLimit": 0,
