@@ -10,6 +10,7 @@ resources:
 - helm/templates/serviceaccount.yaml
 - helm/templates/deployment.yaml
 - helm/templates/service.yaml
+- helm/templates/crs-configmap.yaml
 
 commonAnnotations:
   argoManaged: 'true'

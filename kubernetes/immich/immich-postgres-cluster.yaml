@@ -6,6 +6,11 @@ metadata:
   name: immich-postgres
 
 spec:
+  inheritedMetadata:
+    annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port: '9187'
+
   instances: 1
   imageName: ghcr.io/tensorchord/cloudnative-vectorchord:17-0.4.3
   enablePDB: false

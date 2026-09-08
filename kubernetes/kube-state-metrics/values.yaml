@@ -1,2 +1,27 @@
 ---
-...
+rbac:
+  extraRules:
+  - apiGroups: [postgresql.cnpg.io]
+    resources: [clusters]
+    verbs: [list, watch]
+
+customResourceState:
+  enabled: true
+  config:
+    kind: CustomResourceStateMetrics
+    spec:
+      resources:
+      - groupVersionKind:
+          group: postgresql.cnpg.io
+          version: v1
+          kind: Cluster
+        labelsFromPath:
+          namespace: [metadata, namespace]
+          cnpg_io_cluster: [metadata, name]
+        metrics:
+        - name: cnpg_instances
+          help: Configured number of database instances.
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, instances]

@@ -1,0 +1,40 @@
+---
+# Source: kube-state-metrics/templates/crs-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-state-metrics-customresourcestate-config
+  namespace: default
+  labels:    
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
+    app.kubernetes.io/version: "2.19.1"
+data:
+  config.yaml: |
+    kind: CustomResourceStateMetrics
+    spec:
+      resources:
+      - groupVersionKind:
+          group: postgresql.cnpg.io
+          kind: Cluster
+          version: v1
+        labelsFromPath:
+          cnpg_io_cluster:
+          - metadata
+          - name
+          namespace:
+          - metadata
+          - namespace
+        metrics:
+        - each:
+            gauge:
+              path:
+              - spec
+              - instances
+            type: Gauge
+          help: Configured number of database instances.
+          name: cnpg_instances
+
