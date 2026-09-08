@@ -8,6 +8,7 @@ kind: ServiceAccount
 metadata:
   name: proxies
   namespace: default
+
 ---
 # Source: tailscale-operator/templates/proxy-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -22,6 +23,7 @@ rules:
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["create", "patch", "get"]
+
 ---
 # Source: tailscale-operator/templates/proxy-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
