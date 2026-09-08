@@ -24,7 +24,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: healthchecks
-        image: healthchecks/healthchecks:v3.13@sha256:228137b2fe50f8c4b3f6f1a8ef3970cc74ee84b56075bcf79381fc35a50b295d
+        image: healthchecks/healthchecks:v4.3@sha256:cd7bcd94350818b3944f82eb5995f48bdeab8c8627977578a569ffa73f56f56f
         ports:
         - name: http
           containerPort: 8000
