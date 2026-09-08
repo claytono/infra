@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: bookbridge
-        image: ghcr.io/cporcellijr/bookbridge:v7.3.4@sha256:dc980d05cbbd0d04b87c56dfd8ae98619e5aedc70ec513fdf319a0b81abba187
+        image: ghcr.io/cporcellijr/bookbridge:v7.6.0@sha256:501bb14f7ac9e9be2bde2864c9e7649a541ad2ba2b65d415fffe2b518850955a
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
