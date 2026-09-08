@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nvidia-device-plugin
     app.kubernetes.io/instance: nvidia-device-plugin
-    app.kubernetes.io/version: "0.19.3"
+    app.kubernetes.io/version: "0.20.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/name: nvidia-device-plugin
         app.kubernetes.io/instance: nvidia-device-plugin
       annotations:
-        checksum/config: 0e341c66123adddc547e2e4aecaf48275393d9a4c55092e1bf50141463410593
+        checksum/config: 6d8585f8a2d9f8471dabfff3c530e694a7ec108968cc0ec61c6e07872c2c43c2
     spec:
       priorityClassName: system-node-critical
       runtimeClassName: nvidia
@@ -32,7 +32,7 @@ spec:
       serviceAccountName: nvidia-device-plugin-service-account
       shareProcessNamespace: true
       initContainers:
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.19.3
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.20.0
         name: nvidia-device-plugin-init
         command: ["config-manager"]
         env:
@@ -66,7 +66,7 @@ spec:
           - name: config
             mountPath: /config
       containers:
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.19.3
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.20.0
         name: nvidia-device-plugin-sidecar
         command: ["config-manager"]
         env:
@@ -103,7 +103,7 @@ spec:
           capabilities:
             add:
               - SYS_ADMIN
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.19.3
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.20.0
         imagePullPolicy: IfNotPresent
         name: nvidia-device-plugin-ctr
         command: ["nvidia-device-plugin"]
@@ -182,19 +182,3 @@ spec:
         - effect: NoSchedule
           key: nvidia.com/gpu
           operator: Exists
-
----
-# Source: nvidia-device-plugin/templates/daemonset-device-plugin.yml
-# Copyright (c) 2019, NVIDIA CORPORATION.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.

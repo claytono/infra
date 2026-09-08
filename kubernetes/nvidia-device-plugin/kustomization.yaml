@@ -13,7 +13,6 @@ resources:
 - helm/role.yml
 - helm/role-binding.yml
 - helm/daemonset-device-plugin.yml
-- helm/daemonset-gfd.yml
 - helm/daemonset-mps-control-daemon.yml
 
 commonAnnotations:
