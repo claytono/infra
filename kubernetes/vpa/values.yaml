@@ -17,7 +17,6 @@ updater:
     eviction-tolerance: "0.15"
     updater-interval: "2m"
     use-admission-controller-status: "true"
-    feature-gates: "InPlaceOrRecreate=true"
 
 admissionController:
   enabled: true  # Apply recommendations to NEW pods
@@ -36,7 +35,6 @@ admissionController:
   generateCertificate: false  # Use cert-manager instead of Helm hooks
   secretName: vpa-webhook-tls
   extraArgs:
-    feature-gates: "InPlaceOrRecreate=true"
     reload-cert: "true"
   tlsSecretKeys:
   - key: ca.crt

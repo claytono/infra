@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: updater
     app.kubernetes.io/name: vpa
     app.kubernetes.io/instance: vpa
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 0
@@ -40,13 +40,12 @@ spec:
               drop:
               - ALL
             readOnlyRootFilesystem: true
-          image: registry.k8s.io/autoscaling/vpa-updater:1.6.0
+          image: registry.k8s.io/autoscaling/vpa-updater:1.7.1
           imagePullPolicy: Always
           args:
             - --eviction-rate-burst=1
             - --eviction-rate-limit=0.0667
             - --eviction-tolerance=0.15
-            - --feature-gates=InPlaceOrRecreate=true
             - --min-replicas=1
             - --updater-interval=2m
             - --use-admission-controller-status=true
