@@ -10,6 +10,11 @@ metadata:
     app.kubernetes.io/name: server
     app.kubernetes.io/version: v2.6.3
   namespace: immich
+
+
+
+
+
 ---
 # Source: immich/templates/server.yaml
 apiVersion: v1
@@ -36,6 +41,8 @@ spec:
     app.kubernetes.io/controller: main
     app.kubernetes.io/instance: immich
     app.kubernetes.io/name: server
+
+
 ---
 # Source: immich/templates/server.yaml
 apiVersion: apps/v1
@@ -144,6 +151,10 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: immich-library
+
+
+  
+
 ---
 # Source: immich/templates/server.yaml
 apiVersion: networking.k8s.io/v1
