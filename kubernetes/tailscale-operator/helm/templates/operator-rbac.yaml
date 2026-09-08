@@ -8,6 +8,7 @@ kind: ServiceAccount
 metadata:
   name: operator
   namespace: default
+
 ---
 # Source: tailscale-operator/templates/operator-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -40,6 +41,9 @@ rules:
   resources: ["tailnets", "tailnets/status"]
   verbs: ["get", "list", "watch", "update"]
 - apiGroups: ["tailscale.com"]
+  resources: ["peerrelays", "peerrelays/status"]
+  verbs: ["get", "list", "watch", "update"]
+- apiGroups: ["tailscale.com"]
   resources: ["proxygrouppolicies", "proxygrouppolicies/status"]
   verbs: ["get", "list", "watch", "update"]
 - apiGroups: ["tailscale.com"]
@@ -52,6 +56,7 @@ rules:
 - apiGroups: ["admissionregistration.k8s.io"]
   resources: ["validatingadmissionpolicies", "validatingadmissionpolicybindings"]
   verbs: ["list", "create", "delete", "update", "get", "watch"]
+
 ---
 # Source: tailscale-operator/templates/operator-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -66,6 +71,7 @@ roleRef:
   kind: ClusterRole
   name: tailscale-operator
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: tailscale-operator/templates/operator-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -77,6 +83,10 @@ rules:
 - apiGroups: [""]
   resources: ["secrets", "serviceaccounts", "configmaps"]
   verbs: ["create","delete","deletecollection","get","list","patch","update","watch"]
+- apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  resourceNames: ["operator"]
+  verbs: ["create"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get","list","watch", "update"]
@@ -95,6 +105,7 @@ rules:
 - apiGroups: ["monitoring.coreos.com"]
   resources: ["servicemonitors"]
   verbs: ["get", "list", "update", "create", "delete"]
+
 ---
 # Source: tailscale-operator/templates/operator-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

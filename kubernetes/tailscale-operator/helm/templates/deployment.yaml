@@ -27,7 +27,7 @@ spec:
             secretName: operator-oauth
       containers:
         - name: operator
-          image: tailscale/k8s-operator:v1.98.9
+          image: tailscale/k8s-operator:v1.102.3
           imagePullPolicy: Always
           env:
             - name: OPERATOR_INITIAL_TAGS
@@ -42,6 +42,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: OPERATOR_SERVICE_ACCOUNT_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
             - name: OPERATOR_LOGIN_SERVER
               value: 
             - name: OPERATOR_INGRESS_CLASS_NAME
@@ -51,7 +55,7 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /oauth/client_secret
             - name: PROXY_IMAGE
-              value: tailscale/tailscale:v1.98.9
+              value: tailscale/tailscale:v1.102.3
             - name: PROXY_TAGS
               value: tag:k8s
             - name: APISERVER_PROXY

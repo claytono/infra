@@ -14,6 +14,7 @@ resources:
 - helm/templates/ingressclass.yaml
 - helm/templates/oauth-secret.yaml
 - helm/templates/operator-rbac.yaml
+- helm/templates/peerrelay.yaml
 - helm/templates/proxy-rbac.yaml
 - helm/templates/proxyclass.yaml
 - helm/templates/proxygroup.yaml
