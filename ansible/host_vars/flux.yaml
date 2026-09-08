@@ -1,7 +1,11 @@
 ---
-# Vultr VPS running Debian 11 (bullseye)
+# Vultr VPS running Debian 12 (bookworm)
 # vc2-1c-1gb instance
-tailscale_args: --advertise-exit-node
+common_additional_packages:
+  # Flux uses Vultr networking rather than the role that installs this elsewhere.
+  - resolvconf
+# This remote VPS needs MagicDNS for its backup and monitoring endpoints.
+tailscale_args: --advertise-exit-node --accept-dns=true
 tailscale_tags: ["flux"]
 ip_forwarding_enabled: true
 qemu_guest_agent_enabled: false
