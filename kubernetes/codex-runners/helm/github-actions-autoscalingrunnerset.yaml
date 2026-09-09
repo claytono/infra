@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-github-actions
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 88f8c23839ac81a37c8989861f646366a15c7d782c0a08b4d673787e266c3a2
+    actions.github.com/values-hash: 69230d92450dd7cf41f80232fba10cea8a8c989d142be9d1e5bd6b47c8104aa
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -70,7 +70,7 @@ spec:
         - name: runner
           command:
             - /home/runner/run.sh
-          image: ghcr.io/actions/actions-runner:2.336.0@sha256:0cfdcc701ce933c6d243c6b0b2da767366dc9f2e99961d4c3754b0b78084cdda
+          image: ghcr.io/actions/actions-runner:2.337.0@sha256:e5496277be5d09bc968b3d64911b74e219ac4a3f2edce956a3ecf9271bea1ef4
           env:
             - name: CODEX_HOME
               value: /home/runner/.codex
