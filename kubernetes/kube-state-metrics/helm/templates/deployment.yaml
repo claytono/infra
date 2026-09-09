@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: kube-state-metrics
-    app.kubernetes.io/version: "2.19.1"
+    app.kubernetes.io/version: "2.20.0"
 spec:
   selector:
     matchLabels:      
@@ -29,7 +29,7 @@ spec:
         app.kubernetes.io/part-of: kube-state-metrics
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/instance: kube-state-metrics
-        app.kubernetes.io/version: "2.19.1"
+        app.kubernetes.io/version: "2.20.0"
     spec:
       automountServiceAccountToken: true
       hostNetwork: false
@@ -53,7 +53,7 @@ spec:
           mountPath: /etc/customresourcestate
           readOnly: true
         imagePullPolicy: IfNotPresent
-        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.19.1
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.20.0
         ports:
         - containerPort: 8080
           name: http

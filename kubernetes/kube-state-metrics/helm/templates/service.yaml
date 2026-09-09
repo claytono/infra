@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: kube-state-metrics
-    app.kubernetes.io/version: "2.19.1"
+    app.kubernetes.io/version: "2.20.0"
   annotations:
     prometheus.io/scrape: 'true'
 spec:
@@ -21,7 +21,6 @@ spec:
     protocol: TCP
     port: 8080
     targetPort: http
-  
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: kube-state-metrics
