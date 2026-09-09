@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: shelfmark
-        image: ghcr.io/calibrain/shelfmark:v1.3.12@sha256:e22413551ab647388f0279f1d7b7db3ff4a6fe1151337b5b234d3747cc09f5a3
+        image: ghcr.io/calibrain/shelfmark:v1.3.15@sha256:9602290324993c801b319d3166b202b96bd9039af2416f0916dae03a5bdca815
         ports:
         - containerPort: 8084
           name: http
