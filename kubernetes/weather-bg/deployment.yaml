@@ -29,7 +29,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: nginx
-        image: nginxinc/nginx-unprivileged:1.30-alpine@sha256:93722936b82ec8a1178d48448e619226680d2de3706a1640800e186cd5fa7fd3
+        image: nginxinc/nginx-unprivileged:1.30-alpine@sha256:442753882674b49ae2c1de83ed67896131c0777f56df5005e356e62bc3f7e7ce
         ports:
         - containerPort: 8080
           name: http
