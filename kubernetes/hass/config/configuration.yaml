@@ -7,12 +7,6 @@ homeassistant:
 # Enables the frontend
 frontend:
 
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-  - 10.244.0.0/16
-  - 172.19.74.0/24
-
 # Enables configuration UI
 config:
 
