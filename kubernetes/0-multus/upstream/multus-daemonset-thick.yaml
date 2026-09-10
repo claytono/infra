@@ -74,6 +74,15 @@ rules:
       - update
       - watch
   - apiGroups:
+      - "resource.k8s.io"
+    resources:
+      - resourceclaims
+      - resourceclaims/status
+      - resourceslices
+    verbs:
+      - get
+      - list
+  - apiGroups:
       - ""
       - events.k8s.io
     resources:
@@ -155,7 +164,7 @@ spec:
       serviceAccountName: multus
       containers:
         - name: kube-multus
-          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:b2136983532b5bcd9480a3c906a2ac267d1ac0e7fb68512ff02236bde99682b8
+          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick
           command: [ "/usr/src/multus-cni/bin/multus-daemon" ]
           resources:
             requests:
@@ -202,7 +211,7 @@ spec:
                   fieldPath: spec.nodeName
       initContainers:
         - name: install-multus-binary
-          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:b2136983532b5bcd9480a3c906a2ac267d1ac0e7fb68512ff02236bde99682b8
+          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick
           command:
             - "/usr/src/multus-cni/bin/install_multus"
             - "-d"
@@ -220,7 +229,7 @@ spec:
             - name: cnibin
               mountPath: /host/opt/cni/bin
               mountPropagation: Bidirectional
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 30
       volumes:
         - name: cni
           hostPath:
