@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: openarchiver
-        image: docker.io/logiclabshq/open-archiver:v0.5.2@sha256:3d756fa193421f832a59be18d16147b41442ecede45b95e844e82e774a77c549
+        image: docker.io/logiclabshq/open-archiver:v0.6.0@sha256:3c240bf852d604b73a5229c0a22e2e69987e8e9cfe7241710598ca6187c08b83
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
