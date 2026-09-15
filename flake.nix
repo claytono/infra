@@ -10,7 +10,7 @@
   outputs = { self, nixpkgs, go-unifi-mcp }:
     let
       # Helpers for producing system-specific outputs
-      supportedSystems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-darwin" "aarch64-linux" ];
       forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
         pkgs = import nixpkgs { inherit system; };
       });
@@ -187,13 +187,15 @@
 
           pythonEnv = mkPythonEnv pkgs;
 
-          # Replace dotnet-sdk with a stub to avoid building dotnet-vmr from
-          # source on aarch64-darwin. The upstream pre-commit package takes
-          # dotnet-sdk as a function argument for tests we don't run.
+          # This repo does not use pre-commit's .NET support. Keep the SDK
+          # placeholder used for aarch64-darwin and skip the upstream tests
+          # that require the real dotnet executable.
           # https://github.com/NixOS/nixpkgs/issues/294088
-          pre-commit = pkgs.pre-commit.override {
+          pre-commit = (pkgs.pre-commit.override {
             dotnet-sdk = pkgs.emptyDirectory;
-          };
+          }).overrideAttrs (oldAttrs: {
+            disabledTests = (oldAttrs.disabledTests or []) ++ [ "test_dotnet_" ];
+          });
 
         in
         {
