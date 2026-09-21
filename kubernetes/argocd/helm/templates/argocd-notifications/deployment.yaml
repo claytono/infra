@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: notifications-controller
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.5.1"
+    app.kubernetes.io/version: "v3.5.2"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -30,14 +30,14 @@ spec:
         app.kubernetes.io/component: notifications-controller
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.5.1"
+        app.kubernetes.io/version: "v3.5.2"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-notifications-controller
       automountServiceAccountToken: true
       containers:
         - name: notifications-controller
-          image: quay.io/argoproj/argocd:v3.5.1
+          image: quay.io/argoproj/argocd:v3.5.2
           imagePullPolicy: IfNotPresent
           args:
             - /usr/local/bin/argocd-notifications
@@ -118,6 +118,7 @@ spec:
         - name: tls-certs
           configMap:
             name: argocd-tls-certs-cm
+            optional: true
         - name: argocd-repo-server-tls
           secret:
             secretName: argocd-repo-server-tls
