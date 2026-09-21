@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.9.0"
+    app.kubernetes.io/version: "v2.10.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -161,7 +161,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.9.0"
+    app.kubernetes.io/version: "v2.10.0"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-view: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
@@ -214,7 +214,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.9.0"
+    app.kubernetes.io/version: "v2.10.0"
     app.kubernetes.io/managed-by: Helm
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
@@ -271,7 +271,7 @@ metadata:
     servicebinding.io/controller: "true"
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.9.0"
+    app.kubernetes.io/version: "v2.10.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -293,7 +293,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.9.0"
+    app.kubernetes.io/version: "v2.10.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -314,7 +314,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.9.0"
+    app.kubernetes.io/version: "v2.10.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -353,7 +353,7 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/version: "v2.9.0"
+    app.kubernetes.io/version: "v2.10.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
