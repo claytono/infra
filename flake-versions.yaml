@@ -10,13 +10,13 @@ bats: 1.14.0
 ccache: 4.13.6
 curl: 8.22.0
 efficient-compression-tool: 0.9.5
-go-unifi-mcp: 8fc132790ed78b97540a8db5cddf31e9bd83edbb
+go-unifi-mcp: c2e635700effea1ac2c83fc254860a01141ec9b0
 jq: 1.8.2
 kopia: 0.23.1
 kubecolor: 0.7.1
 kubeconform: 0.8.0
 kubectl: 1.37.0
-kubernetes-helm: 4.2.4
+kubernetes-helm: 4.3.0
 kustomize: 5.8.1
 kyverno: 1.19.1
 logcli: 3.6.4
@@ -28,9 +28,9 @@ pluto: 5.24.3
 pre-commit: 4.6.2
 python3: 3.14.7-env
 rclone: 1.75.1
-skopeo: 1.24.0
+skopeo: 1.24.1
 tflint: 0.64.0
-uv: 0.12.11
+uv: 0.12.16
 velero: 1.18.2
 yamlfix: 1.19.1
 yq-go: 4.53.3
