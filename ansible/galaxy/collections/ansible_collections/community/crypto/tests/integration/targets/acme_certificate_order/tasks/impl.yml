@@ -1,0 +1,821 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: "({{ select_crypto_backend }}) Generate random domain name"
+  ansible.builtin.set_fact:
+    domain_name: "host{{ '%0x' % ((2**32) | random) }}.example.com"
+
+- name: "({{ select_crypto_backend }}) Generate account key"
+  community.crypto.openssl_privatekey:
+    path: "{{ remote_tmp_dir }}/accountkey.pem"
+    type: ECC
+    curve: secp256r1
+    force: true
+
+- name: "({{ select_crypto_backend }}) Parse account keys (to ease debugging some test failures)"
+  community.crypto.openssl_privatekey_info:
+    path: "{{ remote_tmp_dir }}/accountkey.pem"
+    return_private_key_data: true
+
+- name: "({{ select_crypto_backend }}) Create ACME account"
+  community.crypto.acme_account:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    terms_agreed: true
+    state: present
+  register: account
+
+- name: "({{ select_crypto_backend }}) Generate certificate key"
+  community.crypto.openssl_privatekey:
+    path: "{{ remote_tmp_dir }}/cert.key"
+    type: ECC
+    curve: secp256r1
+    force: true
+
+- name: "({{ select_crypto_backend }}) Generate certificate CSR"
+  community.crypto.openssl_csr:
+    path: "{{ remote_tmp_dir }}/cert.csr"
+    privatekey_path: "{{ remote_tmp_dir }}/cert.key"
+    subject:
+      commonName: "{{ domain_name }}"
+    return_content: true
+  register: csr
+
+- name: "({{ select_crypto_backend }}) Create certificate order"
+  community.crypto.acme_certificate_order_create:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    csr: "{{ remote_tmp_dir }}/cert.csr"
+  register: order_1
+
+- name: "({{ select_crypto_backend }}) Show order information"
+  ansible.builtin.debug:
+    var: order_1
+
+- name: "({{ select_crypto_backend }}) Check order (1/2)"
+  ansible.builtin.assert:
+    that:
+      - order_1 is changed
+      - order_1.order_uri.startswith('https://' ~ acme_host ~ ':14000/')
+      - order_1.challenge_data | length == 1
+      - order_1.challenge_data[0].identifier_type == 'dns'
+      - order_1.challenge_data[0].identifier == domain_name
+      - order_1.challenge_data[0].challenges | length >= 2
+      - "'http-01' in order_1.challenge_data[0].challenges"
+      - "'dns-01' in order_1.challenge_data[0].challenges"
+      - order_1.challenge_data[0].challenges['http-01'].resource.startswith('.well-known/acme-challenge/')
+      - order_1.challenge_data[0].challenges['http-01'].resource_value is string
+      - order_1.challenge_data[0].challenges['dns-01'].record == '_acme-challenge.' ~ domain_name
+      - order_1.challenge_data[0].challenges['dns-01'].resource == '_acme-challenge'
+      - order_1.challenge_data[0].challenges['dns-01'].resource_value is string
+      - order_1.challenge_data_dns | length == 1
+      - order_1.challenge_data_dns['_acme-challenge.' ~ domain_name] | length == 1
+      - order_1.account_uri == account.account_uri
+
+- name: "({{ select_crypto_backend }}) Check order (2/2)"
+  when: ansible_version.full is version('2.21', '>=')
+  ansible.builtin.assert:
+    that:
+      - "'dns-account-01' in order_1.challenge_data[0].challenges"
+      - "'dns-persist-01' in order_1.challenge_data[0].challenges"
+      - order_1.challenge_data[0].challenges['dns-account-01'].record.endswith('._acme-challenge.' ~ domain_name)
+      - order_1.challenge_data[0].challenges['dns-account-01'].resource.endswith('._acme-challenge')
+      - order_1.challenge_data[0].challenges['dns-account-01'].resource_value is string
+      - "'record' not in order_1.challenge_data[0].challenges['dns-persist-01']"
+      - "'resource' not in order_1.challenge_data[0].challenges['dns-persist-01']"
+      - "'resource_value' not in order_1.challenge_data[0].challenges['dns-persist-01']"
+      - order_1.challenge_data[0].challenges['dns-persist-01'].account_uri == order_1.account_uri
+      - order_1.challenge_data[0].challenges['dns-persist-01'].issuer_domain_names | length == 2
+      - order_1.challenge_data[0].challenges['dns-persist-01'].issuer_domain_names == ["pebble.letsencrypt.org", "ca.example.com"]
+      - order_1.challenge_data_dns_account | length == 1
+      - order_1.challenge_data_dns_account.values() | first | length == 1
+
+- name: "({{ select_crypto_backend }}) Get order information"
+  community.crypto.acme_certificate_order_info:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+  register: order_info_1
+
+- name: "({{ select_crypto_backend }}) Show order information"
+  ansible.builtin.debug:
+    var: order_info_1
+
+- name: "({{ select_crypto_backend }}) Check order information (1/2)"
+  ansible.builtin.assert:
+    that:
+      - order_info_1 is not changed
+      - order_info_1.authorizations_by_identifier | length == 1
+      - order_info_1.authorizations_by_identifier['dns:' ~ domain_name].identifier.type == 'dns'
+      - order_info_1.authorizations_by_identifier['dns:' ~ domain_name].identifier.value == domain_name
+      - order_info_1.authorizations_by_identifier['dns:' ~ domain_name].status == 'pending'
+      - (order_info_1.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'http-01') | first).status == 'pending'
+      - (order_info_1.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-01') | first).status == 'pending'
+      - order_info_1.authorizations_by_status['deactivated'] | length == 0
+      - order_info_1.authorizations_by_status['expired'] | length == 0
+      - order_info_1.authorizations_by_status['invalid'] | length == 0
+      - order_info_1.authorizations_by_status['pending'] | length == 1
+      - order_info_1.authorizations_by_status['pending'][0] == 'dns:' ~ domain_name
+      - order_info_1.authorizations_by_status['revoked'] | length == 0
+      - order_info_1.authorizations_by_status['valid'] | length == 0
+      - order_info_1.order.authorizations | length == 1
+      - order_info_1.order.authorizations[0] == order_info_1.authorizations_by_identifier['dns:' ~ domain_name].uri
+      - "'certificate' not in order_info_1.order"
+      - order_info_1.order.status == 'pending'
+      - order_info_1.order.replaces is not defined
+      - order_info_1.order_uri == order_1.order_uri
+      - order_info_1.account_uri == account.account_uri
+
+- name: "({{ select_crypto_backend }}) Check order information (2/2)"
+  when: ansible_version.full is version('2.21', '>=')
+  ansible.builtin.assert:
+    that:
+      - (order_info_1.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-account-01') | first).status == 'pending'
+      - (order_info_1.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-persist-01') | first).status == 'pending'
+
+- name: "({{ select_crypto_backend }}) Create HTTP challenges"
+  ansible.builtin.uri:
+    url: "http://{{ acme_host }}:5000/http/{{ item.identifier }}/{{ item.challenges['http-01'].resource[('.well-known/acme-challenge/' | length) :] }}"
+    method: PUT
+    body_format: raw
+    body: "{{ item.challenges['http-01'].resource_value }}"
+    headers:
+      content-type: "application/octet-stream"
+  loop: "{{ order_1.challenge_data }}"
+  when: "'http-01' in item.challenges"
+
+- name: "({{ select_crypto_backend }}) Let the challenge be validated"
+  community.crypto.acme_certificate_order_validate:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+    challenge: http-01
+  register: validate_1
+
+- name: "({{ select_crypto_backend }}) Check validation result"
+  ansible.builtin.assert:
+    that:
+      - validate_1 is changed
+      - validate_1.account_uri == account.account_uri
+
+- name: "({{ select_crypto_backend }}) Get order information"
+  community.crypto.acme_certificate_order_info:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+  register: order_info_2
+
+- name: "({{ select_crypto_backend }}) Show order information"
+  ansible.builtin.debug:
+    var: order_info_2
+
+- name: "({{ select_crypto_backend }}) Check order information (1/2)"
+  ansible.builtin.assert:
+    that:
+      - order_info_2 is not changed
+      - order_info_2.authorizations_by_identifier | length == 1
+      - order_info_2.authorizations_by_identifier['dns:' ~ domain_name].identifier.type == 'dns'
+      - order_info_2.authorizations_by_identifier['dns:' ~ domain_name].identifier.value == domain_name
+      - order_info_2.authorizations_by_identifier['dns:' ~ domain_name].status in ['pending', 'valid']
+      - (order_info_2.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'http-01') | map(attribute='status') | first | default('not there')) in ['processing', 'valid']
+      - (order_info_2.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-01') | map(attribute='status') | first | default('not there')) in ['pending', 'not there']
+      - order_info_2.authorizations_by_status['deactivated'] | length == 0
+      - order_info_2.authorizations_by_status['expired'] | length == 0
+      - order_info_2.authorizations_by_status['invalid'] | length == 0
+      - order_info_2.authorizations_by_status['pending'] | length <= 1
+      - order_info_2.authorizations_by_status['revoked'] | length == 0
+      - order_info_2.authorizations_by_status['valid'] | length <= 1
+      - (order_info_2.authorizations_by_status['pending'] | length) + (order_info_2.authorizations_by_status['valid'] | length) == 1
+      - order_info_2.order.authorizations | length == 1
+      - order_info_2.order.authorizations[0] == order_info_2.authorizations_by_identifier['dns:' ~ domain_name].uri
+      - "'certificate' not in order_info_2.order"
+      - order_info_2.order.status in ['pending', 'ready']
+      - order_info_2.order.replaces is not defined
+      - order_info_2.order_uri == order_1.order_uri
+      - order_info_2.account_uri == account.account_uri
+
+- name: "({{ select_crypto_backend }}) Check order information (2/2)"
+  when: ansible_version.full is version('2.21', '>=')
+  ansible.builtin.assert:
+    that:
+      - (order_info_2.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-account-01') | map(attribute='status') | first | default('not there')) in ['pending', 'not there']
+      - (order_info_2.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-persist-01') | map(attribute='status') | first | default('not there')) in ['pending', 'not there']
+
+- name: "({{ select_crypto_backend }}) Let the challenge be validated (idempotent)"
+  community.crypto.acme_certificate_order_validate:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+    challenge: http-01
+  register: validate_2
+
+- name: "({{ select_crypto_backend }}) Check validation result"
+  ansible.builtin.assert:
+    that:
+      - validate_2 is not changed
+      - validate_2.account_uri == account.account_uri
+
+- name: "({{ select_crypto_backend }}) Retrieve the cert and intermediate certificate"
+  community.crypto.acme_certificate_order_finalize:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+    deactivate_authzs: never
+    retrieve_all_alternates: true
+    csr: "{{ remote_tmp_dir }}/cert.csr"
+    cert_dest: "{{ remote_tmp_dir }}/cert.pem"
+    chain_dest: "{{ remote_tmp_dir }}/cert-chain.pem"
+    fullchain_dest: "{{ remote_tmp_dir }}/cert-fullchain.pem"
+  register: finalize_1
+
+- name: "({{ select_crypto_backend }}) Check finalization result"
+  ansible.builtin.assert:
+    that:
+      - finalize_1 is changed
+      - finalize_1.account_uri == account.account_uri
+      - finalize_1.all_chains | length >= 1
+      - finalize_1.selected_chain == finalize_1.all_chains[0]
+      - finalize_1.selected_chain.cert.startswith('-----BEGIN CERTIFICATE-----\nMII')
+      - finalize_1.selected_chain.chain.startswith('-----BEGIN CERTIFICATE-----\nMII')
+      - finalize_1.selected_chain.full_chain == finalize_1.selected_chain.cert + finalize_1.selected_chain.chain
+
+- name: "({{ select_crypto_backend }}) Read files from disk"
+  ansible.builtin.slurp:
+    src: "{{ remote_tmp_dir }}/{{ item }}.pem"
+  loop:
+    - cert
+    - cert-chain
+    - cert-fullchain
+  register: slurp
+
+- name: "({{ select_crypto_backend }}) Compare finalization result with files on disk"
+  ansible.builtin.assert:
+    that:
+      - finalize_1.selected_chain.cert == slurp.results[0].content | b64decode
+      - finalize_1.selected_chain.chain == slurp.results[1].content | b64decode
+      - finalize_1.selected_chain.full_chain == slurp.results[2].content | b64decode
+
+- name: "({{ select_crypto_backend }}) Get order information"
+  community.crypto.acme_certificate_order_info:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+  register: order_info_3
+
+- name: "({{ select_crypto_backend }}) Show order information"
+  ansible.builtin.debug:
+    var: order_info_3
+
+- name: "({{ select_crypto_backend }}) Check order information"
+  ansible.builtin.assert:
+    that:
+      - order_info_3 is not changed
+      - order_info_3.authorizations_by_identifier['dns:' ~ domain_name].identifier.type == 'dns'
+      - order_info_3.authorizations_by_identifier['dns:' ~ domain_name].identifier.value == domain_name
+      - order_info_3.authorizations_by_identifier['dns:' ~ domain_name].status == 'valid'
+      - (order_info_3.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'http-01') | first).status == 'valid'
+      - order_info_3.authorizations_by_status['deactivated'] | length == 0
+      - order_info_3.authorizations_by_status['expired'] | length == 0
+      - order_info_3.authorizations_by_status['invalid'] | length == 0
+      - order_info_3.authorizations_by_status['pending'] | length == 0
+      - order_info_3.authorizations_by_status['revoked'] | length == 0
+      - order_info_3.authorizations_by_status['valid'] | length == 1
+      - order_info_3.authorizations_by_status['valid'][0] == 'dns:' ~ domain_name
+      - order_info_3.order.authorizations | length == 1
+      - order_info_3.order.authorizations[0] == order_info_3.authorizations_by_identifier['dns:' ~ domain_name].uri
+      - "'certificate' in order_info_3.order"
+      - order_info_3.order.status == 'valid'
+      - order_info_3.order_uri == order_1.order_uri
+      - order_info_3.account_uri == account.account_uri
+
+- name: "({{ select_crypto_backend }}) Retrieve the cert and intermediate certificate (idempotent, but deactivate authzs)"
+  community.crypto.acme_certificate_order_finalize:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+    deactivate_authzs: on_success
+    retrieve_all_alternates: true
+    csr: "{{ remote_tmp_dir }}/cert.csr"
+    cert_dest: "{{ remote_tmp_dir }}/cert.pem"
+    chain_dest: "{{ remote_tmp_dir }}/cert-chain.pem"
+    fullchain_dest: "{{ remote_tmp_dir }}/cert-fullchain.pem"
+  register: finalize_2
+
+- name: "({{ select_crypto_backend }}) Check finalization result"
+  ansible.builtin.assert:
+    that:
+      - finalize_2 is not changed
+      - finalize_2.account_uri == account.account_uri
+      - finalize_2.all_chains | length >= 1
+      - finalize_2.selected_chain == finalize_2.all_chains[0]
+      - finalize_2.selected_chain.cert.startswith('-----BEGIN CERTIFICATE-----\nMII')
+      - finalize_2.selected_chain.chain.startswith('-----BEGIN CERTIFICATE-----\nMII')
+      - finalize_2.selected_chain.full_chain == finalize_2.selected_chain.cert + finalize_2.selected_chain.chain
+      - finalize_2.selected_chain == finalize_1.selected_chain
+
+- name: "({{ select_crypto_backend }}) Get order information"
+  community.crypto.acme_certificate_order_info:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    select_crypto_backend: "{{ select_crypto_backend }}"
+    order_uri: "{{ order_1.order_uri }}"
+  register: order_info_4
+
+- name: "({{ select_crypto_backend }}) Show order information"
+  ansible.builtin.debug:
+    var: order_info_4
+
+- name: "({{ select_crypto_backend }}) Check order information"
+  ansible.builtin.assert:
+    that:
+      - order_info_4 is not changed
+      - order_info_4.authorizations_by_identifier['dns:' ~ domain_name].identifier.type == 'dns'
+      - order_info_4.authorizations_by_identifier['dns:' ~ domain_name].identifier.value == domain_name
+      - order_info_4.authorizations_by_identifier['dns:' ~ domain_name].status == 'deactivated'
+      - (order_info_4.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'http-01') | first).status == 'valid'
+      - order_info_4.authorizations_by_status['deactivated'] | length == 1
+      - order_info_4.authorizations_by_status['deactivated'][0] == 'dns:' ~ domain_name
+      - order_info_4.authorizations_by_status['expired'] | length == 0
+      - order_info_4.authorizations_by_status['invalid'] | length == 0
+      - order_info_4.authorizations_by_status['pending'] | length == 0
+      - order_info_4.authorizations_by_status['revoked'] | length == 0
+      - order_info_4.authorizations_by_status['valid'] | length == 0
+      - order_info_4.order.authorizations | length == 1
+      - order_info_4.order.authorizations[0] == order_info_4.authorizations_by_identifier['dns:' ~ domain_name].uri
+      - "'certificate' in order_info_4.order"
+      - order_info_4.order.status in ('deactivated', 'invalid')
+      - order_info_4.order_uri == order_1.order_uri
+      - order_info_4.account_uri == account.account_uri
+
+# Test ARI support
+
+- when: acme_supports_ari
+  block:
+    - name: "({{ select_crypto_backend }}) Get certificate renewal information"
+      community.crypto.acme_certificate_renewal_info:
+        acme_directory: "{{ acme_directory_url }}"
+        acme_version: 2
+        validate_certs: false
+        # account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+        select_crypto_backend: "{{ select_crypto_backend }}"
+        certificate_path: "{{ remote_tmp_dir }}/cert.pem"
+      register: cert_info
+
+    - name: "({{ select_crypto_backend }}) Verify information"
+      ansible.builtin.assert:
+        that:
+          - cert_info.supports_ari == true
+          - cert_info.should_renew == false
+          - cert_info.cert_id is string
+
+    - name: "({{ select_crypto_backend }}) Create replacement order 1"
+      community.crypto.acme_certificate_order_create:
+        acme_directory: "{{ acme_directory_url }}"
+        acme_version: 2
+        validate_certs: false
+        account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+        select_crypto_backend: "{{ select_crypto_backend }}"
+        csr: "{{ remote_tmp_dir }}/cert.csr"
+        replaces_cert_id: "{{ cert_info.cert_id }}"
+        order_creation_error_strategy: fail
+        profile: "{{ '90days' if acme_supports_profiles else omit }}"
+      register: replacement_order_1
+
+    - name: "({{ select_crypto_backend }}) Get replacement order 1 information"
+      community.crypto.acme_certificate_order_info:
+        acme_directory: "{{ acme_directory_url }}"
+        acme_version: 2
+        validate_certs: false
+        account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+        select_crypto_backend: "{{ select_crypto_backend }}"
+        order_uri: "{{ replacement_order_1.order_uri }}"
+      register: order_info_5
+
+    - name: "({{ select_crypto_backend }}) Check replacement order 1"
+      ansible.builtin.assert:
+        that:
+          - replacement_order_1 is changed
+          - replacement_order_1.order_uri.startswith('https://' ~ acme_host ~ ':14000/')
+          - replacement_order_1.challenge_data | length == 1
+          - replacement_order_1.challenge_data[0].identifier_type == 'dns'
+          - replacement_order_1.challenge_data[0].identifier == domain_name
+          - replacement_order_1.challenge_data[0].challenges | length >= 2
+          - "'http-01' in replacement_order_1.challenge_data[0].challenges"
+          - "'dns-01' in replacement_order_1.challenge_data[0].challenges"
+          - replacement_order_1.challenge_data[0].challenges['http-01'].resource.startswith('.well-known/acme-challenge/')
+          - replacement_order_1.challenge_data[0].challenges['http-01'].resource_value is string
+          - replacement_order_1.challenge_data[0].challenges['dns-01'].record == '_acme-challenge.' ~ domain_name
+          - replacement_order_1.challenge_data[0].challenges['dns-01'].resource == '_acme-challenge'
+          - replacement_order_1.challenge_data[0].challenges['dns-01'].resource_value is string
+          - replacement_order_1.challenge_data_dns | length == 1
+          - replacement_order_1.challenge_data_dns['_acme-challenge.' ~ domain_name] | length == 1
+          - replacement_order_1.account_uri == account.account_uri
+          - replacement_order_1.order_uri not in [order_1.order_uri]
+
+    - name: "({{ select_crypto_backend }}) Check replacement order 1 information (1/2)"
+      ansible.builtin.assert:
+        that:
+          - order_info_5 is not changed
+          - order_info_5.authorizations_by_identifier | length == 1
+          - order_info_5.authorizations_by_identifier['dns:' ~ domain_name].identifier.type == 'dns'
+          - order_info_5.authorizations_by_identifier['dns:' ~ domain_name].identifier.value == domain_name
+          - order_info_5.authorizations_by_identifier['dns:' ~ domain_name].status == 'pending'
+          - (order_info_5.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'http-01') | first).status == 'pending'
+          - (order_info_5.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-01') | first).status == 'pending'
+          - order_info_5.authorizations_by_status['deactivated'] | length == 0
+          - order_info_5.authorizations_by_status['expired'] | length == 0
+          - order_info_5.authorizations_by_status['invalid'] | length == 0
+          - order_info_5.authorizations_by_status['pending'] | length == 1
+          - order_info_5.authorizations_by_status['pending'][0] == 'dns:' ~ domain_name
+          - order_info_5.authorizations_by_status['revoked'] | length == 0
+          - order_info_5.authorizations_by_status['valid'] | length == 0
+          - order_info_5.order.authorizations | length == 1
+          - order_info_5.order.authorizations[0] == order_info_5.authorizations_by_identifier['dns:' ~ domain_name].uri
+          - "'certificate' not in order_info_5.order"
+          - order_info_5.order.status == 'pending'
+          - order_info_5.order.replaces == cert_info.cert_id
+          - order_info_5.order_uri == replacement_order_1.order_uri
+          - order_info_5.account_uri == account.account_uri
+
+    - name: "({{ select_crypto_backend }}) Check replacement order 1 information (2/2)"
+      when: ansible_version.full is version('2.21', '>=')
+      ansible.builtin.assert:
+        that:
+          - (order_info_5.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-account-01') | first).status == 'pending'
+          - (order_info_5.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-persist-01') | first).status == 'pending'
+
+    # Right now Pebble does not reject duplicate replacement orders...
+
+    - when: false  # TODO get Pebble improved
+      block:
+        - name: "({{ select_crypto_backend }}) Create replacement order 2 (should fail)"
+          community.crypto.acme_certificate_order_create:
+            acme_directory: "{{ acme_directory_url }}"
+            acme_version: 2
+            validate_certs: false
+            account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+            select_crypto_backend: "{{ select_crypto_backend }}"
+            csr: "{{ remote_tmp_dir }}/cert.csr"
+            replaces_cert_id: "{{ cert_info.cert_id }}"
+            order_creation_error_strategy: fail
+          register: replacement_order_2
+          ignore_errors: true
+
+        - name: "({{ select_crypto_backend }}) Check replacement order 2"
+          ansible.builtin.assert:
+            that:
+              - replacement_order_2 is failed
+              - >-
+                replacement_order_2.msg.startswith(
+                  'Failed to start new order for '
+                  ~ acme_directory_url
+                  ~ '/order-plz with status 409 Conflict. Error urn:ietf:params:acme:error:alreadyReplaced:'
+                )
+
+        - name: "({{ select_crypto_backend }}) Create replacement order 3 with error handling"
+          community.crypto.acme_certificate_order_create:
+            acme_directory: "{{ acme_directory_url }}"
+            acme_version: 2
+            validate_certs: false
+            account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+            select_crypto_backend: "{{ select_crypto_backend }}"
+            csr: "{{ remote_tmp_dir }}/cert.csr"
+            replaces_cert_id: "{{ cert_info.cert_id }}"
+            order_creation_error_strategy: retry_without_replaces_cert_id
+          register: replacement_order_3
+
+        - name: "({{ select_crypto_backend }}) Get replacement order 3 information"
+          community.crypto.acme_certificate_order_info:
+            acme_directory: "{{ acme_directory_url }}"
+            acme_version: 2
+            validate_certs: false
+            account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+            select_crypto_backend: "{{ select_crypto_backend }}"
+            order_uri: "{{ replacement_order_3.order_uri }}"
+          register: order_info_6
+
+        - name: "({{ select_crypto_backend }}) Check replacement order 3"
+          ansible.builtin.assert:
+            that:
+              - replacement_order_3 is changed
+              - replacement_order_3.order_uri.startswith('https://' ~ acme_host ~ ':14000/')
+              - replacement_order_3.challenge_data | length == 1
+              - replacement_order_3.challenge_data[0].identifier_type == 'dns'
+              - replacement_order_3.challenge_data[0].identifier == domain_name
+              - replacement_order_3.challenge_data[0].challenges | length >= 2
+              - "'http-01' in replacement_order_3.challenge_data[0].challenges"
+              - "'dns-01' in replacement_order_3.challenge_data[0].challenges"
+              - replacement_order_3.challenge_data[0].challenges['http-01'].resource.startswith('.well-known/acme-challenge/')
+              - replacement_order_3.challenge_data[0].challenges['http-01'].resource_value is string
+              - replacement_order_3.challenge_data[0].challenges['dns-01'].record == '_acme-challenge.' ~ domain_name
+              - replacement_order_3.challenge_data[0].challenges['dns-01'].resource == '_acme-challenge'
+              - replacement_order_3.challenge_data[0].challenges['dns-01'].resource_value is string
+              - replacement_order_3.challenge_data_dns | length == 1
+              - replacement_order_3.challenge_data_dns['_acme-challenge.' ~ domain_name] | length == 1
+              - replacement_order_3.account_uri == account.account_uri
+              - replacement_order_3.order_uri not in [order_1.order_uri, replacement_order_1.order_uri]
+              - >-
+                ('Stop passing `replaces=' ~ cert_info.cert_id ~ '` due to error 409 urn:ietf:params:acme:error:alreadyReplaced when creating ACME order') in replacement_order_3.warnings
+
+        - name: "({{ select_crypto_backend }}) Check replacement order 3 information (1/2)"
+          ansible.builtin.assert:
+            that:
+              - order_info_6 is not changed
+              - order_info_6.authorizations_by_identifier | length == 1
+              - order_info_6.authorizations_by_identifier['dns:' ~ domain_name].identifier.type == 'dns'
+              - order_info_6.authorizations_by_identifier['dns:' ~ domain_name].identifier.value == domain_name
+              - order_info_6.authorizations_by_identifier['dns:' ~ domain_name].status == 'pending'
+              - (order_info_6.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'http-01') | first).status == 'pending'
+              - (order_info_6.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-01') | first).status == 'pending'
+              - order_info_6.authorizations_by_status['deactivated'] | length == 0
+              - order_info_6.authorizations_by_status['expired'] | length == 0
+              - order_info_6.authorizations_by_status['invalid'] | length == 0
+              - order_info_6.authorizations_by_status['pending'] | length == 1
+              - order_info_6.authorizations_by_status['pending'][0] == 'dns:' ~ domain_name
+              - order_info_6.authorizations_by_status['revoked'] | length == 0
+              - order_info_6.authorizations_by_status['valid'] | length == 0
+              - order_info_6.order.authorizations | length == 1
+              - order_info_6.order.authorizations[0] == order_info_6.authorizations_by_identifier['dns:' ~ domain_name].uri
+              - "'certificate' not in order_info_6.order"
+              - order_info_6.order.status == 'pending'
+              - order_info_6.order.replaces is not defined
+              - order_info_6.order_uri == replacement_order_3.order_uri
+              - order_info_6.account_uri == account.account_uri
+
+        - name: "({{ select_crypto_backend }}) Check replacement order 3 information (2/2)"
+          when: ansible_version.full is version('2.21', '>=')
+          ansible.builtin.assert:
+            that:
+              - (order_info_6.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-account-01') | first).status == 'pending'
+              - (order_info_6.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-persist-01') | first).status == 'pending'
+
+        - name: "({{ select_crypto_backend }}) Deactivate authzs for replacement order 3"
+          community.crypto.acme_certificate_deactivate_authz:
+            acme_directory: "{{ acme_directory_url }}"
+            acme_version: 2
+            validate_certs: false
+            account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+            select_crypto_backend: "{{ select_crypto_backend }}"
+            order_uri: "{{ replacement_order_3.order_uri }}"
+
+    # Complete replacement order 1
+
+    - name: "({{ select_crypto_backend }}) Create HTTP challenges (replacement order 1)"
+      ansible.builtin.uri:
+        url: "http://{{ acme_host }}:5000/http/{{ item.identifier }}/{{ item.challenges['http-01'].resource[('.well-known/acme-challenge/' | length) :] }}"
+        method: PUT
+        body_format: raw
+        body: "{{ item.challenges['http-01'].resource_value }}"
+        headers:
+          content-type: "application/octet-stream"
+      loop: "{{ replacement_order_1.challenge_data }}"
+      when: "'http-01' in item.challenges"
+
+    - name: "({{ select_crypto_backend }}) Let the challenge be validated (replacement order 1)"
+      community.crypto.acme_certificate_order_validate:
+        acme_directory: "{{ acme_directory_url }}"
+        acme_version: 2
+        validate_certs: false
+        account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+        select_crypto_backend: "{{ select_crypto_backend }}"
+        order_uri: "{{ replacement_order_1.order_uri }}"
+        challenge: http-01
+
+    - name: "({{ select_crypto_backend }}) Retrieve the cert and intermediate certificate (replacement order 1)"
+      community.crypto.acme_certificate_order_finalize:
+        acme_directory: "{{ acme_directory_url }}"
+        acme_version: 2
+        validate_certs: false
+        account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+        select_crypto_backend: "{{ select_crypto_backend }}"
+        order_uri: "{{ replacement_order_1.order_uri }}"
+        deactivate_authzs: on_success
+        retrieve_all_alternates: true
+        csr: "{{ remote_tmp_dir }}/cert.csr"
+        cert_dest: "{{ remote_tmp_dir }}/cert-repl.pem"
+        chain_dest: "{{ remote_tmp_dir }}/cert-repl-chain.pem"
+        fullchain_dest: "{{ remote_tmp_dir }}/cert-repl-fullchain.pem"
+
+    # Pebble *does* check against *completed* replacement orders
+    - when: true
+      block:
+        - name: "({{ select_crypto_backend }}) Create replacement order 4 (should fail)"
+          community.crypto.acme_certificate_order_create:
+            acme_directory: "{{ acme_directory_url }}"
+            acme_version: 2
+            validate_certs: false
+            account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+            select_crypto_backend: "{{ select_crypto_backend }}"
+            csr: "{{ remote_tmp_dir }}/cert.csr"
+            replaces_cert_id: "{{ cert_info.cert_id }}"
+            order_creation_error_strategy: fail
+          register: replacement_order_4
+          ignore_errors: true
+
+        - name: "({{ select_crypto_backend }}) Check replacement order 4"
+          ansible.builtin.assert:
+            that:
+              - replacement_order_4 is failed
+              - replacement_order_4.msg.startswith('Failed to start new order for https://' ~ acme_host)
+              - >-
+                ' with status 409 Conflict. Error urn:ietf:params:acme:error:malformed: ' in replacement_order_4.msg
+                or
+                ' with status 409 Conflict. Error urn:ietf:params:acme:error:alreadyReplaced: ' in replacement_order_4.msg
+
+        - name: "({{ select_crypto_backend }}) Create replacement order 5 with error handling"
+          community.crypto.acme_certificate_order_create:
+            acme_directory: "{{ acme_directory_url }}"
+            acme_version: 2
+            validate_certs: false
+            account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+            select_crypto_backend: "{{ select_crypto_backend }}"
+            csr: "{{ remote_tmp_dir }}/cert.csr"
+            replaces_cert_id: "{{ cert_info.cert_id }}"
+            order_creation_error_strategy: retry_without_replaces_cert_id
+          register: replacement_order_5
+          ignore_errors: true
+
+        # Only the latest Pebble returns the correct error message, which makes the above fail
+        - name: "({{ select_crypto_backend }}) Check that replacement order 5 worked"
+          when: ansible_version.full is version('2.21', '>=')
+          ansible.builtin.assert:
+            that:
+              - replacement_order_5 is failed
+              - replacement_order_5.msg.startswith('Failed to start new order for https://' ~ acme_host)
+              - >-
+                ' with status 409 Conflict. Error urn:ietf:params:acme:error:alreadyReplaced: ' in replacement_order_5.msg
+
+        - when: ansible_version.full is version('2.21', '<')
+          block:
+            - name: "({{ select_crypto_backend }}) Check that replacement order 5 worked"
+              ansible.builtin.assert:
+                that:
+                  - replacement_order_5 is success
+
+            - name: "({{ select_crypto_backend }}) Get replacement order 5 information"
+              community.crypto.acme_certificate_order_info:
+                acme_directory: "{{ acme_directory_url }}"
+                acme_version: 2
+                validate_certs: false
+                account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+                select_crypto_backend: "{{ select_crypto_backend }}"
+                order_uri: "{{ replacement_order_5.order_uri }}"
+              register: order_info_7
+
+            - name: "({{ select_crypto_backend }}) Check replacement order 5 (1/2)"
+              ansible.builtin.assert:
+                that:
+                  - replacement_order_5 is changed
+                  - replacement_order_5.order_uri.startswith('https://' ~ acme_host ~ ':14000/')
+                  - replacement_order_5.challenge_data | length == 1
+                  - replacement_order_5.challenge_data[0].identifier_type == 'dns'
+                  - replacement_order_5.challenge_data[0].identifier == domain_name
+                  - replacement_order_5.challenge_data[0].challenges | length >= 2
+                  - "'http-01' in replacement_order_5.challenge_data[0].challenges"
+                  - "'dns-01' in replacement_order_5.challenge_data[0].challenges"
+                  - replacement_order_5.challenge_data[0].challenges['http-01'].resource.startswith('.well-known/acme-challenge/')
+                  - replacement_order_5.challenge_data[0].challenges['http-01'].resource_value is string
+                  - replacement_order_5.challenge_data[0].challenges['dns-01'].record == '_acme-challenge.' ~ domain_name
+                  - replacement_order_5.challenge_data[0].challenges['dns-01'].resource == '_acme-challenge'
+                  - replacement_order_5.challenge_data[0].challenges['dns-01'].resource_value is string
+                  - replacement_order_5.challenge_data_dns | length == 1
+                  - replacement_order_5.challenge_data_dns['_acme-challenge.' ~ domain_name] | length == 1
+                  - replacement_order_5.account_uri == account.account_uri
+                  - replacement_order_5.order_uri not in [order_1.order_uri, replacement_order_1.order_uri, replacement_order_3.order_uri | default('')]
+                  - >-
+                    ('Stop passing `replaces=' ~ cert_info.cert_id ~ '` due to error 409 urn:ietf:params:acme:error:malformed when creating ACME order') in replacement_order_5.warnings
+
+            - name: "({{ select_crypto_backend }}) Check replacement order 5 (2/2)"
+              when: ansible_version.full is version('2.21', '>=')
+              ansible.builtin.assert:
+                that:
+                  - "'dns-account-01' in replacement_order_5.challenge_data[0].challenges"
+                  - "'dns-persist-01' in replacement_order_5.challenge_data[0].challenges"
+                  - replacement_order_5.challenge_data[0].challenges['dns-account-01'].record.endswith('._acme-challenge.' ~ domain_name)
+                  - replacement_order_5.challenge_data[0].challenges['dns-account-01'].resource.endswith('._acme-challenge')
+                  - replacement_order_5.challenge_data[0].challenges['dns-account-01'].resource_value is string
+                  - "'record' not in replacement_order_5.challenge_data[0].challenges['dns-persist-01']"
+                  - "'resource' not in replacement_order_5.challenge_data[0].challenges['dns-persist-01']"
+                  - "'resource_value' not in replacement_order_5.challenge_data[0].challenges['dns-persist-01']"
+                  - replacement_order_5.challenge_data[0].challenges['dns-persist-01'].account_uri == replacement_order_5.account_uri
+                  - replacement_order_5.challenge_data[0].challenges['dns-persist-01'].issuer_domain_names | length == 2
+                  - replacement_order_5.challenge_data[0].challenges['dns-persist-01'].issuer_domain_names == ["pebble.letsencrypt.org", "ca.example.com"]
+                  - replacement_order_5.challenge_data_dns_account | length == 1
+                  - replacement_order_5.challenge_data_dns_account.values() | first | length == 1
+
+            - name: "({{ select_crypto_backend }}) Check replacement order 5 information (1/2)"
+              ansible.builtin.assert:
+                that:
+                  - order_info_7 is not changed
+                  - order_info_7.authorizations_by_identifier | length == 1
+                  - order_info_7.authorizations_by_identifier['dns:' ~ domain_name].identifier.type == 'dns'
+                  - order_info_7.authorizations_by_identifier['dns:' ~ domain_name].identifier.value == domain_name
+                  - order_info_7.authorizations_by_identifier['dns:' ~ domain_name].status == 'pending'
+                  - (order_info_7.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'http-01') | first).status == 'pending'
+                  - (order_info_7.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-01') | first).status == 'pending'
+                  - order_info_7.authorizations_by_status['deactivated'] | length == 0
+                  - order_info_7.authorizations_by_status['expired'] | length == 0
+                  - order_info_7.authorizations_by_status['invalid'] | length == 0
+                  - order_info_7.authorizations_by_status['pending'] | length == 1
+                  - order_info_7.authorizations_by_status['pending'][0] == 'dns:' ~ domain_name
+                  - order_info_7.authorizations_by_status['revoked'] | length == 0
+                  - order_info_7.authorizations_by_status['valid'] | length == 0
+                  - order_info_7.order.authorizations | length == 1
+                  - order_info_7.order.authorizations[0] == order_info_7.authorizations_by_identifier['dns:' ~ domain_name].uri
+                  - "'certificate' not in order_info_7.order"
+                  - order_info_7.order.status == 'pending'
+                  - order_info_7.order.replaces is not defined
+                  - order_info_7.order_uri == replacement_order_5.order_uri
+                  - order_info_7.account_uri == account.account_uri
+
+            - name: "({{ select_crypto_backend }}) Check replacement order 5 information (2/2)"
+              when: ansible_version.full is version('2.21', '>=')
+              ansible.builtin.assert:
+                that:
+                  - (order_info_7.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-account-01') | first).status == 'pending'
+                  - (order_info_7.authorizations_by_identifier['dns:' ~ domain_name].challenges | selectattr('type', 'equalto', 'dns-persist-01') | first).status == 'pending'
+
+            - name: "({{ select_crypto_backend }}) Deactivate authzs for replacement order 5"
+              community.crypto.acme_certificate_deactivate_authz:
+                acme_directory: "{{ acme_directory_url }}"
+                acme_version: 2
+                validate_certs: false
+                account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+                select_crypto_backend: "{{ select_crypto_backend }}"
+                order_uri: "{{ replacement_order_5.order_uri }}"
+
+# Test invalid profile
+
+- when: acme_supports_profiles
+  block:
+    - name: "({{ select_crypto_backend }}) Create order with invalid profile (should fail)"
+      community.crypto.acme_certificate_order_create:
+        acme_directory: "{{ acme_directory_url }}"
+        acme_version: 2
+        validate_certs: false
+        account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+        select_crypto_backend: "{{ select_crypto_backend }}"
+        csr: "{{ remote_tmp_dir }}/cert.csr"
+        profile: does-not-exist
+        order_creation_error_strategy: fail
+      register: invalid_profile_order
+      ignore_errors: true
+
+    - name: "({{ select_crypto_backend }}) Check invalid profile order"
+      ansible.builtin.assert:
+        that:
+          - invalid_profile_order is failed
+          - invalid_profile_order.msg == "The ACME CA does not support selected profile 'does-not-exist'."
+
+# Test profile when server does not support it
+
+- when: not acme_supports_profiles
+  block:
+    - name: "({{ select_crypto_backend }}) Create order with profile when server does not support it (should fail)"
+      community.crypto.acme_certificate_order_create:
+        acme_directory: "{{ acme_directory_url }}"
+        acme_version: 2
+        validate_certs: false
+        account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+        select_crypto_backend: "{{ select_crypto_backend }}"
+        csr: "{{ remote_tmp_dir }}/cert.csr"
+        profile: default
+      register: profile_without_server_support
+      ignore_errors: true
+
+    - name: "({{ select_crypto_backend }}) Check profile without server support order"
+      ansible.builtin.assert:
+        that:
+          - profile_without_server_support is failed
+          - profile_without_server_support.msg == 'The ACME CA does not support profiles. Please omit the "profile" option.'

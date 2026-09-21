@@ -1,0 +1,199 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Create (check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: present
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+    pbkdf:
+      iteration_time: 0.1
+  check_mode: true
+  become: true
+  register: create_check
+- name: Create
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: present
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+    pbkdf:
+      iteration_time: 0.1
+  become: true
+  register: create
+- name: Create (idempotent)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: present
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+    pbkdf:
+      iteration_time: 0.1
+  become: true
+  register: create_idem
+- name: Create (idempotent, check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: present
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+    pbkdf:
+      iteration_time: 0.1
+  check_mode: true
+  become: true
+  register: create_idem_check
+- ansible.builtin.assert:
+    that:
+      - create_check is changed
+      - create is changed
+      - create_idem is not changed
+      - create_idem_check is not changed
+
+- name: Open (check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: opened
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+  check_mode: true
+  become: true
+  register: open_check
+- name: Open
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: opened
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+  become: true
+  register: open
+- name: Open (idempotent)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: opened
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+  become: true
+  register: open_idem
+- name: Open (idempotent, check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: opened
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+  check_mode: true
+  become: true
+  register: open_idem_check
+- ansible.builtin.assert:
+    that:
+      - open_check is changed
+      - open is changed
+      - open_idem is not changed
+      - open_idem_check is not changed
+
+- name: Closed (via name, check)
+  community.crypto.luks_device:
+    name: "{{ open.name }}"
+    state: closed
+  check_mode: true
+  become: true
+  register: close_check
+- name: Closed (via name)
+  community.crypto.luks_device:
+    name: "{{ open.name }}"
+    state: closed
+  become: true
+  register: close
+- name: Closed (via name, idempotent)
+  community.crypto.luks_device:
+    name: "{{ open.name }}"
+    state: closed
+  become: true
+  register: close_idem
+- name: Closed (via name, idempotent, check)
+  community.crypto.luks_device:
+    name: "{{ open.name }}"
+    state: closed
+  check_mode: true
+  become: true
+  register: close_idem_check
+- ansible.builtin.assert:
+    that:
+      - close_check is changed
+      - close is changed
+      - close_idem is not changed
+      - close_idem_check is not changed
+
+- name: Re-open
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: opened
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+  become: true
+
+- name: Closed (via device, check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: closed
+  check_mode: true
+  become: true
+  register: close_check
+- name: Closed (via device)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: closed
+  become: true
+  register: close
+- name: Closed (via device, idempotent)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: closed
+  become: true
+  register: close_idem
+- name: Closed (via device, idempotent, check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: closed
+  check_mode: true
+  become: true
+  register: close_idem_check
+- ansible.builtin.assert:
+    that:
+      - close_check is changed
+      - close is changed
+      - close_idem is not changed
+      - close_idem_check is not changed
+
+- name: Re-opened
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: opened
+    keyfile: "{{ remote_tmp_dir }}/keyfile1"
+  become: true
+
+- name: Absent (check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: absent
+  check_mode: true
+  become: true
+  register: absent_check
+- name: Absent
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: absent
+  become: true
+  register: absent
+- name: Absent (idempotence)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: absent
+  become: true
+  register: absent_idem
+- name: Absent (idempotence, check)
+  community.crypto.luks_device:
+    device: "{{ cryptfile_device }}"
+    state: absent
+  check_mode: true
+  become: true
+  register: absent_idem_check
+- ansible.builtin.assert:
+    that:
+      - absent_check is changed
+      - absent is changed
+      - absent_idem is not changed
+      - absent_idem_check is not changed

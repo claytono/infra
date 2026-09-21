@@ -1,0 +1,242 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Read PEM cert
+  ansible.builtin.slurp:
+    src: '{{ remote_tmp_dir }}/cert_2.pem'
+  register: slurp_pem
+
+- name: Read DER cert
+  ansible.builtin.slurp:
+    src: '{{ remote_tmp_dir }}/cert_2.der'
+  register: slurp_der
+
+- name: Convert PEM cert (check mode)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.pem'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_1
+  check_mode: true
+
+- name: Convert PEM cert
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.pem'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_2
+
+- name: Convert PEM cert (idempotent, check mode)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.pem'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_3
+  check_mode: true
+
+- name: Convert PEM cert (idempotent)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.pem'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_4
+
+- name: Convert PEM cert (overwrite, check mode)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_2.pem'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_5
+  check_mode: true
+
+- name: Convert PEM cert (overwrite)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_2.pem'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_6
+
+- name: Convert PEM cert (idempotent, content)
+  community.crypto.x509_certificate_convert:
+    src_content: '{{ slurp_pem.content | b64decode }}'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_7
+
+- name: Convert PEM cert (idempotent, content, base64)
+  community.crypto.x509_certificate_convert:
+    src_content: '{{ slurp_pem.content }}'
+    src_content_base64: true
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_8
+
+- name: Convert PEM cert (idempotent, content, base64, from DER)
+  community.crypto.x509_certificate_convert:
+    src_content: '{{ slurp_der.content }}'
+    src_content_base64: true
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_9
+
+- name: Convert PEM cert (idempotent, from DER)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_2.der'
+    format: pem
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.pem'
+  register: result_10
+
+- name: Check conditions
+  ansible.builtin.assert:
+    that:
+      - result_1 is changed
+      - result_2 is changed
+      - result_3 is not changed
+      - result_4 is not changed
+      - result_5 is changed
+      - result_6 is changed
+      - result_7 is not changed
+      - result_8 is not changed
+      - result_9 is not changed
+      - result_10 is not changed
+
+- name: Convert DER cert (check mode)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.der'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_1
+  check_mode: true
+
+- name: Convert DER cert
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.der'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_2
+
+- name: Convert DER cert (idempotent, check mode)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.der'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_3
+  check_mode: true
+
+- name: Convert DER cert (idempotent)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_1.der'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_4
+
+- name: Convert DER cert (overwrite, check mode)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_2.der'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_5
+  check_mode: true
+
+- name: Convert DER cert (overwrite)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_2.der'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_6
+
+- name: Convert DER cert (idempotent, content, base64)
+  community.crypto.x509_certificate_convert:
+    src_content: '{{ slurp_der.content }}'
+    src_content_base64: true
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_7
+
+- name: Convert DER cert (idempotent, content, from PEM)
+  community.crypto.x509_certificate_convert:
+    src_content: '{{ slurp_pem.content | b64decode }}'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_8
+
+- name: Convert DER cert (idempotent, content, base64, from PEM)
+  community.crypto.x509_certificate_convert:
+    src_content: '{{ slurp_pem.content }}'
+    src_content_base64: true
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_9
+
+- name: Convert DER cert (idempotent, from PEM)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/cert_2.pem'
+    format: der
+    strict: true
+    dest_path: '{{ remote_tmp_dir }}/out_1.der'
+  register: result_10
+
+- name: Check conditions
+  ansible.builtin.assert:
+    that:
+      - result_1 is changed
+      - result_2 is changed
+      - result_3 is not changed
+      - result_4 is not changed
+      - result_5 is changed
+      - result_6 is changed
+      - result_7 is not changed
+      - result_8 is not changed
+      - result_9 is not changed
+      - result_10 is not changed
+
+- name: Create empty file
+  ansible.builtin.copy:
+    dest: '{{ remote_tmp_dir }}/empty'
+    content: ''
+
+- name: Convert empty file to PEM (w/o verify)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/empty'
+    dest_path: '{{ remote_tmp_dir }}/empty.pem'
+    format: pem
+    verify_cert_parsable: false
+  register: result_1
+
+- name: Convert empty file to PEM (w/ verify)
+  community.crypto.x509_certificate_convert:
+    src_path: '{{ remote_tmp_dir }}/empty'
+    dest_path: '{{ remote_tmp_dir }}/empty.pem'
+    format: pem
+    verify_cert_parsable: true
+  register: result_2
+  ignore_errors: true
+
+- name: Check conditions
+  ansible.builtin.assert:
+    that:
+      - result_1 is changed
+      - result_2 is failed
+      - >-
+        result_2.msg.startswith('Error while parsing certificate: ')

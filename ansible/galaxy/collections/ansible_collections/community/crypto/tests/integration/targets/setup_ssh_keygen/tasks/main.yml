@@ -1,0 +1,31 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+####################################################################
+# WARNING: These are designed specifically for Ansible tests       #
+# and should not be used as examples of how to write Ansible roles #
+####################################################################
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: '{{ ansible_facts.os_family }}.yml'
+  when: not ansible_facts.os_family == "Darwin" and not ansible_facts.os_family == "FreeBSD"
+
+- name: Install ssh-keygen
+  ansible.builtin.package:
+    name: '{{ openssh_client_package_name }}'
+  when: not ansible_facts.os_family == "Darwin" and not ansible_facts.os_family == "FreeBSD"
+
+- name: Get ssh version
+  ansible.builtin.shell: ssh -Vq 2>&1|sed 's/^.*OpenSSH_\([0-9]\{1,\}\.[0-9]\{1,\}\).*$/\1/'
+  register:
+    rc_openssh_version_output
+
+- name: Set ssh version facts
+  ansible.builtin.set_fact:
+    openssh_version: "{{ rc_openssh_version_output.stdout.strip() }}"
+
+- name: Set ssh support facts
+  ansible.builtin.set_fact:
+    openssh_supports_dsa: "{{ openssh_version is version('9.8', '<') }}"

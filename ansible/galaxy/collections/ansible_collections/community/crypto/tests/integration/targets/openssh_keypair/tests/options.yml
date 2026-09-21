@@ -1,0 +1,133 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+####################################################################
+# WARNING: These are designed specifically for Ansible tests       #
+# and should not be used as examples of how to write Ansible roles #
+####################################################################
+
+- ansible.builtin.set_fact:
+    key_types: "{{ key_types_src | reject('equalto', '') | list }}"
+  vars:
+    key_types_src:
+      - rsa
+      - "{{ 'dsa' if openssh_supports_dsa else '' }}"
+      - ecdsa
+
+- name: "({{ backend }}) Generate keys with default size - size"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/default_size_{{ item }}"
+    type: "{{ item }}"
+    backend: "{{ backend }}"
+  loop: "{{ key_types }}"
+
+- name: "({{ backend }}) Retrieve key size from 'ssh-keygen' - size"
+  ansible.builtin.shell: "ssh-keygen -lf {{ remote_tmp_dir }}/default_size_{{ item }} | grep -o -E '^[0-9]+'"
+  loop: "{{ key_types }}"
+  register: key_size_output
+
+- name: "({{ backend }}) Assert key sizes match default size - size"
+  ansible.builtin.assert:
+    that:
+      - (key_size_output.results | selectattr('item', 'equalto', 'rsa') | first).stdout == '4096'
+      - not openssh_supports_dsa or (key_size_output.results | selectattr('item', 'equalto', 'dsa') | first).stdout == '1024'
+      - (key_size_output.results | selectattr('item', 'equalto', 'ecdsa') | first).stdout == '256'
+
+- name: "({{ backend }}) Remove keys - size"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/default_size_{{ item }}"
+    state: absent
+  loop: "{{ key_types }}"
+
+- block:
+    - name: "({{ backend }}) Generate ed25519 key with default size - size"
+      community.crypto.openssh_keypair:
+        path: "{{ remote_tmp_dir }}/default_size_ed25519"
+        type: ed25519
+        backend: "{{ backend }}"
+
+    - name: "({{ backend }}) Retrieve ed25519 key size from 'ssh-keygen' - size"
+      ansible.builtin.shell: "ssh-keygen -lf {{ remote_tmp_dir }}/default_size_ed25519 | grep -o -E '^[0-9]+'"
+      register: ed25519_key_size_output
+
+    - name: "({{ backend }}) Assert ed25519 key size matches default size - size"
+      ansible.builtin.assert:
+        that:
+          - ed25519_key_size_output.stdout == '256'
+
+    - name: "({{ backend }}) Remove ed25519 key - size"
+      community.crypto.openssh_keypair:
+        path: "{{ remote_tmp_dir }}/default_size_ed25519"
+        state: absent
+  # Support for ed25519 keys was added in OpenSSH 6.5
+  when: not (backend == 'opensshbin' and openssh_version is version('6.5', '<'))
+
+- name: "({{ backend }}) Generate key - force"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/force"
+    type: rsa
+    backend: "{{ backend }}"
+
+- name: "({{ backend }}) Regenerate key - force"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/force"
+    type: rsa
+    force: true
+    backend: "{{ backend }}"
+  register: force_output
+
+- name: "({{ backend }}) Assert key regenerated - force"
+  ansible.builtin.assert:
+    that:
+      - force_output is changed
+
+- name: "({{ backend }}) Remove key - force"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/force"
+    state: absent
+    backend: "{{ backend }}"
+
+- name: "({{ backend }}) Generate key - comment"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/comment"
+    comment: "test@comment"
+    backend: "{{ backend }}"
+  register: comment_output
+
+- name: "({{ backend }}) Modify comment - comment"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/comment"
+    comment: "test_modified@comment"
+    backend: "{{ backend }}"
+  register: modified_comment_output
+  ignore_errors: true
+
+- name: "({{ backend }}) Assert comment preserved public key - comment"
+  when: modified_comment_output is succeeded
+  ansible.builtin.assert:
+    that:
+      - comment_output.public_key == modified_comment_output.public_key
+      - comment_output.comment == 'test@comment'
+
+- name: "({{ backend }}) Assert comment changed - comment"
+  ansible.builtin.assert:
+    that:
+      - modified_comment_output.comment == 'test_modified@comment'
+      - modified_comment_output is succeeded
+  # Support for updating comments for key types other than rsa1 was added in OpenSSH 7.2
+  when: not (backend == 'opensshbin' and openssh_version is version('7.2', '<'))
+
+- name: "({{ backend }}) Assert comment not changed - comment"
+  ansible.builtin.assert:
+    that:
+      - modified_comment_output is failed
+  # Support for updating comments for key types other than rsa1 was added in OpenSSH 7.2
+  when: backend == 'opensshbin' and openssh_version is version('7.2', '<')
+
+- name: "({{ backend }}) Remove key - comment"
+  community.crypto.openssh_keypair:
+    path: "{{ remote_tmp_dir }}/comment"
+    state: absent
+    backend: "{{ backend }}"

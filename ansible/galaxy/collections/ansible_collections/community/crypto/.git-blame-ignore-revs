@@ -1,0 +1,12 @@
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# Reformat YAML: https://github.com/ansible-collections/community.crypto/pull/866
+33ef158b094f16d5e04ea9db3ed8bad010744d02
+# Reformat with black, keeping Python 2 compatibility: https://github.com/ansible-collections/community.crypto/pull/871
+aec1826c34051b9e7f8af7950489915b661e320b
+# Reformat with black another time, this time without Python 2 compatibility
+797bd8a6e2a6f4a37a89ecb15ca34ec88b33258d
+# Reformat with ruff check --fix instead of isort
+9cbf9fc6eca4631e34f91ce927c5192966dbe3f6

@@ -1,0 +1,40 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+####################################################################
+# WARNING: These are designed specifically for Ansible tests       #
+# and should not be used as examples of how to write Ansible roles #
+####################################################################
+
+- block:
+    - name: Running tests with OpenSSL backend
+      ansible.builtin.include_tasks: impl.yml
+      vars:
+        select_crypto_backend: openssl
+
+    - ansible.builtin.import_tasks: ../tests/validate.yml
+
+  # Old 0.9.8 versions have insufficient CLI support for signing with EC keys
+  when: openssl_version is version('1.0.0', '>=')
+
+- name: Remove output directory
+  ansible.builtin.file:
+    path: "{{ remote_tmp_dir }}"
+    state: absent
+
+- name: Re-create output directory
+  ansible.builtin.file:
+    path: "{{ remote_tmp_dir }}"
+    state: directory
+
+- block:
+    - name: Running tests with cryptography backend
+      ansible.builtin.include_tasks: impl.yml
+      vars:
+        select_crypto_backend: cryptography
+
+    - ansible.builtin.import_tasks: ../tests/validate.yml
+
+  when: cryptography_version is version('3.3', '>=')
