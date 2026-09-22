@@ -3,9 +3,10 @@
 # Email allowlist is stored in 1Password to keep addresses out of git.
 
 resource "cloudflare_zero_trust_access_policy" "seerr_allow_emails" {
-  account_id = local.cloudflare_account_id
-  name       = "Allow Seerr users"
-  decision   = "allow"
+  account_id       = local.cloudflare_account_id
+  name             = "Allow Seerr users"
+  decision         = "allow"
+  session_duration = "24h"
 
   include = [for email in local.seerr_access_emails : {
     email = { email = trimspace(email) }
