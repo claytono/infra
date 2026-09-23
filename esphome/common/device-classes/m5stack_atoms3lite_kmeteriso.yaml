@@ -37,7 +37,7 @@ light:
   internal: true
   pin: GPIO35
   num_leds: 4
-  rgb_order: GRB
+  channel_colors: GRB
   chipset: ws2812
   restore_mode: ALWAYS_OFF
   default_transition_length: 0s
