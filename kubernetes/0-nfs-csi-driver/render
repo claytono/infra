@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$BASEDIR"
+
+source "$BASEDIR/../scripts/chart-version"
+
+rm -rf helm tmp
+mkdir tmp helm
+
+helm_template csi-driver-nfs csi-driver-nfs \
+  --namespace nfs-csi-driver \
+  --values values.yaml \
+  --output-dir tmp
+
+mv tmp/*/* helm
+rmdir tmp/*
+rmdir tmp
+rm -rf helm/tests
+find helm -type f -name '*.yaml' -exec perl -0777 -pi -e 's/\n+\z/\n/' {} +
+
+echo "csi-driver-nfs Helm templates rendered successfully"

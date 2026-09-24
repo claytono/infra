@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: nfs-csi-driver
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- helm/templates/csi-nfs-driverinfo.yaml
+- helm/templates/rbac-csi-nfs.yaml
+- helm/templates/csi-nfs-controller.yaml
+- helm/templates/csi-nfs-node.yaml

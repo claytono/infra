@@ -1,0 +1,165 @@
+---
+# Source: csi-driver-nfs/templates/csi-nfs-node.yaml
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: csi-nfs-node
+  namespace: nfs-csi-driver
+  labels:
+    app.kubernetes.io/instance: "csi-driver-nfs"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: "csi-driver-nfs"
+    app.kubernetes.io/version: "4.13.4"
+spec:
+  revisionHistoryLimit: 10
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: csi-nfs-node
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: "csi-driver-nfs"
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/name: "csi-driver-nfs"
+        app.kubernetes.io/version: "4.13.4"
+        app: csi-nfs-node
+    spec:
+      hostNetwork: true # original nfs connection would be broken without hostNetwork setting
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: csi-nfs-node-sa
+      priorityClassName: system-cluster-critical
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: liveness-probe
+          image: "registry.k8s.io/sig-storage/livenessprobe:v2.19.0"
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=3s
+            - --http-endpoint=localhost:29653
+            - --v=2
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+          resources:
+            limits:
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+              - ALL
+        - name: node-driver-registrar
+          image: "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.17.0"
+          args:
+            - --v=2
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+            - --timeout=60s
+            - --http-endpoint=localhost:19809
+          env:
+            - name: DRIVER_REG_SOCK_PATH
+              value: /var/lib/kubelet/plugins/csi-nfsplugin/csi.sock
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+          ports:
+            - name: healthz
+              containerPort: 19809
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              host: localhost
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 20
+            timeoutSeconds: 10
+            periodSeconds: 5
+            failureThreshold: 2
+          resources:
+            limits:
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
+        - name: nfs
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+              drop:
+              - ALL
+            allowPrivilegeEscalation: true
+          image: "registry.k8s.io/sig-storage/nfsplugin:v4.13.4"
+          args :
+            - "--v=5"
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--drivername=nfs.csi.k8s.io"
+            - "--mount-permissions=0"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              host: localhost
+              path: /healthz
+              port: 29653
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            periodSeconds: 30
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: "Bidirectional"
+          resources:
+            limits:
+              memory: 300Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+      volumes:
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-nfsplugin
+            type: DirectoryOrCreate
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
+        - hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: Directory
+          name: registration-dir

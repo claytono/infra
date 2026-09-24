@@ -1,0 +1,11 @@
+---
+# Source: csi-driver-nfs/templates/csi-nfs-driverinfo.yaml
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: nfs.csi.k8s.io
+spec:
+  attachRequired: false
+  volumeLifecycleModes:
+    - Persistent
+  fsGroupPolicy: File
