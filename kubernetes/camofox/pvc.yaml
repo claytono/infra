@@ -6,7 +6,6 @@ metadata:
   name: camofox-data
 
 spec:
-  storageClassName: nfs
   accessModes:
   - ReadWriteOncePod
   resources:

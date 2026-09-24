@@ -8,7 +8,7 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: nfs-slow
+  storageClassName: nfs-csi-slow
   resources:
     requests:
       storage: 80Gi

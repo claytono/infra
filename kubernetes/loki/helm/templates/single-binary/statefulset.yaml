@@ -125,7 +125,7 @@ spec:
         name: storage
       spec:
         accessModes:
-          - ReadWriteOnce
+          - ReadWriteOncePod
         resources:
           requests:
             storage: "10Gi"

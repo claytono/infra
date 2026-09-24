@@ -46,6 +46,13 @@ controllers:
     pod:
       annotations:
         reloader.stakater.com/auto: 'true'
+    statefulset:
+      volumeClaimTemplates:
+      - name: data
+        accessMode: ReadWriteOncePod
+        size: 2Gi
+        globalMounts:
+        - path: /data
     containers:
       karakeep:
         env:
@@ -106,3 +113,4 @@ meilisearch:
   persistence:
     enabled: true
     size: 10Gi
+    accessMode: ReadWriteOncePod

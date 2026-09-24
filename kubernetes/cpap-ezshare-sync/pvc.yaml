@@ -6,7 +6,6 @@ metadata:
   name: data
 
 spec:
-  storageClassName: nfs
   accessModes:
   - ReadWriteOncePod
   resources:

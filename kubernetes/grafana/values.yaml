@@ -4,8 +4,13 @@
 # Global namespace override
 namespaceOverride: o11y
 
+deploymentStrategy:
+  type: Recreate
+
 persistence:
   enabled: true
+  accessModes:
+  - ReadWriteOncePod
 
 # Configure Grafana for OIDC authentication
 grafana.ini:

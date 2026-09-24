@@ -9,7 +9,7 @@ performance in Kubernetes, designed for evaluating infrastructure upgrades
 - Nix development environment (provides kubectl, python3, jinja2, pre-commit
   tools)
 - Access to Kubernetes cluster with worker nodes
-- Storage classes configured: `synology-iscsi`, `nfs`, `nfs-slow`
+- Storage classes configured: `synology-iscsi`, `nfs-csi`, `nfs-csi-slow`
 
 ## Quick Start
 
@@ -95,10 +95,8 @@ consistent performance measurement.
 ### Storage Classes Used
 
 - `synology-iscsi` - Fast iSCSI block storage (volume1 SSD) via democratic-csi
-- `nfs` - Fast NFS file storage (volume1 SSD) via
-  nfs-subdir-external-provisioner
-- `nfs-slow` - Slow NFS file storage (volume2 HDD) via
-  nfs-subdir-external-provisioner
+- `nfs` - Fast NFS file storage (volume1 SSD) via the default `nfs-csi` class
+- `nfs-slow` - Slow NFS file storage (volume2 HDD) via `nfs-csi-slow`
 
 ### Running Storage Benchmarks
 

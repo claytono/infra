@@ -13,6 +13,8 @@ service:
 persistence:
   enabled: true
   size: 1Gi
+  accessModes:
+  - ReadWriteOncePod
 
 # Secrets injected via environment from ExternalSecret
 existingSecret: smtp-relay

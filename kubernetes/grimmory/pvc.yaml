@@ -8,8 +8,7 @@ metadata:
 
 spec:
   accessModes:
-  - ReadWriteOnce
-  storageClassName: nfs
+  - ReadWriteOncePod
   resources:
     requests:
       storage: 2Gi

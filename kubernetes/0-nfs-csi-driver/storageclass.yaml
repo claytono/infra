@@ -1,0 +1,20 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+
+metadata:
+  name: nfs-csi
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+
+provisioner: nfs.csi.k8s.io
+
+parameters:
+  server: fs2.oneill.net
+  share: /volume1/k8s-pv
+  subDir: ${pvc.metadata.namespace}-${pvc.metadata.name}
+  onDelete: retain
+
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true

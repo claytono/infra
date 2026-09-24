@@ -17,6 +17,9 @@ spec:
 
   storage:
     size: 20Gi
+    pvcTemplate:
+      accessModes:
+      - ReadWriteOncePod
 
   managed:
     roles:

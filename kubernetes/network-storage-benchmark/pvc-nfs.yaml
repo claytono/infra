@@ -8,7 +8,6 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: nfs
   resources:
     requests:
       storage: 80Gi
