@@ -96,3 +96,20 @@ alert:
     repeat: 10
     notifiers:
     - call_me
+
+automation:
+- id: refresh_appliance_temperatures
+  alias: Refresh appliance temperatures
+  description: Keep the appliance rolling minima supplied with YoLink reports.
+  mode: single
+  triggers:
+  - trigger: time_pattern
+    minutes: "/5"
+  actions:
+  - action: homeassistant.update_entity
+    target:
+      entity_id:
+      - sensor.garage_freezer_temperature
+      - sensor.refrigerator_temperature
+      - sensor.refrigerator_freezer_temperature
+      - sensor.refrigerator_lower_drawer_temperature
