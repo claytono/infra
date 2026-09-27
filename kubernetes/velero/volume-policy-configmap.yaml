@@ -13,5 +13,7 @@ data:
     - conditions:
         storageClass:
         - nfs
+        - nfs-csi
+        - nfs-csi-slow
       action:
         type: skip

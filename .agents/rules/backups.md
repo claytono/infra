@@ -76,13 +76,13 @@ the Restic job's `/source/k8s-pv` mount.
 The `daily-iscsi-backups` Velero schedule selects Kubernetes resources labeled
 `velero.io/backup: 'true'`; those labels are currently applied to PVCs. Volumes
 using the `synology-iscsi` storage class use the Synology iSCSI snapshot class,
-while the volume policy skips the `nfs` storage class. NFS PVC data is protected
-by Restic rather than Velero. Velero moves snapshot data through
-`rclone-s3-velero.k.oneill.net` into an encrypted Hetzner WebDAV repository; the
-CSI snapshot class itself has a `Delete` retention policy. Recovery therefore
-depends on the encrypted off-site repository and its credentials, not on a
-retained Synology snapshot. The Velero configuration is under
-`kubernetes/velero/`.
+while the volume policy skips the `nfs`, `nfs-csi`, and `nfs-csi-slow` storage
+classes. NFS PVC data is protected by Restic rather than Velero. Velero moves
+snapshot data through `rclone-s3-velero.k.oneill.net` into an encrypted Hetzner
+WebDAV repository; the CSI snapshot class itself has a `Delete` retention
+policy. Recovery therefore depends on the encrypted off-site repository and its
+credentials, not on a retained Synology snapshot. The Velero configuration is
+under `kubernetes/velero/`.
 
 ## Monitoring and Credentials
 
