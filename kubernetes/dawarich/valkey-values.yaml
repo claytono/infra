@@ -14,7 +14,7 @@ haMode:
 storage:
   requestedSize: 2Gi
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteOncePod
 
 # Use existing secret auth.conf file for authentication
 extraSecretValkeyConfigs: dawarich-valkey-config

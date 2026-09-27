@@ -36,7 +36,7 @@ env:
 # Enable persistent storage for ARA data (5Gi for SQLite fallback)
 persistentVolumes:
   enabled: true
-  storageClassName: nfs
+  storageClassName: nfs-csi
 
 # Security context (chart defaults: runAsUser 1000, runAsGroup 2000)
 securityContext:

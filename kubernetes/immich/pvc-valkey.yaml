@@ -3,12 +3,11 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 
 metadata:
-  name: grimmory-mariadb-data
-  namespace: grimmory
+  name: immich-valkey
 
 spec:
   accessModes:
   - ReadWriteOncePod
   resources:
     requests:
-      storage: 10Gi
+      storage: 2Gi

@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/version: "0.21.0"
     app.kubernetes.io/managed-by: Helm
 spec:
-  storageClassName: nfs
+  storageClassName: nfs-csi
   accessModes:
     - ReadWriteOnce
   resources:

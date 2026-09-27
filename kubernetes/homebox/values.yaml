@@ -3,7 +3,7 @@
 # Only override non-default settings
 
 global:
-  defaultStorageClass: nfs
+  defaultStorageClass: nfs-csi
 
 env:
   TZ: America/New_York

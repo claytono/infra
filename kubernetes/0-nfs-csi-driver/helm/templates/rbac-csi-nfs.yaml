@@ -1,0 +1,139 @@
+---
+# Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-nfs-controller-sa
+  namespace: nfs-csi-driver
+  labels:
+    app.kubernetes.io/instance: "csi-driver-nfs"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: "csi-driver-nfs"
+    app.kubernetes.io/version: "4.13.4"
+
+---
+# Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-nfs-node-sa
+  namespace: nfs-csi-driver
+  labels:
+    app.kubernetes.io/instance: "csi-driver-nfs"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: "csi-driver-nfs"
+    app.kubernetes.io/version: "4.13.4"
+
+---
+# Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-external-provisioner-role
+  labels:
+    app.kubernetes.io/instance: "csi-driver-nfs"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: "csi-driver-nfs"
+    app.kubernetes.io/version: "4.13.4"
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotclasses", "volumesnapshots"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotcontents"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotcontents/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csinodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+
+---
+# Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-external-resizer-role
+  labels:
+    app.kubernetes.io/instance: "csi-driver-nfs"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: "csi-driver-nfs"
+    app.kubernetes.io/version: "4.13.4"
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims/status"]
+    verbs: ["update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["list", "watch", "create", "update", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+---
+# Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-csi-resizer-role
+  labels:
+    app.kubernetes.io/instance: "csi-driver-nfs"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: "csi-driver-nfs"
+    app.kubernetes.io/version: "4.13.4"
+subjects:
+  - kind: ServiceAccount
+    name: csi-nfs-controller-sa
+    namespace: nfs-csi-driver
+roleRef:
+  kind: ClusterRole
+  name: nfs-external-resizer-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-csi-provisioner-binding
+  labels:
+    app.kubernetes.io/instance: "csi-driver-nfs"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: "csi-driver-nfs"
+    app.kubernetes.io/version: "4.13.4"
+subjects:
+  - kind: ServiceAccount
+    name: csi-nfs-controller-sa
+    namespace: nfs-csi-driver
+roleRef:
+  kind: ClusterRole
+  name: nfs-external-provisioner-role
+  apiGroup: rbac.authorization.k8s.io

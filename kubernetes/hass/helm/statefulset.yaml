@@ -122,7 +122,7 @@ spec:
       name: hass-home-assistant
     spec:
       accessModes:
-        - ReadWriteOnce
+        - ReadWriteOncePod
       resources:
         requests:
           storage: 10Gi

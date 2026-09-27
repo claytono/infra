@@ -6,6 +6,7 @@ dnsPolicy: ClusterFirstWithHostNet
 # Persistence configuration
 persistence:
   enabled: true
+  accessMode: ReadWriteOncePod
   size: 10Gi
 
 # Ingress configuration

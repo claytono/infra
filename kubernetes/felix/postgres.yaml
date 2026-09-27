@@ -17,6 +17,9 @@ spec:
   enablePDB: false
   storage:
     size: 1Gi
+    pvcTemplate:
+      accessModes:
+      - ReadWriteOncePod
   bootstrap:
     initdb:
       database: gametrack

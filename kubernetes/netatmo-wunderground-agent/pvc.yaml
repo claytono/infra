@@ -7,7 +7,7 @@ metadata:
 
 spec:
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteOncePod
   resources:
     requests:
       storage: 1Gi

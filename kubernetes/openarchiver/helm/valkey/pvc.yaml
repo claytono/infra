@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOncePod
   volumeMode: Filesystem
   resources:
     requests:

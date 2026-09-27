@@ -18,6 +18,7 @@ resources:
 - immich-postgres-cluster.yaml
 - externalsecret.yaml
 - pvc-library.yaml
+- pvc-valkey.yaml
 - helm/immich/server.yaml
 - helm/immich/machine-learning.yaml
 - helm/valkey/scripts.yaml

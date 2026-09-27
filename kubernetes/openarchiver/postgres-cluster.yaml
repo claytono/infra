@@ -18,6 +18,9 @@ spec:
 
   storage:
     size: 20Gi
+    pvcTemplate:
+      accessModes:
+      - ReadWriteOncePod
 
   bootstrap:
     initdb:

@@ -26,6 +26,7 @@ spec:
   selector:
     app.kubernetes.io/name: mail
     app.kubernetes.io/instance: smtp
+
 ---
 # Source: mail/templates/service.yaml
 # https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations

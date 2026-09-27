@@ -1,0 +1,18 @@
+---
+storageClass:
+  create: false
+
+volumeSnapshotClass:
+  create: false
+
+externalSnapshotter:
+  enabled: false
+  customResourceDefinitions:
+    enabled: false
+
+controller:
+  enableSnapshotter: false
+  defaultOnDeletePolicy: retain
+
+feature:
+  enableFSGroupPolicy: true

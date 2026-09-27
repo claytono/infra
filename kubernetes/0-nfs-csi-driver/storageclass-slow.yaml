@@ -1,0 +1,18 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+
+metadata:
+  name: nfs-csi-slow
+
+provisioner: nfs.csi.k8s.io
+
+parameters:
+  server: fs2.oneill.net
+  share: /volume2/k8s-pv-slow
+  subDir: ${pvc.metadata.namespace}-${pvc.metadata.name}
+  onDelete: retain
+
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true

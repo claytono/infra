@@ -3,6 +3,9 @@ deploymentMode: SingleBinary
 
 singleBinary:
   replicas: 1
+  persistence:
+    accessModes:
+    - ReadWriteOncePod
 
 # Loki config
 loki:
