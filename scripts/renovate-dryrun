@@ -18,9 +18,29 @@ LOGFILE="$LOGDIR/dryrun.log"
 echo "Running Renovate dry-run (mode: $MODE)..."
 echo "Log file: $LOGFILE"
 
-docker run --rm \
-  -v "$REPO_ROOT:/usr/src/app" \
-  -e LOG_LEVEL=debug \
+DOCKER_ARGS=(
+  --rm
+  -v "$REPO_ROOT:/usr/src/app"
+  -e LOG_LEVEL=debug
+)
+
+# Without a token, github-releases and github-tags dependencies are skipped and
+# api.github.com rate limits at 60 requests/hour, which silently truncates the
+# run. Forward one if the caller supplies it:
+#   GITHUB_TOKEN=$(gh auth token) scripts/renovate-dryrun full
+#
+# Renovate only reads GITHUB_COM_TOKEN for github.com lookups. It treats
+# GITHUB_TOKEN as a legacy platform variable and deletes it, so the value has to
+# be passed under the name Renovate expects. Exported rather than given as
+# -e NAME=value so the token does not appear in the process arguments.
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  export GITHUB_COM_TOKEN="$GITHUB_TOKEN"
+  DOCKER_ARGS+=(-e GITHUB_COM_TOKEN)
+else
+  echo "Note: GITHUB_TOKEN not set; GitHub-sourced dependencies will be skipped."
+fi
+
+docker run "${DOCKER_ARGS[@]}" \
   renovate/renovate:latest \
   --platform=local \
   --dry-run="$MODE" 2>&1 | tee "$LOGFILE"
@@ -28,9 +48,20 @@ docker run --rm \
 echo ""
 echo "=== Checking for critical errors ==="
 
+# A host error partway through aborts the run. Without this check the log looks
+# clean and the script exits 0, so a truncated run reads as a passing one.
+if [[ "$MODE" != "extract" ]] && ! grep -q "flattened updates found" "$LOGFILE"; then
+  echo "RUN DID NOT COMPLETE: never reached the update-calculation stage."
+  echo "Usually an upstream host error or rate limit. Relevant lines:"
+  grep -E "external-host-error|AggregateError|Rate limit exceeded|\"statusCode\": (429|50[0-9])" \
+    "$LOGFILE" 2>/dev/null | sort -u | head -5 || true
+  echo "Results in this log are incomplete and must not be treated as a pass."
+  exit 1
+fi
+
 # Critical error patterns that indicate config or runtime failures
 ERRORS=$(grep -E \
-  "^ *(ERROR|FATAL):|config-validation|Invalid regExp|invalid perl operator|Could not extract.*after autoreplace|Error updating branch|update failure" \
+  "^ *(ERROR|FATAL):|config-validation|Invalid regExp|invalid perl operator|Could not extract.*after autoreplace|Error updating branch|update failure|Response has failed validation|Schema error" \
   "$LOGFILE" 2>/dev/null || true)
 
 if [[ -n "$ERRORS" ]]; then

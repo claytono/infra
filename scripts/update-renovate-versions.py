@@ -4,7 +4,7 @@ Update Renovate version constraints based on endoflife.date and PyPI data.
 Rules:
 - MariaDB: LTS releases at least 6 months old
 - PostgreSQL: Major versions at least 6 months old
-- Kubernetes: Latest version minus 1 (N-1)
+- Kubernetes: one minor version at a time, capped one behind the newest upstream minor
 - Home Assistant: One month behind latest stable (YYYY.MM format)
 - ESPHome: One month behind latest stable (YYYY.MM format)
 """
@@ -16,6 +16,11 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
+
+# The Kubernetes minor version is recorded once, here. The Renovate custom
+# manager in .renovaterc reads the same field with a regex, so keep the two in
+# sync if it is ever renamed.
+KUBERNETES_VARS_PATH = Path("ansible/group_vars/kubernetes.yaml")
 
 
 def fetch_json(url: str) -> dict | list | None:
@@ -96,26 +101,56 @@ def get_postgresql_allowed_versions() -> str | None:
     return f"/^({'|'.join(cycles)})\\./"
 
 
+def get_kubernetes_current_minor(path: Path = KUBERNETES_VARS_PATH) -> str | None:
+    """Read the cluster's current Kubernetes minor version, e.g. "1.34"."""
+    try:
+        content = path.read_text()
+    except OSError as e:
+        print(f"Error reading {path}: {e}", file=sys.stderr)
+        return None
+
+    match = re.search(
+        r'^kubernetes_short_version:\s*"(\d+\.\d+)"', content, re.MULTILINE
+    )
+    if not match:
+        print(f"Warning: kubernetes_short_version not found in {path}", file=sys.stderr)
+        return None
+
+    return match.group(1)
+
+
 def get_kubernetes_allowed_versions() -> str | None:
-    """Get Kubernetes N-1 version (latest minus one)."""
+    """Allow exactly one Kubernetes minor version: the next one up from the
+    cluster's current minor, capped at one behind the newest upstream minor.
+
+    Renovate reads every Kubernetes tag through github-tags, so left alone it
+    would jump straight to the cap. Kubernetes forbids skipping minor versions
+    on upgrade, so the allowlist names a single version and advances one step
+    each time an upgrade is merged. Returning the current minor means no
+    upgrade is offered, which is what we want once the cap is reached.
+    """
+    current = get_kubernetes_current_minor()
+    if not current:
+        return None
+
     data = fetch_json("https://endoflife.date/api/kubernetes.json")
     if not data:
         return None
 
-    # Sort by cycle version descending
-    sorted_releases = sorted(
-        data, key=lambda x: [int(p) for p in x["cycle"].split(".")], reverse=True
+    cycles = sorted(
+        (release["cycle"] for release in data),
+        key=lambda cycle: [int(part) for part in cycle.split(".")],
+        reverse=True,
     )
-
-    if len(sorted_releases) < 2:
+    if len(cycles) < 2:
         print("Warning: Not enough Kubernetes versions found", file=sys.stderr)
         return None
 
-    # Get N-1 (second latest)
-    n_minus_1 = sorted_releases[1]["cycle"]
-    # Allow this version and all older
-    major, minor = n_minus_1.split(".")
-    return f"<={major}.{minor}"
+    cap = tuple(int(part) for part in cycles[1].split("."))
+    cur = tuple(int(part) for part in current.split("."))
+    target = min((cur[0], cur[1] + 1), cap)
+
+    return f"/^{target[0]}\\.{target[1]}$/"
 
 
 def get_pypi_latest_stable(package: str) -> str | None:
@@ -221,16 +256,12 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
             "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
             "get_allowed": get_postgresql_allowed_versions,
         },
-        # TODO: Kubernetes version tracking requires a custom regex manager
-        # to be added to .renovaterc first. The manager would need to match
-        # kubernetes_version in ansible/group_vars/kubernetes.yaml
-        # "kubernetes-n-minus-1": {
-        #     "description": "Kubernetes: N-1 version policy (auto-managed)",
-        #     "matchManagers": ["custom.regex"],
-        #     "matchFileNames": ["ansible/group_vars/kubernetes.yaml"],
-        #     "matchPackageNames": ["kubernetes/kubernetes"],
-        #     "get_allowed": get_kubernetes_allowed_versions,
-        # },
+        "kubernetes-next-minor": {
+            "description": "Kubernetes: one minor at a time, capped one behind upstream (auto-managed)",
+            "matchDatasources": ["github-tags"],
+            "matchPackageNames": ["kubernetes/kubernetes"],
+            "get_allowed": get_kubernetes_allowed_versions,
+        },
         "home-assistant-n-minus-1": {
             "description": "Home Assistant: One month behind latest (auto-managed)",
             "matchDatasources": ["docker"],

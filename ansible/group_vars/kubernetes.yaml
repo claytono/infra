@@ -42,11 +42,6 @@ kubectl_version: "1.34.6-1.1"
 cri_tools_version: "1.34.0-1.1"
 kubernetes_cni_version: "1.7.1-1.1"
 
-# Kubernetes repository versions to maintain (current + previous for rollback)
-kubernetes_repo_versions:
-  - "1.34"
-  - "1.33"
-
 kubernetes_master: "k1.oneill.net"
 
 # NVIDIA driver and toolkit versions (from NVIDIA CUDA repository)

@@ -1,0 +1,16 @@
+---
+# Kubernetes APT repositories to configure: the current minor version plus the
+# one below it, which is the package-level rollback path. Each minor's repo
+# contains only that minor's packages, so 1.34.x becomes unreachable once the
+# v1.34 repo is gone.
+#
+# The previous minor is always exactly one below the current one, because
+# Kubernetes forbids skipping minor versions on upgrade. There is therefore no
+# case where the rollback repo is two minors back, and deriving it keeps
+# kubernetes_short_version as the single place a minor version is recorded.
+#
+# Override this in group_vars or host_vars if a host ever needs a different set
+# of repositories.
+kubeadm_repo_versions:
+  - "{{ kubernetes_short_version }}"
+  - "{{ kubernetes_short_version.split('.')[0] }}.{{ kubernetes_short_version.split('.')[1] | int - 1 }}"

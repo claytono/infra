@@ -61,17 +61,20 @@ target 1.34).
 
 ## Phase 1: Deploy kubeadm
 
-Update `ansible/group_vars/kubernetes.yaml` — only kubeadm, cri-tools, and repo
-versions. Leave kubelet/kubectl/kubernetes-cni unchanged:
+Update `ansible/group_vars/kubernetes.yaml` — only kubeadm and cri-tools. Leave
+kubelet/kubectl/kubernetes-cni unchanged:
 
 ```yaml
 kubernetes_short_version: "1.XX"
 kubeadm_version: "1.XX.XX-1.1"
 cri_tools_version: "1.XX.0-1.1"
-kubernetes_repo_versions:
-  - "1.XX"
-  - "1.YY" # previous version for rollback
 ```
+
+The APT repositories follow `kubernetes_short_version` automatically. The
+kubeadm role derives `kubeadm_repo_versions` as the current minor plus the one
+below it, which is the package rollback path — see
+`ansible/roles/kubeadm/defaults/main.yaml`. Do not set it by hand unless a host
+genuinely needs a different set of repositories.
 
 If the kubeadm config API version has changed (e.g., v1beta3 → v1beta4), update
 `ansible/roles/kubeadm/templates/kubeadm.conf.j2` to match. This template is not

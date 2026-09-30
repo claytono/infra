@@ -59,7 +59,7 @@
     path: "/etc/apt/sources.list.d/kubernetes-v{{ item }}.list"
     state: absent
   loop: "{{ kubeadm_existing_versions }}"
-  when: item not in kubernetes_repo_versions
+  when: item not in kubeadm_repo_versions
   register: kubeadm_remove_repos
 
 - name: "Add managed Kubernetes APT repositories"
@@ -68,7 +68,7 @@
     filename: "kubernetes-v{{ item }}"
     state: present
     update_cache: false
-  loop: "{{ kubernetes_repo_versions }}"
+  loop: "{{ kubeadm_repo_versions }}"
   register: kubeadm_add_repos
 
 - name: "Update APT cache"

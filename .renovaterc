@@ -36,6 +36,43 @@
       "kubernetes/restic/cronjobs/**"
     ]
   },
+  "customDatasources": {
+    "kubernetes-deb-kubeadm": {
+      "description": "kubeadm versions from the Kubernetes apt repository. pkgs.k8s.io is a flat repo, so the built-in deb datasource cannot read it; the Packages index is parsed directly. The package name must be baked into the transform because transformTemplates has no access to the dependency name.",
+      "format": "plain",
+      "transformTemplates": [
+        "( $l := releases.version; $v := $map([0..($count($l)-2)], function($i) { $l[$i] = \"Package: kubeadm\" ? $substringAfter($l[$i+1], \"Version: \") : \"\" }); { \"releases\": $append([], $map($distinct($v[$ != \"\"]), function($x) { {\"version\": $x} })) } )"
+      ]
+    },
+    "kubernetes-deb-kubelet": {
+      "description": "kubelet versions from the Kubernetes apt repository. pkgs.k8s.io is a flat repo, so the built-in deb datasource cannot read it; the Packages index is parsed directly. The package name must be baked into the transform because transformTemplates has no access to the dependency name.",
+      "format": "plain",
+      "transformTemplates": [
+        "( $l := releases.version; $v := $map([0..($count($l)-2)], function($i) { $l[$i] = \"Package: kubelet\" ? $substringAfter($l[$i+1], \"Version: \") : \"\" }); { \"releases\": $append([], $map($distinct($v[$ != \"\"]), function($x) { {\"version\": $x} })) } )"
+      ]
+    },
+    "kubernetes-deb-kubectl": {
+      "description": "kubectl versions from the Kubernetes apt repository. pkgs.k8s.io is a flat repo, so the built-in deb datasource cannot read it; the Packages index is parsed directly. The package name must be baked into the transform because transformTemplates has no access to the dependency name.",
+      "format": "plain",
+      "transformTemplates": [
+        "( $l := releases.version; $v := $map([0..($count($l)-2)], function($i) { $l[$i] = \"Package: kubectl\" ? $substringAfter($l[$i+1], \"Version: \") : \"\" }); { \"releases\": $append([], $map($distinct($v[$ != \"\"]), function($x) { {\"version\": $x} })) } )"
+      ]
+    },
+    "kubernetes-deb-cri-tools": {
+      "description": "cri-tools versions from the Kubernetes apt repository. pkgs.k8s.io is a flat repo, so the built-in deb datasource cannot read it; the Packages index is parsed directly. The package name must be baked into the transform because transformTemplates has no access to the dependency name.",
+      "format": "plain",
+      "transformTemplates": [
+        "( $l := releases.version; $v := $map([0..($count($l)-2)], function($i) { $l[$i] = \"Package: cri-tools\" ? $substringAfter($l[$i+1], \"Version: \") : \"\" }); { \"releases\": $append([], $map($distinct($v[$ != \"\"]), function($x) { {\"version\": $x} })) } )"
+      ]
+    },
+    "kubernetes-deb-kubernetes-cni": {
+      "description": "kubernetes-cni versions from the Kubernetes apt repository. pkgs.k8s.io is a flat repo, so the built-in deb datasource cannot read it; the Packages index is parsed directly. The package name must be baked into the transform because transformTemplates has no access to the dependency name.",
+      "format": "plain",
+      "transformTemplates": [
+        "( $l := releases.version; $v := $map([0..($count($l)-2)], function($i) { $l[$i] = \"Package: kubernetes-cni\" ? $substringAfter($l[$i+1], \"Version: \") : \"\" }); { \"releases\": $append([], $map($distinct($v[$ != \"\"]), function($x) { {\"version\": $x} })) } )"
+      ]
+    }
+  },
   "customManagers": [
     {
       "customType": "regex",
@@ -163,6 +200,117 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[A-Z0-9_]*VERSION=(?<currentValue>\\d+(?:\\.\\d+)+)"
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Kubernetes version, tracked from the kubeadm package with the Debian revision stripped",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStringsStrategy": "combination",
+      "matchStrings": [
+        "kubernetes_short_version:\\s*\"(?<shortVersion>\\d+\\.\\d+)\"",
+        "kubernetes_version:\\s*\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "depNameTemplate": "kubernetes",
+      "datasourceTemplate": "custom.kubernetes-deb-kubeadm",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+\\.\\d+)",
+      "registryUrlTemplate": "https://pkgs.k8s.io/core:/stable:/v{{{shortVersion}}}/deb/Packages"
+    },
+    {
+      "customType": "regex",
+      "description": "kubeadm package pin from the Kubernetes apt repository",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStringsStrategy": "combination",
+      "matchStrings": [
+        "kubernetes_short_version:\\s*\"(?<shortVersion>\\d+\\.\\d+)\"",
+        "kubeadm_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "kubeadm",
+      "datasourceTemplate": "custom.kubernetes-deb-kubeadm",
+      "versioningTemplate": "deb",
+      "registryUrlTemplate": "https://pkgs.k8s.io/core:/stable:/v{{{shortVersion}}}/deb/Packages"
+    },
+    {
+      "customType": "regex",
+      "description": "kubelet package pin from the Kubernetes apt repository",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStringsStrategy": "combination",
+      "matchStrings": [
+        "kubernetes_short_version:\\s*\"(?<shortVersion>\\d+\\.\\d+)\"",
+        "kubelet_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "kubelet",
+      "datasourceTemplate": "custom.kubernetes-deb-kubelet",
+      "versioningTemplate": "deb",
+      "registryUrlTemplate": "https://pkgs.k8s.io/core:/stable:/v{{{shortVersion}}}/deb/Packages"
+    },
+    {
+      "customType": "regex",
+      "description": "kubectl package pin from the Kubernetes apt repository",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStringsStrategy": "combination",
+      "matchStrings": [
+        "kubernetes_short_version:\\s*\"(?<shortVersion>\\d+\\.\\d+)\"",
+        "kubectl_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "kubectl",
+      "datasourceTemplate": "custom.kubernetes-deb-kubectl",
+      "versioningTemplate": "deb",
+      "registryUrlTemplate": "https://pkgs.k8s.io/core:/stable:/v{{{shortVersion}}}/deb/Packages"
+    },
+    {
+      "customType": "regex",
+      "description": "cri-tools package pin from the Kubernetes apt repository",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStringsStrategy": "combination",
+      "matchStrings": [
+        "kubernetes_short_version:\\s*\"(?<shortVersion>\\d+\\.\\d+)\"",
+        "cri_tools_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "cri-tools",
+      "datasourceTemplate": "custom.kubernetes-deb-cri-tools",
+      "versioningTemplate": "deb",
+      "registryUrlTemplate": "https://pkgs.k8s.io/core:/stable:/v{{{shortVersion}}}/deb/Packages"
+    },
+    {
+      "customType": "regex",
+      "description": "kubernetes-cni package pin from the Kubernetes apt repository",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStringsStrategy": "combination",
+      "matchStrings": [
+        "kubernetes_short_version:\\s*\"(?<shortVersion>\\d+\\.\\d+)\"",
+        "kubernetes_cni_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "kubernetes-cni",
+      "datasourceTemplate": "custom.kubernetes-deb-kubernetes-cni",
+      "versioningTemplate": "deb",
+      "registryUrlTemplate": "https://pkgs.k8s.io/core:/stable:/v{{{shortVersion}}}/deb/Packages"
+    },
+    {
+      "customType": "regex",
+      "description": "Kubernetes minor version. Tracked from upstream tags rather than the apt index, because the apt repository URL is built from this value and so can only ever offer the minor already in use. scripts/update-renovate-versions.py restricts this to one minor at a time, since Kubernetes forbids skipping minor versions.",
+      "managerFilePatterns": [
+        "ansible/group_vars/kubernetes.yaml"
+      ],
+      "matchStrings": [
+        "kubernetes_short_version:\\s*\"(?<currentValue>\\d+\\.\\d+)\""
+      ],
+      "depNameTemplate": "kubernetes/kubernetes",
+      "datasourceTemplate": "github-tags",
+      "extractVersionTemplate": "^v(?<version>\\d+\\.\\d+)\\.\\d+$",
+      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)$"
     }
   ],
   "packageRules": [
@@ -510,6 +658,29 @@
         "ghcr.io/claytono/readest-hardcover-sync"
       ],
       "enabled": false
+    },
+    {
+      "description": "Kubernetes cluster packages: one PR for the whole version set. No release-age gate because the pkgs.k8s.io Packages index carries no publish timestamps, and with minimumReleaseAge inherited Renovate marks every release pending and opens nothing. Review before merge is the gate instead; deliberately no automerge label so renovate-eval always runs.",
+      "matchDatasources": [
+        "custom.kubernetes-deb-kubeadm",
+        "custom.kubernetes-deb-kubelet",
+        "custom.kubernetes-deb-kubectl",
+        "custom.kubernetes-deb-cri-tools",
+        "custom.kubernetes-deb-kubernetes-cni"
+      ],
+      "groupName": "kubernetes",
+      "minimumReleaseAge": "0 days",
+      "automerge": false
+    },
+    {
+      "description": "Kubernetes: one minor at a time, capped one behind upstream (auto-managed)",
+      "allowedVersions": "/^1\\.35$/",
+      "matchDatasources": [
+        "github-tags"
+      ],
+      "matchPackageNames": [
+        "kubernetes/kubernetes"
+      ]
     }
   ],
   "gitIgnoredAuthors": [
