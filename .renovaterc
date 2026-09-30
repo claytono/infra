@@ -668,7 +668,7 @@
         "custom.kubernetes-deb-cri-tools",
         "custom.kubernetes-deb-kubernetes-cni"
       ],
-      "groupName": "kubernetes",
+      "groupName": "Kubernetes packages",
       "minimumReleaseAge": "0 days",
       "automerge": false
     },
@@ -680,6 +680,19 @@
       ],
       "matchPackageNames": [
         "kubernetes/kubernetes"
+      ]
+    },
+    {
+      "description": "Naming and context for the Kubernetes minor version bump. Kept separate from the auto-managed rule above because scripts/update-renovate-versions.py rewrites that one wholesale and would drop these keys.",
+      "matchDatasources": [
+        "github-tags"
+      ],
+      "matchPackageNames": [
+        "kubernetes/kubernetes"
+      ],
+      "commitMessageTopic": "Kubernetes APT repository target",
+      "prBodyNotes": [
+        "Changes only which Kubernetes APT repository the nodes use. Installs no packages: the version pins move in a separate PR once this is merged."
       ]
     }
   ],
