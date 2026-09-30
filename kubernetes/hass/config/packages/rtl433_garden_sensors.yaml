@@ -173,6 +173,54 @@ mqtt:
     device:
       identifiers: [wh51_0fb505]
 
+  - name: Temperature
+    unique_id: wn31_201_temperature
+    default_entity_id: sensor.ecowitt_wn31_test_temperature
+    state_topic: rtl_433/devices/AmbientWeather-WH31B/201
+    value_template: '{{ value_json.temperature_C }}'
+    unit_of_measurement: °C
+    device_class: temperature
+    state_class: measurement
+    expire_after: 3600
+    json_attributes_topic: rtl_433/devices/AmbientWeather-WH31B/201
+    json_attributes_template: >-
+      {{
+        {
+          "channel": value_json.channel,
+          "data": value_json.data
+        } | tojson
+      }}
+    device:
+      identifiers: [wn31_201]
+      name: Ecowitt WN31 Test
+      model: WN31
+      manufacturer: Ecowitt
+      via_device: rtl_433
+
+  - name: Humidity
+    unique_id: wn31_201_humidity
+    default_entity_id: sensor.ecowitt_wn31_test_humidity
+    state_topic: rtl_433/devices/AmbientWeather-WH31B/201
+    value_template: '{{ value_json.humidity }}'
+    unit_of_measurement: '%'
+    device_class: humidity
+    state_class: measurement
+    expire_after: 3600
+    device:
+      identifiers: [wn31_201]
+
+  - name: Battery
+    unique_id: wn31_201_battery
+    default_entity_id: sensor.ecowitt_wn31_test_battery
+    state_topic: rtl_433/devices/AmbientWeather-WH31B/201
+    value_template: '{{ (value_json.battery_ok | int) * 100 }}'
+    unit_of_measurement: '%'
+    device_class: battery
+    state_class: measurement
+    expire_after: 3600
+    device:
+      identifiers: [wn31_201]
+
   - name: Rain Meter WH40 51409
     unique_id: wh40_51409_rain
     state_topic: rtl_433/devices/EcoWitt-WH40/51409
