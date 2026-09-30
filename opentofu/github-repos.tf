@@ -6,6 +6,16 @@ locals {
     "go-unifi-mcp",
   ])
 
+  # Repositories that run the shared claytono-renovate-eval workflow. Its
+  # provider comes from RENOVATE_EVAL_PROVIDER, and callers pass the Claude
+  # OAuth token to it explicitly.
+  renovate_eval_github_repositories = toset([
+    "infra",
+    "dotfiles",
+    "go-unifi-mcp",
+    "github-actions",
+  ])
+
   tailscale_ssh_github_repositories = toset([
     "github-actions",
     "dotfiles",
@@ -67,10 +77,25 @@ resource "github_actions_secret" "infra_semaphore_api_token" {
   value       = local.semaphore_api_token
 }
 
-resource "github_actions_secret" "infra_claude_code_oauth_token" {
-  repository  = "infra"
+resource "github_actions_secret" "claude_code_oauth_token" {
+  for_each = local.renovate_eval_github_repositories
+
+  repository  = each.key
   secret_name = "CLAUDE_CODE_OAUTH_TOKEN"
   value       = data.onepassword_item.claude_code_oauth_token.credential
+}
+
+moved {
+  from = github_actions_secret.infra_claude_code_oauth_token
+  to   = github_actions_secret.claude_code_oauth_token["infra"]
+}
+
+resource "github_actions_variable" "renovate_eval_provider" {
+  for_each = local.renovate_eval_github_repositories
+
+  repository    = each.key
+  variable_name = "RENOVATE_EVAL_PROVIDER"
+  value         = "claude"
 }
 
 resource "github_actions_variable" "infra_semaphore_project" {
