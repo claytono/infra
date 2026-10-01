@@ -1,0 +1,184 @@
+---
+# Upgrade the control plane to kubernetes_version, following upstream's kubeadm
+# upgrade order. Included by the control plane upgrade play in kubernetes.yaml, after
+# the routine Kubernetes play, which leaves a node's packages alone while its
+# version is changing.
+#
+# When nothing needs doing, this ends after a few read-only checks, which is the
+# path every ordinary deploy takes. While k1 is not done, every run repeats the
+# whole sequence. Each step is safe to repeat; in particular kubeadm upgrade
+# apply re-runs at the version already applied, which finishes an apply that was
+# interrupted partway (the apiserver is upgraded first, so its manifest alone
+# cannot show that the rest of the control plane followed).
+
+- name: "Upgrade: check this host runs a control plane"
+  ansible.builtin.stat:
+    path: /etc/kubernetes/manifests/kube-apiserver.yaml
+  register: kubeadm_cp_manifest_stat
+
+- name: "Upgrade: nothing to upgrade before kubeadm init, exiting early"
+  ansible.builtin.meta: end_host
+  when: not kubeadm_cp_manifest_stat.stat.exists
+
+- name: "Upgrade: read the installed kubelet package version"
+  ansible.builtin.command:
+    cmd: dpkg-query -W -f=${Version} kubelet
+  register: kubeadm_upgrade_installed
+  changed_when: false
+
+# kubeadm upgrade apply moves these in turn: the static pods first, kube-proxy
+# with the addons at the end. All four at the target means the apply finished.
+# etcd is left out; it has its own version scheme.
+- name: "Upgrade: read the control plane component images"
+  ansible.builtin.command:
+    argv: "{{ item }}"
+  loop:
+    - - kubectl
+      - --namespace=kube-system
+      - get
+      - pods
+      - --selector=component in (kube-apiserver,kube-controller-manager,kube-scheduler)
+      - --field-selector=spec.nodeName={{ inventory_hostname }}
+      - --output=jsonpath={range .items[*]}{.spec.containers[0].image}{"\n"}{end}
+    - - kubectl
+      - --namespace=kube-system
+      - get
+      - daemonset
+      - kube-proxy
+      - --output=jsonpath={.spec.template.spec.containers[0].image}
+  loop_control:
+    label: "{{ item[4] }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  register: kubeadm_cp_images
+  changed_when: false
+
+- name: "Upgrade: check whether every component is at the target version"
+  vars:
+    kubeadm_cp_image_list: "{{ kubeadm_cp_images.results | map(attribute='stdout_lines') | flatten }}"
+  ansible.builtin.set_fact:
+    kubeadm_cp_components_current: >-
+      {{ kubeadm_cp_image_list | length == 4 and
+         kubeadm_cp_image_list | map('split', ':') | map('last') | unique == ['v' ~ kubernetes_version] }}
+
+- name: "Upgrade: read the node state"
+  ansible.builtin.include_tasks: upgrade-node-state.yaml
+
+- name: "Upgrade: the control plane is already at the target version, exiting early"
+  ansible.builtin.meta: end_host
+  when:
+    - kubeadm_upgrade_installed.stdout == kubelet_version
+    - kubeadm_cp_components_current | bool
+    - kubeadm_node_version == 'v' ~ kubernetes_version
+    - not kubeadm_node_upgrade_in_progress | bool
+    - not kubeadm_node_cordoned_by_upgrade | bool
+
+- name: "Upgrade: record that this run upgrades the control plane"
+  ansible.builtin.set_fact:
+    kubeadm_upgrade_performed: true
+    kubeadm_upgrade_is_minor: >-
+      {{ (kubeadm_upgrade_installed.stdout.split('.')[0:2] | join('.')) !=
+         (kubernetes_version.split('.')[0:2] | join('.')) }}
+    kubeadm_upgrade_timestamp: "{{ now(utc=true, fmt='%Y%m%dT%H%M%SZ') }}"
+
+- name: "Upgrade: check the control plane's pods first"
+  ansible.builtin.include_tasks: upgrade-pods-before.yaml
+
+- name: "Upgrade: upgrade the control plane to the target version"
+  block:
+    - name: "Upgrade: mark the upgrade as in progress on the node"
+      ansible.builtin.command:
+        argv: [kubectl, annotate, --overwrite, node, "{{ inventory_hostname }}", "{{ kubeadm_progress_annotation }}=true"]
+      delegate_to: "{{ kubeadm_control_plane_host }}"
+      environment:
+        KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+      changed_when: true
+
+    - name: "Upgrade: install the target kubeadm and cri-tools"
+      ansible.builtin.include_tasks: packages.yaml
+      vars:
+        kubeadm_package_stage: kubeadm
+
+    - name: "Upgrade: rehearse before changing anything"
+      block:
+        - name: "Upgrade: create the upgrade log directory"
+          ansible.builtin.file:
+            path: "{{ kubeadm_upgrade_log_dir }}"
+            state: directory
+            mode: "0750"
+
+        - name: "Upgrade: run kubeadm upgrade plan and apply --dry-run"
+          ansible.builtin.command:
+            argv: "{{ item.argv }}"
+          loop:
+            - { name: plan, argv: [kubeadm, upgrade, plan, "v{{ kubernetes_version }}"] }
+            - { name: dry-run, argv: [kubeadm, upgrade, apply, "v{{ kubernetes_version }}", --dry-run, --yes] }
+          loop_control:
+            label: "{{ item.name }}"
+          register: kubeadm_rehearsal
+          changed_when: false
+          failed_when: false
+
+        # Kept on the node, not in /tmp, which a reboot after a failed upgrade
+        # would clear. Deliberately not printed: the dry-run renders every
+        # manifest, thousands of lines that slowed the run by a minute and
+        # buried the rest of the job log. Read these files when a run fails.
+        - name: "Upgrade: save the rehearsal output"
+          ansible.builtin.copy:
+            dest: "{{ kubeadm_upgrade_log_dir }}/{{ kubernetes_version }}-{{ kubeadm_upgrade_timestamp }}-{{ item.item.name }}.log"
+            content: "{{ item.stdout }}\n{{ item.stderr }}\n"
+            mode: "0640"
+          loop: "{{ kubeadm_rehearsal.results }}"
+          loop_control:
+            label: "{{ item.item.name }}"
+
+        - name: "Upgrade: require the rehearsal to succeed"
+          ansible.builtin.assert:
+            that: kubeadm_rehearsal.results | rejectattr('rc', 'equalto', 0) | list | length == 0
+            fail_msg: >-
+              kubeadm upgrade plan or apply --dry-run failed; nothing has been
+              changed. Output is in {{ kubeadm_upgrade_log_dir }} on
+              {{ inventory_hostname }}.
+            quiet: true
+
+    - name: "Upgrade: cordon the control plane"
+      ansible.builtin.include_tasks: upgrade-cordon.yaml
+
+    - name: "Upgrade: apply the new control plane version"
+      ansible.builtin.command:
+        argv: [kubeadm, upgrade, apply, "v{{ kubernetes_version }}", --yes]
+      changed_when: true
+
+    - name: "Upgrade: install the target kubectl, kubernetes-cni and kubelet"
+      ansible.builtin.include_tasks: packages.yaml
+      vars:
+        kubeadm_package_stage: rest
+
+    # The kubelet package does not restart the service on upgrade, and the
+    # handler only fires when apt changed something in this run. A run that died
+    # after the install but before the handler would otherwise never restart
+    # kubelet. This point is only reached when the node is not done.
+    - name: "Upgrade: restart kubelet on the target version"
+      ansible.builtin.systemd:
+        name: kubelet
+        state: restarted
+
+    - name: "Upgrade: wait for the API server"
+      ansible.builtin.command:
+        argv: [kubectl, get, --raw, /readyz]
+      environment:
+        KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+      register: kubeadm_readyz
+      until: kubeadm_readyz.rc == 0
+      retries: "{{ (kubeadm_node_ready_timeout | int / 10) | int }}"
+      delay: 10
+      changed_when: false
+
+    - name: "Upgrade: wait for the control plane node"
+      ansible.builtin.include_tasks: upgrade-wait.yaml
+
+    # Only after both waits pass. A failed node stays cordoned, still marked
+    # as the upgrade's, so nothing new lands on it until it is looked at or a
+    # retry succeeds.
+    - name: "Upgrade: restore the control plane's scheduling"
+      ansible.builtin.include_tasks: upgrade-uncordon.yaml

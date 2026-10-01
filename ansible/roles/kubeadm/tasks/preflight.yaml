@@ -1,0 +1,155 @@
+---
+# Refuse unsafe package changes before anything is installed.
+#
+# These checks only apply to a node already in the cluster. A fresh node has no
+# Kubernetes packages and nothing to compare against, so it skips straight to
+# installation and the usual init/join path.
+#
+# The role installs exact versions with allow_downgrade enabled, so without
+# these guards a mistaken pin silently downgrades a running node, and a pin two
+# minors ahead installs binaries the cluster cannot skip to.
+#
+# Runs after the repositories are configured, so the availability check below
+# can see the packages the new repository offers.
+
+# The routine play runs these on every node in lockstep, before any upgrade
+# play starts, so a failure on one node stops the whole run while nothing has
+# changed yet. Without this, the failed node would only drop out and the rest of
+# the cluster would upgrade without it. any_errors_fatal is not accepted on the
+# include in common.yaml, hence the block here.
+- name: "Preflight: refuse unsafe version changes on any node"
+  any_errors_fatal: true
+  block:
+    - name: "Preflight: require the package pins to agree with kubernetes_version"
+      ansible.builtin.assert:
+        that:
+          - kubeadm_version is match(kubernetes_version | regex_escape ~ '-')
+          - kubelet_version is match(kubernetes_version | regex_escape ~ '-')
+          - kubectl_version is match(kubernetes_version | regex_escape ~ '-')
+        fail_msg: >-
+          The kubeadm, kubelet and kubectl pins must match kubernetes_version
+          ({{ kubernetes_version }}). Got kubeadm={{ kubeadm_version }},
+          kubelet={{ kubelet_version }}, kubectl={{ kubectl_version }}. A partial
+          version bump leaves the node inconsistent.
+        success_msg: "core package pins all match {{ kubernetes_version }}"
+
+    - name: "Preflight: check whether this node is already in the cluster"
+      ansible.builtin.stat:
+        path: /etc/kubernetes/kubelet.conf
+      register: kubeadm_preflight_kubelet_conf
+
+    - name: "Preflight: read the installed kubelet version"
+      ansible.builtin.command:
+        cmd: dpkg-query -W -f=${Version} kubelet
+      register: kubeadm_preflight_installed
+      changed_when: false
+      failed_when: false
+      when: kubeadm_preflight_kubelet_conf.stat.exists
+
+    # Without a version, this node would be treated as unchanged and the routine
+    # play would install the target kubelet outside the ordered upgrade.
+    - name: "Preflight: require a readable kubelet version on a node in the cluster"
+      ansible.builtin.assert:
+        that:
+          - kubeadm_preflight_installed.rc == 0
+          - kubeadm_preflight_installed.stdout | length > 0
+        fail_msg: >-
+          {{ inventory_hostname }} is in the cluster (/etc/kubernetes/kubelet.conf
+          exists) but its installed kubelet version can't be read. Fix the
+          kubelet package by hand before deploying.
+        quiet: true
+      when: kubeadm_preflight_kubelet_conf.stat.exists
+
+    - name: "Preflight: compare the installed and target versions"
+      when: kubeadm_preflight_kubelet_conf.stat.exists
+      block:
+        - name: "Preflight: derive version facts"
+          ansible.builtin.set_fact:
+            # Upstream version only: 1.34.6-1.1 -> 1.34.6
+            kubeadm_installed_version: "{{ kubeadm_preflight_installed.stdout | regex_replace('-.*$', '') }}"
+
+        - name: "Preflight: derive minor version facts"
+          ansible.builtin.set_fact:
+            kubeadm_installed_minor: "{{ kubeadm_installed_version.split('.')[0:2] | join('.') }}"
+            kubeadm_target_minor: "{{ kubernetes_version.split('.')[0:2] | join('.') }}"
+            kubeadm_installed_minor_num: "{{ kubeadm_installed_version.split('.')[1] | int }}"
+            kubeadm_target_minor_num: "{{ kubernetes_version.split('.')[1] | int }}"
+
+        - name: "Preflight: refuse a downgrade"
+          ansible.builtin.assert:
+            that: kubernetes_version is version(kubeadm_installed_version, '>=')
+            fail_msg: >-
+              Refusing to downgrade {{ inventory_hostname }} from
+              {{ kubeadm_installed_version }} to {{ kubernetes_version }}. Kubernetes
+              does not support downgrading a node in place; restore the previous
+              configuration or rebuild the node instead.
+            success_msg: "{{ kubeadm_installed_version }} -> {{ kubernetes_version }} is not a downgrade"
+
+        - name: "Preflight: refuse to skip a minor version"
+          ansible.builtin.assert:
+            that: kubeadm_target_minor_num | int - kubeadm_installed_minor_num | int <= 1
+            fail_msg: >-
+              Refusing to move {{ inventory_hostname }} from {{ kubeadm_installed_minor }}
+              to {{ kubeadm_target_minor }}. Kubernetes forbids skipping minor versions;
+              upgrade one minor at a time.
+            success_msg: "{{ kubeadm_installed_minor }} -> {{ kubeadm_target_minor }} skips no minor version"
+
+        - name: "Preflight: require explicit approval for a minor upgrade"
+          ansible.builtin.assert:
+            that: kubeadm_target_minor == kubeadm_installed_minor or kubeadm_allow_minor_upgrade | bool
+            fail_msg: >-
+              {{ inventory_hostname }} is on {{ kubeadm_installed_minor }} and the
+              configuration targets {{ kubeadm_target_minor }}. A minor upgrade needs
+              the staged procedure in docs/kubernetes-upgrade-playbook.md. Re-run with
+              -e kubeadm_allow_minor_upgrade=true once its prerequisites are done.
+            success_msg: >-
+              {{ 'minor upgrade explicitly approved' if kubeadm_target_minor != kubeadm_installed_minor
+                 else 'patch update within ' ~ kubeadm_installed_minor }}
+
+    # Only worth the round trips when something is actually moving. --dry-run
+    # tests that the exact version will actually install, dependencies included,
+    # rather than just appearing in an index; apt-cache madison would answer the
+    # weaker question. apt fails on a bad version anyway, but far later and less
+    # clearly. Under -t kubernetes the common role's apt cache refresh does not
+    # run, and a patch bump stays in the same repository, so nothing else
+    # refreshes the cache.
+    - name: "Preflight: refresh the package lists before checking availability"
+      when:
+        - kubeadm_preflight_kubelet_conf.stat.exists
+        - kubeadm_preflight_installed.stdout != kubelet_version
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: "Preflight: confirm every target version can be installed"
+      when:
+        - kubeadm_preflight_kubelet_conf.stat.exists
+        - kubeadm_preflight_installed.stdout != kubelet_version
+      ansible.builtin.command:
+        argv:
+          - apt-get
+          - install
+          - --dry-run
+          - --quiet
+          - "{{ item.name }}={{ item.version }}"
+      loop:
+        - { name: kubeadm, version: "{{ kubeadm_version }}" }
+        - { name: kubelet, version: "{{ kubelet_version }}" }
+        - { name: kubectl, version: "{{ kubectl_version }}" }
+        - { name: cri-tools, version: "{{ cri_tools_version }}" }
+        - { name: kubernetes-cni, version: "{{ kubernetes_cni_version }}" }
+      loop_control:
+        label: "{{ item.name }}={{ item.version }}"
+      changed_when: false
+
+# A node in the cluster whose version is changing must be moved by the upgrade
+# plays in kubernetes.yaml, in order, not by the routine install in common.yaml.
+# That install runs on every node at once, ahead of the upgrade plays, so it
+# would move kubelet before the control plane had been upgraded.
+#
+# Compared on the full package version, so a Debian revision change on its own
+# (1.34.9-1.1 to 1.34.9-2.1) also goes through the ordered upgrade.
+- name: "Preflight: note whether this node's packages are about to change"
+  ansible.builtin.set_fact:
+    kubeadm_version_change_pending: >-
+      {{ kubeadm_preflight_kubelet_conf.stat.exists
+         and kubeadm_preflight_installed.stdout != kubelet_version }}

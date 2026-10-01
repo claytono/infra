@@ -1,0 +1,89 @@
+---
+# Take the node out of scheduling for its upgrade. A patch only cordons: the
+# kubelet restart leaves running containers alone. A minor upgrade drains, as
+# upstream requires.
+#
+# A node a person already cordoned is left without the annotation, so
+# upgrade-uncordon.yaml never undoes their cordon. The annotation goes on before
+# the cordon: if a run dies between the two, the retry finds an annotated node
+# that is still schedulable. A node left annotated and schedulable by a failed
+# run is cordoned again here, keeping its annotation.
+
+- name: "Upgrade: read the node before cordoning"
+  ansible.builtin.include_tasks: upgrade-node-state.yaml
+
+- name: "Upgrade: cordon the node and record that the upgrade did it"
+  when: not kubeadm_node_unschedulable | bool
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  block:
+    - name: "Upgrade: annotate the node as cordoned by the upgrade"
+      ansible.builtin.command:
+        argv: [kubectl, annotate, --overwrite, node, "{{ inventory_hostname }}", "{{ kubeadm_cordon_annotation }}=true"]
+      changed_when: true
+
+    - name: "Upgrade: cordon the node"
+      ansible.builtin.command:
+        argv: [kubectl, cordon, "{{ inventory_hostname }}"]
+      changed_when: true
+
+# A minor upgrade drains, and the evicted pods start on other nodes, where the
+# per-node wait in upgrade-wait.yaml cannot see them. So wait for every pod
+# scheduled elsewhere to be Ready, as scripts/rolling-node-reboot.sh does after
+# a drain. Pods with no node yet are left out: on a small cluster some only fit
+# once this node is uncordoned. So are pods that were not Ready before the drain.
+- name: "Upgrade: drain the node and wait for the evicted pods"
+  when: kubeadm_upgrade_is_minor | bool
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  vars:
+    kubeadm_elsewhere_selector: >-
+      --field-selector=status.phase!=Succeeded,status.phase!=Failed,spec.nodeName!=,spec.nodeName!={{ inventory_hostname }}
+  block:
+    - name: "Upgrade: record the pods elsewhere that are not Ready before the drain"
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - pods
+          - --all-namespaces
+          - "{{ kubeadm_elsewhere_selector }}"
+          - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
+      register: kubeadm_pods_elsewhere_before
+      changed_when: false
+
+    - name: "Upgrade: drain the node"
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - drain
+          - "{{ inventory_hostname }}"
+          - --ignore-daemonsets
+          - --delete-emptydir-data
+          - --force
+          - --grace-period=120
+          - --timeout={{ kubeadm_drain_timeout }}s
+      changed_when: true
+
+    - name: "Upgrade: wait for the evicted pods to be Ready on other nodes"
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - pods
+          - --all-namespaces
+          - "{{ kubeadm_elsewhere_selector }}"
+          - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
+      register: kubeadm_pods_elsewhere_after
+      changed_when: false
+      until: >-
+        kubeadm_pods_elsewhere_after.rc == 0 and
+        kubeadm_pods_elsewhere_after.stdout_lines | reject('search', ' True$')
+          | map('split', ' ') | map('first')
+          | reject('in', kubeadm_pods_elsewhere_before.stdout_lines
+                           | reject('search', ' True$') | map('split', ' ') | map('first') | list)
+          | list | length == 0
+      retries: "{{ (kubeadm_node_pods_timeout | int / 10) | int }}"
+      delay: 10

@@ -1,14 +1,88 @@
 # Kubernetes Upgrade Playbook
 
-Step-by-step instructions for upgrading Kubernetes clusters managed by Ansible
-and kubeadm.
+How Kubernetes upgrades run on this cluster, which is managed by Ansible and
+kubeadm. Patch updates are automated end to end; minor upgrades use the same
+automation but are started by hand.
 
 ## Version Policy
 
 Stay one minor version behind the latest stable release (e.g., latest is 1.35 →
 target 1.34).
 
-## Prerequisites
+## How Upgrades Run
+
+Renovate proposes version changes to `ansible/group_vars/kubernetes.yaml`:
+
+- **Patch updates** (1.34.6 → 1.34.7) arrive as one PR moving
+  `kubernetes_version` and the kubeadm, kubelet and kubectl pins together.
+- **Minor upgrades** (1.34 → 1.35) arrive as two PRs: first
+  `kubernetes_short_version`, which switches the APT repositories, then the
+  pins. Renovate never proposes skipping a minor.
+
+When a version change is deployed, the plays in `ansible/kubernetes.yaml`
+(imported by `site.yaml`) upgrade the cluster in order:
+
+1. **Routine Kubernetes play** (all nodes at once). Preflight checks refuse a
+   downgrade, a skipped minor, pins that disagree with `kubernetes_version`, a
+   version absent from the repositories, and a minor upgrade without
+   `-e kubeadm_allow_minor_upgrade=true`. A node whose version is changing gets
+   no packages installed here.
+2. **Control plane** (k1). Installs the new kubeadm, runs `kubeadm upgrade plan`
+   and `kubeadm upgrade apply --dry-run` (both must pass), cordons k1, runs
+   `kubeadm upgrade apply`, installs kubectl, kubernetes-cni and kubelet,
+   restarts kubelet, waits for the API server, for k1 Ready at the new version
+   and for its pods, then uncordons. If k1 does not come back, the run stops.
+3. **Workers**, one at a time: k3, k4, k5, then k2 last (its
+   `kubeadm_upgrade_tier` is `last`). Each refuses to start unless the API
+   server is already at the target version, then runs the same sequence with
+   `kubeadm upgrade node` in place of `apply`, following upstream's order. Any
+   failure stops the run before the next node.
+4. **Verification**: every node in the run Ready at the target version.
+
+When versions already match, each upgrade play ends after a few read-only
+checks, so ordinary deploys are unaffected.
+
+Details worth knowing:
+
+- **Pods must be Ready first.** Before touching a node, the upgrade waits up to
+  a minute for every unfinished pod on it to be Ready, and refuses to start if
+  any are not, naming them. Otherwise a pod that was already broken would fail
+  the wait afterwards and block every upgrade. To upgrade anyway, add
+  `-e kubeadm_upgrade_allow_unready_pods=true`; those pods are then left out of
+  the wait.
+
+- **Cordon or drain.** A patch only cordons: restarting kubelet leaves running
+  containers alone. A minor upgrade drains, as upstream requires.
+- **Rehearsal output** is kept on k1 in
+  `/var/log/kubeadm-upgrade/<version>-<timestamp>-{plan,dry-run}.log`. It is not
+  printed in the Ansible output (the dry-run alone is thousands of lines); read
+  these files when a run fails.
+- **Two node annotations.** `oneill.net/kubeadm-upgrade-in-progress` is set on
+  every node when its upgrade starts and removed only once the run's final
+  verification passes. `oneill.net/kubeadm-upgrade-cordoned` is set only when
+  the upgrade did the cordoning, so a node a person cordoned beforehand is never
+  uncordoned by the upgrade.
+- **After a drain** (minor upgrades only), the upgrade also waits for the
+  evicted pods to be Ready on the other nodes. Pods with no node yet are left
+  out, since some only fit once the drained node is uncordoned.
+- **`kubectl` runs on k1** with `/etc/kubernetes/admin.conf`, so limited runs
+  such as `-l k3` still work.
+
+## Patch Updates
+
+Review the Renovate PR (the renovate-eval comment covers the release notes),
+then merge it. The merge deploy through Semaphore performs the upgrade. Merging
+the PR is the approval for the maintenance window.
+
+No Proxmox snapshot is taken: kubeadm keeps its own manifest and etcd backups
+during `apply`, which covers what a patch realistically breaks.
+
+Watch the Semaphore job, then run the checks in
+[Final Validation](#final-validation).
+
+## Minor Upgrades
+
+### Prerequisites
 
 1. **Investigate the release.** Before starting, review the target version's
    changelog, urgent upgrade notes, and deprecation list. Check for removed
@@ -30,28 +104,21 @@ target 1.34).
    noise.
 
 2. **Verify component compatibility** with the target version. Check upstream
-   docs for flannel, metallb, traefik, argocd, vpa, descheduler, external-dns,
-   external-secrets, cert-manager, kube-state-metrics, metrics-server,
-   democratic-csi, nfs-subdir-external-provisioner, reloader, and containerd.
+   docs for flannel, multus (and its network attachment definitions), metallb,
+   traefik, argocd, vpa, descheduler, external-dns, external-secrets,
+   cert-manager, kube-state-metrics, metrics-server, democratic-csi,
+   csi-driver-nfs (`kubernetes/0-nfs-csi-driver`), volume-snapshot-controller,
+   velero, cloudnative-pg, node-feature-discovery, nvidia-device-plugin, spegel,
+   tailscale-operator, reloader, and containerd.
 
-3. **Snapshot k1** on Proxmox:
+3. **Check the kubeadm config API version.** If it has changed (e.g., v1beta3 →
+   v1beta4), update `ansible/roles/kubeadm/templates/kubeadm.conf.j2` to match.
+   See [kubeadm Configuration Template](#kubeadm-configuration-template).
 
-   ```bash
-   # From the Proxmox node (p1):
-   pvesh get /cluster/resources --type vm --output-format json | \
-     python3 -c "import sys,json; [print(f'VMID={v[\"vmid\"]} node={v[\"node\"]}') for v in json.load(sys.stdin) if v['name']=='k1']"
+4. **Snapshot k1** on Proxmox (see [Proxmox Snapshots](#proxmox-snapshots)). The
+   workers cannot be snapshotted.
 
-   VMID=<vmid>
-   NODE=<node>
-
-   pvesh create /nodes/$NODE/qemu/$VMID/snapshot --snapname pre-upgrade \
-     --description "Before K8s upgrade to v1.XX"
-
-   # Verify it exists
-   pvesh get /nodes/$NODE/qemu/$VMID/snapshot --output-format json | python3 -m json.tool
-   ```
-
-4. **Verify cluster health:**
+5. **Verify cluster health:**
 
    ```bash
    kubectl get applications -A                                  # All Synced & Healthy
@@ -59,118 +126,60 @@ target 1.34).
    ssh k1 sudo kubeadm certs check-expiration                  # Save for post-upgrade comparison
    ```
 
-## Phase 1: Deploy kubeadm
+### Steps
 
-Update `ansible/group_vars/kubernetes.yaml` — only kubeadm and cri-tools. Leave
-kubelet/kubectl/kubernetes-cni unchanged:
+1. **Merge the `kubernetes_short_version` PR.** Its deploy only switches the APT
+   repositories to the new minor plus the one below; the installed packages stay
+   where they are.
 
-```yaml
-kubernetes_short_version: "1.XX"
-kubeadm_version: "1.XX.XX-1.1"
-cri_tools_version: "1.XX.0-1.1"
-```
+2. **Run the upgrade by hand from the pin PR's branch, before merging it.** A
+   minor upgrade refuses to run without the flag, so the merge deploy cannot
+   start it, and running it locally keeps the drains away from the Semaphore
+   runner, which a drain could evict mid-run. Doing the control plane on its own
+   first leaves a point to check it before any worker is drained:
 
-The APT repositories follow `kubernetes_short_version` automatically. The
-kubeadm role derives `kubeadm_repo_versions` as the current minor plus the one
-below it, which is the package rollback path — see
-`ansible/roles/kubeadm/defaults/main.yaml`. Do not set it by hand unless a host
-genuinely needs a different set of repositories.
+   ```bash
+   cd ansible
+   ansible-playbook -l k1 kubernetes.yaml \
+     -e kubeadm_allow_minor_upgrade=true
+   # check the control plane, then:
+   ansible-playbook -l k2,k3,k4,k5 kubernetes.yaml \
+     -e kubeadm_allow_minor_upgrade=true
+   ```
 
-If the kubeadm config API version has changed (e.g., v1beta3 → v1beta4), update
-`ansible/roles/kubeadm/templates/kubeadm.conf.j2` to match. This template is not
-used during `kubeadm upgrade apply` (kubeadm reads the live ConfigMap), but it
-should stay current for any future `kubeadm reset && init`.
+   The upgrade can take up to 20 minutes on k1, especially with major etcd
+   version jumps (e.g., 3.5 → 3.6). Drains can take several minutes because of
+   PodDisruptionBudgets and iSCSI volume detachment, and on a small cluster some
+   evicted pods stay Pending until the node is uncordoned.
 
-Deploy to all nodes and verify:
+3. **Merge the pin PR.** The cluster already matches it, so the merge deploy is
+   a no-op.
 
-```bash
-cd ansible && ansible-playbook -l kubernetes -t kubernetes site.yaml
-ssh k1 kubeadm version   # Should show target version
-```
+4. Run [Final Validation](#final-validation), then delete the k1 snapshot.
 
-## Phase 2: Upgrade Control Plane
+## Re-running After a Failure
 
-Review what kubeadm will do, pre-pull images, then apply:
+Re-running the same command, or retrying the Semaphore job, is the normal way to
+recover. Each upgrade step is safe to repeat: a node whose upgrade was
+interrupted or failed still carries the in-progress annotation, so the next run
+stops at that node again instead of treating it as done and moving on. A node
+whose upgrade failed is left cordoned, so nothing new is scheduled onto it; a
+successful retry uncordons it. Nodes that had already succeeded in the failed
+run are upgraded again on the retry, which is safe but restarts their kubelet.
+While k1 is not done, every run repeats `kubeadm upgrade apply` at the target
+version, which finishes an apply that was interrupted partway.
 
-```bash
-ssh k1 sudo kubeadm upgrade plan 2>&1 | tee /tmp/k1-upgrade-plan.log
-
-ssh k1 'sudo time kubeadm config images pull --kubernetes-version v1.XX.XX' \
-  2>&1 | tee /tmp/k1-image-pull.log
-
-ssh k1 'sudo time kubeadm upgrade apply v1.XX.XX' \
-  2>&1 | tee /tmp/k1-upgrade.log
-```
-
-The upgrade can take up to 20 minutes, especially with major etcd version jumps
-(e.g., 3.5 → 3.6). Tee the output so it's available for review if the terminal
-disconnects.
-
-Verify the control plane is healthy before touching anything else:
+To see which nodes an upgrade has not finished:
 
 ```bash
-kubectl cluster-info
-kubectl get nodes
-kubectl get pods -n kube-system
+kubectl get nodes -o custom-columns='NAME:.metadata.name,VERSION:.status.nodeInfo.kubeletVersion,UNSCHEDULABLE:.spec.unschedulable,IN-PROGRESS:.metadata.annotations.oneill\.net/kubeadm-upgrade-in-progress'
 ```
 
-If the control plane is unhealthy, restore from the Proxmox snapshot (see
-Rollback Plan) before proceeding.
+If a re-run keeps failing at the same point, fix the cause, or finish that node
+by hand using [Manual Fallback](#manual-fallback), then run the deploy again so
+the remaining nodes follow.
 
-## Phase 3: Upgrade k1 Packages
-
-Drain k1, update package versions, deploy, and uncordon:
-
-```bash
-scripts/rolling-node-reboot.sh --skip-reboot --skip-uncordon k1
-```
-
-Check available package versions, then update `kubernetes.yaml`:
-
-```bash
-ssh k1 'sudo apt update && apt-cache policy kubernetes-cni kubelet kubectl cri-tools'
-```
-
-```yaml
-kubernetes_version: "1.XX.XX"
-kubelet_version: "1.XX.XX-1.1"
-kubectl_version: "1.XX.XX-1.1"
-kubernetes_cni_version: "1.X.X-1.1" # latest available in target repo
-```
-
-```bash
-cd ansible && ansible-playbook -l k1 -t kubernetes site.yaml
-kubectl uncordon k1
-```
-
-The API server may be briefly unavailable after the kubelet restarts — wait a
-few seconds and retry if `kubectl uncordon` gets a connection error.
-
-Verify k1 shows the target version before proceeding to workers:
-
-```bash
-kubectl get nodes -o wide
-```
-
-## Phase 4: Upgrade Workers
-
-Upgrade one at a time. Generic workers first, specialized nodes (GPU) last.
-
-For each worker:
-
-```bash
-scripts/rolling-node-reboot.sh --skip-reboot --skip-uncordon <worker>
-ssh <worker> sudo kubeadm upgrade node
-cd ansible && ansible-playbook -l <worker> -t kubernetes site.yaml
-kubectl uncordon <worker>
-kubectl get nodes -o wide   # Verify Ready + target version before next worker
-```
-
-Drains can take several minutes due to PodDisruptionBudgets and iSCSI volume
-detachment. On a small cluster, some evicted pods may remain Pending until the
-node is uncordoned — this is expected when capacity is tight.
-
-## Phase 5: Final Validation
+## Final Validation
 
 ```bash
 kubectl get nodes -o wide                                      # All at target version
@@ -185,39 +194,106 @@ kubectl run test-dns --image=nicolaka/netshoot --rm -it --restart=Never \
   -- dig kubernetes.default.svc.cluster.local
 ```
 
-Once satisfied, remove the Proxmox snapshot:
-
-```bash
-# From the same Proxmox node as Prerequisites
-pvesh delete /nodes/$NODE/qemu/$VMID/snapshot/pre-upgrade
-```
-
 ## Rollback Plan
 
 If the control plane upgrade fails or is unhealthy:
 
-1. Restore k1 from Proxmox snapshot:
+1. Restore k1 from its Proxmox snapshot (see
+   [Proxmox Snapshots](#proxmox-snapshots)).
 
-   ```bash
-   pvesh create /nodes/$NODE/qemu/$VMID/snapshot/pre-upgrade/rollback
-   ```
+2. Workers reconnect automatically once the API server is back. Workers are only
+   upgraded after k1 succeeds, so after a k1 rollback they are normally still on
+   the old version. If any were upgraded, a kubelet one minor newer than the API
+   server is outside the supported skew: roll it back by setting the previous
+   versions in `group_vars` and finishing it by hand.
 
-2. Workers reconnect automatically once the API server is back. If workers were
-   already upgraded, kubelet n+1 talking to apiserver n is supported (n-1 skew),
-   but they should be rolled back by redeploying previous packages via Ansible.
+3. Set `ansible/group_vars/kubernetes.yaml` back to the version k1 is on.
+   Otherwise the next deploy, including unrelated ones and the nightly
+   idempotency run, retries the upgrade that just failed.
 
 **Rollback triggers:** `kubeadm upgrade apply` exits non-zero, API server not
 responding within 5 minutes, control plane pods in CrashLoopBackOff.
 
 ## Reference
 
+### Proxmox Snapshots
+
+Run on `p1` as root. Find k1's VM and node (k1 is currently VMID 134 on `p1`):
+
+```bash
+ssh root@p1
+export NAME=k1
+pvesh get /cluster/resources --type vm --output-format json | \
+  python3 -c "import sys,json,os; [print(f'VMID={v[\"vmid\"]} node={v[\"node\"]}') for v in json.load(sys.stdin) if v['name']==os.environ['NAME']]"
+VMID=<vmid>
+NODE=<node>
+```
+
+Take the snapshot and confirm it exists:
+
+```bash
+pvesh create /nodes/$NODE/qemu/$VMID/snapshot --snapname pre-upgrade \
+  --description "Before K8s upgrade to v1.XX"
+pvesh get /nodes/$NODE/qemu/$VMID/snapshot --output-format json | python3 -m json.tool
+```
+
+Roll back:
+
+```bash
+pvesh create /nodes/$NODE/qemu/$VMID/snapshot/pre-upgrade/rollback
+```
+
+Delete it only once the upgrade has been validated, never as part of recovery:
+
+```bash
+pvesh delete /nodes/$NODE/qemu/$VMID/snapshot/pre-upgrade
+```
+
+### Manual Fallback
+
+The commands the automation runs, for finishing a node by hand. `kubectl`
+commands run from anywhere with cluster-admin access. Set `group_vars` to the
+target first, so the packages the commands below install match.
+
+Control plane (k1):
+
+```bash
+ssh k1 sudo apt-get install -y kubeadm=1.XX.XX-1.1 cri-tools=1.XX.0-1.1
+ssh k1 sudo kubeadm upgrade plan v1.XX.XX
+kubectl cordon k1                     # drain instead for a minor upgrade
+ssh k1 sudo kubeadm upgrade apply v1.XX.XX --yes
+ssh k1 sudo apt-get install -y kubelet=1.XX.XX-1.1 kubectl=1.XX.XX-1.1 kubernetes-cni=1.X.X-1.1
+ssh k1 sudo systemctl restart kubelet
+kubectl uncordon k1
+```
+
+Worker:
+
+```bash
+ssh <worker> sudo apt-get install -y kubeadm=1.XX.XX-1.1 cri-tools=1.XX.0-1.1
+ssh <worker> sudo kubeadm upgrade node
+kubectl cordon <worker>               # drain instead for a minor upgrade:
+                                      #   scripts/rolling-node-reboot.sh --skip-reboot --skip-uncordon <worker>
+ssh <worker> sudo apt-get install -y kubelet=1.XX.XX-1.1 kubectl=1.XX.XX-1.1 kubernetes-cni=1.X.X-1.1
+ssh <worker> sudo systemctl restart kubelet
+kubectl uncordon <worker>
+```
+
+Afterwards, remove the upgrade annotations so the automation treats the node as
+done (removing one that is not there is a no-op):
+
+```bash
+kubectl annotate node <node> oneill.net/kubeadm-upgrade-in-progress- oneill.net/kubeadm-upgrade-cordoned-
+```
+
 ### kubeadm Configuration Template
 
 The template at `ansible/roles/kubeadm/templates/kubeadm.conf.j2` uses the
-kubeadm v1beta4 API. kubeadm migrates the live cluster ConfigMap automatically
-during upgrades, but the local template must be updated manually when the API
-version changes (e.g., v1beta4 changed `extraArgs` from a map to a list of
-`{name, value}` objects).
+kubeadm v1beta4 API. It is not used during `kubeadm upgrade apply` (kubeadm
+reads the live ConfigMap and migrates it automatically), but it must stay
+current for any future `kubeadm reset && init`, and it has to be updated by hand
+when the API version changes (e.g., v1beta4 changed `extraArgs` from a map to a
+list of `{name, value}` objects).
 
 Before any `kubeadm reset && init`, reconcile the template against the live
 config and kubeadm defaults:
@@ -230,8 +306,9 @@ ssh k1 sudo kubeadm config print init-defaults
 
 ### Dependency Requirements
 
-kubeadm requires cri-tools from the same minor version. Always update
-`cri_tools_version` when updating `kubeadm_version`.
+kubeadm requires cri-tools from the same minor version. Renovate moves
+`cri_tools_version` when a matching release exists; the role installs kubeadm
+and cri-tools together.
 
 ### Troubleshooting
 
@@ -240,3 +317,7 @@ kubeadm requires cri-tools from the same minor version. Always update
 
 **Package dependency conflicts:** Check apt preferences files in
 `/etc/apt/preferences.d/` — the Ansible role creates version pins there.
+
+**Preflight says a version is not available:** the apt cache on that node may
+predate the release. Preflight refreshes it when a version is changing; if it
+still fails, check the repositories in `/etc/apt/sources.list.d/kubernetes-v*`.

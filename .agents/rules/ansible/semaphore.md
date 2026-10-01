@@ -14,6 +14,14 @@ The workflow:
 This means Ansible changes are deployed immediately after PR merge - no manual
 action required.
 
+## Kubernetes Version Changes
+
+Merging a Kubernetes patch update (`ansible/group_vars/kubernetes.yaml`) makes
+the merge deploy upgrade the cluster: control plane first, then workers one at a
+time. A failed or retried job is safe to re-run; it resumes at the node that did
+not finish. A minor upgrade refuses to run from a merge and is run by hand
+first. See `docs/kubernetes-upgrade-playbook.md`.
+
 ## Manual Deployment via GitHub Actions
 
 You can trigger deployment manually via GitHub Actions:

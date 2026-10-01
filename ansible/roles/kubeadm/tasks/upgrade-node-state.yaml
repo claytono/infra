@@ -1,0 +1,26 @@
+---
+# Read this host's Node object and summarise what the upgrade tasks need.
+# kubectl runs on the control plane host, the only node with admin credentials.
+
+- name: "Upgrade: read the node object"
+  ansible.builtin.command:
+    argv: [kubectl, get, node, "{{ inventory_hostname }}", --output, json]
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  register: kubeadm_node_raw
+  changed_when: false
+  # A worker joined earlier in this run registers its Node object
+  # asynchronously, so allow it a few minutes to appear.
+  until: kubeadm_node_raw.rc == 0
+  retries: 30
+  delay: 10
+
+- name: "Upgrade: summarise the node object"
+  vars:
+    kubeadm_node_object: "{{ kubeadm_node_raw.stdout | from_json }}"
+  ansible.builtin.set_fact:
+    kubeadm_node_version: "{{ kubeadm_node_object.status.nodeInfo.kubeletVersion }}"
+    kubeadm_node_unschedulable: "{{ kubeadm_node_object.spec.unschedulable | default(false) | bool }}"
+    kubeadm_node_cordoned_by_upgrade: "{{ kubeadm_cordon_annotation in (kubeadm_node_object.metadata.annotations | default({})) }}"
+    kubeadm_node_upgrade_in_progress: "{{ kubeadm_progress_annotation in (kubeadm_node_object.metadata.annotations | default({})) }}"
