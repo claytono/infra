@@ -3,6 +3,9 @@ host_ipv4: "172.19.74.112"
 
 kubeadm_nvidia_gpu: true
 
+# Upgrade after the other workers: GPU workloads can only run here.
+kubeadm_upgrade_tier: last
+
 manage_network: true
 interfaces_ether_interfaces:
   - device: ens18

@@ -1,0 +1,48 @@
+---
+# Wait for the node to come back after its kubelet restart: Ready, and reporting
+# the target version. If it never does, the task fails once the retries run out,
+# and any_errors_fatal on the upgrade plays stops the run before another node is
+# touched.
+
+- name: "Upgrade: wait for the node to be Ready at the target version"
+  ansible.builtin.command:
+    argv: [kubectl, get, node, "{{ inventory_hostname }}", --output, json]
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  register: kubeadm_wait_node
+  changed_when: false
+  until: >-
+    kubeadm_wait_node.rc == 0 and
+    (kubeadm_wait_node.stdout | from_json).status.nodeInfo.kubeletVersion == 'v' ~ kubernetes_version and
+    ((kubeadm_wait_node.stdout | from_json).status.conditions
+      | selectattr('type', 'equalto', 'Ready') | map(attribute='status') | first | default('Unknown')) == 'True'
+  retries: "{{ (kubeadm_node_ready_timeout | int / 10) | int }}"
+  delay: 10
+
+# The same check scripts/rolling-node-reboot.sh makes after uncordoning: every
+# unfinished pod on the node must be Ready. Covers workloads that can only run
+# on this node, such as GPU pods on k2, without naming them. Pods that were not
+# Ready before the upgrade (only possible with kubeadm_upgrade_allow_unready_pods,
+# see upgrade-pods-before.yaml) are left out.
+- name: "Upgrade: wait for the pods on the node to be Ready"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - pods
+      - --all-namespaces
+      - --field-selector=spec.nodeName={{ inventory_hostname }},status.phase!=Succeeded,status.phase!=Failed
+      - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  register: kubeadm_pods_after
+  changed_when: false
+  until: >-
+    kubeadm_pods_after.rc == 0 and
+    kubeadm_pods_after.stdout_lines | reject('search', ' True$')
+      | map('split', ' ') | map('first')
+      | reject('in', kubeadm_pods_unready_before | default([])) | list | length == 0
+  retries: "{{ (kubeadm_node_pods_timeout | int / 10) | int }}"
+  delay: 10

@@ -1,0 +1,57 @@
+---
+# After the upgrade plays, confirm every node this run covered is Ready and
+# reporting the target version. Runs once per run, with kubectl on the control
+# plane host, and only when this run upgraded something.
+#
+# Limited to the nodes in this run, so a staged run (-l k1, then the workers)
+# doesn't fail on nodes it was never meant to touch. Preflight sets
+# kubeadm_version_change_pending on every Kubernetes host in the run and on no
+# other, which identifies them without parsing the --limit pattern.
+#
+# Only when every check passes are the in-progress annotations removed. Until
+# then those nodes fail their done checks, so a retry after a failed
+# verification re-runs them and verifies again instead of reporting success.
+
+- name: "Upgrade: list the nodes this run covered"
+  ansible.builtin.set_fact:
+    kubeadm_verify_hosts: >-
+      {{ groups['kubernetes'] | map('extract', hostvars)
+         | selectattr('kubeadm_version_change_pending', 'defined')
+         | map(attribute='inventory_hostname') | list }}
+
+- name: "Upgrade: read every node"
+  ansible.builtin.command:
+    argv: [kubectl, get, nodes, --output, json]
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  register: kubeadm_verify_nodes
+  changed_when: false
+
+- name: "Upgrade: require every node Ready at the target version"
+  ansible.builtin.assert:
+    that:
+      - item.status.nodeInfo.kubeletVersion == 'v' ~ kubernetes_version
+      - >-
+        (item.status.conditions | selectattr('type', 'equalto', 'Ready')
+         | map(attribute='status') | first | default('Unknown')) == 'True'
+    fail_msg: >-
+      {{ item.metadata.name }} is on {{ item.status.nodeInfo.kubeletVersion }}
+      and should be Ready at v{{ kubernetes_version }}.
+    quiet: true
+  loop: >-
+    {{ (kubeadm_verify_nodes.stdout | from_json)['items']
+       | selectattr('metadata.name', 'in', kubeadm_verify_hosts) | list }}
+  loop_control:
+    label: "{{ item.metadata.name }}"
+
+# Removing an annotation a node doesn't have is a no-op, so this can cover every
+# node in the run, including ones that ended early this time.
+- name: "Upgrade: mark the upgrade finished on every node in the run"
+  ansible.builtin.command:
+    argv: [kubectl, annotate, node, "{{ item }}", "{{ kubeadm_progress_annotation }}-"]
+  loop: "{{ kubeadm_verify_hosts }}"
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  changed_when: true

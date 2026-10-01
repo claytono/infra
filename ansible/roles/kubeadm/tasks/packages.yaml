@@ -1,0 +1,61 @@
+---
+# Install the pinned Kubernetes packages.
+#
+# kubeadm and cri-tools install together, ahead of the rest. kubeadm requires
+# cri-tools from the same minor version - see Dependency Requirements in
+# docs/kubernetes-upgrade-playbook.md - and an upgrade needs the new kubeadm in
+# place before `kubeadm upgrade apply` or `kubeadm upgrade node` runs, while
+# kubelet must not move until that has succeeded. Callers pick a stage with
+# kubeadm_package_stage:
+#
+#   all      both stages in order - the fresh-install and no-change path
+#   kubeadm  kubeadm and cri-tools only
+#   rest     kubectl, kubernetes-cni and kubelet
+#
+# The kubelet restart is a handler flushed explicitly at the end of the rest
+# stage, so it lands before the upgrade tasks check the node is healthy rather
+# than at the end of the play, after those checks and after uncordon.
+
+- name: "Reject an unknown package stage"
+  ansible.builtin.assert:
+    that: kubeadm_package_stage in ['all', 'kubeadm', 'rest']
+    fail_msg: >-
+      kubeadm_package_stage is {{ kubeadm_package_stage }}; expected all,
+      kubeadm or rest. An unrecognised value would silently install nothing.
+    quiet: true
+
+- name: "Install kubeadm and cri-tools"
+  ansible.builtin.apt:
+    name:
+      - "cri-tools={{ cri_tools_version }}"
+      - "kubeadm={{ kubeadm_version }}"
+    state: present
+    allow_downgrade: true
+  when: kubeadm_package_stage in ['all', 'kubeadm']
+
+- name: "Install kubectl and kubernetes-cni"
+  ansible.builtin.apt:
+    name:
+      - "kubectl={{ kubectl_version }}"
+      - "kubernetes-cni={{ kubernetes_cni_version }}"
+    state: present
+    allow_downgrade: true
+  when: kubeadm_package_stage in ['all', 'rest']
+
+- name: "Install kubelet package"
+  ansible.builtin.apt:
+    name: "kubelet={{ kubelet_version }}"
+    state: present
+    allow_downgrade: true
+  notify: "Restart kubelet"
+  when: kubeadm_package_stage in ['all', 'rest']
+
+# Only in the stages that can have notified it. flush_handlers empties the whole
+# queue, not just this role's handler, so running it in the kubeadm stage would
+# fire any pending Reload sysctl or Restart containerd immediately before
+# `kubeadm upgrade apply` — a worse moment, chosen by accident. Verified that
+# `when` does gate a meta task: a flush with a false condition is skipped and
+# its handlers run at end of play instead.
+- name: "Apply the kubelet restart now rather than at the end of the play"
+  ansible.builtin.meta: flush_handlers
+  when: kubeadm_package_stage in ['all', 'rest']

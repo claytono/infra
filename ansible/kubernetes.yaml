@@ -1,0 +1,87 @@
+---
+# Kubernetes cluster plays: the routine kubeadm role, then version upgrades in
+# order. Imported by site.yaml at its original position; can also be run on its
+# own, e.g. `ansible-playbook kubernetes.yaml -l k1`.
+# See docs/kubernetes-upgrade-playbook.md.
+
+- name: Kubernetes role
+  hosts: kubernetes
+  roles:
+    - role: kubeadm
+      tags: kubernetes
+
+# Version upgrades. The play above leaves a node's packages alone while its
+# version is changing; these plays move it, control plane first, then workers
+# one at a time. Each ends within a few checks when versions already match.
+- name: Kubernetes control plane upgrade
+  hosts: kubernetes_master
+  tags: kubernetes
+  any_errors_fatal: true
+  tasks:
+    - name: Upgrade the control plane
+      ansible.builtin.include_role:
+        name: kubeadm
+        tasks_from: upgrade-control-plane.yaml
+
+# Ansible cannot order a play's hosts by a variable, so workers are grouped by
+# kubeadm_upgrade_tier and each tier gets its own play below. A tier without a
+# play would never be upgraded, hence the check.
+- name: Kubernetes worker upgrade tiers
+  hosts: kubernetes_node
+  tags: kubernetes
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Require a known upgrade tier
+      ansible.builtin.assert:
+        that: kubeadm_upgrade_tier in ['normal', 'last']
+        fail_msg: >-
+          kubeadm_upgrade_tier is {{ kubeadm_upgrade_tier }}; expected normal or
+          last. kubernetes.yaml has an upgrade play for each of those only.
+        quiet: true
+
+    - name: Group workers by upgrade tier
+      ansible.builtin.group_by:
+        key: kubeadm_upgrade_tier_{{ kubeadm_upgrade_tier }}
+      # Grouping only exists for this run; nothing on the host changes.
+      changed_when: false
+
+- name: Kubernetes worker upgrade, normal tier
+  hosts: kubeadm_upgrade_tier_normal
+  tags: kubernetes
+  serial: 1
+  any_errors_fatal: true
+  tasks:
+    - name: Upgrade the worker
+      ansible.builtin.include_role:
+        name: kubeadm
+        tasks_from: upgrade-worker.yaml
+
+- name: Kubernetes worker upgrade, last tier
+  hosts: kubeadm_upgrade_tier_last
+  tags: kubernetes
+  serial: 1
+  any_errors_fatal: true
+  tasks:
+    - name: Upgrade the worker
+      ansible.builtin.include_role:
+        name: kubeadm
+        tasks_from: upgrade-worker.yaml
+
+# Targets every Kubernetes host but verifies from the first one only, so a run
+# limited to workers is still verified; kubectl itself is delegated to the
+# control plane.
+- name: Kubernetes upgrade verification
+  hosts: kubernetes
+  tags: kubernetes
+  gather_facts: false
+  tasks:
+    - name: Verify the cluster after an upgrade
+      ansible.builtin.include_role:
+        name: kubeadm
+        tasks_from: upgrade-verify.yaml
+      when:
+        - inventory_hostname == ansible_play_hosts[0]
+        - >-
+          groups['kubernetes'] | map('extract', hostvars)
+          | selectattr('kubeadm_upgrade_performed', 'defined') | list | length > 0

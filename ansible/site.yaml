@@ -301,11 +301,8 @@
     - role: matter
       tags: matter
 
-- name: Kubernetes role
-  hosts: kubernetes
-  roles:
-    - role: kubeadm
-      tags: kubernetes
+- name: Kubernetes
+  ansible.builtin.import_playbook: kubernetes.yaml
 
 - name: Prometheus node exporter
   hosts: all

@@ -14,3 +14,49 @@
 kubeadm_repo_versions:
   - "{{ kubernetes_short_version }}"
   - "{{ kubernetes_short_version.split('.')[0] }}.{{ kubernetes_short_version.split('.')[1] | int - 1 }}"
+
+# Which packages tasks/packages.yaml installs: all, kubeadm or rest. Only the
+# upgrade tasks set anything but all; see that file for why the split exists.
+kubeadm_package_stage: all
+
+# A minor upgrade (1.34 -> 1.35) refuses to run without this. It needs the
+# preparation in docs/kubernetes-upgrade-playbook.md — release notes, deprecated
+# API scan, addon compatibility, snapshot — so it is never something a merge
+# starts on its own. Patch updates within a minor are unaffected.
+kubeadm_allow_minor_upgrade: false
+
+# Timeouts for the upgrade tasks, in seconds. Same values as
+# scripts/rolling-node-reboot.sh, which were tuned against this cluster:
+# drains are slow here because of PodDisruptionBudgets and iSCSI detach.
+kubeadm_drain_timeout: 300
+kubeadm_node_ready_timeout: 600
+kubeadm_node_pods_timeout: 300
+
+# The upgrade tasks run kubectl on the control plane host. admin.conf rather
+# than super-admin.conf: cordon and drain need ordinary admin rights, and
+# super-admin bypasses RBAC.
+kubeadm_control_plane_host: "{{ groups['kubernetes_master'][0] }}"
+kubeadm_kubeconfig: /etc/kubernetes/admin.conf
+
+# Set on a node while an upgrade has it cordoned, so a re-run after an
+# interruption can tell its own cordon from one a person made on purpose.
+kubeadm_cordon_annotation: oneill.net/kubeadm-upgrade-cordoned
+
+# Set on every node when its upgrade starts and removed only once the final
+# verification of the run passes, so a re-run stops at an unfinished node
+# instead of treating it as done. Kept separate from the cordon annotation,
+# which a node cordoned by hand never gets.
+kubeadm_progress_annotation: oneill.net/kubeadm-upgrade-in-progress
+
+# Where the control plane upgrade keeps kubeadm's plan and dry-run output.
+kubeadm_upgrade_log_dir: /var/log/kubeadm-upgrade
+
+# Each node's unfinished pods must be Ready before its upgrade starts. Set this
+# to upgrade anyway; pods that were not Ready beforehand are then left out of
+# the readiness wait afterwards.
+kubeadm_upgrade_allow_unready_pods: false
+
+# One line per unfinished pod on a node: "namespace/name <Ready status>".
+kubeadm_pod_ready_jsonpath: >-
+  {range .items[*]}{.metadata.namespace}/{.metadata.name}
+  {.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}

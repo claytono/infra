@@ -1,0 +1,29 @@
+---
+# Undo the upgrade's own cordon, and only that. Runs only once the node's
+# upgrade and waits have succeeded; a failed node stays cordoned.
+#
+# The cordon annotation goes with the cordon. Retry state lives in the separate
+# in-progress annotation, removed only once the final verification in
+# upgrade-verify.yaml passes. Uncordon happens first: a run that dies between
+# the two leaves an annotated, schedulable node, which the retry re-cordons as
+# its own.
+
+- name: "Upgrade: read the node before uncordoning"
+  ansible.builtin.include_tasks: upgrade-node-state.yaml
+
+- name: "Upgrade: undo the upgrade's cordon"
+  when: kubeadm_node_cordoned_by_upgrade | bool
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  block:
+    - name: "Upgrade: uncordon the node"
+      ansible.builtin.command:
+        argv: [kubectl, uncordon, "{{ inventory_hostname }}"]
+      when: kubeadm_node_unschedulable | bool
+      changed_when: true
+
+    - name: "Upgrade: remove the cordon annotation"
+      ansible.builtin.command:
+        argv: [kubectl, annotate, node, "{{ inventory_hostname }}", "{{ kubeadm_cordon_annotation }}-"]
+      changed_when: true

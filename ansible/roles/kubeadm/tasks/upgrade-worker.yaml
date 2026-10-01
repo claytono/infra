@@ -1,0 +1,110 @@
+---
+# Upgrade one worker to kubernetes_version, in the order upstream's "Upgrading
+# Linux nodes" page gives. Included by the worker upgrade plays in kubernetes.yaml,
+# which run one host at a time, after the control plane play.
+#
+# When nothing needs doing, this ends after a few read-only checks. After an
+# interruption the whole sequence re-runs; each step is either idempotent or
+# skips itself when already done.
+
+- name: "Upgrade: check this worker has joined the cluster"
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubeadm_worker_kubelet_conf
+
+- name: "Upgrade: nothing to upgrade before kubeadm join, exiting early"
+  ansible.builtin.meta: end_host
+  when: not kubeadm_worker_kubelet_conf.stat.exists
+
+- name: "Upgrade: read the installed kubelet package version"
+  ansible.builtin.command:
+    cmd: dpkg-query -W -f=${Version} kubelet
+  register: kubeadm_upgrade_installed
+  changed_when: false
+
+- name: "Upgrade: read the node state"
+  ansible.builtin.include_tasks: upgrade-node-state.yaml
+
+- name: "Upgrade: the worker is already at the target version, exiting early"
+  ansible.builtin.meta: end_host
+  when:
+    - kubeadm_upgrade_installed.stdout == kubelet_version
+    - kubeadm_node_version == 'v' ~ kubernetes_version
+    - not kubeadm_node_upgrade_in_progress | bool
+    - not kubeadm_node_cordoned_by_upgrade | bool
+
+- name: "Upgrade: record that this run upgrades the worker"
+  ansible.builtin.set_fact:
+    kubeadm_upgrade_performed: true
+    kubeadm_upgrade_is_minor: >-
+      {{ (kubeadm_upgrade_installed.stdout.split('.')[0:2] | join('.')) !=
+         (kubernetes_version.split('.')[0:2] | join('.')) }}
+
+# A kubelet may be older than the API server but never newer. Checking this
+# here, rather than restricting -l, keeps limited runs such as -l k3 working
+# while making it impossible for a worker to get ahead of the control plane.
+- name: "Upgrade: read the API server version"
+  ansible.builtin.command:
+    argv: [kubectl, version, --output, json]
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  register: kubeadm_server_version
+  changed_when: false
+
+- name: "Upgrade: require the control plane to be upgraded first"
+  vars:
+    kubeadm_server_git_version: "{{ (kubeadm_server_version.stdout | from_json).serverVersion.gitVersion }}"
+  ansible.builtin.assert:
+    that: kubeadm_server_git_version == 'v' ~ kubernetes_version
+    fail_msg: >-
+      Refusing to upgrade {{ inventory_hostname }} to v{{ kubernetes_version }}:
+      the API server is on {{ kubeadm_server_git_version }}. Upgrade the control
+      plane first by including {{ kubeadm_control_plane_host }} in the run.
+    quiet: true
+
+- name: "Upgrade: check the worker's pods first"
+  ansible.builtin.include_tasks: upgrade-pods-before.yaml
+
+- name: "Upgrade: upgrade the worker to the target version"
+  block:
+    - name: "Upgrade: mark the upgrade as in progress on the node"
+      ansible.builtin.command:
+        argv: [kubectl, annotate, --overwrite, node, "{{ inventory_hostname }}", "{{ kubeadm_progress_annotation }}=true"]
+      delegate_to: "{{ kubeadm_control_plane_host }}"
+      environment:
+        KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+      changed_when: true
+
+    - name: "Upgrade: install the target kubeadm and cri-tools"
+      ansible.builtin.include_tasks: packages.yaml
+      vars:
+        kubeadm_package_stage: kubeadm
+
+    # On a worker this refreshes kubelet's configuration from the cluster and
+    # does not disturb running pods, so it comes before the cordon.
+    - name: "Upgrade: run kubeadm upgrade node"
+      ansible.builtin.command:
+        argv: [kubeadm, upgrade, node]
+      changed_when: true
+
+    - name: "Upgrade: cordon the worker"
+      ansible.builtin.include_tasks: upgrade-cordon.yaml
+
+    - name: "Upgrade: install the target kubectl, kubernetes-cni and kubelet"
+      ansible.builtin.include_tasks: packages.yaml
+      vars:
+        kubeadm_package_stage: rest
+
+    # See upgrade-control-plane.yaml: the handler alone can lose this restart.
+    - name: "Upgrade: restart kubelet on the target version"
+      ansible.builtin.systemd:
+        name: kubelet
+        state: restarted
+
+    - name: "Upgrade: wait for the worker"
+      ansible.builtin.include_tasks: upgrade-wait.yaml
+
+    # Only after both waits pass; see upgrade-control-plane.yaml.
+    - name: "Upgrade: restore the worker's scheduling"
+      ansible.builtin.include_tasks: upgrade-uncordon.yaml
