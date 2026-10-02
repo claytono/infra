@@ -99,17 +99,6 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "ansible/group_vars/all/node_exporter.yaml"
-      ],
-      "matchStrings": [
-        "(?:^|\\n)\\s*node_exporter_version:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*(#.*)?"
-      ],
-      "depNameTemplate": "prometheus/node_exporter",
-      "datasourceTemplate": "github-releases"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
         "ansible/roles/netdata/defaults/main.yaml"
       ],
       "matchStrings": [
@@ -193,12 +182,14 @@
     },
     {
       "customType": "regex",
-      "description": "GitHub release versions in Kubernetes run scripts",
+      "description": "Versions with a renovate comment annotation in Kubernetes run scripts and Ansible variables",
       "managerFilePatterns": [
-        "/^kubernetes\\/[^/]+\\/run$/"
+        "/^kubernetes\\/[^/]+\\/run$/",
+        "ansible/**/*.yaml"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[A-Z0-9_]*VERSION=(?<currentValue>\\d+(?:\\.\\d+)+)"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[A-Z0-9_]*VERSION=(?<currentValue>\\d+(?:\\.\\d+)+)",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[a-z0-9_]+_version:\\s*\"?(?<currentValue>\\d+(?:\\.\\d+)+)\"?"
       ]
     },
     {
@@ -323,6 +314,14 @@
       "matchPackageNames": [
         "getmeili/meilisearch",
         "docker.io/getmeili/meilisearch"
+      ]
+    },
+    {
+      "description": "Group the democratic-csi driver, proxy and CSI sidecar images so they are tested and rolled out together",
+      "groupName": "democratic-csi images",
+      "separateMajorMinor": false,
+      "matchFileNames": [
+        "kubernetes/democratic-csi/**"
       ]
     },
     {

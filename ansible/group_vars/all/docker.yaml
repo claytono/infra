@@ -1,6 +1,5 @@
 ---
-# Docker version pinning - managed by Renovate
-# renovate: datasource=github-releases depName=moby/moby
+# Docker version pinning
 docker_version: "29.1.1"
 docker_package_version: >-
   5:{{ docker_version }}-1~{{ ansible_facts['distribution'] | lower }}.{{
