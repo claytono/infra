@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/name: democratic-csi
     app.kubernetes.io/instance: democratic-csi
     app.kubernetes.io/managed-by: Helm
+
 ---
 # Source: democratic-csi/templates/node-rbac.yaml
 kind: ClusterRole
@@ -33,6 +34,8 @@ rules:
   - apiGroups: ["storage.k8s.io"]
     resources: ["volumeattachments"]
     verbs: ["get", "list", "watch", "update"]
+
+
 ---
 # Source: democratic-csi/templates/node-rbac.yaml
 kind: ClusterRoleBinding
