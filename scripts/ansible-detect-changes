@@ -27,7 +27,11 @@ done
 EFFECTIVE_ROOT="${SCAN_ROOT:-$REPO_ROOT}"
 cd "$EFFECTIVE_ROOT"
 
-changed_files=$(git diff --name-only "$BASE_REF"..."$HEAD_REF" | grep -E '^ansible/' || true)
+# Run the diff on its own so set -e stops on a failure (a bad ref, or a shallow
+# clone missing the base commit) instead of reporting no changes. Only grep's
+# no-match exit status is expected here.
+all_changed=$(git diff --name-only "$BASE_REF"..."$HEAD_REF")
+changed_files=$(grep -E '^ansible/' <<< "$all_changed" || true)
 
 if [[ -z "$changed_files" ]]; then
   echo "No ansible files changed"
