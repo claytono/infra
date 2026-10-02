@@ -14,6 +14,7 @@
   "branchTopic": "{{{depNameSanitized}}}-{{{newVersion}}}{{#if isLockfileUpdate}}-lockfile{{/if}}",
   "automergeStrategy": "rebase",
   "minimumReleaseAge": "14 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
   "internalChecksFilter": "strict",
@@ -642,16 +643,6 @@
       ]
     },
     {
-      "description": "GHCR does not support release timestamps; skip age check to avoid permanently pending updates",
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "/^ghcr\\.io/"
-      ],
-      "minimumReleaseAgeBehaviour": "timestamp-optional"
-    },
-    {
       "description": "Disable Renovate for readest-hardcover-sync (personal project, tracks edge)",
       "matchPackageNames": [
         "ghcr.io/claytono/readest-hardcover-sync"
@@ -659,7 +650,7 @@
       "enabled": false
     },
     {
-      "description": "Kubernetes cluster packages: one PR for the whole version set. No release-age gate because the pkgs.k8s.io Packages index carries no publish timestamps, and with minimumReleaseAge inherited Renovate marks every release pending and opens nothing. Review before merge is the gate instead; deliberately no automerge label so renovate-eval always runs.",
+      "description": "Kubernetes cluster packages: one PR for the whole version set. The pkgs.k8s.io Packages index carries no publish timestamps, so the release-age gate never applies; review before merge is the gate instead; deliberately no automerge label so renovate-eval always runs.",
       "matchDatasources": [
         "custom.kubernetes-deb-kubeadm",
         "custom.kubernetes-deb-kubelet",
@@ -668,7 +659,6 @@
         "custom.kubernetes-deb-kubernetes-cni"
       ],
       "groupName": "Kubernetes packages",
-      "minimumReleaseAge": "0 days",
       "automerge": false
     },
     {
