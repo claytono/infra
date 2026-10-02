@@ -31,28 +31,36 @@
 # A minor upgrade drains, and the evicted pods start on other nodes, where the
 # per-node wait in upgrade-wait.yaml cannot see them. So wait for every pod
 # scheduled elsewhere to be Ready, as scripts/rolling-node-reboot.sh does after
-# a drain. Pods with no node yet are left out: on a small cluster some only fit
-# once this node is uncordoned. So are pods that were not Ready before the drain.
+# a drain. Pods with no node yet are left out here: on a small cluster some only
+# fit once this node is uncordoned, and upgrade-uncordon.yaml checks them then.
+#
+# Pods are compared by owner (see kubeadm_pod_key_regex), because a drain
+# recreates them under new names. Workloads that were not Ready anywhere in the
+# cluster before the drain are left out of both waits; that includes ones on
+# this node let through by kubeadm_upgrade_allow_unready_pods.
 - name: "Upgrade: drain the node and wait for the evicted pods"
   when: kubeadm_upgrade_is_minor | bool
   delegate_to: "{{ kubeadm_control_plane_host }}"
   environment:
     KUBECONFIG: "{{ kubeadm_kubeconfig }}"
-  vars:
-    kubeadm_elsewhere_selector: >-
-      --field-selector=status.phase!=Succeeded,status.phase!=Failed,spec.nodeName!=,spec.nodeName!={{ inventory_hostname }}
   block:
-    - name: "Upgrade: record the pods elsewhere that are not Ready before the drain"
+    - name: "Upgrade: read every pod before the drain"
       ansible.builtin.command:
         argv:
           - kubectl
           - get
           - pods
           - --all-namespaces
-          - "{{ kubeadm_elsewhere_selector }}"
+          - --field-selector=status.phase!=Succeeded,status.phase!=Failed
           - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
-      register: kubeadm_pods_elsewhere_before
+      register: kubeadm_pods_cluster_before
       changed_when: false
+
+    - name: "Upgrade: record the workloads that were not Ready before the drain"
+      ansible.builtin.set_fact:
+        kubeadm_pods_cluster_unready_before: >-
+          {{ kubeadm_pods_cluster_before.stdout_lines | reject('search', ' True$')
+             | map('regex_replace', kubeadm_pod_key_regex, kubeadm_pod_key_replace) | unique | list }}
 
     - name: "Upgrade: drain the node"
       ansible.builtin.command:
@@ -74,16 +82,14 @@
           - get
           - pods
           - --all-namespaces
-          - "{{ kubeadm_elsewhere_selector }}"
+          - --field-selector=status.phase!=Succeeded,status.phase!=Failed,spec.nodeName!=,spec.nodeName!={{ inventory_hostname }}
           - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
       register: kubeadm_pods_elsewhere_after
       changed_when: false
       until: >-
         kubeadm_pods_elsewhere_after.rc == 0 and
         kubeadm_pods_elsewhere_after.stdout_lines | reject('search', ' True$')
-          | map('split', ' ') | map('first')
-          | reject('in', kubeadm_pods_elsewhere_before.stdout_lines
-                           | reject('search', ' True$') | map('split', ' ') | map('first') | list)
-          | list | length == 0
+          | map('regex_replace', kubeadm_pod_key_regex, kubeadm_pod_key_replace)
+          | reject('in', kubeadm_pods_cluster_unready_before) | list | length == 0
       retries: "{{ (kubeadm_node_pods_timeout | int / 10) | int }}"
       delay: 10

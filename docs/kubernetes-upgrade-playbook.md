@@ -44,12 +44,15 @@ checks, so ordinary deploys are unaffected.
 
 Details worth knowing:
 
-- **Pods must be Ready first.** Before touching a node, the upgrade waits up to
-  a minute for every unfinished pod on it to be Ready, and refuses to start if
-  any are not, naming them. Otherwise a pod that was already broken would fail
-  the wait afterwards and block every upgrade. To upgrade anyway, add
-  `-e kubeadm_upgrade_allow_unready_pods=true`; those pods are then left out of
-  the wait.
+- **The cluster must be healthy first.** Before touching each node, the upgrade
+  refuses to start if any node is cordoned other than by the upgrade itself, and
+  waits up to a minute for every unfinished pod in the cluster, unscheduled ones
+  included, to be Ready, naming any that are not. Checking the whole cluster
+  before each node means a workload left down by an earlier step stops the run
+  before the next node. To upgrade despite unready pods, add
+  `-e kubeadm_upgrade_allow_unready_pods=true`; those workloads are then left
+  out of the waits. There is no override for a cordoned node: uncordon it, or
+  finish what it is cordoned for, first.
 
 - **Cordon or drain.** A patch only cordons: restarting kubelet leaves running
   containers alone. A minor upgrade drains, as upstream requires.
@@ -64,7 +67,11 @@ Details worth knowing:
   uncordoned by the upgrade.
 - **After a drain** (minor upgrades only), the upgrade also waits for the
   evicted pods to be Ready on the other nodes. Pods with no node yet are left
-  out, since some only fit once the drained node is uncordoned.
+  out at that point, since some only fit once the drained node is uncordoned;
+  after the uncordon, every workload in the cluster must be Ready before the
+  next node is drained. Workloads that were not Ready before the drain are left
+  out of both checks. Pods are compared by their owner (ReplicaSet, StatefulSet
+  and so on), because a drain recreates them under new names.
 - **`kubectl` runs on k1** with `/etc/kubernetes/admin.conf`, so limited runs
   such as `-l k3` still work.
 

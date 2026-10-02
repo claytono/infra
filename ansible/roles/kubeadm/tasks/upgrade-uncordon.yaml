@@ -27,3 +27,27 @@
       ansible.builtin.command:
         argv: [kubectl, annotate, node, "{{ inventory_hostname }}", "{{ kubeadm_cordon_annotation }}-"]
       changed_when: true
+
+    # After a drain, some evicted pods could only be scheduled once this node
+    # was back. Check every workload in the cluster, unscheduled ones included,
+    # before the next node is drained. Workloads not Ready before the drain are
+    # left out, as in upgrade-cordon.yaml.
+    - name: "Upgrade: wait for every workload to be Ready after uncordoning"
+      when: kubeadm_upgrade_is_minor | bool
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - pods
+          - --all-namespaces
+          - --field-selector=status.phase!=Succeeded,status.phase!=Failed
+          - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
+      register: kubeadm_pods_cluster_after
+      changed_when: false
+      until: >-
+        kubeadm_pods_cluster_after.rc == 0 and
+        kubeadm_pods_cluster_after.stdout_lines | reject('search', ' True$')
+          | map('regex_replace', kubeadm_pod_key_regex, kubeadm_pod_key_replace)
+          | reject('in', kubeadm_pods_cluster_unready_before | default([])) | list | length == 0
+      retries: "{{ (kubeadm_node_pods_timeout | int / 10) | int }}"
+      delay: 10

@@ -1,21 +1,50 @@
 ---
-# Refuse to start on a node whose pods are not all Ready. Otherwise the wait
-# after the upgrade cannot tell a pod the upgrade broke from one that was
-# already broken, and an unrelated crash-looping pod would fail every upgrade.
-# Allows a minute for pods that are just starting. A failed upgrade that left
-# pods broken is caught here on the retry too, instead of being excluded.
+# Refuse to start on a node unless the cluster is healthy: no node cordoned
+# other than by this upgrade, and every unfinished pod in the cluster Ready,
+# including pods with no node yet. Checking the whole cluster, not just this
+# node, stops the run before the next node whenever an earlier step left a
+# workload down, for example evicted pods that could not be rescheduled after a
+# drain, and it is what a retry sees too. Otherwise the waits after the upgrade
+# also could not tell a pod the upgrade broke from one that was already broken.
+# Allows a minute for pods that are just starting.
 #
-# -e kubeadm_upgrade_allow_unready_pods=true upgrades anyway, and the pods that
-# were not Ready are left out of the wait in upgrade-wait.yaml.
+# -e kubeadm_upgrade_allow_unready_pods=true upgrades anyway; the workloads that
+# were not Ready are left out of the waits afterwards. There is no override for
+# a cordoned node: finish whatever it is cordoned for, or uncordon it, first.
 
-- name: "Upgrade: wait for the node's pods to be Ready before starting"
+- name: "Upgrade: read the nodes before starting"
+  ansible.builtin.command:
+    argv: [kubectl, get, nodes, --output, json]
+  delegate_to: "{{ kubeadm_control_plane_host }}"
+  environment:
+    KUBECONFIG: "{{ kubeadm_kubeconfig }}"
+  register: kubeadm_nodes_before
+  changed_when: false
+
+# A node the upgrade itself cordoned (it carries the cordon annotation) is
+# allowed: that is a failed or interrupted node a retry has to resume.
+- name: "Upgrade: refuse to start while a node is cordoned"
+  ansible.builtin.assert:
+    that: >-
+      not (item.spec.unschedulable | default(false))
+      or kubeadm_cordon_annotation in (item.metadata.annotations | default({}))
+    fail_msg: >-
+      Refusing to upgrade {{ inventory_hostname }}: {{ item.metadata.name }} is
+      cordoned, and not by this upgrade. A healthy cluster has no cordoned nodes;
+      finish what it is cordoned for, or uncordon it, before upgrading.
+    quiet: true
+  loop: "{{ (kubeadm_nodes_before.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"
+
+- name: "Upgrade: wait for every pod in the cluster to be Ready before starting"
   ansible.builtin.command:
     argv:
       - kubectl
       - get
       - pods
       - --all-namespaces
-      - --field-selector=spec.nodeName={{ inventory_hostname }},status.phase!=Succeeded,status.phase!=Failed
+      - --field-selector=status.phase!=Succeeded,status.phase!=Failed
       - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
   delegate_to: "{{ kubeadm_control_plane_host }}"
   environment:
@@ -31,18 +60,18 @@
   retries: 6
   delay: 10
 
-- name: "Upgrade: record the pods that were not Ready before the upgrade"
+- name: "Upgrade: record the workloads that were not Ready before the upgrade"
   ansible.builtin.set_fact:
     kubeadm_pods_unready_before: >-
       {{ kubeadm_pods_before.stdout_lines | reject('search', ' True$')
-         | map('split', ' ') | map('first') | list }}
+         | map('regex_replace', kubeadm_pod_key_regex, kubeadm_pod_key_replace) | unique | list }}
 
-- name: "Upgrade: require the node's pods to be Ready"
+- name: "Upgrade: require every pod in the cluster to be Ready"
   ansible.builtin.assert:
     that: kubeadm_upgrade_allow_unready_pods | bool or kubeadm_pods_unready_before | length == 0
     fail_msg: >-
-      Refusing to upgrade {{ inventory_hostname }}: these pods were not Ready
-      before the upgrade started: {{ kubeadm_pods_unready_before | join(', ') }}.
+      Refusing to upgrade {{ inventory_hostname }}: these workloads were not
+      Ready before the upgrade started: {{ kubeadm_pods_unready_before | join(', ') }}.
       Fix them, or re-run with -e kubeadm_upgrade_allow_unready_pods=true to
-      upgrade anyway and leave them out of the readiness wait.
+      upgrade anyway and leave them out of the readiness waits.
     quiet: true

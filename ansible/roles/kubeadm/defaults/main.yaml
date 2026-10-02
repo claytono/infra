@@ -56,7 +56,13 @@ kubeadm_upgrade_log_dir: /var/log/kubeadm-upgrade
 # the readiness wait afterwards.
 kubeadm_upgrade_allow_unready_pods: false
 
-# One line per unfinished pod on a node: "namespace/name <Ready status>".
+# One line per pod: "namespace/ownerKind/ownerName/podName <Ready status>".
+# The readiness checks compare pods by kubeadm_pod_key_regex, which reduces a
+# line to its controlling owner (namespace/ownerKind/ownerName), so a pod that a
+# drain recreates under a new name still counts as the same workload. A pod with
+# no controlling owner keeps its full line as its key.
 kubeadm_pod_ready_jsonpath: >-
-  {range .items[*]}{.metadata.namespace}/{.metadata.name}
+  {range .items[*]}{.metadata.namespace}/{.metadata.ownerReferences[?(@.controller==true)].kind}/{.metadata.ownerReferences[?(@.controller==true)].name}/{.metadata.name}
   {.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}
+kubeadm_pod_key_regex: "^([^/ ]*)/([^/ ]+)/([^/ ]+)/\\S*.*$|^(\\S*).*$"
+kubeadm_pod_key_replace: "\\1/\\2/\\3\\4"
