@@ -42,7 +42,7 @@
   until: >-
     kubeadm_pods_after.rc == 0 and
     kubeadm_pods_after.stdout_lines | reject('search', ' True$')
-      | map('split', ' ') | map('first')
+      | map('regex_replace', kubeadm_pod_key_regex, kubeadm_pod_key_replace)
       | reject('in', kubeadm_pods_unready_before | default([])) | list | length == 0
   retries: "{{ (kubeadm_node_pods_timeout | int / 10) | int }}"
   delay: 10
