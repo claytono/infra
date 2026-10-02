@@ -35,10 +35,10 @@ containerd_config: |
 
 # Our goal is to stay one version behind
 kubernetes_short_version: "1.34"
-kubernetes_version: "1.34.10"
-kubeadm_version: "1.34.10-1.1"
-kubelet_version: "1.34.10-1.1"
-kubectl_version: "1.34.10-1.1"
+kubernetes_version: "1.34.12"
+kubeadm_version: "1.34.12-1.1"
+kubelet_version: "1.34.12-1.1"
+kubectl_version: "1.34.12-1.1"
 cri_tools_version: "1.34.0-1.1"
 kubernetes_cni_version: "1.7.1-1.1"
 
