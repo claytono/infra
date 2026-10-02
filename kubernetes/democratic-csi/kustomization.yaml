@@ -9,19 +9,19 @@ commonAnnotations:
 
 images:
 - name: docker.io/democraticcsi/democratic-csi
-  newTag: v1.9.0@sha256:cc0b51dd9eda5762e5ca5707e8c233e3fa47d2d870aa92f9ba6acacd37679b58
+  newTag: v1.9.5@sha256:fc3b7d7ed3a616714139525075312758e23a5d425ffb539ad12c9bd20fb6001f
 - name: ghcr.io/democratic-csi/csi-grpc-proxy
   newTag: v0.5.7@sha256:0240d0fba3cedd598036766b1865e88aa2eac9c16822df03d5d912a81128ebb6
 - name: registry.k8s.io/sig-storage/csi-attacher
-  newTag: v4.4.0@sha256:dbded4ebe299973e31d0ef55815eb07a990fc67872b14900a8e69232acae4f2d
+  newTag: v4.13.0@sha256:d1a26170efed45491074ca4545c81844eee2b9043fb885ac01fb4aed6f8b72d2
 - name: registry.k8s.io/sig-storage/csi-node-driver-registrar
-  newTag: v2.9.0@sha256:cd21e19cd8bbd5bc56f1b4f1398a436e7897da2995d6d036c9729be3f4e456e6
+  newTag: v2.18.0@sha256:b7fefd08651f00ac4df1a196ed4c621c2451fbb899297fe9fad9e36c667af0c0
 - name: registry.k8s.io/sig-storage/csi-provisioner
-  newTag: v3.6.0@sha256:6de50bacfd72627ffe4209e3db8ad7391d04ea6fb741bf51feab6c5dcfd80002
+  newTag: v6.3.0@sha256:a4b0b1a37605b7b04a293e136edf7006ec1786a8eb3f4e5a945f81d667dcc371
 - name: registry.k8s.io/sig-storage/csi-resizer
-  newTag: v1.9.0@sha256:f1f352df97874442624fcef23eab04aa038f66cb0e361212f6ec09e92998184d
+  newTag: v2.2.1@sha256:ea1d25e23479000c7e8eeb92d827df66258df4e482ca054c5e7ce3fc0f5c41a5
 - name: registry.k8s.io/sig-storage/csi-snapshotter
-  newTag: v8.2.1@sha256:5f4bb469fec51147ce157329dab598c758da1b018bad6dad26f0ff469326d769
+  newTag: v8.6.0@sha256:42af0929bcd60a43499825c078a60ff0534e08af8fbeb283aa391be40feb9f3e
 
 resources:
 - namespace.yaml
