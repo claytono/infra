@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/name: democratic-csi
     app.kubernetes.io/instance: democratic-csi
     app.kubernetes.io/managed-by: Helm
+
 ---
 # Source: democratic-csi/templates/controller-rbac.yaml
 kind: ClusterRole
@@ -91,6 +92,7 @@ rules:
   - apiGroups: ["apps"]
     resources: ["daemonsets", "deployments", "replicasets", "statefulsets"]
     verbs: ["get"]
+
 ---
 # Source: democratic-csi/templates/controller-rbac.yaml
 kind: ClusterRoleBinding
