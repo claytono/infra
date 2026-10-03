@@ -54,6 +54,15 @@ Details worth knowing:
   out of the waits. There is no override for a cordoned node: uncordon it, or
   finish what it is cordoned for, first.
 
+- **A retry while a node is still cordoned by the upgrade.** Some workloads can
+  only run on one node: the ezshare-sync job needs k5's USB device, and plex,
+  immich machine learning, ollama and whisperx need k2's GPU. While a failed run
+  leaves their node cordoned they have no node to go to, so the cluster-wide
+  checks leave out pods with no node for as long as any node carries the
+  upgrade's cordon annotation. Once the run uncordons the last such node, its
+  own post-uncordon wait counts them again, so they still have to come back
+  Ready before the run passes.
+
 - **Cordon or drain.** A patch only cordons: restarting kubelet leaves running
   containers alone. A minor upgrade drains, as upstream requires.
 - **Rehearsal output** is kept on k1 in
@@ -71,7 +80,13 @@ Details worth knowing:
   after the uncordon, every workload in the cluster must be Ready before the
   next node is drained. Workloads that were not Ready before the drain are left
   out of both checks. Pods are compared by their owner (ReplicaSet, StatefulSet
-  and so on), because a drain recreates them under new names.
+  and so on), because a drain recreates them under new names. Each of these
+  waits, and the wait for a node's own pods after its kubelet restart, allows 15
+  minutes (`kubeadm_node_pods_timeout`): an evicted pod may first wait for its
+  old copy to stop (up to the drain's 120s grace period), then for a
+  `ReadWriteOncePod` volume to move, a recursive ownership change on the volume
+  and image pulls on a node that has never run it. During the 1.35 upgrade felix
+  took about 8 minutes this way.
 - **`kubectl` runs on k1** with `/etc/kubernetes/admin.conf`, so limited runs
   such as `-l k3` still work.
 
@@ -175,6 +190,12 @@ successful retry uncordons it. Nodes that had already succeeded in the failed
 run are upgraded again on the retry, which is safe but restarts their kubelet.
 While k1 is not done, every run repeats `kubeadm upgrade apply` at the target
 version, which finishes an apply that was interrupted partway.
+
+Include every unfinished node in a limited run (`-l`). While a node is still
+cordoned by the upgrade, the readiness checks leave out pods with no node, since
+some can only run there; they are checked again once a run uncordons that node.
+A run that leaves the cordoned node out never does, so it can pass while that
+node and the workloads tied to it are still down.
 
 To see which nodes an upgrade has not finished:
 
