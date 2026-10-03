@@ -29,6 +29,10 @@ spec:
         runAsUser: 10000
         runAsGroup: 10000
         fsGroup: 10000
+        # Skip kubelet's recursive chown of the NFS volume when its root
+        # already matches. Requires HERMES_HOME_MODE below, since Hermes
+        # otherwise resets the root to 0700 on every start.
+        fsGroupChangePolicy: OnRootMismatch
       initContainers:
       # Work around the image's startup hook calling s6-setuidgid when already
       # non-root by running its config migration directly before Hermes.
@@ -48,6 +52,8 @@ spec:
         env:
         - name: HERMES_HOME
           value: /opt/data
+        - name: HERMES_HOME_MODE
+          value: '2770'
         volumeMounts:
         - name: data
           mountPath: /opt/data
@@ -136,6 +142,10 @@ spec:
         - name: dashboard
           containerPort: 9119
         env:
+        # Keep the volume root group-rwx with setgid so kubelet's
+        # OnRootMismatch check passes; Hermes defaults it to 0700.
+        - name: HERMES_HOME_MODE
+          value: '2770'
         - name: API_SERVER_ENABLED
           value: 'true'
         - name: API_SERVER_HOST
