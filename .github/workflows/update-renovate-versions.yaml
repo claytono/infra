@@ -48,6 +48,7 @@ jobs:
           **Rules applied:**
           - **MariaDB**: LTS versions at least 6 months old
           - **PostgreSQL**: Major versions at least 6 months old
+          - **containerd**: Newest LTS at least 3 months old
           - **Home Assistant**: One month behind latest stable
           - **ESPHome**: One month behind latest stable
 

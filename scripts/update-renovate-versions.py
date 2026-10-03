@@ -5,6 +5,7 @@ Rules:
 - MariaDB: LTS releases at least 6 months old
 - PostgreSQL: Major versions at least 6 months old
 - Kubernetes: one minor version at a time, capped one behind the newest upstream minor
+- containerd: the newest LTS release line at least 3 months old
 - Home Assistant: One month behind latest stable (YYYY.MM format)
 - ESPHome: One month behind latest stable (YYYY.MM format)
 """
@@ -153,6 +154,44 @@ def get_kubernetes_allowed_versions() -> str | None:
     return f"/^{target[0]}\\.{target[1]}$/"
 
 
+def get_containerd_allowed_versions() -> str | None:
+    """Get the newest containerd LTS line at least 3 months old.
+
+    containerd supports upgrading one minor at a time or directly from one LTS
+    to the next, and only removes features in the release after an LTS.
+    Allowing a single LTS line keeps every upgrade on a supported path: the
+    rule stays on the current LTS until its successor has had three months to
+    settle, then moves to that successor alone.
+    """
+    data = fetch_json("https://endoflife.date/api/containerd.json")
+    if not data:
+        return None
+
+    three_months_ago = datetime.now(UTC) - timedelta(days=90)
+    lts_cycles = []
+
+    for release in data:
+        if not release.get("lts"):
+            continue
+        release_date = datetime.strptime(release["releaseDate"], "%Y-%m-%d").replace(
+            tzinfo=UTC
+        )
+        if release_date <= three_months_ago:
+            lts_cycles.append(release["cycle"])
+
+    if not lts_cycles:
+        print(
+            "Warning: No containerd LTS versions found >= 3 months old",
+            file=sys.stderr,
+        )
+        return None
+
+    newest = max(lts_cycles, key=lambda cycle: [int(part) for part in cycle.split(".")])
+    escaped = newest.replace(".", "\\.")
+    # containerd release tags carry a "v" prefix, e.g. v2.3.5.
+    return f"/^v?{escaped}\\./"
+
+
 def get_pypi_latest_stable(package: str) -> str | None:
     """Get latest stable version from PyPI (excluding pre-releases)."""
     data = fetch_json(f"https://pypi.org/pypi/{package}/json")
@@ -261,6 +300,12 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
             "matchDatasources": ["github-tags"],
             "matchPackageNames": ["kubernetes/kubernetes"],
             "get_allowed": get_kubernetes_allowed_versions,
+        },
+        "containerd-lts": {
+            "description": "containerd: Newest LTS at least 3 months old (auto-managed)",
+            "matchDatasources": ["github-releases"],
+            "matchPackageNames": ["containerd/containerd"],
+            "get_allowed": get_containerd_allowed_versions,
         },
         "home-assistant-n-minus-1": {
             "description": "Home Assistant: One month behind latest (auto-managed)",
