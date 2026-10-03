@@ -683,6 +683,16 @@
       "prBodyNotes": [
         "Changes only which Kubernetes APT repository the nodes use. Installs no packages: the version pins move in a separate PR once this is merged."
       ]
+    },
+    {
+      "description": "containerd: Newest LTS at least 3 months old (auto-managed)",
+      "allowedVersions": "/^v?2\\.3\\./",
+      "matchDatasources": [
+        "github-releases"
+      ],
+      "matchPackageNames": [
+        "containerd/containerd"
+      ]
     }
   ],
   "gitIgnoredAuthors": [
