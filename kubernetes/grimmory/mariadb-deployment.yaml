@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: grimmory-mariadb
-        image: mariadb:11.8@sha256:2d2f4095530294735a857cfe22bb101e19b0849b416911c796ec4aa81b164a62
+        image: mariadb:11.8@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15
         ports:
         - containerPort: 3306
           name: mysql
