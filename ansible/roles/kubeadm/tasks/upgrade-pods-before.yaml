@@ -37,6 +37,19 @@
   loop_control:
     label: "{{ item.metadata.name }}"
 
+# A retry can find a node still cordoned by an earlier, failed run. Pods that
+# can only run on that node, such as a job needing its USB device, then have no
+# node until the run reaches and uncordons it, so unscheduled pods are left out
+# while any node is cordoned by the upgrade. The uncordon of the last such node
+# checks them again; see upgrade-uncordon.yaml.
+- name: "Upgrade: note whether a node is still cordoned by the upgrade"
+  ansible.builtin.set_fact:
+    kubeadm_upgrade_cordon_pending: >-
+      {{ (kubeadm_nodes_before.stdout | from_json)['items']
+         | selectattr('spec.unschedulable', 'defined') | selectattr('spec.unschedulable')
+         | map(attribute='metadata.annotations') | map('default', {})
+         | select('contains', kubeadm_cordon_annotation) | list | length > 0 }}
+
 - name: "Upgrade: wait for every pod in the cluster to be Ready before starting"
   ansible.builtin.command:
     argv:
@@ -44,7 +57,9 @@
       - get
       - pods
       - --all-namespaces
-      - --field-selector=status.phase!=Succeeded,status.phase!=Failed
+      - >-
+        --field-selector=status.phase!=Succeeded,status.phase!=Failed{{
+        ',spec.nodeName!=' if kubeadm_upgrade_cordon_pending | bool else '' }}
       - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
   delegate_to: "{{ kubeadm_control_plane_host }}"
   environment:
