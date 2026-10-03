@@ -11,16 +11,18 @@ OOM-kill a workload exactly when it needs headroom.
 
 ## How requests are set
 
-Goldilocks creates a VPA for each workload in a namespace labeled
-`goldilocks.fairwinds.com/enabled: "true"` (it is not on by default). Workloads
-VPA can't target, such as those in unlabeled namespaces or custom controllers
+Every namespace defined in this repo is labeled
+`goldilocks.fairwinds.com/enabled: "true"`, so Goldilocks creates a VPA for each
+workload it can target. Workloads VPA can't target, such as custom controllers
 without a `/scale` subresource like the actions-runner-controller runners,
 simply run without requests.
 
-`.kyverno/policies/require-goldilocks-vpa-config.yaml` requires every namespace
-with that label to carry both VPA annotations. It checks they are present, not
-their values; the `kyverno-validate` pre-commit hook runs it, and CI's Lint job
-runs that on every file. The convention for those values:
+`.kyverno/policies/require-goldilocks-vpa-config.yaml` requires every Namespace
+manifest to carry that label and both VPA annotations. It checks the annotations
+are present, not their values, so a namespace can opt out of VPA changes with
+`vpa-update-mode: "Off"` rather than by dropping the label. The
+`kyverno-validate` pre-commit hook runs it, and CI's Lint job runs that on every
+file. The convention for those values:
 
 ```yaml
 metadata:

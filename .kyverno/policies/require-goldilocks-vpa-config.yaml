@@ -8,18 +8,31 @@ metadata:
 spec:
   validationFailureAction: Enforce
   rules:
+  - name: require-goldilocks-enabled
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+    validate:
+      message: >-
+        Every namespace MUST set the label goldilocks.fairwinds.com/enabled: "true"
+        so Goldilocks creates VPAs for its workloads. To keep VPA from changing a
+        namespace's pods, set goldilocks.fairwinds.com/vpa-update-mode: "Off"
+        instead of leaving Goldilocks disabled.
+      pattern:
+        metadata:
+          labels:
+            goldilocks.fairwinds.com/enabled: "true"
   - name: require-vpa-annotations
     match:
       any:
       - resources:
           kinds:
           - Namespace
-          selector:
-            matchLabels:
-              goldilocks.fairwinds.com/enabled: "true"
     validate:
       message: >-
-        Namespaces with goldilocks.fairwinds.com/enabled=true MUST have both annotations:
+        Every namespace MUST have both annotations:
         1. goldilocks.fairwinds.com/vpa-update-mode (values: Off, Initial, Recreate,
         Auto, InPlaceOrRecreate)
         2. goldilocks.fairwinds.com/vpa-resource-policy (JSON format)
@@ -27,6 +40,7 @@ spec:
         Standard configurations:
         - Cluster-critical: Initial + RequestsOnly
         - All others: InPlaceOrRecreate + RequestsOnly
+        - To stop VPA changing a namespace's pods, set the update mode to Off
       pattern:
         metadata:
           annotations:
