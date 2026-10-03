@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
 # Debian 13 = trixie
 FROM geerlingguy/docker-debian13-ansible:latest@sha256:d24ea56c3ca39471800637d5c79b64e37afc486aa42776567aef586e36365b1e
