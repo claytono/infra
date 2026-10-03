@@ -7,7 +7,7 @@ node_exporter_enabled: true
 
 # The githubixx.containerd role default only moves once per containerd minor.
 # renovate: datasource=github-releases depName=containerd/containerd
-containerd_version: "2.2.1"
+containerd_version: "2.3.5"
 
 containerd_validate_config: true
 
