@@ -44,6 +44,10 @@
   environment:
     KUBECONFIG: "{{ kubeadm_kubeconfig }}"
   block:
+    # Pods with no node while another node is still cordoned by the upgrade
+    # are left out here too, as in the pre-check. Recording them as broken
+    # before the drain would exempt them from the post-uncordon check meant to
+    # confirm they come back.
     - name: "Upgrade: read every pod before the drain"
       ansible.builtin.command:
         argv:
@@ -51,7 +55,10 @@
           - get
           - pods
           - --all-namespaces
-          - --field-selector=status.phase!=Succeeded,status.phase!=Failed
+          - >-
+            --field-selector=status.phase!=Succeeded,status.phase!=Failed{{
+            ',spec.nodeName!=' if (kubeadm_upgrade_cordon_pending | default(false) | bool
+                                    and not kubeadm_upgrade_allow_unready_pods | bool) else '' }}
           - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
       register: kubeadm_pods_cluster_before
       changed_when: false

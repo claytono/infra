@@ -37,6 +37,21 @@
   loop_control:
     label: "{{ item.metadata.name }}"
 
+# A retry can find a node still cordoned by an earlier, failed run. Pods that
+# can only run on that node, such as a job needing its USB device, then have no
+# node until the run reaches and uncordons it, so unscheduled pods are left out
+# while any node is cordoned by the upgrade. The uncordon of the last such node
+# checks them again; see upgrade-uncordon.yaml. With
+# kubeadm_upgrade_allow_unready_pods nothing is left out, so every unready pod,
+# scheduled or not, is recorded and exempted as the override intends.
+- name: "Upgrade: note whether a node is still cordoned by the upgrade"
+  ansible.builtin.set_fact:
+    kubeadm_upgrade_cordon_pending: >-
+      {{ (kubeadm_nodes_before.stdout | from_json)['items']
+         | selectattr('spec.unschedulable', 'defined') | selectattr('spec.unschedulable')
+         | map(attribute='metadata.annotations') | map('default', {})
+         | select('contains', kubeadm_cordon_annotation) | list | length > 0 }}
+
 - name: "Upgrade: wait for every pod in the cluster to be Ready before starting"
   ansible.builtin.command:
     argv:
@@ -44,7 +59,10 @@
       - get
       - pods
       - --all-namespaces
-      - --field-selector=status.phase!=Succeeded,status.phase!=Failed
+      - >-
+        --field-selector=status.phase!=Succeeded,status.phase!=Failed{{
+        ',spec.nodeName!=' if (kubeadm_upgrade_cordon_pending | default(false) | bool
+                                and not kubeadm_upgrade_allow_unready_pods | bool) else '' }}
       - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
   delegate_to: "{{ kubeadm_control_plane_host }}"
   environment:
@@ -59,6 +77,14 @@
       kubeadm_pods_before.stdout_lines | reject('search', ' True$') | list | length == 0)
   retries: 6
   delay: 10
+
+# The pods left out above still have to come back. upgrade-uncordon.yaml
+# checks the whole cluster after the uncordon whenever this is set, even on a
+# patch-level pass that would otherwise skip that wait.
+- name: "Upgrade: note whether pods with no node were left out"
+  ansible.builtin.set_fact:
+    kubeadm_upgrade_skipped_unscheduled: >-
+      {{ kubeadm_upgrade_cordon_pending | bool and not kubeadm_upgrade_allow_unready_pods | bool }}
 
 - name: "Upgrade: record the workloads that were not Ready before the upgrade"
   ansible.builtin.set_fact:
