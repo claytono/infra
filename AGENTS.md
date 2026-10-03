@@ -13,7 +13,7 @@ including:
 - **[backups.md](.agents/rules/backups.md)** - Restic backup architecture for
   hosts and Kubernetes storage
 - **[kubernetes/](.agents/rules/kubernetes/)** - Kubernetes deployment patterns
-  (GitOps, Helm rendering, External Secrets)
+  (GitOps, Helm rendering, External Secrets, resource requests and limits)
 - **[ansible/](.agents/rules/ansible/)** - Ansible usage guidelines
 - **[opentofu/](.agents/rules/opentofu/)** - OpenTofu/Terraform usage
 - **[tooling/](.agents/rules/tooling/)** - Pre-commit hooks, CI/CD, and
