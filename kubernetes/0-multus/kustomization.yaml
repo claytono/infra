@@ -13,3 +13,26 @@ resources:
 images:
 - name: ghcr.io/k8snetworkplumbingwg/multus-cni
   newTag: v4.3.1-thick@sha256:a357a79359b80ddd5f4699117946cacf3b54f5baecf7944535594863e875fc25
+
+# Upstream pins kube-multus to 100m/50Mi requests and limits. The limits
+# throttled the daemon during a node drain in the 1.35 upgrade, stalling about
+# 60 pod teardowns; VPA sets the requests, as for other workloads.
+patches:
+
+- target:
+    kind: DaemonSet
+    name: kube-multus-ds
+  patch: |-
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: kube-multus-ds
+    spec:
+      template:
+        spec:
+          containers:
+          - name: kube-multus
+            resources: null
+          initContainers:
+          - name: install-multus-binary
+            resources: null
