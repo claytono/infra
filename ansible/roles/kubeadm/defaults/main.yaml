@@ -27,10 +27,12 @@ kubeadm_allow_minor_upgrade: false
 
 # Timeouts for the upgrade tasks, in seconds. Same values as
 # scripts/rolling-node-reboot.sh, which were tuned against this cluster:
-# drains are slow here because of PodDisruptionBudgets and iSCSI detach.
+# drains are slow here because of PodDisruptionBudgets and iSCSI detach. The
+# pod waits allow 15 minutes: one evicted pod during the 1.35 upgrade needed
+# about 8 to stop, move its volume, change its ownership and pull its images.
 kubeadm_drain_timeout: 300
 kubeadm_node_ready_timeout: 600
-kubeadm_node_pods_timeout: 300
+kubeadm_node_pods_timeout: 900
 
 # The upgrade tasks run kubectl on the control plane host. admin.conf rather
 # than super-admin.conf: cordon and drain need ordinary admin rights, and

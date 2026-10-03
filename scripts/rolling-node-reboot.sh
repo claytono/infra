@@ -7,11 +7,11 @@ set -euo pipefail
 # By default, the script will:
 # 1. Get list of pods on the node before draining
 # 2. Drain the node
-# 3. Wait for drained pods to become ready on other nodes (5 min timeout)
+# 3. Wait for drained pods to become ready on other nodes (15 min timeout)
 # 4. Reboot the node
 # 5. Wait for node to come back up
 # 6. Uncordon the node
-# 7. Wait for all pods on the node to be ready (5 min timeout)
+# 7. Wait for all pods on the node to be ready (15 min timeout)
 #
 # Usage: rolling-node-reboot.sh [OPTIONS] [node1 node2 ...]
 # If no nodes specified, reboots all nodes
@@ -85,10 +85,10 @@ EOF
 
 # Default timeout values (in seconds)
 DEFAULT_TIMEOUT_DRAIN=300
-DEFAULT_TIMEOUT_PODS_READY=300
+DEFAULT_TIMEOUT_PODS_READY=900
 DEFAULT_TIMEOUT_NODE_NOTREADY=300
 DEFAULT_TIMEOUT_NODE_READY=600
-DEFAULT_TIMEOUT_NODE_PODS=300
+DEFAULT_TIMEOUT_NODE_PODS=900
 DEFAULT_PROGRESS_INTERVAL=10
 
 # Parse command line options

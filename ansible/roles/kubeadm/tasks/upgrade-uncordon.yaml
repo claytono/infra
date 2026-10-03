@@ -28,6 +28,25 @@
         argv: [kubectl, annotate, node, "{{ inventory_hostname }}", "{{ kubeadm_cordon_annotation }}-"]
       changed_when: true
 
+    - name: "Upgrade: read the nodes after uncordoning"
+      when: kubeadm_upgrade_is_minor | bool
+      ansible.builtin.command:
+        argv: [kubectl, get, nodes, --output, json]
+      register: kubeadm_nodes_after
+      changed_when: false
+
+    # Same rule as the pre-check in upgrade-pods-before.yaml: while another node
+    # is still cordoned by the upgrade (a retry passing over nodes it already
+    # finished), pods that can only run there have no node yet.
+    - name: "Upgrade: note whether another node is still cordoned by the upgrade"
+      when: kubeadm_upgrade_is_minor | bool
+      ansible.builtin.set_fact:
+        kubeadm_upgrade_cordon_pending: >-
+          {{ (kubeadm_nodes_after.stdout | from_json)['items']
+             | selectattr('spec.unschedulable', 'defined') | selectattr('spec.unschedulable')
+             | map(attribute='metadata.annotations') | map('default', {})
+             | select('contains', kubeadm_cordon_annotation) | list | length > 0 }}
+
     # After a drain, some evicted pods could only be scheduled once this node
     # was back. Check every workload in the cluster, unscheduled ones included,
     # before the next node is drained. Workloads not Ready before the drain are
@@ -40,7 +59,9 @@
           - get
           - pods
           - --all-namespaces
-          - --field-selector=status.phase!=Succeeded,status.phase!=Failed
+          - >-
+            --field-selector=status.phase!=Succeeded,status.phase!=Failed{{
+            ',spec.nodeName!=' if kubeadm_upgrade_cordon_pending | bool else '' }}
           - --output=jsonpath={{ kubeadm_pod_ready_jsonpath }}
       register: kubeadm_pods_cluster_after
       changed_when: false
