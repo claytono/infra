@@ -52,7 +52,7 @@ spec:
         - name: data
           mountPath: /opt/data
       - name: www
-        image: nginxinc/nginx-unprivileged:1.30-alpine@sha256:442753882674b49ae2c1de83ed67896131c0777f56df5005e356e62bc3f7e7ce
+        image: nginxinc/nginx-unprivileged:1.30-alpine@sha256:ed04ec1ff34502c339ee5c3ae3f855442398edc1d05591e2b98981dcbbd20b1e
         restartPolicy: Always
         ports:
         - containerPort: 8080
