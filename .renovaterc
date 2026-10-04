@@ -663,7 +663,7 @@
     },
     {
       "description": "Kubernetes: one minor at a time, capped one behind upstream (auto-managed)",
-      "allowedVersions": "/^1\\.35$/",
+      "allowedVersions": "/^1\\.36$/",
       "matchDatasources": [
         "github-tags"
       ],
