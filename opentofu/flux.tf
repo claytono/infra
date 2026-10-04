@@ -7,13 +7,20 @@ resource "vultr_ssh_key" "flux" {
 # curl -X GET "https://api.vultr.com/v2/os" -H "Authorization: Bearer YOUR_API_KEY" | jq '.os[] | select(.name | contains("Debian")) | {id, name, arch, family}'
 
 resource "vultr_instance" "flux" {
-  plan        = "vc2-1c-1gb"
-  region      = "ewr"
-  os_id       = 477 # Debian 11 x64 (bullseye)
+  plan   = "vc2-1c-1gb"
+  region = "ewr"
+  # Installed from 477 (Debian 11) and upgraded in place since. os_id is
+  # ForceNew in the Vultr provider, so changes are ignored to keep tofu from
+  # rebuilding the instance when the OS is upgraded.
+  os_id       = 2625 # Debian 13 x64 (trixie)
   label       = "flux.fnord.net"
   hostname    = "flux"
   ssh_key_ids = [vultr_ssh_key.flux.id]
   enable_ipv6 = true
+
+  lifecycle {
+    ignore_changes = [os_id]
+  }
 }
 
 resource "vultr_reverse_ipv4" "flux" {
