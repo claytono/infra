@@ -8,8 +8,9 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.30.0"
+    app.kubernetes.io/version: "1.30.1"
     app.kubernetes.io/managed-by: Helm
+
 ---
 # Source: cloudnative-pg/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -19,7 +20,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.30.0"
+    app.kubernetes.io/version: "1.30.1"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -262,6 +263,7 @@ rules:
   - list
   - patch
   - watch
+
 ---
 # Source: cloudnative-pg/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -271,7 +273,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.30.0"
+    app.kubernetes.io/version: "1.30.1"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -293,6 +295,7 @@ rules:
   - get
   - list
   - watch
+
 ---
 # Source: cloudnative-pg/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -302,7 +305,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.30.0"
+    app.kubernetes.io/version: "1.30.1"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -326,6 +329,7 @@ rules:
   - deletecollection
   - patch
   - update
+
 ---
 # Source: cloudnative-pg/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -335,7 +339,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/instance: cloudnative-pg
-    app.kubernetes.io/version: "1.30.0"
+    app.kubernetes.io/version: "1.30.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -345,6 +349,8 @@ subjects:
 - kind: ServiceAccount
   name: cloudnative-pg
   namespace: cnpg-system
+
+
 ---
 # Source: cloudnative-pg/templates/rbac.yaml
 #
@@ -365,3 +371,4 @@ subjects:
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+
