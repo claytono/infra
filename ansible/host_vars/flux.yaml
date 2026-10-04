@@ -1,9 +1,13 @@
 ---
-# Vultr VPS running Debian 12 (bookworm)
+# Vultr VPS running Debian 13 (trixie)
 # vc2-1c-1gb instance
 common_additional_packages:
   # Flux uses Vultr networking rather than the role that installs this elsewhere.
   - resolvconf
+# Vultr's per-boot cloud-init only fought Ansible over /etc/hosts and failed
+# on tailscale0 hotplug. Networking uses the static interfaces file it left.
+common_additional_packages_to_remove:
+  - cloud-init
 # This remote VPS needs MagicDNS for its backup and monitoring endpoints.
 tailscale_args: --advertise-exit-node --accept-dns=true
 tailscale_tags: ["flux"]

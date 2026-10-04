@@ -7,7 +7,9 @@
 
 - name: "Remove unwanted packages"
   ansible.builtin.apt:
-    name: "{{ common_packages_to_remove }}"
+    name: >-
+      {{ common_packages_to_remove
+         + (common_additional_packages_to_remove | default([])) }}
     state: absent
 
 - name: "Install wanted packages"
@@ -186,6 +188,15 @@
     - { name: "fs.inotify.max_user_watches", value: "1048576" }
     - { name: "fs.inotify.max_user_instances", value: "4096" }
 
+- name: "Detect virtualization"
+  ansible.builtin.command: systemd-detect-virt
+  register: common_detect_virt
+  changed_when: false
+  # Exits 1 and prints "none" on bare metal; a missing binary also leaves
+  # stdout empty, which skips hardware-only settings below.
+  failed_when: false
+  check_mode: false
+
 - name: "Configure NMI watchdog sysctl"
   ansible.posix.sysctl:
     name: kernel.nmi_watchdog
@@ -195,7 +206,9 @@
     reload: true
   when:
     - ansible_facts['architecture'] in ['x86_64', 'i386']
-    - ansible_facts['virtualization_role'] != 'guest'
+    # Ansible's virtualization facts miss some hypervisors, e.g. Vultr
+    # reports NA. systemd-detect-virt identifies VMs and containers.
+    - common_detect_virt.stdout == 'none'
 
 - name: "Configure IPv6 hardening sysctls"
   ansible.builtin.copy:
