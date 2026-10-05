@@ -1,15 +1,30 @@
 ---
 name: Renovate PR Evaluation
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+# Evaluations run as passes rather than per PR event, so a mass Renovate rebase
+# does not start one evaluation per branch. workflow_run only starts a pass;
+# the pass selects Renovate-authored PRs from the inventory and never acts on
+# the PR that triggered it. PRs from non-owners do not run CI without approval,
+# so they cannot fire this trigger on their own.
+on:  # zizmor: ignore[dangerous-triggers]
+  # Hourly pass, off the top of the hour to avoid scheduler load.
+  schedule:
+  - cron: 23 * * * *
+  # Any workflow finished on a Renovate branch, so its PR may now be ready. The
+  # job filter below drops runs that are not Renovate pull_request runs, so new
+  # check workflows need no change here.
+  workflow_run:
+    workflows:
+    - '*'
+    - '!Renovate PR Evaluation'
+    types: [completed]
   workflow_dispatch:
     inputs:
       pr_number:
-        description: PR number to evaluate, or 'all' for all unevaluated
-        required: true
+        description: PR number to evaluate now; empty runs a normal pass
+        required: false
         type: string
+        default: ''
       dry_run:
         description: Evaluate but do not post or label
         required: false
@@ -38,6 +53,10 @@ on:
 
 jobs:
   renovate-eval:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.event == 'pull_request' &&
+      startsWith(github.event.workflow_run.head_branch, 'renovate/'))
     permissions:
       actions: read
       contents: read
@@ -49,8 +68,9 @@ jobs:
     # Renovate pinDigest updates for this reusable workflow are disabled in .renovaterc.
     uses: claytono/github-actions/.github/workflows/claytono-renovate-eval.yaml@main  # zizmor: ignore[unpinned-uses]
     with:
-      pr_number: ${{ github.event.pull_request.number || inputs.pr_number }}
-      trigger: ${{ github.event_name == 'pull_request' && 'auto' || 'manual' }}
+      pr_number: ${{ inputs.pr_number || '' }}
+      # Start small while the pass-based rollout is verified.
+      batch_size: 2
       dry_run: ${{ inputs.dry_run || false }}
       provider: ${{ inputs.provider }}
       codex_runner_label: ${{ inputs.codex_runner_label || 'codex' }}
