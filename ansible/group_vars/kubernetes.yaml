@@ -38,7 +38,7 @@ containerd_config: |
         conf_dir = '/etc/cni/net.d'
 
 # Our goal is to stay one version behind
-kubernetes_short_version: "1.35"
+kubernetes_short_version: "1.36"
 kubernetes_version: "1.35.9"
 kubeadm_version: "1.35.9-1.1"
 kubelet_version: "1.35.9-1.1"
