@@ -26,7 +26,7 @@ spec:
       priorityClassName: gpu-priority
       containers:
       - name: ollama
-        image: ollama/ollama:0.33.3@sha256:32931b46719f673c05fdbaa81ccb26da18ea4a1c57590a754874ab28ba269eb2
+        image: ollama/ollama:0.34.2@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532
         env:
         - name: OLLAMA_CONTEXT_LENGTH
           value: '8192'
