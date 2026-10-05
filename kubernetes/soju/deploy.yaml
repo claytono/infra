@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: soju
-        image: codeberg.org/emersion/soju:v0.10.1@sha256:c0473d8f19554a03790f2a475d59646600f2f384b07b296afa782aec4c40253d
+        image: codeberg.org/emersion/soju:v0.11.1@sha256:d96e0e796eab43fdea143e2ccfdd586bb5b04e3bb6a6dc544b01c35ebeaef74a
         imagePullPolicy: IfNotPresent
         args:
         - -config
