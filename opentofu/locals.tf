@@ -131,6 +131,13 @@ locals {
       hostname = "pifire.oneill.net"
       note     = "Raspberry Pi 4"
     }
+    droplet = {
+      mac         = "d0:cf:13:18:45:b4"
+      ip          = "172.20.4.169"
+      hostname    = "droplet.oneill.net"
+      note        = "Hydrific Droplet water flow monitor"
+      enable_ipv6 = false
+    }
     landroid = {
       mac         = "7c:fa:80:61:08:2e"
       ip          = "172.20.6.67"
