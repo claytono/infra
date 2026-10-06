@@ -39,32 +39,17 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: List finished tasks on node01
   community.proxmox.proxmox_tasks_info:
-    api_host: proxmoxhost
-    api_user: root@pam
-    api_password: '{{ password | default(omit) }}'
-    api_token_id: '{{ token_id | default(omit) }}'
-    api_token_secret: '{{ token_secret | default(omit) }}'
     node: node01
   register: result
 
 - name: List active tasks on node02
   community.proxmox.proxmox_tasks_info:
-    api_host: proxmoxhost
-    api_user: root@pam
-    api_password: '{{ password | default(omit) }}'
-    api_token_id: '{{ token_id | default(omit) }}'
-    api_token_secret: '{{ token_secret | default(omit) }}'
     node: node02
     source: active
   register: result
 
 - name: Retrieve information about specific tasks on node01
   community.proxmox.proxmox_tasks_info:
-    api_host: proxmoxhost
-    api_user: root@pam
-    api_password: '{{ password | default(omit) }}'
-    api_token_id: '{{ token_id | default(omit) }}'
-    api_token_secret: '{{ token_secret | default(omit) }}'
     task: 'UPID:node01:00003263:16167ACE:621EE230:srvreload:networking:root@pam:'
     node: node01
   register: proxmox_tasks
@@ -129,12 +114,22 @@ msg:
   sample: 'Task: UPID:xyz:xyz does not exist on node: proxmoxnode'
 """
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        task=dict(type="str", aliases=["upid", "name"], required=False),
+        node=dict(type="str", required=True),
+        source=dict(default="archive", choices=["archive", "active", "all"]),
+    )
+
+
+def module_options():
+    return {}
 
 
 class ProxmoxTaskInfoAnsible(ProxmoxAnsible):
@@ -161,28 +156,12 @@ class ProxmoxTask:
                 self.info[k] = v
 
 
-def proxmox_task_info_argument_spec():
-    return dict(
-        task=dict(type="str", aliases=["upid", "name"], required=False),
-        node=dict(type="str", required=True),
-        source=dict(default="archive", choices=["archive", "active", "all"]),
-    )
-
-
 def main():
-    module_args = proxmox_auth_argument_spec()
-    task_info_args = proxmox_task_info_argument_spec()
-    module_args.update(task_info_args)
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxTaskInfoAnsible(module)
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        required_together=[("api_token_id", "api_token_secret")],
-        required_one_of=[("api_password", "api_token_id")],
-        supports_check_mode=True,
-    )
     result = dict(changed=False)
 
-    proxmox = ProxmoxTaskInfoAnsible(module)
     upid = module.params["task"]
     node = module.params["node"]
     source = module.params["source"]

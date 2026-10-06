@@ -29,9 +29,9 @@ options:
     type: int
   disk:
     description:
-      - The disk key (V(unused[n]), V(ide[n]), V(sata[n]), V(scsi[n]) or V(virtio[n])) you want to operate on.
+      - The disk key (V(unused[n]), V(ide[n]), V(sata[n]), V(scsi[n]), V(virtio[n]), V(efidisk[n]) or V(tpmstate[n])) you want to operate on.
       - Disk buses (IDE, SATA and so on) have fixed ranges of V(n) that accepted by Proxmox API.
-      - 'For IDE: 0-3; for SCSI: 0-30; for SATA: 0-5; for VirtIO: 0-15; for Unused: 0-255.'
+      - 'For IDE: 0-3; for SCSI: 0-30; for SATA: 0-5; for VirtIO: 0-15; for Unused: 0-255; for EFI disk: 0; for TPM state: 0.'
     type: str
     required: true
   state:
@@ -99,7 +99,7 @@ options:
     description:
       - The (unique) ID of the VM where disk will be placed when O(state=moved).
       - You can move disk between VMs only when the same storage is used.
-      - Mutually exclusive with O(target_vmid).
+      - Mutually exclusive with O(target_storage).
     type: int
   timeout:
     description:
@@ -316,10 +316,6 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create new disk in VM (do not rewrite in case it exists already)
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_token_id: token1
-    api_token_secret: some-token-data
     name: vm-name
     disk: scsi3
     backup: true
@@ -330,10 +326,6 @@ EXAMPLES = r"""
 
 - name: Create new disk in VM (force rewrite in case it exists already)
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_token_id: token1
-    api_token_secret: some-token-data
     vmid: 101
     disk: scsi3
     format: qcow2
@@ -344,10 +336,6 @@ EXAMPLES = r"""
 
 - name: Update existing disk
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_token_id: token1
-    api_token_secret: some-token-data
     vmid: 101
     disk: ide0
     backup: false
@@ -357,10 +345,6 @@ EXAMPLES = r"""
 
 - name: Grow existing disk
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_token_id: token1
-    api_token_secret: some-token-data
     vmid: 101
     disk: sata4
     size: +5G
@@ -368,19 +352,12 @@ EXAMPLES = r"""
 
 - name: Detach disk (leave it unused)
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_token_id: token1
-    api_token_secret: some-token-data
     name: vm-name
     disk: virtio0
     state: detached
 
 - name: Move disk to another storage
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_password: secret
     vmid: 101
     disk: scsi7
     target_storage: local
@@ -389,10 +366,6 @@ EXAMPLES = r"""
 
 - name: Move disk from one VM to another
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_token_id: token1
-    api_token_secret: some-token-data
     vmid: 101
     disk: scsi7
     target_vmid: 201
@@ -400,19 +373,12 @@ EXAMPLES = r"""
 
 - name: Remove disk permanently
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_password: secret
     vmid: 101
     disk: scsi4
     state: absent
 
 - name: Mount ISO image on CD-ROM (create drive if missing)
   community.proxmox.proxmox_disk:
-    api_host: node1
-    api_user: root@pam
-    api_token_id: token1
-    api_token_secret: some-token-data
     vmid: 101
     disk: ide2
     media: cdrom
@@ -433,13 +399,11 @@ msg:
   sample: "Disk scsi3 created in VM 101"
 """
 
-from re import compile, match, sub
-
-from ansible.module_utils.basic import AnsibleModule
+import re
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 from ansible_collections.community.proxmox.plugins.module_utils.version import LooseVersion
 
@@ -485,6 +449,105 @@ def disk_conf_str_to_dict(config_string):
         config_current[k] = v
 
     return config_current
+
+
+def module_args():
+    return dict(
+        # Proxmox native parameters
+        aio=dict(type="str", choices=["native", "threads", "io_uring"]),
+        backup=dict(type="bool"),
+        bps_max_length=dict(type="int"),
+        bps_rd_max_length=dict(type="int"),
+        bps_wr_max_length=dict(type="int"),
+        cache=dict(type="str", choices=["none", "writethrough", "writeback", "unsafe", "directsync"]),
+        cyls=dict(type="int"),
+        detect_zeroes=dict(type="bool"),
+        discard=dict(type="str", choices=["ignore", "on"]),
+        format=dict(type="str", choices=["raw", "cow", "qcow", "qed", "qcow2", "vmdk", "cloop"]),
+        heads=dict(type="int"),
+        import_from=dict(type="str"),
+        iops=dict(type="int"),
+        iops_max=dict(type="int"),
+        iops_max_length=dict(type="int"),
+        iops_rd=dict(type="int"),
+        iops_rd_max=dict(type="int"),
+        iops_rd_max_length=dict(type="int"),
+        iops_wr=dict(type="int"),
+        iops_wr_max=dict(type="int"),
+        iops_wr_max_length=dict(type="int"),
+        iothread=dict(type="bool"),
+        iso_image=dict(type="str"),
+        mbps=dict(type="float"),
+        mbps_max=dict(type="float"),
+        mbps_rd=dict(type="float"),
+        mbps_rd_max=dict(type="float"),
+        mbps_wr=dict(type="float"),
+        mbps_wr_max=dict(type="float"),
+        media=dict(type="str", choices=["cdrom", "disk"]),
+        queues=dict(type="int"),
+        replicate=dict(type="bool"),
+        rerror=dict(type="str", choices=["ignore", "report", "stop"]),
+        ro=dict(type="bool"),
+        scsiblock=dict(type="bool"),
+        secs=dict(type="int"),
+        serial=dict(type="str"),
+        shared=dict(type="bool"),
+        snapshot=dict(type="bool"),
+        ssd=dict(type="bool"),
+        trans=dict(type="str", choices=["auto", "lba", "none"]),
+        werror=dict(type="str", choices=["enospc", "ignore", "report", "stop"]),
+        wwn=dict(type="str"),
+        # Disk moving relates parameters
+        bwlimit=dict(type="int"),
+        target_storage=dict(type="str"),
+        target_disk=dict(type="str"),
+        target_vmid=dict(type="int"),
+        delete_moved=dict(type="bool"),
+        timeout=dict(type="int", default="600"),
+        # Module related parameters
+        name=dict(type="str"),
+        vmid=dict(type="int"),
+        disk=dict(type="str", required=True),
+        storage=dict(type="str"),
+        size=dict(type="str"),
+        state=dict(type="str", choices=["present", "resized", "detached", "moved", "absent"], default="present"),
+        create=dict(type="str", choices=["disabled", "regular", "forced"], default="regular"),
+    )
+
+
+def module_options():
+    return dict(
+        required_one_of=[("name", "vmid")],
+        required_if=[
+            ("create", "forced", ["storage"]),
+            ("state", "resized", ["size"]),
+        ],
+        required_by={
+            "target_disk": "target_vmid",
+            "mbps_max": "mbps",
+            "mbps_rd_max": "mbps_rd",
+            "mbps_wr_max": "mbps_wr",
+            "bps_max_length": "mbps_max",
+            "bps_rd_max_length": "mbps_rd_max",
+            "bps_wr_max_length": "mbps_wr_max",
+            "iops_max": "iops",
+            "iops_rd_max": "iops_rd",
+            "iops_wr_max": "iops_wr",
+            "iops_max_length": "iops_max",
+            "iops_rd_max_length": "iops_rd_max",
+            "iops_wr_max_length": "iops_wr_max",
+            "iso_image": "media",
+        },
+        supports_check_mode=False,
+        mutually_exclusive=[
+            ("target_vmid", "target_storage"),
+            ("mbps", "mbps_rd"),
+            ("mbps", "mbps_wr"),
+            ("iops", "iops_rd"),
+            ("iops", "iops_wr"),
+            ("import_from", "size"),
+        ],
+    )
 
 
 class ProxmoxDiskAnsible(ProxmoxAnsible):
@@ -533,7 +596,13 @@ class ProxmoxDiskAnsible(ProxmoxAnsible):
         "wwn",
     ]
     supported_bus_num_ranges = dict(
-        ide=range(0, 4), scsi=range(0, 31), sata=range(0, 6), virtio=range(0, 16), unused=range(0, 256)
+        ide=range(0, 4),
+        scsi=range(0, 31),
+        sata=range(0, 6),
+        virtio=range(0, 16),
+        unused=range(0, 256),
+        efidisk=range(0, 1),
+        tpmstate=range(0, 1),
     )
 
     def get_create_attributes(self):
@@ -548,7 +617,7 @@ class ProxmoxDiskAnsible(ProxmoxAnsible):
         }
         return params
 
-    def create_disk(self, disk, vmid, vm, vm_config):
+    def create_disk(self, disk, vmid, vm, vm_config):  # noqa: PLR0912
         """Create a disk in the specified virtual machine. Check if creation is required,
         and if so, compile the disk configuration and create it by updating the virtual
         machine configuration. After calling the API function, wait for the result.
@@ -696,7 +765,7 @@ class ProxmoxDiskAnsible(ProxmoxAnsible):
             and the message to return to Ansible.
         """
         size = self.module.params["size"]
-        if not match(r"^\+?\d+(\.\d+)?[KMGT]?$", size):
+        if not re.match(r"^\+?\d+(\.\d+)?[KMGT]?$", size):
             self.module.fail_json(msg=f"Unrecognized size pattern for disk {disk}: {size}")
         disk_config = disk_conf_str_to_dict(vm_config[disk])
         actual_size = disk_config["size"]
@@ -706,7 +775,7 @@ class ProxmoxDiskAnsible(ProxmoxAnsible):
         # Resize disk API endpoint has changed at v8.0: PUT method become async.
         version = self.version()
         pve_major_version = 3 if version < LooseVersion("4.0") else version.version[0]
-        if pve_major_version >= 8:
+        if pve_major_version >= 8:  # noqa: PLR2004
             current_task_id = self.proxmox_api.nodes(vm["node"]).qemu(vmid).resize.set(disk=disk, size=size)
             task_success, fail_reason = self.api_task_complete(
                 vm["node"], current_task_id, self.module.params["timeout"]
@@ -725,114 +794,15 @@ class ProxmoxDiskAnsible(ProxmoxAnsible):
             return True, f"Disk {disk} resized in VM {vmid}"
 
 
-def main():
-    module_args = proxmox_auth_argument_spec()
-    disk_args = dict(
-        # Proxmox native parameters
-        aio=dict(type="str", choices=["native", "threads", "io_uring"]),
-        backup=dict(type="bool"),
-        bps_max_length=dict(type="int"),
-        bps_rd_max_length=dict(type="int"),
-        bps_wr_max_length=dict(type="int"),
-        cache=dict(type="str", choices=["none", "writethrough", "writeback", "unsafe", "directsync"]),
-        cyls=dict(type="int"),
-        detect_zeroes=dict(type="bool"),
-        discard=dict(type="str", choices=["ignore", "on"]),
-        format=dict(type="str", choices=["raw", "cow", "qcow", "qed", "qcow2", "vmdk", "cloop"]),
-        heads=dict(type="int"),
-        import_from=dict(type="str"),
-        iops=dict(type="int"),
-        iops_max=dict(type="int"),
-        iops_max_length=dict(type="int"),
-        iops_rd=dict(type="int"),
-        iops_rd_max=dict(type="int"),
-        iops_rd_max_length=dict(type="int"),
-        iops_wr=dict(type="int"),
-        iops_wr_max=dict(type="int"),
-        iops_wr_max_length=dict(type="int"),
-        iothread=dict(type="bool"),
-        iso_image=dict(type="str"),
-        mbps=dict(type="float"),
-        mbps_max=dict(type="float"),
-        mbps_rd=dict(type="float"),
-        mbps_rd_max=dict(type="float"),
-        mbps_wr=dict(type="float"),
-        mbps_wr_max=dict(type="float"),
-        media=dict(type="str", choices=["cdrom", "disk"]),
-        queues=dict(type="int"),
-        replicate=dict(type="bool"),
-        rerror=dict(type="str", choices=["ignore", "report", "stop"]),
-        ro=dict(type="bool"),
-        scsiblock=dict(type="bool"),
-        secs=dict(type="int"),
-        serial=dict(type="str"),
-        shared=dict(type="bool"),
-        snapshot=dict(type="bool"),
-        ssd=dict(type="bool"),
-        trans=dict(type="str", choices=["auto", "lba", "none"]),
-        werror=dict(type="str", choices=["enospc", "ignore", "report", "stop"]),
-        wwn=dict(type="str"),
-        # Disk moving relates parameters
-        bwlimit=dict(type="int"),
-        target_storage=dict(type="str"),
-        target_disk=dict(type="str"),
-        target_vmid=dict(type="int"),
-        delete_moved=dict(type="bool"),
-        timeout=dict(type="int", default="600"),
-        # Module related parameters
-        name=dict(type="str"),
-        vmid=dict(type="int"),
-        disk=dict(type="str", required=True),
-        storage=dict(type="str"),
-        size=dict(type="str"),
-        state=dict(type="str", choices=["present", "resized", "detached", "moved", "absent"], default="present"),
-        create=dict(type="str", choices=["disabled", "regular", "forced"], default="regular"),
-    )
-
-    module_args.update(disk_args)
-
-    module = AnsibleModule(
-        argument_spec=module_args,
-        required_together=[("api_token_id", "api_token_secret")],
-        required_one_of=[("name", "vmid"), ("api_password", "api_token_id")],
-        required_if=[
-            ("create", "forced", ["storage"]),
-            ("state", "resized", ["size"]),
-        ],
-        required_by={
-            "target_disk": "target_vmid",
-            "mbps_max": "mbps",
-            "mbps_rd_max": "mbps_rd",
-            "mbps_wr_max": "mbps_wr",
-            "bps_max_length": "mbps_max",
-            "bps_rd_max_length": "mbps_rd_max",
-            "bps_wr_max_length": "mbps_wr_max",
-            "iops_max": "iops",
-            "iops_rd_max": "iops_rd",
-            "iops_wr_max": "iops_wr",
-            "iops_max_length": "iops_max",
-            "iops_rd_max_length": "iops_rd_max",
-            "iops_wr_max_length": "iops_wr_max",
-            "iso_image": "media",
-        },
-        supports_check_mode=False,
-        mutually_exclusive=[
-            ("target_vmid", "target_storage"),
-            ("mbps", "mbps_rd"),
-            ("mbps", "mbps_wr"),
-            ("iops", "iops_rd"),
-            ("iops", "iops_wr"),
-            ("import_from", "size"),
-        ],
-    )
-
+def main():  # noqa: PLR0912, PLR0915
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxDiskAnsible(module)
 
     disk = module.params["disk"]
     # Verify disk name has appropriate name
-    disk_regex = compile(r"^([a-z]+)([0-9]+)$")
-    disk_bus = sub(disk_regex, r"\1", disk)
-    disk_number = int(sub(disk_regex, r"\2", disk))
+    disk_regex = re.compile(r"^([a-z]+)([0-9]+)$")
+    disk_bus = re.sub(disk_regex, r"\1", disk)
+    disk_number = int(re.sub(disk_regex, r"\2", disk))
     if disk_bus not in proxmox.supported_bus_num_ranges:
         proxmox.module.fail_json(msg=f"Unsupported disk bus: {disk_bus}")
     elif disk_number not in proxmox.supported_bus_num_ranges[disk_bus]:

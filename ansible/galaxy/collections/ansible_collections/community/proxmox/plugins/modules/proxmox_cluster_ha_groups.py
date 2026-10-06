@@ -72,10 +72,6 @@ author:
 EXAMPLES = r"""
 - name: Create HA group
   community.proxmox.proxmox_cluster_ha_groups:
-    api_host: "{{ ansible_host }}"
-    api_password: "{{ proxmox_root_pw | default(lookup('ansible.builtin.env', 'PROXMOX_PASSWORD', default='')) }}"
-    api_user: root@pam
-
     state: "present"
     name: ha0
     comment: yes
@@ -85,22 +81,31 @@ EXAMPLES = r"""
 
 - name: Delete HA group
   community.proxmox.proxmox_cluster_ha_groups:
-    api_host: "{{ ansible_host }}"
-    api_password: "{{ proxmox_root_pw | default(lookup('ansible.builtin.env', 'PROXMOX_PASSWORD', default='')) }}"
-    api_user: root@pam
-
     state: "absent"
     name: ha0
 """
 
 RETURN = r"""#"""
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        state=dict(choices=["present", "absent"], required=True),
+        name=dict(type="str", required=True),
+        comment=dict(type="str", required=False),
+        nodes=dict(type="list", elements="str", required=False),
+        nofailback=dict(type="bool", default=False),
+        restricted=dict(type="bool", default=False),
+    )
+
+
+def module_options():
+    return dict(supports_check_mode=False)
 
 
 class ProxmoxClusterHAGroupsAnsible(ProxmoxAnsible):
@@ -117,7 +122,7 @@ class ProxmoxClusterHAGroupsAnsible(ProxmoxAnsible):
     def _delete(self, name):
         return self.proxmox_api.cluster.ha.groups(name).delete()
 
-    def create(self, groups, name, comment, nodes, nofailback, restricted):
+    def create(self, groups, name, comment, nodes, nofailback, restricted):  # noqa: PLR0913
         data = {
             "comment": comment,
             "nodes": ",".join(nodes),
@@ -156,26 +161,12 @@ class ProxmoxClusterHAGroupsAnsible(ProxmoxAnsible):
 
 
 def run_module():
-    module_args = proxmox_auth_argument_spec()
-
-    acl_args = dict(
-        state=dict(choices=["present", "absent"], required=True),
-        name=dict(type="str", required=True),
-        comment=dict(type="str", required=False),
-        nodes=dict(type="list", elements="str", required=False),
-        nofailback=dict(type="bool", default=False),
-        restricted=dict(type="bool", default=False),
-    )
-
-    module_args.update(acl_args)
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxClusterHAGroupsAnsible(module)
 
     result = dict(
         changed=False,
     )
-
-    module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
-
-    proxmox = ProxmoxClusterHAGroupsAnsible(module)
 
     name = module.params["name"]
     comment = module.params["comment"]

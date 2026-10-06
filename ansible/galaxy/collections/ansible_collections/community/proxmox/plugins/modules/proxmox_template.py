@@ -92,17 +92,11 @@ EXAMPLES = r"""
 - name: Upload new openvz template with minimal options
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     src: ~/ubuntu-14.04-x86_64.tar.gz
 
 - name: Pull new openvz template with minimal options
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     url: https://ubuntu-mirror/ubuntu-14.04-x86_64.tar.gz
 
 - name: >
@@ -110,16 +104,11 @@ EXAMPLES = r"""
     PROXMOX_PASSWORD variable(you should export it before)
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_host: node1
     src: ~/ubuntu-14.04-x86_64.tar.gz
 
 - name: Upload new openvz template with all options and force overwrite
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     storage: local
     content_type: vztmpl
     src: ~/ubuntu-14.04-x86_64.tar.gz
@@ -128,9 +117,6 @@ EXAMPLES = r"""
 - name: Pull new openvz template with all options and force overwrite
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     storage: local
     content_type: vztmpl
     url: https://ubuntu-mirror/ubuntu-14.04-x86_64.tar.gz
@@ -139,18 +125,12 @@ EXAMPLES = r"""
 - name: Delete template with minimal options
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     template: ubuntu-14.04-x86_64.tar.gz
     state: absent
 
 - name: Download proxmox appliance container template
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     storage: local
     content_type: vztmpl
     template: ubuntu-20.04-standard_20.04-1_amd64.tar.gz
@@ -158,9 +138,6 @@ EXAMPLES = r"""
 - name: Download and verify a template's checksum
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     url: ubuntu-20.04-standard_20.04-1_amd64.tar.gz
     checksum_algorithm: sha256
     checksum: 65d860160bdc9b98abf72407e14ca40b609417de7939897d3b58d55787aaef69
@@ -168,18 +145,12 @@ EXAMPLES = r"""
 - name: Upload new disk image template with minimal options
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     content_type: import
     src: debian-13-genericcloud-amd64.qcow2
 
 - name: Upload new ISO with minimal options
   community.proxmox.proxmox_template:
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     content_type: iso
     src: proxmox.iso
 """
@@ -189,14 +160,16 @@ import time
 import traceback
 from urllib.parse import urlencode, urlparse
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import missing_required_lib
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 
 REQUESTS_TOOLBELT_ERR = None
+MAX_FILE_SIZE_WITHOUT_REQUESTS_TOOLBELT = 256 * 1024 * 1024  # 256 MB
+
 try:
     # requests_toolbelt is used internally by proxmoxer module
     import requests_toolbelt  # noqa: F401, pylint: disable=unused-import
@@ -205,6 +178,31 @@ try:
 except ImportError:
     HAS_REQUESTS_TOOLBELT = False
     REQUESTS_TOOLBELT_ERR = traceback.format_exc()
+
+
+def module_args():
+    return dict(
+        node=dict(),
+        src=dict(type="path"),
+        url=dict(),
+        template=dict(),
+        content_type=dict(default="vztmpl", choices=["vztmpl", "iso", "import"]),
+        storage=dict(default="local"),
+        timeout=dict(type="int", default=30),
+        force=dict(type="bool", default=False),
+        state=dict(default="present", choices=["present", "absent"]),
+        checksum_algorithm=dict(choices=["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]),
+        checksum=dict(type="str"),
+    )
+
+
+def module_options():
+    return dict(
+        supports_check_mode=False,
+        required_together=[("checksum", "checksum_algorithm")],
+        required_if=[("state", "absent", ["template"])],
+        mutually_exclusive=[("src", "url")],
+    )
 
 
 class ProxmoxTemplateAnsible(ProxmoxAnsible):
@@ -238,7 +236,7 @@ class ProxmoxTemplateAnsible(ProxmoxAnsible):
 
     def upload_template(self, node, storage, content_type, realpath, timeout):
         stats = os.stat(realpath)
-        if stats.st_size > 268435456 and not HAS_REQUESTS_TOOLBELT:
+        if stats.st_size > MAX_FILE_SIZE_WITHOUT_REQUESTS_TOOLBELT and not HAS_REQUESTS_TOOLBELT:
             self.module.fail_json(
                 msg=missing_required_lib("requests_toolbelt", reason="to upload files larger than 256MB"),
                 exception=REQUESTS_TOOLBELT_ERR,
@@ -248,13 +246,13 @@ class ProxmoxTemplateAnsible(ProxmoxAnsible):
             taskid = (
                 self.proxmox_api.nodes(node)
                 .storage(storage)
-                .upload.post(content=content_type, filename=open(realpath, "rb"))
+                .upload.post(content=content_type, filename=open(realpath, "rb"))  # noqa: SIM115
             )
             return self.task_status(node, taskid, timeout)
         except Exception as e:
             self.module.fail_json(msg=f"Uploading template {realpath} failed with error: {e}")
 
-    def fetch_template(self, node, storage, content_type, url, timeout, template):
+    def fetch_template(self, node, storage, content_type, url, timeout, template):  # noqa: PLR0913
         """Fetch a template from a web url source using the proxmox download-url endpoint"""
         try:
             taskid = (
@@ -286,7 +284,7 @@ class ProxmoxTemplateAnsible(ProxmoxAnsible):
             time.sleep(1)
         return False
 
-    def fetch_and_verify(self, node, storage, url, content_type, timeout, checksum, checksum_algorithm, template):
+    def fetch_and_verify(self, node, storage, url, content_type, timeout, checksum, checksum_algorithm, template):  # noqa: PLR0913
         """Fetch a template from a web url, then verify it using a checksum."""
         data = {
             "url": url,
@@ -302,31 +300,8 @@ class ProxmoxTemplateAnsible(ProxmoxAnsible):
             self.module.fail_json(msg=f"Checksum mismatch: {e}")
 
 
-def main():
-    module_args = proxmox_auth_argument_spec()
-    template_args = dict(
-        node=dict(),
-        src=dict(type="path"),
-        url=dict(),
-        template=dict(),
-        content_type=dict(default="vztmpl", choices=["vztmpl", "iso", "import"]),
-        storage=dict(default="local"),
-        timeout=dict(type="int", default=30),
-        force=dict(type="bool", default=False),
-        state=dict(default="present", choices=["present", "absent"]),
-        checksum_algorithm=dict(choices=["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]),
-        checksum=dict(type="str"),
-    )
-    module_args.update(template_args)
-
-    module = AnsibleModule(
-        argument_spec=module_args,
-        required_together=[("api_token_id", "api_token_secret"), ("checksum", "checksum_algorithm")],
-        required_one_of=[("api_password", "api_token_id")],
-        required_if=[("state", "absent", ["template"])],
-        mutually_exclusive=[("src", "url")],
-    )
-
+def main():  # noqa: PLR0912, PLR0915
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxTemplateAnsible(module)
 
     state = module.params["state"]
@@ -386,14 +361,13 @@ def main():
                         msg=f"failed to delete template with volid={storage}:{content_type}/{template}",
                     )
 
-            if checksum:
-                if proxmox.fetch_and_verify(
-                    node, storage, url, content_type, timeout, checksum, checksum_algorithm, template
-                ):
-                    module.exit_json(
-                        changed=True,
-                        msg=f"Checksum verified, template with volid={storage}:{content_type}/{template} uploaded",
-                    )
+            if checksum and proxmox.fetch_and_verify(
+                node, storage, url, content_type, timeout, checksum, checksum_algorithm, template
+            ):
+                module.exit_json(
+                    changed=True,
+                    msg=f"Checksum verified, template with volid={storage}:{content_type}/{template} uploaded",
+                )
             if proxmox.fetch_template(node, storage, content_type, url, timeout, template):
                 module.exit_json(changed=True, msg=f"template with volid={storage}:{content_type}/{template} uploaded")
 

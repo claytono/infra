@@ -49,9 +49,6 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create new Proxmox VE role
   community.proxmox.proxmox_role:
-    api_host: node1
-    api_user: root@pam
-    api_password: password
     roleid: test
     privs:
       - VM.PowerMgmt
@@ -59,9 +56,6 @@ EXAMPLES = r"""
 
 - name: Delete Proxmox VE role
   community.proxmox.proxmox_role:
-    api_host: node1
-    api_user: root@pam
-    api_password: password
     roleid: test
     state: absent
 """
@@ -89,15 +83,14 @@ msg:
   sample: "Role test successfully created"
 """
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
+    is_not_found_error,
 )
 
 
-def get_proxmox_args():
+def module_args():
     return dict(
         state=dict(choices=["present", "absent"], default="present"),
         roleid=dict(aliases=["name"], required=True),
@@ -105,11 +98,8 @@ def get_proxmox_args():
     )
 
 
-def get_ansible_module():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(get_proxmox_args())
-
-    return AnsibleModule(argument_spec=module_args, supports_check_mode=True)
+def module_options():
+    return {}
 
 
 class ProxmoxRoleAnsible(ProxmoxAnsible):
@@ -134,8 +124,7 @@ class ProxmoxRoleAnsible(ProxmoxAnsible):
         try:
             return self.proxmox_api.access.roles.get(roleid)
         except Exception as e:
-            error_str = str(e).lower()
-            if "does not exist" in error_str:
+            if is_not_found_error(e):
                 return None
             self.module.fail_json(msg=f"Failed to retrieve role {roleid}: {e}")
 
@@ -239,9 +228,8 @@ class ProxmoxRoleAnsible(ProxmoxAnsible):
 
 
 def main():
-    module = get_ansible_module()
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxRoleAnsible(module)
-
     try:
         proxmox.run()
     except Exception as e:

@@ -50,52 +50,34 @@ extends_documentation_fragment:
 EXAMPLES = """
 - name: Ensure that VM is present in the backup job
   community.proxmox.proxmox_backup_schedule:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_name: 'VM Name'
     backup_id: 'backup-b2adffdc-316e'
     state: 'present'
 
 - name: Ensure that vmid is present in the backup job
   community.proxmox.proxmox_backup_schedule:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_id: 'VM ID'
     backup_id: 'backup-b2adffdc-316e'
     state: 'present'
 
 - name: Ensure that there is no scheduled backup for VM name within all backup jobs
   community.proxmox.proxmox_backup_schedule:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_name: 'VM Name'
     state: 'absent'
 
 - name: Ensure that there is no scheduled backup for vmid within all backup jobs
   community.proxmox.proxmox_backup_schedule:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_id: 'VM ID'
     state: 'absent'
 
 - name: Ensure that there is no scheduled backup for VM within specific backup job
   community.proxmox.proxmox_backup_schedule:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_name: 'VM Name'
     backup_id: 'backup-b2adffdc-316e'
     state: 'absent'
 
 - name: Ensure that there is no scheduled backup for vmid within specific backup job
   community.proxmox.proxmox_backup_schedule:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_id: 'VM ID'
     backup_id: 'backup-b2adffdc-316e'
     state: 'absent'
@@ -104,14 +86,24 @@ EXAMPLES = """
 RETURN = """
 """
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
-    HAS_PROXMOXER,
-    PROXMOXER_IMP_ERR,
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        vm_name=dict(type="str"),
+        vm_id=dict(type="str"),
+        backup_id=dict(type="str"),
+        state=dict(choices=["present", "absent"], required=True),
+    )
+
+
+def module_options():
+    return dict(mutually_exclusive=[("vm_id", "vm_name")])
 
 
 class ProxmoxSetVMBackupAnsible(ProxmoxAnsible):
@@ -201,25 +193,11 @@ class ProxmoxSetVMBackupAnsible(ProxmoxAnsible):
 
 
 def main():
-    args = proxmox_auth_argument_spec()
-    backup_schedule_args = dict(
-        vm_name=dict(type="str"),
-        vm_id=dict(type="str"),
-        backup_id=dict(type="str"),
-        state=dict(choices=["present", "absent"], required=True),
-    )
-    args.update(backup_schedule_args)
-
-    module = AnsibleModule(argument_spec=args, mutually_exclusive=[("vm_id", "vm_name")], supports_check_mode=True)
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxSetVMBackupAnsible(module)
 
     result = dict(changed=False, message="")
 
-    # Check if proxmoxer exist
-    if not HAS_PROXMOXER:
-        module.fail_json(msg=missing_required_lib("proxmoxer"), exception=PROXMOXER_IMP_ERR)
-
-    # Start to connect to proxmox to get backup data
-    proxmox = ProxmoxSetVMBackupAnsible(module)
     vm_name = module.params["vm_name"]
     vm_id = module.params["vm_id"]
     backup_id = module.params["backup_id"]

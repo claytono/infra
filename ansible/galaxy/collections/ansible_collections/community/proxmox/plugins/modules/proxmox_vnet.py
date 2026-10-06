@@ -72,22 +72,12 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create a vnet
   community.proxmox.proxmox_vnet:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     vnet: anstest
     zone: ans1
     state: present
 
 - name: Update a vnet
   community.proxmox.proxmox_vnet:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     vnet: anstest
     zone: ans1
     alias: anst
@@ -96,11 +86,6 @@ EXAMPLES = r"""
 
 - name: Delete a vnet
   community.proxmox.proxmox_vnet:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     vnet: anstest
     zone: ans1
     state: absent
@@ -116,17 +101,15 @@ vnet:
     anstest
 """
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ansible_to_proxmox_bool,
     compare_list_of_dicts,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox_sdn import ProxmoxSdnAnsible
 
 
-def get_proxmox_args():
+def module_args():
     return dict(
         state=dict(type="str", choices=["present", "absent"], default="present", required=False),
         update=dict(type="bool", default=True, required=False),
@@ -141,12 +124,10 @@ def get_proxmox_args():
     )
 
 
-def get_ansible_module():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(get_proxmox_args())
-
-    return AnsibleModule(
-        argument_spec=module_args, required_if=[("state", "present", ["vnet", "zone"]), ("state", "absent", ["vnet"])]
+def module_options():
+    return dict(
+        supports_check_mode=False,
+        required_if=[("state", "present", ["vnet", "zone"]), ("state", "absent", ["vnet"])],
     )
 
 
@@ -181,7 +162,7 @@ class ProxmoxVnetAnsible(ProxmoxSdnAnsible):
         except Exception as e:
             self.module.fail_json(msg=f"Failed to retrieve vnet information from cluster: {e}")
 
-    def vnet_present(self, update, vnet_params):
+    def vnet_present(self, update, vnet_params):  # noqa: PLR0912
         vnet_name = vnet_params["vnet"]
         existing_vnet = [vnet for vnet in self.get_vnet_detail() if vnet.get("vnet") == vnet_name]
         vnet_to_create, vnet_to_update = compare_list_of_dicts(
@@ -253,7 +234,7 @@ class ProxmoxVnetAnsible(ProxmoxSdnAnsible):
 
 
 def main():
-    module = get_ansible_module()
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxVnetAnsible(module)
 
     try:

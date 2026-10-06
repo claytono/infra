@@ -80,6 +80,13 @@ options:
           - O(disk_volume.options) is a dict of extra options.
           - The value of any given option must be a string, for example V("1").
         type: dict
+  cmode:
+    description:
+      - Console mode.
+      - If set to V(default), no C(cmode) will be provided on instance creation.
+    type: str
+    choices: ['default', 'tty', 'console', 'shell']
+    default: default
   cores:
     description:
       - Specify number of cores per socket.
@@ -243,6 +250,13 @@ options:
       - Used with O(state=absent).
     type: bool
     default: false
+  destroy_unreferenced_disks:
+    description:
+      - Remove unreferenced disks that belong to the container.
+      - Volumes referenced in the config (e.g. via rootfs or mpX parameters) will always be removed.
+      - Used with O(state=absent).
+    type: bool
+    default: false
   state:
     description:
       - Indicate desired state of the instance.
@@ -304,9 +318,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -315,9 +326,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -327,9 +335,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -337,13 +342,19 @@ EXAMPLES = r"""
       storage: local
       size: 20
 
+- name: Create new container with minimal options specifying console mode set to shell
+  community.proxmox.proxmox:
+    vmid: 100
+    node: uk-mc02
+    password: 123456
+    hostname: example.org
+    ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+    cmode: 'shell'
+
 - name: Create new container with hookscript and description
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -353,9 +364,6 @@ EXAMPLES = r"""
 - name: Create new container automatically selecting the next available vmid.
   community.proxmox.proxmox:
     node: 'uk-mc02'
-    api_user: 'root@pam'
-    api_password: '1q2w3e'
-    api_host: 'node1'
     password: '123456'
     hostname: 'example.org'
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -364,9 +372,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -376,8 +381,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -386,9 +389,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -399,9 +399,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -412,9 +409,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -425,9 +419,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -438,9 +429,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -454,9 +442,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -466,9 +451,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -478,9 +460,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -494,9 +473,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 201
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     clone: 100
     hostname: clone.example.org
 
@@ -504,9 +480,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 201
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     clone: 100
     hostname: clone.example.org
     storage: local
@@ -515,9 +488,6 @@ EXAMPLES = r"""
   community.proxmox.proxmox:
     vmid: 100
     node: uk-mc02
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     netif:
       net0: "name=eth0,gw=192.168.0.1,ip=192.168.0.3/24,bridge=vmbr0"
     update: true
@@ -525,9 +495,6 @@ EXAMPLES = r"""
 - name: Start container
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     state: started
 
 - name: >
@@ -535,71 +502,54 @@ EXAMPLES = r"""
     with additional disks take longer to boot
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     state: started
     timeout: 90
 
 - name: Stop container
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     state: stopped
 
 - name: Stop container with force
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     force: true
     state: stopped
 
 - name: Restart container(stopped or mounted container you can't restart)
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     state: restarted
 
 - name: Convert container to template
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     state: template
 
 - name: Convert container to template (stop container if running)
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     state: template
     force: true
 
 - name: Remove container
   community.proxmox.proxmox:
     vmid: 100
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     state: absent
+
+- name: >-
+    Remove container, deleting all volumes that use the container's ID, regardless
+    of whether they are mentioned in the container config or not
+  community.proxmox.proxmox:
+    vmid: 100
+    state: absent
+    destroy_unreferenced_disks: true
 
 - name: >-
     Create a new container automatically selecting the next available vmid
     using a non-root API token
   community.proxmox.proxmox:
     node: 'uk-mc02'
-    api_token_id: 'svc-tkn'
-    api_token_secret: '81c09a2a-0359-4ba1-8153-8cb3cd02509b'
-    api_user: 'remoteapiuser@pam'
-    api_host: 'node1'
     password: '123456'
     hostname: 'example.org'
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -610,9 +560,6 @@ EXAMPLES = r"""
     to connect to the new container
   community.proxmox.proxmox:
     node: 'uk-mc02'
-    api_user: 'root@pam'
-    api_password: '1q2w3e'
-    api_host: 'node1'
     password: '123456'
     hostname: 'example.org'
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
@@ -622,18 +569,20 @@ EXAMPLES = r"""
 import re
 import time
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
     ansible_to_proxmox_bool,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 from ansible_collections.community.proxmox.plugins.module_utils.version import LooseVersion
 
+# Fields PVE stores as a delimited string but the module accepts as a list.
+_LIST_FIELDS = {"tags": ";"}
 
-def get_proxmox_args():
+
+def module_args():
     return dict(
         vmid=dict(type="int", required=False),
         node=dict(),
@@ -659,6 +608,15 @@ def get_proxmox_args():
                 ("host_path", "storage"),
                 ("host_path", "volume"),
                 ("host_path", "size"),
+            ],
+        ),
+        cmode=dict(
+            default="default",
+            choices=[
+                "default",
+                "tty",
+                "console",
+                "shell",
             ],
         ),
         cores=dict(type="int"),
@@ -719,6 +677,7 @@ def get_proxmox_args():
         update=dict(type="bool", default=True),
         force=dict(type="bool", default=False),
         purge=dict(type="bool", default=False),
+        destroy_unreferenced_disks=dict(type="bool", default=False),
         state=dict(
             default="present",
             choices=[
@@ -741,26 +700,15 @@ def get_proxmox_args():
     )
 
 
-def get_ansible_module():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(get_proxmox_args())
-
-    return AnsibleModule(
-        argument_spec=module_args,
+def module_options():
+    return dict(
+        supports_check_mode=False,
         required_if=[
             ("state", "present", ["node", "hostname"]),
-            # Require one of clone, ostemplate, or update.
-            # Together with mutually_exclusive this ensures that we either
-            # clone a container or create a new one from a template file.
             ("state", "present", ("clone", "ostemplate", "update"), True),
         ],
-        required_together=[("api_token_id", "api_token_secret")],
-        required_one_of=[
-            ("api_password", "api_token_id"),
-            ("vmid", "hostname"),
-        ],
+        required_one_of=[("vmid", "hostname")],
         mutually_exclusive=[
-            # Creating a new container is done either by cloning an existing one, or based on a template.
             ("clone", "ostemplate"),
             ("clone", "update"),
             ("force", "update"),
@@ -811,6 +759,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
                 node=self.params.get("node"),
                 timeout=self.params.get("timeout"),
                 purge=self.params.get("purge"),
+                destroy_unreferenced_disks=self.params.get("destroy_unreferenced_disks"),
                 force=self.params.get("force"),
             )
         elif state == "started":
@@ -868,6 +817,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
                 self.update_lxc_instance(
                     vmid,
                     node,
+                    cmode=self.params.get("cmode"),
                     cores=self.params.get("cores"),
                     cpus=self.params.get("cpus"),
                     cpuunits=self.params.get("cpuunits"),
@@ -910,7 +860,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
             force=force,
         )
 
-    def lxc_absent(self, vmid, hostname, node, timeout, purge, force):
+    def lxc_absent(self, vmid, hostname, node, timeout, purge, destroy_unreferenced_disks, force):  # noqa: PLR0913
         try:
             lxc = self.get_lxc_resource(vmid, hostname)
         except LookupError:
@@ -936,7 +886,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
                 msg=f"VM {identifier} is mounted. Stop it with force option before deletion.",
             )
 
-        self.remove_lxc_instance(vmid, node, timeout, purge, force)
+        self.remove_lxc_instance(vmid, node, timeout, purge, destroy_unreferenced_disks, force)
         self.module.exit_json(changed=True, vmid=vmid, msg=f"VM {identifier} removed.")
 
     def lxc_started(self, vmid, hostname, node, timeout):
@@ -1016,7 +966,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
         getattr(proxmox_node, self.VZ_TYPE)(vmid).template.post()
         self.module.exit_json(changed=True, vmid=vmid, msg=f"VM {identifier} converted to template.")
 
-    def update_lxc_instance(self, vmid, node, **kwargs):
+    def update_lxc_instance(self, vmid, node, **kwargs):  # noqa: PLR0912
         if self.VZ_TYPE != "lxc":
             self.module.fail_json(
                 msg="Updating LXC containers is only supported for LXC-enabled clusters in PVE 4.0 and above."
@@ -1066,7 +1016,14 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
 
         # create diff between the current and requested config
         diff = {}
+
         for arg, value in kwargs.items():
+            if arg in _LIST_FIELDS and isinstance(value, list):
+                sep = _LIST_FIELDS[arg]
+                current = {x for x in current_config.get(arg, "").split(sep) if x}
+                if current != set(value):
+                    diff[arg] = value
+                continue
             # if the arg isn't in the current config, it needs to be added
             if arg not in current_config:
                 diff[arg] = value
@@ -1089,7 +1046,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
         # update the config
         getattr(proxmox_node, self.VZ_TYPE)(vmid).config.put(vmid=vmid, node=node, **kwargs)
 
-    def new_lxc_instance(self, vmid, hostname, node, clone_from, ostemplate, force):
+    def new_lxc_instance(self, vmid, hostname, node, clone_from, ostemplate, force):  # noqa: PLR0913
         identifier = self.format_vm_identifier(vmid, hostname)
 
         if clone_from is not None:
@@ -1116,6 +1073,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
                 node,
                 ostemplate,
                 timeout=self.params.get("timeout"),
+                cmode=self.params.get("cmode"),
                 cores=self.params.get("cores"),
                 cpus=self.params.get("cpus"),
                 cpuunits=self.params.get("cpuunits"),
@@ -1207,6 +1165,9 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
 
         if kwargs.get("ostype") == "auto":
             kwargs.pop("ostype")
+
+        if kwargs.get("cmode") == "default":
+            kwargs.pop("cmode")
 
         proxmox_node = self.proxmox_api.nodes(node)
         taskid = getattr(proxmox_node, self.VZ_TYPE).create(vmid=vmid, ostemplate=ostemplate, **kwargs)
@@ -1310,10 +1271,13 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
             timeout_msg="Reached timeout while waiting for VM to be unmounted.",
         )
 
-    def remove_lxc_instance(self, vmid, node, timeout, purge, force):
+    def remove_lxc_instance(self, vmid, node, timeout, purge, destroy_unreferenced_disks, force):  # noqa: PLR0913
         delete_params = {}
         if purge:
             delete_params["purge"] = 1
+
+        if destroy_unreferenced_disks:
+            delete_params["destroy-unreferenced-disks"] = 1
 
         if force:
             delete_params["force"] = 1
@@ -1470,7 +1434,7 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
 
         return disk_kwargs
 
-    def build_volume(
+    def build_volume(  # noqa: PLR0912, PLR0913
         self,
         vmid,
         node,
@@ -1539,16 +1503,16 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
                 ]
 
             # If not, we have proxmox create one using the special syntax
-            except Exception:
+            except Exception as e:
                 if size is None:
-                    raise ValueError("Size must be provided for storage-backed volume creation.")
+                    raise ValueError("Size must be provided for storage-backed volume creation.") from e
                 elif size.endswith("G"):
                     size = size.rstrip("G")
                     vol_parts = [f"{storage}:{size}"]
                 else:
                     raise ValueError(
                         "Size must be provided in GiB for storage-backed volume creation. Convert it to GiB or allocate a new storage manually."
-                    )
+                    ) from e
         # 3. If we have a host_path, we don't have storage, a volume, or a size
         # Then we don't have to do anything, just build and return the vol_string
         elif host_path is not None:
@@ -1685,7 +1649,7 @@ def isfloat(value):
 
 
 def main():
-    module = get_ansible_module()
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxLxcAnsible(module)
 
     try:

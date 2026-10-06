@@ -245,11 +245,6 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create firewall rules at cluster level
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     level: cluster
     state: present
     rules:
@@ -267,11 +262,6 @@ EXAMPLES = r"""
 
 - name: Update Cluster level firewall rules
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     level: cluster
     state: present
     update: true
@@ -290,44 +280,24 @@ EXAMPLES = r"""
 
 - name: Delete cluster level firewall rule at pos 10
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     level: cluster
     state: absent
     pos: 10
 
 - name: Create security group
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     group_conf: true
     state: present
     group: test
 
 - name: Delete security group
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     group_conf: true
     state: absent
     group: test
 
 - name: Create FW aliases
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     state: present
     aliases:
       - name: test1
@@ -337,11 +307,6 @@ EXAMPLES = r"""
 
 - name: Update FW aliases
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     state: present
     update: true
     aliases:
@@ -352,11 +317,6 @@ EXAMPLES = r"""
 
 - name: Delete FW aliases
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     state: absent
     aliases:
       - name: test1
@@ -364,11 +324,6 @@ EXAMPLES = r"""
 
 - name: Create IP SET
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     ip_sets:
       - name: hypervisors
         comment: PVE hosts
@@ -387,22 +342,12 @@ EXAMPLES = r"""
 
 - name: Delete IP SETs
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     state: absent
     ip_sets:
       - name: hypervisors
 
 - name: Delete specific CIDR from IP SET
   community.proxmox.proxmox_firewall:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     state: absent
     ip_sets:
       - name: test
@@ -422,17 +367,15 @@ group:
 import ipaddress
 import re
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ansible_to_proxmox_bool,
     compare_list_of_dicts,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox_sdn import ProxmoxSdnAnsible
 
 
-def get_proxmox_args():
+def module_args():
     return dict(
         state=dict(type="str", choices=["present", "absent"], default="present"),
         update=dict(type="bool", default=True),
@@ -502,12 +445,9 @@ def get_proxmox_args():
     )
 
 
-def get_ansible_module():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(get_proxmox_args())
-
-    return AnsibleModule(
-        argument_spec=module_args,
+def module_options():
+    return dict(
+        supports_check_mode=False,
         required_if=[
             ("group_conf", True, ["group"]),
             ("level", "vm", ["vmid"]),
@@ -550,7 +490,7 @@ class ProxmoxFirewallAnsible(ProxmoxSdnAnsible):
                     "pos/aliases/ip_sets must be present but not both"
                 )
 
-    def run(self):
+    def run(self):  # noqa: PLR0912
         self.validate_params()
 
         state = self.params.get("state")
@@ -864,7 +804,7 @@ class ProxmoxFirewallAnsible(ProxmoxSdnAnsible):
 
 
 def main():
-    module = get_ansible_module()
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxFirewallAnsible(module)
 
     try:

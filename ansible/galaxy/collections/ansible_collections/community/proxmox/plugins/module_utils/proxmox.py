@@ -18,7 +18,7 @@ except ImportError:
     PROXMOXER_IMP_ERR = traceback.format_exc()
 
 
-from ansible.module_utils.basic import env_fallback, missing_required_lib
+from ansible.module_utils.basic import AnsibleModule, env_fallback, missing_required_lib
 from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.community.proxmox.plugins.module_utils.version import LooseVersion
@@ -36,12 +36,36 @@ def proxmox_auth_argument_spec():
         api_port=dict(type="int", fallback=(env_fallback, ["PROXMOX_PORT"])),
         api_user=dict(type="str", required=True, fallback=(env_fallback, ["PROXMOX_USER"])),
         api_password=dict(type="str", no_log=True, fallback=(env_fallback, ["PROXMOX_PASSWORD"])),
+        api_otp=dict(type="str", no_log=True, fallback=(env_fallback, ["PROXMOX_OTP"])),
         api_token_id=dict(type="str", no_log=False, fallback=(env_fallback, ["PROXMOX_TOKEN_ID"])),
         api_token_secret=dict(type="str", no_log=True, fallback=(env_fallback, ["PROXMOX_TOKEN_SECRET"])),
         ca_path=dict(type="path", fallback=(env_fallback, ["PROXMOX_CA_PATH"])),
-        validate_certs=dict(type="bool", fallback=(env_fallback, ["PROXMOX_VALIDATE_CERTS"])),
+        validate_certs=dict(type="bool", default=True, fallback=(env_fallback, ["PROXMOX_VALIDATE_CERTS"])),
         api_timeout=dict(type="int", default=5, fallback=(env_fallback, ["PROXMOX_API_TIMEOUT"])),
     )
+
+
+def create_proxmox_module(argument_spec, **kwargs):
+    """
+    Create an AnsibleModule with Proxmox auth arguments and constraints merged in.
+
+    Args:
+        argument_spec: Module-specific argument specification.
+        **kwargs: Additional AnsibleModule options (e.g. supports_check_mode, mutually_exclusive, required_if).
+
+    Returns:
+        AnsibleModule: The configured module instance.
+    """
+    spec = {**proxmox_auth_argument_spec(), **argument_spec}
+    supports_check_mode = kwargs.pop("supports_check_mode", True)
+
+    for key, default in (
+        ("required_one_of", ("api_password", "api_token_id")),
+        ("required_together", ("api_token_id", "api_token_secret")),
+    ):
+        kwargs[key] = [default] + list(kwargs.get(key, []))
+
+    return AnsibleModule(argument_spec=spec, supports_check_mode=supports_check_mode, **kwargs)
 
 
 def proxmox_to_ansible_bool(value):  # noqa: SIM210
@@ -134,6 +158,17 @@ def compare_list_of_dicts(existing_list, new_list, uid, params_to_ignore=None):
     return items_to_create, items_to_update
 
 
+def is_not_found_error(exception: Exception) -> bool:
+    """Check if the exception is a not found error."""
+    error_str = str(exception).lower()
+    return (
+        "does not exist" in error_str
+        or "not found" in error_str
+        or "no such" in error_str
+        or "not defined" in error_str
+    )
+
+
 class ProxmoxAnsible:
     """Base class for Proxmox modules."""
 
@@ -142,8 +177,8 @@ class ProxmoxAnsible:
     def __init__(self, module):
         if not HAS_PROXMOXER:
             module.fail_json(msg=missing_required_lib("proxmoxer"), exception=PROXMOXER_IMP_ERR)
-        if proxmoxer_version < LooseVersion("2.0"):
-            module.fail_json(f"Requires proxmoxer 2.0 or newer; found version {proxmoxer_version}")
+        if proxmoxer_version < LooseVersion("2.3"):
+            module.fail_json(f"Requires proxmoxer 2.3 or newer; found version {proxmoxer_version}")
 
         self.module = module
         self.proxmoxer_version = proxmoxer_version
@@ -159,24 +194,15 @@ class ProxmoxAnsible:
         api_port = self.module.params["api_port"]
         api_user = self.module.params["api_user"]
         api_password = self.module.params["api_password"]
+        api_otp = self.module.params["api_otp"]
         api_token_id = self.module.params["api_token_id"]
         api_token_secret = self.module.params["api_token_secret"]
-        if self.module.params["validate_certs"] is None:
-            self.module.deprecate(
-                "The connection setting `validate_certs` was not provided and "
-                "defaults to `false`. This default will change to `true` in"
-                "in community.proxmox 2.0.0.",
-                version="2.0.0",
-                collection_name="community.proxmox",
-            )
-            self.module.params["validate_certs"] = False
         # Only push the cert path as a string to proxmoxer, if validation is required
         # verify_ssl supports True, False or Path as values
         if self.module.params["ca_path"] and self.module.params["validate_certs"]:
             validate_certs = self.module.params["ca_path"]
         else:
             validate_certs = self.module.params["validate_certs"]
-        validate_certs = self.module.params["validate_certs"]
         api_timeout = self.module.params["api_timeout"]
         auth_args = {"user": api_user}
 
@@ -189,6 +215,8 @@ class ProxmoxAnsible:
             auth_args["token_name"] = api_token_id
             auth_args["token_value"] = api_token_secret
 
+        if api_otp:
+            auth_args["otp"] = api_otp
         try:
             return ProxmoxAPI(api_host, timeout=api_timeout, verify_ssl=validate_certs, **auth_args)
         except Exception as e:
@@ -207,12 +235,13 @@ class ProxmoxAnsible:
         except Exception as e:
             self.module.fail_json(msg=f"Unable to retrieve Proxmox VE version: {e}")
 
-    def get_node(self, node):
+    def get_node(self, node, strict=False):
         """
         Filters all known PVE nodes for the given node name.
 
         Args:
             node(str): The name of the node.
+            strict(bool): Fail if the node does not exist.
 
         Returns:
             dict | None: The node information provided by the api path GET /nodes.
@@ -221,6 +250,8 @@ class ProxmoxAnsible:
             nodes = [n for n in self.proxmox_api.nodes.get() if n["node"] == node]
         except Exception as e:
             self.module.fail_json(msg=f"Unable to retrieve Proxmox VE node: {e}")
+        if not nodes and strict:
+            self.module.fail_json(msg=f"Node {node} does not exist")
         return nodes[0] if nodes else None
 
     def get_nextvmid(self):
@@ -354,6 +385,22 @@ class ProxmoxAnsible:
                     return False, ProxmoxAnsible.TASK_TIMED_OUT
                 sleep(1)
 
+    def upid_to_node(self, upid):
+        """
+        Extract the node name from a UPID.
+
+        Args:
+            upid(str): The UPID to convert to a node name.
+
+        Returns:
+            str: The node name.
+        """
+        parts = to_native(upid).split(":")
+        if len(parts) >= 2 and parts[0] == "UPID":  # noqa: PLR2004
+            return parts[1]
+
+        self.module.fail_json(msg=f"Unexpected task id from Proxmox API: {upid}")
+
     def get_pool(self, poolid):
         """
         Retrieve pool information.
@@ -365,7 +412,7 @@ class ProxmoxAnsible:
             dict: Pool information.
         """
         try:
-            return self.proxmox_api.pools(poolid).get()
+            return self.proxmox_api.pools.get(poolid=poolid)[0]
         except Exception as e:
             self.module.fail_json(msg=f"Unable to retrieve pool {poolid} information: {e}")
 

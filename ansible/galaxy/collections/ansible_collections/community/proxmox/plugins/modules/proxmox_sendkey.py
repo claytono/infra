@@ -62,18 +62,12 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Send Ctrl+Alt+Delete to a Windows VM
   proxmox_sendkey:
-    api_host: proxmoxhost
-    api_user: root@pam
-    api_password: password123
     name: win-test
     keys_send:
       - ctrl-alt-delete
 
 - name: Type a login string into a Linux VM console
   proxmox_sendkey:
-    api_host: proxmoxhost
-    api_user: root@pam
-    api_password: password123
     vmid: 101
     string_send: |
         root
@@ -107,15 +101,13 @@ completed_keys_num:
 
 import time
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 
 
-def get_proxmox_args():
+def module_args():
     return dict(
         vmid=dict(type="int"),
         name=dict(type="str"),
@@ -125,23 +117,13 @@ def get_proxmox_args():
     )
 
 
-def get_ansible_module():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(get_proxmox_args())
-
-    return AnsibleModule(
-        argument_spec=module_args,
-        required_together=[
-            ("api_token_id", "api_token_secret"),
-        ],
+def module_options():
+    return dict(
         required_one_of=[
             ("keys_send", "string_send"),
             ("vmid", "name"),
-            ("api_password", "api_token_id"),
         ],
-        mutually_exclusive=[
-            ("keys_send", "string_send"),
-        ],
+        mutually_exclusive=[("keys_send", "string_send")],
         supports_check_mode=False,
     )
 
@@ -475,8 +457,9 @@ class ProxmoxSendkeyAnsible(ProxmoxAnsible):
 
 def main():
     """Main entry point."""
-    module = get_ansible_module()
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxSendkeyAnsible(module)
+
     proxmox.run()
 
 

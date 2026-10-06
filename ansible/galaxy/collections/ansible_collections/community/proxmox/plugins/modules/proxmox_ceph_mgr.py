@@ -40,17 +40,11 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Add a ceph manager
   community.proxmox.proxmox_ceph_mgr:
-    api_host: proxmox-01.example.com
-    api_user: root@pam
-    api_password: secret
     node: proxmox-02
     state: present
 
 - name: Delete a ceph manager
   community.proxmox.proxmox_ceph_mgr:
-    api_host: proxmox-01.example.com
-    api_user: root@pam
-    api_password: secret
     node: proxmox-02
     state: absent
 """
@@ -66,13 +60,23 @@ msg:
     returned: always
 """
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        node=dict(type="str", required=True),
+        state=dict(choices=["present", "absent"], required=True),
+    )
+
+
+def module_options():
+    return {}
 
 
 class ProxmoxCephMgrAnsible(ProxmoxAnsible):
@@ -114,22 +118,9 @@ class ProxmoxCephMgrAnsible(ProxmoxAnsible):
 
 
 def main():
-    module_args = proxmox_auth_argument_spec()
-    manager_args = dict(
-        node=dict(type="str", required=True),
-        state=dict(choices=["present", "absent"], required=True),
-    )
-
-    module_args.update(manager_args)
-
-    module = AnsibleModule(
-        argument_spec=module_args,
-        supports_check_mode=True,
-        required_one_of=[("api_password", "api_token_id")],
-        required_together=[("api_token_id", "api_token_secret")],
-    )
-
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxCephMgrAnsible(module)
+
     state = module.params["state"]
 
     if state == "present":
