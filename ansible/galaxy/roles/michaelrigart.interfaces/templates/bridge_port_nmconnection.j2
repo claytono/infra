@@ -4,13 +4,20 @@
 id={{ item.1 }}
 type={{ ('vlan' if item.1 is match(vlan_interface_regex) else 'dummy' if item.1 is match(dummy_interface_regex) else 'ethernet') }}
 interface-name={{ item.1 }}
+controller={{ item.0.device }}
+port-type=bridge
 
-master={{ item.0.device }}
-slave-type=bridge
-
+{% if item.0.type | default('ethernet')  == 'ipoib' %}
+[infiniband]
+transport-mode=datagram
+{% if item.mtu is defined %}
+mtu={{ item.0.mtu }}
+{% endif %}
+{% else %}
 {% if item.0.mtu is defined %}
 [ethernet]
 mtu={{ item.0.mtu }}
+{% endif %}
 {% endif %}
 
 {% if item.1 is match(vlan_interface_regex) %}

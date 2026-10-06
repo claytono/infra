@@ -1,0 +1,11 @@
+---
+- name: Create NetworkManager configurations
+  ansible.builtin.copy:
+    dest: "{{ interfaces_nm_config_path }}/{{ item.key}}"
+    owner: root
+    group: root
+    mode: '0640'
+    content: "{{ item.value | community.general.to_ini }}"
+  notify: Reload NetworkManager
+  loop: "{{ lookup('dict', interfaces_networkmanager_configs, wantlist=True) }}"
+  tags: configurations

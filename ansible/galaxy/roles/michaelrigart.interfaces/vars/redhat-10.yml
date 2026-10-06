@@ -3,3 +3,4 @@ interfaces_pkgs:
   - NetworkManager-config-server
 
 interfaces_net_path: /etc/NetworkManager/system-connections
+interfaces_nm_config_path: /etc/NetworkManager/conf.d

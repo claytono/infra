@@ -47,6 +47,9 @@ interfaces_merge: false
 # error has occured - useful when you assume one of the interfaces
 # to not have proper state.
 interfaces_bounce_ignore_errors: false
+
+# Creates configuration files in `/etc/NetworkManager/conf.d`
+interfaces_networkmanager_configs: {}
 ```
 
 Note: The values for the list are listed in the examples below.
@@ -492,6 +495,23 @@ interfaces_ether_interfaces:
           options:
             - type: local
 ```
+
+19) Some network configurations may require changing how Network Manager behaves and this can be done using the `interfaces_networkmanager_configs` variable to define the `.ini` style files that are expected in `/etc/NetworkManager/conf.d`. This variable does no validation or checking and will create the files as specified.
+
+```yaml
+interfaces_networkmanager_configs:
+  90-dns-none.conf:
+    main:
+      dns: 'none'
+```
+
+Will create the file `/etc/networkmanager/conf.d/90-dns-none.conf` with the content:
+
+```ini
+[main]
+dns=none
+```
+Which will block Network Manager from updating `/etc/resolv.conf` as per [Redhat Documentation on disabling DNS processing for Network Manager](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/manually-configuring-the-etc-resolv-conf-file_configuring-and-managing-networking)
 
 Example Playbook
 ----------------

@@ -6,3 +6,4 @@ interfaces_pkgs:
   - network-scripts
 
 interfaces_net_path: "{{ interfaces_use_nmconnection | ternary('/etc/NetworkManager/system-connections', '/etc/sysconfig/network-scripts') }}"
+interfaces_nm_config_path: /etc/NetworkManager/conf.d
