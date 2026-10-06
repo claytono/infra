@@ -27,7 +27,7 @@ spec:
         fsGroup: 0
       containers:
       - name: camofox
-        image: ghcr.io/jo-inc/camofox-browser:1.16.0@sha256:3cc29763d3c784ae71a7d56853a12c43e100ff2f13da1e2eb88322b08e12d6a0
+        image: ghcr.io/jo-inc/camofox-browser:1.18.1@sha256:cff2c1432b609bde9c9d0b91e5b924dae0799d3c7bc9d468c0bc949325beaf2a
         ports:
         - name: api
           containerPort: 9377
