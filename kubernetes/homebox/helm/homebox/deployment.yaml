@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: homebox
     app.kubernetes.io/instance: homebox
-    app.kubernetes.io/version: "0.21.0"
+    app.kubernetes.io/version: "0.26.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -18,12 +18,12 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 0a7763abd5775abb8a4147b9d39193bbb96a759173e1f525bc76f26a38352b92
+        checksum/secret: 41a84068e4a1550e6820e827f29498d76e02dc888aae1acdb250c56d83e04c88
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: homebox
         app.kubernetes.io/instance: homebox
-        app.kubernetes.io/version: "0.21.0"
+        app.kubernetes.io/version: "0.26.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: homebox
@@ -42,7 +42,7 @@ spec:
             runAsGroup: 65532
             runAsNonRoot: true
             runAsUser: 65532
-          image: "sysadminsmedia/homebox:0.21.0"
+          image: "sysadminsmedia/homebox:0.26.0"
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
