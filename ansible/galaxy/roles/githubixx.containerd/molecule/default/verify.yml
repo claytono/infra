@@ -34,6 +34,51 @@
           - containerd__binary_path | length > 0
         fail_msg: "containerd binary not found in candidate paths: {{ containerd__candidate_binaries }}"
 
+    - name: Check installed containerd version
+      ansible.builtin.command:
+        cmd: "{{ containerd__binary_path }} --version"
+      register: containerd__version_output
+      changed_when: false
+
+    - name: Assert containerd version is 2.4.1
+      ansible.builtin.assert:
+        that:
+          - "' v2.4.1 ' in containerd__version_output.stdout"
+        fail_msg: "Unexpected containerd version: {{ containerd__version_output.stdout }}"
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Assert containerd service is running and enabled
+      ansible.builtin.assert:
+        that:
+          - "'containerd.service' in ansible_facts.services"
+          - "ansible_facts.services['containerd.service'].state == 'running'"
+          - "ansible_facts.services['containerd.service'].status == 'enabled'"
+
+    - name: Check containerd socket
+      ansible.builtin.stat:
+        path: /run/containerd/containerd.sock
+      register: containerd__socket
+
+    - name: Assert containerd socket exists
+      ansible.builtin.assert:
+        that:
+          - containerd__socket.stat.issock | default(false)
+
+    - name: List containerd plugins
+      ansible.builtin.command:
+        cmd: ctr plugins ls
+      register: containerd__plugins
+      changed_when: false
+
+    - name: Assert CRI runtime and image plugins are healthy
+      ansible.builtin.assert:
+        that:
+          - "containerd__plugins.stdout is regex('(?m)^io.containerd.cri.v1\\s+runtime\\s+.*\\s+ok\\s*$')"
+          - "containerd__plugins.stdout is regex('(?m)^io.containerd.cri.v1\\s+images\\s+.*\\s+ok\\s*$')"
+        fail_msg: "CRI plugins not healthy: {{ containerd__plugins.stdout }}"
+
     - name: Verify conf.d imports behavior
       when: inventory_hostname == 'test-cd-ubuntu2404-conf-d'
       block:
@@ -79,39 +124,79 @@
         that:
           - "'saved' in ctr_pull_output.stdout"
 
-    - name: Start nginx with ctr
+    - name: List existing tasks before nginx test
       ansible.builtin.command:
-        cmd: "ctr run -d -t docker.io/library/nginx:{{ containerd__nginx_version }} nginx"
+        cmd: ctr tasks ls
+      register: containerd__existing_tasks
       changed_when: false
 
-    - name: List containers
+    - name: Remove stale nginx task
       ansible.builtin.command:
-        cmd: "ctr containers ls"
-      register: ctr_ls_output
+        cmd: ctr tasks delete --force nginx
+      when: containerd__existing_tasks.stdout is regex('(?m)^nginx\s')
       changed_when: false
 
-    - name: Ensure nginx container running
-      ansible.builtin.assert:
-        that:
-          - "'nginx' in ctr_ls_output.stdout"
-
-    - name: Run curl in nginx container
+    - name: List existing containers before nginx test
       ansible.builtin.command:
-        cmd: "ctr task exec --exec-id curl nginx curl -sfS 127.0.0.1:80"
-      register: ctr_task_output
+        cmd: ctr containers ls
+      register: containerd__existing_containers
       changed_when: false
 
-    - name: Ensure curl command was successful
-      ansible.builtin.assert:
-        that:
-          - "'Welcome to nginx' in ctr_task_output.stdout"
-
-    - name: Stop nginx container
+    - name: Remove stale nginx container and snapshot
       ansible.builtin.command:
-        cmd: "ctr task kill nginx"
+        cmd: ctr containers delete nginx
+      when: containerd__existing_containers.stdout is regex('(?m)^nginx\s')
       changed_when: false
 
-    - name: Remove nginx container
-      ansible.builtin.command:
-        cmd: "ctr c remove nginx"
-      changed_when: false
+    - name: Verify nginx container lifecycle
+      block:
+        - name: Start nginx with ctr
+          ansible.builtin.command:
+            cmd: "ctr run -d -t docker.io/library/nginx:{{ containerd__nginx_version }} nginx"
+          changed_when: false
+
+        - name: List containers
+          ansible.builtin.command:
+            cmd: "ctr containers ls"
+          register: ctr_ls_output
+          changed_when: false
+
+        - name: Ensure nginx container running
+          ansible.builtin.assert:
+            that:
+              - "'nginx' in ctr_ls_output.stdout"
+
+        - name: Run curl in nginx container
+          ansible.builtin.command:
+            cmd: "ctr task exec --exec-id curl -- nginx curl -sfS 127.0.0.1:80"
+          register: ctr_task_output
+          changed_when: false
+
+        - name: Ensure curl command was successful
+          ansible.builtin.assert:
+            that:
+              - "'Welcome to nginx' in ctr_task_output.stdout"
+      always:
+        - name: List tasks after nginx test
+          ansible.builtin.command:
+            cmd: ctr tasks ls
+          register: containerd__remaining_tasks
+          changed_when: false
+
+        - name: Remove nginx task after test
+          ansible.builtin.command:
+            cmd: ctr tasks delete --force nginx
+          when: containerd__remaining_tasks.stdout is regex('(?m)^nginx\s')
+          changed_when: false
+
+        - name: List containers after nginx test
+          ansible.builtin.command:
+            cmd: ctr containers ls
+          register: containerd__remaining_containers
+          changed_when: false
+
+        - name: Remove nginx container and snapshot after test
+          ansible.builtin.command:
+            cmd: ctr containers delete nginx
+          when: containerd__remaining_containers.stdout is regex('(?m)^nginx\s')
+          changed_when: false

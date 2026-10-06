@@ -5,6 +5,24 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 0.19.0+2.4.1
+
+- **UPDATE**
+  - update `containerd` to `v2.4.1`. Review the [2.4.0](https://github.com/containerd/containerd/releases/tag/v2.4.0) and [2.4.1](https://github.com/containerd/containerd/releases/tag/v2.4.1) release notes before upgrading.
+
+- **MOLECULE**
+  - Add Molecule checks for the installed version, service, socket, CRI plugins, idempotence, and verification.
+
+## 0.18.0+2.3.0
+
+- **UPDATE**
+  - update `containerd` to `v2.3.0`
+
+- **MOLECULE**
+  - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
+
+## 0.17.0+2.2.1
+
 - **BREAKING**
   - CNI `bin_dir` in CRI runtime config is deprecated (`plugins.'io.containerd.cri.v1.runtime'.cni.bin_dir`) and will be removed in containerd `v2.3`. It was replaced with `bin_dirs` in the same section which supports a list of directories. So, `plugins.'io.containerd.cri.v1.runtime'.cni.bin_dir = '/opt/cni/bin'` was changed to `plugins.'io.containerd.cri.v1.runtime'.cni.bin_dirs = ['/opt/cni/bin']` in `containerd_config` variable.
 
