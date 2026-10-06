@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
-    app.kubernetes.io/version: "13.2.0"
+    app.kubernetes.io/version: "13.2.2"
 data:
   
   grafana.ini: |
@@ -41,6 +41,8 @@ data:
     logs = /var/log/grafana
     plugins = /var/lib/grafana/plugins
     provisioning = /etc/grafana/provisioning
+    [plugins]
+    preinstall_auto_update = false
     [server]
     domain = grafana.k.oneill.net
     root_url = https://grafana.k.oneill.net
