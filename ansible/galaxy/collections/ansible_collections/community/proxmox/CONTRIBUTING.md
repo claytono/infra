@@ -6,16 +6,26 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Contributing
 
-We follow [Ansible Code of Conduct](https://docs.ansible.com/projects/ansible/latest/community/code_of_conduct.html) 
+We follow [Ansible Code of Conduct](https://docs.ansible.com/projects/ansible/latest/community/code_of_conduct.html)
 in all our contributions and interactions within this repository. If you are stuck while developing a
 module, refer to our [recommended reads](#helpful-documentation) from the Ansible docs.
 
+## AI Contributions
+We are not opposed to merging AI-generated code, so if you're using an AI agent to help you write code or tests, please feel free to do so.
+
+However, please keep the following things in mind:
+
+  * Mention that you've used AI, either by having the AI as a co-contributor on your PR or mentioning it directly in the text.
+  * Verify that whatever your AI does is sensible.
+  * Try to keep the changes organized, remember, we're all volunteers and we don't have time to review huge PRs full of hallucinated nonsense.
+  * Ensure, that you yourself understand the code and its logic. In the end, the contents of your PR are your responsibility.
+
 ## Issue tracker
 
-Whether you are looking for an opportunity to contribute or you found a bug and already know how to 
+Whether you are looking for an opportunity to contribute or you found a bug and already know how to
 solve it, please go to the [issue tracker](https://github.com/ansible-collections/community.proxmox/issues).
-There you can find feature ideas to implement, reports about bugs to solve, or submit an issue to 
-discuss your idea before implementing it which can help choose a right direction at the beginning of 
+There you can find feature ideas to implement, reports about bugs to solve, or submit an issue to
+discuss your idea before implementing it which can help choose a right direction at the beginning of
 your work and potentially save a lot of time and effort.
 Also somebody may already have started discussing or working on implementing the same or a similar idea,
 so you can cooperate to create a better solution together.
@@ -28,9 +38,9 @@ so you can cooperate to create a better solution together.
 
 Look through currently [open pull requests](https://github.com/ansible-collections/community.proxmox/pulls).
 
-You can help by reviewing and testing them, since this collection currently lacks integration tests. 
-Reviews and tests help us estimate the maturity of a pull request and increase the likelihood to merge its contents. 
-Note that reviewing does not only mean code review, but also offering comments on new interfaces added to existing plugins/modules, 
+You can help by reviewing and testing them, since this collection currently lacks integration tests.
+Reviews and tests help us estimate the maturity of a pull request and increase the likelihood to merge its contents.
+Note that reviewing does not only mean code review, but also offering comments on new interfaces added to existing plugins/modules,
 interfaces of new plugins/modules, improving language (not everyone is a native English speaker), or testing bugfixes and new features!
 
 Also, consider taking up a valuable, reviewed, but abandoned pull request which you could politely ask the original authors to complete yourself.
@@ -40,14 +50,14 @@ If you want to test a PR locally, refer to [our testing guide](https://docs.ansi
 If you find any inconsistencies or places in this document which can be improved, feel free to raise an issue or pull request to fix it.
 
 ## Opening pull requests
-Wether you found a bug and want to fix it or you want to contribute a new module, 
+Wether you found a bug and want to fix it or you want to contribute a new module,
 please refer to these conventions:
 * Try committing your changes with an informative but short commit message.
 * Make sure your PR includes a [changelog fragment](https://docs.ansible.com/projects/ansible/devel/community/collection_development_process.html#creating-a-changelog-fragment).
   * You must not include a fragment for new modules or new plugins. Also you shouldn't include one for docs-only changes.
   * Please always include a link to the pull request itself, and if the PR is about an issue, also a link to the issue. Also make sure the fragment ends with a period, and begins with a lower-case letter after `-`. (Again, if you don't do this, we'll add suggestions to fix it, so don't worry too much :) )
-* Note that we lint and format the code with `ruff`. 
-  If your change does not match the expectations, CI will fail and your PR will not get merged. 
+* Note that we lint and format the code with `ruff`.
+  If your change does not match the expectations, CI will fail and your PR will not get merged.
   Continue reading this guide to find out how to lint and format your code.
 
 You can also read the Ansible community's [Quick-start development guide](https://docs.ansible.com/projects/ansible/devel/community/create_pr_quick_start.html).
@@ -56,10 +66,10 @@ You can also read the Ansible community's [Quick-start development guide](https:
 
 Creating new modules and plugins requires a bit more work than other Pull Requests.
 
-1. Please make sure that your new module or plugin is not already part of this collection. 
+1. Please make sure that your new module or plugin is not already part of this collection.
    If it is already partly adressed, you might want to add the functionality there or discuss refactoring the functions in an issue.
 
-2. Please do not add more than one plugin/module in one PR, unless they are closely releated. 
+2. Please do not add more than one plugin/module in one PR, unless they are closely releated.
    That makes it easier for reviewers, and increases the chance that your PR will get merged. If you plan to contribute a group
    of plugins/modules (say, more than a module and a corresponding `_info` module), please mention that in the first PR.
 
@@ -73,7 +83,7 @@ Creating new modules and plugins requires a bit more work than other Pull Reques
    - Make sure that new plugins and modules have unit tests.
 
 ## Formatting, linting and tests
-We use `ruff` to maintain a baseline of code readability and quality. 
+We use `ruff` to maintain a baseline of code readability and quality.
 Please check out our [ruff configuration](./ruff.toml) to find out which formatting and rules are enforced.
 
 To perform basic testing, you will most likely require the following packages:
@@ -81,8 +91,12 @@ To perform basic testing, you will most likely require the following packages:
 - `nox`
 - `ruff`
 - `ansible`
+- `pre-commit` (optional)
 
-and ideally a container runtime, for example `podman` or `docker`.    
+and ideally a container runtime, for example `podman` or `docker`.
+
+The repository includes a [pre-commit](https://pre-commit.com/) configuration ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) which runs basic Ruff checks before each commit. **Hooks are not active until you install them**. After installing the `pre-commit` package, run `pre-commit install`.
+If you want to manually run the hooks before making a commit, you can use `pre-commit run`.
 
 To immediately run all default tests (format, lint), install the dependencies
 and run `nox`. To run all unit/sanity tests, use `nox -s ansible-test-units` or `nox -s ansible-test-sanity`.
@@ -103,7 +117,7 @@ nox -Re codeqa
 nox -e formatters
 ```
 
-While antsibull-nox and nox enable you to run the whole suite of tests, you may 
+While antsibull-nox and nox enable you to run the whole suite of tests, you may
 use `ruff format` and `ruff check` immediately within your development environment to perform basic linting and formatting.
 Note that while our CI is aware of changed files, your environment may not be. Thus, ruff errors,
 which might stem for other files, will not fail the tests of your contribution and can be ignored.
@@ -117,7 +131,7 @@ The following commands show how to run ansible-test sanity tests:
 nox -Re ansible-test-sanity-devel
 
 # Run basic sanity tests for the given files and directories:
-nox -Re ansible-test-sanity-devel -- plugins/modules/system/pids.py tests/integration/targets/pids/
+nox -Re ansible-test-sanity-devel -- plugins/modules/proxmox_pool.py tests/integration/targets/proxmox_pool/
 
 # Run all other sanity tests for all files in the collection:
 nox -R
@@ -138,6 +152,49 @@ nox -Re ansible-test-units-devel -- --python 3.13
 nox -Re ansible-test-units-devel -- --python 3.13 tests/unit/plugins/modules/test_proxmox_kvm.py
 ```
 
+### Integration tests
+
+Most Proxmox module integration tests require access to a real Proxmox environment and are marked as `unsupported` in CI. This means they are skipped during automated testing and must be executed manually in a properly configured environment.
+
+**Warning:** Integration tests may create, modify, or delete resources on your Proxmox environment. It is strongly recommended to use a dedicated test environment.
+
+#### Setup
+
+1. Create your local configuration file:
+
+   ```bash
+   cp tests/integration/integration_config.yml.template tests/integration/integration_config.yml
+   ```
+
+2. Adjust the authentication variables to match your Proxmox environment. A minimal example configuration may look like:
+
+   ```yaml
+   proxmox_host: https://your-proxmox:8006
+   proxmox_user: root@pam
+   proxmox_password: your-password
+   validate_certs: false
+   ```
+
+   Some modules require the `root@pam` user due to permission constraints.
+
+#### Running tests
+
+You can run integration tests using `ansible-test`:
+
+```bash
+# Run all integration tests
+ansible-test integration -v --allow-unsupported
+
+# Run all integration tests using Docker
+ansible-test integration --docker -v --allow-unsupported
+
+# Run a specific test target
+ansible-test integration proxmox_pool -v --allow-unsupported
+
+# Run a specific test target using Docker
+ansible-test integration proxmox_pool --docker -v --allow-unsupported
+```
+
 ### Manual test and review of changes
 If you want to test your new module or bugfix within a playbook, you may do the following:
 - Ensure your repository resides, for example, in `exampledir/community/proxmox`.
@@ -145,7 +202,7 @@ If you want to test your new module or bugfix within a playbook, you may do the 
   Alternatively, you may edit your [ansible.cfg](https://docs.ansible.com/projects/ansible/latest/reference_appendices/config.html#collections-paths).
 - Verify, that your modified collection is found: `ansible-galaxy collection list`
 
-Now you can use your custom code in playbooks and roles. 
+Now you can use your custom code in playbooks and roles.
 And you can use `ansible-doc` to review your rendered documentation.
 
 
@@ -162,62 +219,6 @@ Unless you already read it up above, you probably really shoudl check out these 
     [voice style](https://docs.ansible.com/projects/ansible/devel/dev_guide/style_guide/voice_style.html), [grammar](https://docs.ansible.com/projects/ansible/devel/dev_guide/style_guide/grammar_punctuation.html)
     and [spelling](https://docs.ansible.com/projects/ansible/devel/dev_guide/style_guide/spelling_word_choice.html).
   - [Ansible Markup for documentation yaml](https://docs.ansible.com/projects/ansible/latest/dev_guide/ansible_markup.html).
-<!-- Omitted for the sake of brevity and kept for historical reasons
-## Run basic sanity, unit or integration tests locally (with ansible-test)
-
-Instead of using antsibull-nox, you can also run sanity and unit tests with ansible-test directly.
-
-You have to check out the repository into a specific path structure to be able to run `ansible-test`. 
-The path to the git checkout must end with `.../ansible_collections/community/general`. 
-Please see [our testing guide](https://docs.ansible.com/projects/ansible/devel/community/collection_contributors/collection_test_pr_locally.html) 
-for instructions on how to check out the repository into a correct path structure. The short version of these instructions is:
-
-```.bash
-mkdir -p ~/dev/ansible_collections/community
-git clone https://github.com/ansible-collections/community.proxmox.git ~/dev/ansible_collections/community/proxmox
-cd ~/dev/ansible_collections/community/proxmox
-```
-
-Then you can run `ansible-test` (which is a part of [ansible-core](https://pypi.org/project/ansible-core/)) inside the checkout. 
-The following example commands expect that you have installed Docker or Podman. 
-Note that Podman has only been supported by more recent ansible-core releases. 
-If you are using Docker, the following will work with Ansible 2.9+.
-
-### Basic sanity tests
-
-The following commands show how to run basic sanity tests:
-
-```.bash
-# Run basic sanity tests for all files in the collection:
-ansible-test sanity --docker -v
-
-# Run basic sanity tests for the given files and directories:
-ansible-test sanity --docker -v plugins/modules/system/pids.py tests/integration/targets/pids/
-```
-
-### Unit tests
-
-Note that for running unit tests, you need to install required collections in the same folder structure that `community.proxmox` is checked out in.
-Right now, you need to install [`community.internal_test_tools`](https://github.com/ansible-collections/community.internal_test_tools).
-If you want to use the latest version from GitHub, you can run:
-
-```
-git clone https://github.com/ansible-collections/community.internal_test_tools.git ~/dev/ansible_collections/community/internal_test_tools
-```
-
-The following commands show how to run unit tests:
-
-```.bash
-# Run all unit tests:
-ansible-test units --docker -v
-
-# Run all unit tests for one Python version (a lot faster):
-ansible-test units --docker -v --python 3.8
-
-# Run a specific unit test (for the nmcli module) for one Python version:
-ansible-test units --docker -v --python 3.8 tests/unit/plugins/modules/net_tools/test_nmcli.py
-```
--->
 
 <!-- todo
 ## Devcontainer

@@ -44,16 +44,10 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: List all snapshots for container or VM
   community.proxmox.proxmox_snap_info:
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     vmid: 100
 
 - name: List specific snapshot for container or VM
   community.proxmox.proxmox_snap_info:
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     vmid: 100
     snapname: my-snapshot
 """
@@ -69,13 +63,24 @@ snapshots:
   type: list
 """
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        vmid=dict(required=False),
+        hostname=dict(),
+        snapname=dict(type="str", required=False),
+    )
+
+
+def module_options():
+    return {}
 
 
 class ProxmoxSnapAnsible(ProxmoxAnsible):
@@ -84,16 +89,7 @@ class ProxmoxSnapAnsible(ProxmoxAnsible):
 
 
 def main():
-    module_args = proxmox_auth_argument_spec()
-    snap_args = dict(
-        vmid=dict(required=False),
-        hostname=dict(),
-        snapname=dict(type="str", required=False),
-    )
-    module_args.update(snap_args)
-
-    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
-
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxSnapAnsible(module)
 
     vmid = module.params["vmid"]

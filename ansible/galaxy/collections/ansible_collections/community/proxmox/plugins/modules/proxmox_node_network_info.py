@@ -66,32 +66,20 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Get all network interfaces on a node
   community.proxmox.proxmox_node_network_info:
-    api_host: proxmox.example.com
-    api_user: root@pam
-    api_password: secret
     node: pve01
 
 - name: Get information about a specific network interface
   community.proxmox.proxmox_node_network_info:
-    api_host: proxmox.example.com
-    api_user: root@pam
-    api_password: secret
     node: pve01
     iface: vmbr0
 
 - name: Get all bridge interfaces on a node
   community.proxmox.proxmox_node_network_info:
-    api_host: proxmox.example.com
-    api_user: root@pam
-    api_password: secret
     node: pve01
     iface_type: bridge
 
 - name: Check only for pending changes
   community.proxmox.proxmox_node_network_info:
-    api_host: proxmox.example.com
-    api_user: root@pam
-    api_password: secret
     node: pve01
     check_changes: true
 """
@@ -158,19 +146,17 @@ has_pending_changes:
 
 import traceback
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
     proxmox_to_ansible_bool,
 )
 
 
-def main():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(
+def module_args():
+    return dict(
         node=dict(type="str", required=True),
         iface=dict(type="str", required=False),
         iface_type=dict(
@@ -190,14 +176,9 @@ def main():
         check_changes=dict(type="bool", default=False, required=False),
     )
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        supports_check_mode=True,
-    )
 
-    proxmox = ProxmoxNodeNetworkInfoAnsible(module)
-    result = proxmox.run()
-    module.exit_json(**result)
+def module_options():
+    return {}
 
 
 class ProxmoxNodeNetworkInfoAnsible(ProxmoxAnsible):
@@ -299,6 +280,14 @@ class ProxmoxNodeNetworkInfoAnsible(ProxmoxAnsible):
                 )
 
         return result
+
+
+def main():
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxNodeNetworkInfoAnsible(module)
+
+    result = proxmox.run()
+    module.exit_json(**result)
 
 
 if __name__ == "__main__":

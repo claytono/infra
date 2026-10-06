@@ -28,20 +28,10 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: List existing domains
   community.proxmox.proxmox_domain_info:
-    api_host: helldorado
-    api_user: root@pam
-    api_password: "{{ password | default(omit) }}"
-    api_token_id: "{{ token_id | default(omit) }}"
-    api_token_secret: "{{ token_secret | default(omit) }}"
   register: proxmox_domains
 
 - name: Retrieve information about the pve domain
   community.proxmox.proxmox_domain_info:
-    api_host: helldorado
-    api_user: root@pam
-    api_password: "{{ password | default(omit) }}"
-    api_token_id: "{{ token_id | default(omit) }}"
-    api_token_secret: "{{ token_secret | default(omit) }}"
     domain: pve
   register: proxmox_domain_pve
 """
@@ -73,12 +63,20 @@ proxmox_domains:
 """
 
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        domain=dict(type="str", aliases=["realm", "name"]),
+    )
+
+
+def module_options():
+    return {}
 
 
 class ProxmoxDomainInfoAnsible(ProxmoxAnsible):
@@ -95,26 +93,12 @@ class ProxmoxDomainInfoAnsible(ProxmoxAnsible):
         return domains
 
 
-def proxmox_domain_info_argument_spec():
-    return dict(
-        domain=dict(type="str", aliases=["realm", "name"]),
-    )
-
-
 def main():
-    module_args = proxmox_auth_argument_spec()
-    domain_info_args = proxmox_domain_info_argument_spec()
-    module_args.update(domain_info_args)
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxDomainInfoAnsible(module)
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        required_one_of=[("api_password", "api_token_id")],
-        required_together=[("api_token_id", "api_token_secret")],
-        supports_check_mode=True,
-    )
     result = dict(changed=False)
 
-    proxmox = ProxmoxDomainInfoAnsible(module)
     domain = module.params["domain"]
 
     if domain:

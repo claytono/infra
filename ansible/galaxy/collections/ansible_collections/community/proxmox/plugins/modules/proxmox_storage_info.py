@@ -34,30 +34,15 @@ notes:
 EXAMPLES = r"""
 - name: List existing storages
   community.proxmox.proxmox_storage_info:
-    api_host: helldorado
-    api_user: root@pam
-    api_password: "{{ password | default(omit) }}"
-    api_token_id: "{{ token_id | default(omit) }}"
-    api_token_secret: "{{ token_secret | default(omit) }}"
   register: proxmox_storages
 
 - name: List NFS storages only
   community.proxmox.proxmox_storage_info:
-    api_host: helldorado
-    api_user: root@pam
-    api_password: "{{ password | default(omit) }}"
-    api_token_id: "{{ token_id | default(omit) }}"
-    api_token_secret: "{{ token_secret | default(omit) }}"
     type: nfs
   register: proxmox_storages_nfs
 
 - name: Retrieve information about the lvm2 storage
   community.proxmox.proxmox_storage_info:
-    api_host: helldorado
-    api_user: root@pam
-    api_password: "{{ password | default(omit) }}"
-    api_token_id: "{{ token_id | default(omit) }}"
-    api_token_secret: "{{ token_secret | default(omit) }}"
     storage: lvm2
   register: proxmox_storage_lvm
 """
@@ -108,13 +93,22 @@ proxmox_storages:
 """
 
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
     proxmox_to_ansible_bool,
 )
+
+
+def module_args():
+    return dict(
+        storage=dict(type="str", aliases=["name"]),
+        type=dict(type="str"),
+    )
+
+
+def module_options():
+    return dict(mutually_exclusive=[("storage", "type")])
 
 
 class ProxmoxStorageInfoAnsible(ProxmoxAnsible):
@@ -150,35 +144,19 @@ class ProxmoxStorage:
                 self.storage["prune-backups"][k] = v
 
 
-def proxmox_storage_info_argument_spec():
-    return dict(
-        storage=dict(type="str", aliases=["name"]),
-        type=dict(type="str"),
-    )
-
-
 def main():
-    module_args = proxmox_auth_argument_spec()
-    storage_info_args = proxmox_storage_info_argument_spec()
-    module_args.update(storage_info_args)
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxStorageInfoAnsible(module)
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        required_one_of=[("api_password", "api_token_id")],
-        required_together=[("api_token_id", "api_token_secret")],
-        mutually_exclusive=[("storage", "type")],
-        supports_check_mode=True,
-    )
     result = dict(changed=False)
 
-    proxmox = ProxmoxStorageInfoAnsible(module)
     storage = module.params["storage"]
     storagetype = module.params["type"]
 
     if storage:
         storages = [proxmox.get_storage(storage)]
     else:
-        storages = proxmox.get_storages(storagetype=storagetype)
+        storages = proxmox.get_storages(storagetype)
     result["proxmox_storages"] = [storage.storage for storage in storages]
 
     module.exit_json(**result)

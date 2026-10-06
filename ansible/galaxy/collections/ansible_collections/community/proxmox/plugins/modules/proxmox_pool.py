@@ -46,17 +46,11 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create new Proxmox VE pool
   community.proxmox.proxmox_pool:
-    api_host: node1
-    api_user: root@pam
-    api_password: password
     poolid: test
     comment: 'New pool'
 
 - name: Delete the Proxmox VE pool
   community.proxmox.proxmox_pool:
-    api_host: node1
-    api_user: root@pam
-    api_password: password
     poolid: test
     state: absent
 """
@@ -74,12 +68,23 @@ msg:
   sample: "Pool test successfully created"
 """
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
+    is_not_found_error,
 )
+
+
+def module_args():
+    return dict(
+        poolid=dict(type="str", aliases=["name"], required=True),
+        comment=dict(type="str"),
+        state=dict(default="present", choices=["present", "absent"]),
+    )
+
+
+def module_options():
+    return {}
 
 
 class ProxmoxPoolAnsible(ProxmoxAnsible):
@@ -90,11 +95,10 @@ class ProxmoxPoolAnsible(ProxmoxAnsible):
         :return: bool - is pool exists?
         """
         try:
-            self.proxmox_api.pools(poolid).get()
+            self.proxmox_api.pools.get(poolid=poolid)
             return True
         except Exception as e:
-            error_str = str(e).lower()
-            if "does not exist" in error_str:
+            if is_not_found_error(e):
                 return False
             self.module.fail_json(msg=f"Unable to retrieve pool {poolid}: {e}")
 
@@ -138,7 +142,7 @@ class ProxmoxPoolAnsible(ProxmoxAnsible):
                 return
 
             try:
-                self.proxmox_api.pools(poolid).delete()
+                self.proxmox_api.pools.delete(poolid=poolid)
             except Exception as e:
                 self.module.fail_json(msg=f"Failed to delete pool with ID {poolid}: {e}")
         else:
@@ -148,27 +152,12 @@ class ProxmoxPoolAnsible(ProxmoxAnsible):
 
 
 def main():
-    module_args = proxmox_auth_argument_spec()
-    pools_args = dict(
-        poolid=dict(type="str", aliases=["name"], required=True),
-        comment=dict(type="str"),
-        state=dict(default="present", choices=["present", "absent"]),
-    )
-
-    module_args.update(pools_args)
-
-    module = AnsibleModule(
-        argument_spec=module_args,
-        required_together=[("api_token_id", "api_token_secret")],
-        required_one_of=[("api_password", "api_token_id")],
-        supports_check_mode=True,
-    )
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxPoolAnsible(module)
 
     poolid = module.params["poolid"]
     comment = module.params["comment"]
     state = module.params["state"]
-
-    proxmox = ProxmoxPoolAnsible(module)
 
     if state == "present":
         proxmox.create_pool(poolid, comment)

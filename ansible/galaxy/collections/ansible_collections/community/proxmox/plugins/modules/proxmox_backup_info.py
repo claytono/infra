@@ -50,29 +50,17 @@ extends_documentation_fragment:
 EXAMPLES = """
 - name: Print all backup information by VM ID and VM name
   community.proxmox.proxmox_backup_info:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
 
 - name: Print Proxmox backup information for a specific VM based on its name
   community.proxmox.proxmox_backup_info:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_name: 'mailsrv'
 
 - name: Print Proxmox backup information for a specific VM based on its VM ID
   community.proxmox.proxmox_backup_info:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     vm_id: '150'
 
 - name: Print Proxmox all backup job information
   community.proxmox.proxmox_backup_info:
-    api_user: 'myUser@pam'
-    api_password: '*******'
-    api_host: '192.168.20.20'
     backup_jobs: true
 """
 
@@ -133,14 +121,22 @@ backup_info:
 
 from datetime import datetime
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
-    HAS_PROXMOXER,
-    PROXMOXER_IMP_ERR,
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        vm_id=dict(type="str"),
+        vm_name=dict(type="str"),
+        backup_jobs=dict(type="bool", default=False),
+    )
+
+
+def module_options():
+    return dict(mutually_exclusive=[("backup_jobs", "vm_id", "vm_name")])
 
 
 class ProxmoxBackupInfoAnsible(ProxmoxAnsible):
@@ -198,26 +194,12 @@ class ProxmoxBackupInfoAnsible(ProxmoxAnsible):
 
 
 def main():
-    # Define module args
-    args = proxmox_auth_argument_spec()
-    backup_info_args = dict(
-        vm_id=dict(type="str"), vm_name=dict(type="str"), backup_jobs=dict(type="bool", default=False)
-    )
-    args.update(backup_info_args)
-
-    module = AnsibleModule(
-        argument_spec=args, mutually_exclusive=[("backup_jobs", "vm_id", "vm_name")], supports_check_mode=True
-    )
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxBackupInfoAnsible(module)
 
     # Define (init) result value
     result = dict(changed=False)
 
-    # Check if proxmoxer exist
-    if not HAS_PROXMOXER:
-        module.fail_json(msg=missing_required_lib("proxmoxer"), exception=PROXMOXER_IMP_ERR)
-
-    # Start to connect to proxmox to get backup data
-    proxmox = ProxmoxBackupInfoAnsible(module)
     vm_id = module.params["vm_id"]
     vm_name = module.params["vm_name"]
     backup_jobs = module.params["backup_jobs"]

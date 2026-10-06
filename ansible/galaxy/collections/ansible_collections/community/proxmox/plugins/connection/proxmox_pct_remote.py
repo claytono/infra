@@ -365,7 +365,6 @@ EXAMPLES = r"""
 # ---------------------------------------------
 # plugin: community.proxmox.proxmox
 # url: https://10.0.0.10:8006
-# validate_certs: false
 # user: ansible@pam
 # token_id: ansible
 # token_secret: !vault |
@@ -524,60 +523,44 @@ class Connection(ConnectionBase):
 
         return sock_kwarg
 
-    def _connect(self) -> Connection:
-        """activates the connection object"""
-
-        if PARAMIKO_IMPORT_ERR is not None:
-            raise AnsibleError(f"paramiko is not installed: {to_native(PARAMIKO_IMPORT_ERR)}")
-
-        port = self.get_option("port")
-        display.vvv(
-            f"ESTABLISH PARAMIKO SSH CONNECTION FOR USER: {self.get_option('remote_user')} on PORT {to_text(port)} TO {self.get_option('remote_addr')}",
-            host=self.get_option("remote_addr"),
-        )
-
-        ssh = paramiko.SSHClient()
-
-        # Set pubkey and hostkey algorithms to disable, the only manipulation allowed currently
-        # is keeping or omitting rsa-sha2 algorithms
-        # default_keys: t.Tuple[str] = ()
+    def _build_paramiko_disabled_algorithms(self) -> dict[str, t.Iterable[str]]:
+        """Build dict of algorithms to disable when RSA-SHA2 is turned off."""
         paramiko_preferred_pubkeys = getattr(paramiko.Transport, "_preferred_pubkeys", ())
         paramiko_preferred_hostkeys = getattr(paramiko.Transport, "_preferred_keys", ())
         use_rsa_sha2_algorithms = self.get_option("use_rsa_sha2_algorithms")
-        disabled_algorithms: t.Dict[str, t.Iterable[str]] = {}
+        disabled_algorithms: dict[str, t.Iterable[str]] = {}
         if not use_rsa_sha2_algorithms:
             if paramiko_preferred_pubkeys:
                 disabled_algorithms["pubkeys"] = tuple(a for a in paramiko_preferred_pubkeys if "rsa-sha2" in a)
             if paramiko_preferred_hostkeys:
                 disabled_algorithms["keys"] = tuple(a for a in paramiko_preferred_hostkeys if "rsa-sha2" in a)
+        return disabled_algorithms
 
-        # override paramiko's default logger name
-        if self._log_channel is not None:
-            ssh.set_log_channel(self._log_channel)
-
-        self.keyfile = os.path.expanduser("~/.ssh/known_hosts")
-
-        if self.get_option("host_key_checking"):
-            for ssh_known_hosts in ("/etc/ssh/ssh_known_hosts", "/etc/openssh/ssh_known_hosts"):
-                try:
-                    ssh.load_system_host_keys(ssh_known_hosts)
-                    break
-                except OSError:
-                    pass  # file was not found, but not required to function
-                except paramiko.hostkeys.InvalidHostKey as e:
-                    raise AnsibleConnectionFailure(f"Invalid host key: {to_text(e.line)}")
+    def _load_paramiko_system_host_keys(self, ssh: paramiko.SSHClient) -> None:
+        """Load system and user host key files when host key checking is enabled."""
+        for ssh_known_hosts in ("/etc/ssh/ssh_known_hosts", "/etc/openssh/ssh_known_hosts"):
             try:
-                ssh.load_system_host_keys()
+                ssh.load_system_host_keys(ssh_known_hosts)
+                break
+            except OSError:
+                pass  # file was not found, but not required to function
             except paramiko.hostkeys.InvalidHostKey as e:
-                raise AnsibleConnectionFailure(f"Invalid host key: {to_text(e.line)}")
+                raise AnsibleConnectionFailure(f"Invalid host key: {to_text(e.line)}") from e
+        try:
+            ssh.load_system_host_keys()
+        except paramiko.hostkeys.InvalidHostKey as e:
+            raise AnsibleConnectionFailure(f"Invalid host key: {to_text(e.line)}") from e
 
-        ssh_connect_kwargs = self._parse_proxy_command(port)
-        ssh.set_missing_host_key_policy(MyAddPolicy(self))
+    def _paramiko_connect_ssh(
+        self,
+        ssh: paramiko.SSHClient,
+        port: int,
+        disabled_algorithms: dict[str, t.Iterable[str]],
+        ssh_connect_kwargs: dict[str, t.Any],
+    ) -> None:
+        """Complete Paramiko ssh.connect with version-specific kwargs and error translation."""
         conn_password = self.get_option("password")
-        allow_agent = True
-
-        if conn_password is not None:
-            allow_agent = False
+        allow_agent = conn_password is None
 
         try:
             key_filename = None
@@ -605,31 +588,47 @@ class Connection(ConnectionBase):
                 **ssh_connect_kwargs,
             )
         except paramiko.ssh_exception.BadHostKeyException as e:
-            raise AnsibleConnectionFailure(f"host key mismatch for {to_text(e.hostname)}")
+            raise AnsibleConnectionFailure(f"host key mismatch for {to_text(e.hostname)}") from e
         except paramiko.ssh_exception.AuthenticationException as e:
-            msg = f"Failed to authenticate: {e}"
-            raise AnsibleAuthenticationFailure(msg)
+            raise AnsibleAuthenticationFailure(f"Failed to authenticate: {e}") from e
         except Exception as e:
-            msg = to_text(e)
-            if "PID check failed" in msg:
-                raise AnsibleError("paramiko version issue, please upgrade paramiko on the machine running ansible")
-            elif "Private key file is encrypted" in msg:
-                msg = (
-                    f"ssh {self.get_option('remote_user')}@{self.get_options('remote_addr')}:{port} : "
-                    + f"{msg}\nTo connect as a different user, use -u <username>."
-                )
-                raise AnsibleConnectionFailure(msg)
-            else:
-                raise AnsibleConnectionFailure(msg)
+            self._raise_paramiko_connect_exception(e, port)
+
+    def _connect(self) -> Connection:
+        """Open an SSH session to the Proxmox host via Paramiko."""
+
+        if PARAMIKO_IMPORT_ERR is not None:
+            raise AnsibleError(f"paramiko is not installed: {to_native(PARAMIKO_IMPORT_ERR)}")
+
+        port = self.get_option("port")
+        display.vvv(
+            f"ESTABLISH PARAMIKO SSH CONNECTION FOR USER: {self.get_option('remote_user')} on PORT {to_text(port)} TO {self.get_option('remote_addr')}",
+            host=self.get_option("remote_addr"),
+        )
+
+        ssh = paramiko.SSHClient()
+        disabled_algorithms = self._build_paramiko_disabled_algorithms()
+
+        # override paramiko's default logger name
+        if self._log_channel is not None:
+            ssh.set_log_channel(self._log_channel)
+
+        self.keyfile = os.path.expanduser("~/.ssh/known_hosts")
+
+        if self.get_option("host_key_checking"):
+            self._load_paramiko_system_host_keys(ssh)
+
+        ssh_connect_kwargs = self._parse_proxy_command(port)
+        ssh.set_missing_host_key_policy(MyAddPolicy(self))
+        self._paramiko_connect_ssh(ssh, port, disabled_algorithms, ssh_connect_kwargs)
         self.ssh = ssh
         self._connected = True
         return self
 
     def _any_keys_added(self) -> bool:
-        for hostname, keys in self.ssh._host_keys.items():
-            for keytype, key in keys.items():
-                added_this_time = getattr(key, "_added_by_ansible_this_time", False)
-                if added_this_time:
+        for keys in self.ssh._host_keys.values():
+            for key in keys.values():
+                if getattr(key, "_added_by_ansible_this_time", False):
                     return True
         return False
 
@@ -670,6 +669,100 @@ class Connection(ConnectionBase):
             )
         return " ".join(cmd)
 
+    def _open_exec_channel(self) -> t.Any:
+        try:
+            self.ssh.get_transport().set_keepalive(5)
+            return self.ssh.get_transport().open_session()
+        except Exception as e:
+            text_e = to_text(e)
+            msg = "Failed to open session"
+            if text_e:
+                msg += f": {text_e}"
+            raise AnsibleConnectionFailure(to_native(msg)) from e
+
+    def _configure_exec_channel(self, chan: t.Any, cmd: str, sudoable: bool) -> None:
+        # sudo usually requires a PTY (cf. requiretty option), therefore
+        # we give it one by default (pty=True in ansible.cfg), and we try
+        # to initialise from the calling environment when sudoable is enabled
+        if self.get_option("pty") and sudoable:
+            chan.get_pty(
+                term=os.getenv("TERM", "vt100"),
+                width=int(os.getenv("COLUMNS", "0")),
+                height=int(os.getenv("LINES", "0")),
+            )
+
+        display.vvv(f"EXEC {cmd}", host=self.get_option("remote_addr"))
+
+        if self.get_option("forward_agent"):
+            paramiko.agent.AgentRequestHandler(chan)
+
+    def _resolve_become_prompt(self, chan: t.Any, bufsize: int, become_buf: list[bytes]) -> tuple[bytes, bytes]:
+        password_prompt = False
+        become_success = False
+        while not (become_success or password_prompt):
+            display.debug("Waiting for Privilege Escalation input")
+
+            chunk = chan.recv(bufsize)
+            display.debug(f"chunk is: {to_text(chunk)}")
+            if not chunk:
+                if b"unknown user" in become_buf[0]:
+                    n_become_user = to_native(self.become.get_option("become_user"))
+                    raise AnsibleError(f"user {n_become_user} does not exist")
+                else:
+                    break
+                    # raise AnsibleError('ssh connection closed waiting for password prompt')
+            become_buf[0] += chunk
+
+            # need to check every line because we might get lectured
+            # and we might get the middle of a line in a chunk
+            for line in become_buf[0].splitlines(True):
+                if self.become.check_success(line):
+                    become_success = True
+                    break
+                elif self.become.check_password_prompt(line):
+                    password_prompt = True
+                    break
+
+        no_prompt_out = b""
+        no_prompt_err = b""
+        if password_prompt:
+            if self.become:
+                become_pass = self.become.get_option("become_pass")
+                chan.sendall(to_bytes(become_pass, errors="surrogate_or_strict") + b"\n")
+            else:
+                raise AnsibleError("A password is required but none was supplied")
+        else:
+            no_prompt_out += become_buf[0]
+            no_prompt_err += become_buf[0]
+
+        return no_prompt_out, no_prompt_err
+
+    def _exec_channel_cmd_and_stdin(
+        self, chan: t.Any, cmd: bytes, in_data: bytes | None, bufsize: int
+    ) -> tuple[bytes, bytes]:
+        no_prompt_out = b""
+        no_prompt_err = b""
+        become_buf = [b""]
+
+        try:
+            chan.exec_command(cmd)
+            if self.become and self.become.expect_prompt():
+                np, ne = self._resolve_become_prompt(chan, bufsize, become_buf)
+                no_prompt_out += np
+                no_prompt_err += ne
+
+            if in_data:
+                for i in range(0, len(in_data), bufsize):
+                    chan.send(in_data[i : i + bufsize])
+                chan.shutdown_write()
+            elif in_data == b"":
+                chan.shutdown_write()
+
+        except socket.timeout as e:
+            raise AnsibleError("ssh timed out waiting for privilege escalation.\n" + to_text(become_buf[0])) from e
+
+        return no_prompt_out, no_prompt_err
+
     def exec_command(self, cmd: str, in_data: bytes | None = None, sudoable: bool = True) -> tuple[int, bytes, bytes]:
         """run a command on inside the LXC container"""
 
@@ -679,83 +772,11 @@ class Connection(ConnectionBase):
 
         bufsize = 4096
 
-        try:
-            self.ssh.get_transport().set_keepalive(5)
-            chan = self.ssh.get_transport().open_session()
-        except Exception as e:
-            text_e = to_text(e)
-            msg = "Failed to open session"
-            if text_e:
-                msg += f": {text_e}"
-            raise AnsibleConnectionFailure(to_native(msg))
+        chan = self._open_exec_channel()
+        self._configure_exec_channel(chan, cmd, sudoable)
 
-        # sudo usually requires a PTY (cf. requiretty option), therefore
-        # we give it one by default (pty=True in ansible.cfg), and we try
-        # to initialise from the calling environment when sudoable is enabled
-        if self.get_option("pty") and sudoable:
-            chan.get_pty(
-                term=os.getenv("TERM", "vt100"), width=int(os.getenv("COLUMNS", 0)), height=int(os.getenv("LINES", 0))
-            )
-
-        display.vvv(f"EXEC {cmd}", host=self.get_option("remote_addr"))
-
-        if self.get_option("forward_agent"):
-            paramiko.agent.AgentRequestHandler(chan)
-
-        cmd = to_bytes(cmd, errors="surrogate_or_strict")
-
-        no_prompt_out = b""
-        no_prompt_err = b""
-        become_output = b""
-
-        try:
-            chan.exec_command(cmd)
-            if self.become and self.become.expect_prompt():
-                password_prompt = False
-                become_success = False
-                while not (become_success or password_prompt):
-                    display.debug("Waiting for Privilege Escalation input")
-
-                    chunk = chan.recv(bufsize)
-                    display.debug(f"chunk is: {to_text(chunk)}")
-                    if not chunk:
-                        if b"unknown user" in become_output:
-                            n_become_user = to_native(self.become.get_option("become_user"))
-                            raise AnsibleError(f"user {n_become_user} does not exist")
-                        else:
-                            break
-                            # raise AnsibleError('ssh connection closed waiting for password prompt')
-                    become_output += chunk
-
-                    # need to check every line because we might get lectured
-                    # and we might get the middle of a line in a chunk
-                    for line in become_output.splitlines(True):
-                        if self.become.check_success(line):
-                            become_success = True
-                            break
-                        elif self.become.check_password_prompt(line):
-                            password_prompt = True
-                            break
-
-                if password_prompt:
-                    if self.become:
-                        become_pass = self.become.get_option("become_pass")
-                        chan.sendall(to_bytes(become_pass, errors="surrogate_or_strict") + b"\n")
-                    else:
-                        raise AnsibleError("A password is required but none was supplied")
-                else:
-                    no_prompt_out += become_output
-                    no_prompt_err += become_output
-
-            if in_data:
-                for i in range(0, len(in_data), bufsize):
-                    chan.send(in_data[i : i + bufsize])
-                chan.shutdown_write()
-            elif in_data == b"":
-                chan.shutdown_write()
-
-        except socket.timeout:
-            raise AnsibleError("ssh timed out waiting for privilege escalation.\n" + to_text(become_output))
+        cmd_bytes = to_bytes(cmd, errors="surrogate_or_strict")
+        no_prompt_out, no_prompt_err = self._exec_channel_cmd_and_stdin(chan, cmd_bytes, in_data, bufsize)
 
         stdout = b"".join(chan.makefile("rb", bufsize))
         stderr = b"".join(chan.makefile_stderr("rb", bufsize))
@@ -783,7 +804,7 @@ class Connection(ConnectionBase):
                     raise AnsibleError(f"cat not found in path of container: {to_text(self.get_option('vmid'))}")
                 raise AnsibleError(f"{to_text(stdout)}\n{to_text(stderr)}")
         except Exception as e:
-            raise AnsibleError(f"error occurred while putting file from {in_path} to {out_path}!\n{to_text(e)}")
+            raise AnsibleError(f"error occurred while putting file from {in_path} to {out_path}!\n{to_text(e)}") from e
 
     def fetch_file(self, in_path: str, out_path: str) -> None:
         """save a remote file to the specified path"""
@@ -800,7 +821,7 @@ class Connection(ConnectionBase):
             with open(out_path, "wb") as f:
                 f.write(stdout)
         except Exception as e:
-            raise AnsibleError(f"error occurred while fetching file from {in_path} to {out_path}!\n{to_text(e)}")
+            raise AnsibleError(f"error occurred while fetching file from {in_path} to {out_path}!\n{to_text(e)}") from e
 
     def reset(self) -> None:
         """reset the connection"""
@@ -854,16 +875,16 @@ class Connection(ConnectionBase):
                         self._save_ssh_host_keys(tmp_keyfile_name)
 
                     os.rename(tmp_keyfile_name, self.keyfile)
-            except LockTimeout:
+            except LockTimeout as e:
                 raise AnsibleError(
                     f"writing lock file for {self.keyfile} ran in to the timeout of {self.get_option('lock_file_timeout')}s"
-                )
+                ) from e
             except paramiko.hostkeys.InvalidHostKey as e:
-                raise AnsibleConnectionFailure(f"Invalid host key: {e.line}")
+                raise AnsibleConnectionFailure(f"Invalid host key: {e.line}") from e
             except Exception as e:
                 # unable to save keys, including scenario when key was invalid
                 # and caught earlier
-                raise AnsibleError(f"error occurred while writing SSH host keys!\n{to_text(e)}")
+                raise AnsibleError(f"error occurred while writing SSH host keys!\n{to_text(e)}") from e
             finally:
                 if tmp_keyfile_name is not None:
                     pathlib.Path(tmp_keyfile_name).unlink(missing_ok=True)

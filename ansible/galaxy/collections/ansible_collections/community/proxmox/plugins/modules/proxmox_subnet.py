@@ -103,11 +103,6 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create a subnet
   community.proxmox.proxmox_subnet:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     vnet: test
     subnet: 10.10.2.0/24
     zone: ans1
@@ -121,11 +116,6 @@ EXAMPLES = r"""
 
 - name: Delete a subnet
   community.proxmox.proxmox_subnet:
-    api_user: "{{ pc.proxmox.api_user }}"
-    api_token_id: "{{ pc.proxmox.api_token_id }}"
-    api_token_secret: "{{ vault.proxmox.api_token_secret }}"
-    api_host: "{{ pc.proxmox.api_host }}"
-    validate_certs: false
     vnet: test
     subnet: 10.10.2.0/24
     zone: ans1
@@ -145,50 +135,12 @@ subnet:
 import copy
 from ipaddress import IPv4Address
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ansible_to_proxmox_bool,
     compare_list_of_dicts,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox_sdn import ProxmoxSdnAnsible
-
-
-def get_proxmox_args():
-    return dict(
-        state=dict(type="str", choices=["present", "absent"], default="present", required=False),
-        update=dict(type="bool", default=True),
-        subnet=dict(type="str", required=True),
-        vnet=dict(type="str", required=True),
-        zone=dict(type="str", required=False),
-        dhcp_dns_server=dict(type="str", required=False),
-        dhcp_range_update_mode=dict(type="str", choices=["append", "overwrite"], default="append"),
-        dhcp_range=dict(
-            type="list",
-            elements="dict",
-            required=False,
-            options=dict(start=dict(type="str", required=True), end=dict(type="str", required=True)),
-        ),
-        dnszoneprefix=dict(type="str", required=False),
-        gateway=dict(type="str", required=False),
-        lock_token=dict(type="str", required=False, no_log=False),
-        snat=dict(type="bool", default=False, required=False),
-        delete=dict(type="str", required=False),
-    )
-
-
-def get_ansible_module():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(get_proxmox_args())
-
-    return AnsibleModule(
-        argument_spec=module_args,
-        required_if=[
-            ("state", "present", ["subnet", "vnet", "zone"]),
-            ("state", "absent", ["zone", "vnet", "subnet"]),
-        ],
-    )
 
 
 def get_dhcp_range(dhcp_range=None):
@@ -217,10 +169,43 @@ def compare_dhcp_ranges(existing_ranges, new_ranges):
         if tuple_dhcp_range not in existing_intervals:
             new_dhcp_ranges.append(dhcp_range)
         for start, end in existing_intervals:
-            if not (tuple_dhcp_range[1] < start or tuple_dhcp_range[0] > end):
-                if tuple_dhcp_range != (start, end):
-                    partial_overlap = True
+            ranges_overlap = not (tuple_dhcp_range[1] < start or tuple_dhcp_range[0] > end)
+            if ranges_overlap and tuple_dhcp_range != (start, end):
+                partial_overlap = True
     return new_dhcp_ranges, partial_overlap
+
+
+def module_args():
+    return dict(
+        state=dict(type="str", choices=["present", "absent"], default="present", required=False),
+        update=dict(type="bool", default=True),
+        subnet=dict(type="str", required=True),
+        vnet=dict(type="str", required=True),
+        zone=dict(type="str", required=False),
+        dhcp_dns_server=dict(type="str", required=False),
+        dhcp_range_update_mode=dict(type="str", choices=["append", "overwrite"], default="append"),
+        dhcp_range=dict(
+            type="list",
+            elements="dict",
+            required=False,
+            options=dict(start=dict(type="str", required=True), end=dict(type="str", required=True)),
+        ),
+        dnszoneprefix=dict(type="str", required=False),
+        gateway=dict(type="str", required=False),
+        lock_token=dict(type="str", required=False, no_log=False),
+        snat=dict(type="bool", default=False, required=False),
+        delete=dict(type="str", required=False),
+    )
+
+
+def module_options():
+    return dict(
+        supports_check_mode=False,
+        required_if=[
+            ("state", "present", ["subnet", "vnet", "zone"]),
+            ("state", "absent", ["zone", "vnet", "subnet"]),
+        ],
+    )
 
 
 class ProxmoxSubnetAnsible(ProxmoxSdnAnsible):
@@ -230,7 +215,6 @@ class ProxmoxSubnetAnsible(ProxmoxSdnAnsible):
 
     def run(self):
         state = self.params.get("state")
-        update = self.params.get("update")
 
         subnet_params = {
             "subnet": self.params.get("subnet"),
@@ -255,7 +239,7 @@ class ProxmoxSubnetAnsible(ProxmoxSdnAnsible):
         except Exception as e:
             self.module.fail_json(f"Failed to retrieve subnets {e}")
 
-    def update_subnet(self, **subnet_params):
+    def update_subnet(self, **subnet_params):  # noqa: PLR0912, PLR0915
         new_subnet = copy.deepcopy(subnet_params)
         subnet_id = f"{self.params['zone']}-{new_subnet['subnet'].replace('/', '-')}"
         vnet_name = new_subnet["vnet"]
@@ -404,7 +388,7 @@ class ProxmoxSubnetAnsible(ProxmoxSdnAnsible):
 
 
 def main():
-    module = get_ansible_module()
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxSubnetAnsible(module)
 
     try:

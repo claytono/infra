@@ -44,11 +44,6 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: List existing storages
   community.proxmox.proxmox_storage_contents_info:
-    api_host: helldorado
-    api_user: root@pam
-    api_password: "{{ password | default(omit) }}"
-    api_token_id: "{{ token_id | default(omit) }}"
-    api_token_secret: "{{ token_secret | default(omit) }}"
     storage: lvm2
     content: backup
     vmid: 130
@@ -97,15 +92,13 @@ proxmox_storage_content:
 """
 
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
 
 
-def proxmox_storage_info_argument_spec():
+def module_args():
     return dict(
         storage=dict(type="str", required=True, aliases=["name"]),
         content=dict(
@@ -116,19 +109,15 @@ def proxmox_storage_info_argument_spec():
     )
 
 
-def main():
-    module_args = proxmox_auth_argument_spec()
-    storage_info_args = proxmox_storage_info_argument_spec()
-    module_args.update(storage_info_args)
+def module_options():
+    return {}
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        required_one_of=[("api_password", "api_token_id")],
-        required_together=[("api_token_id", "api_token_secret")],
-        supports_check_mode=True,
-    )
-    result = dict(changed=False)
+
+def main():
+    module = create_proxmox_module(module_args(), **module_options())
     proxmox = ProxmoxAnsible(module)
+
+    result = dict(changed=False)
     res = proxmox.get_storage_content(
         node=module.params["node"],
         storage=module.params["storage"],

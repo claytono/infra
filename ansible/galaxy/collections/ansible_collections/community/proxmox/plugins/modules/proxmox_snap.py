@@ -89,18 +89,12 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create new container snapshot
   community.proxmox.proxmox_snap:
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     vmid: 100
     state: present
     snapname: pre-updates
 
 - name: Create new container snapshot and keep only the 2 newest snapshots
   community.proxmox.proxmox_snap:
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     vmid: 100
     state: present
     snapname: snapshot-42
@@ -108,9 +102,6 @@ EXAMPLES = r"""
 
 - name: Create new snapshot for a container with configured mountpoints
   community.proxmox.proxmox_snap:
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     vmid: 100
     state: present
     unbind: true # requires root@pam+password auth, API tokens are not supported
@@ -118,18 +109,12 @@ EXAMPLES = r"""
 
 - name: Remove container snapshot
   community.proxmox.proxmox_snap:
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     vmid: 100
     state: absent
     snapname: pre-updates
 
 - name: Rollback container snapshot
   community.proxmox.proxmox_snap:
-    api_user: root@pam
-    api_password: 1q2w3e
-    api_host: node1
     vmid: 100
     state: rollback
     snapname: pre-updates
@@ -139,42 +124,13 @@ RETURN = r"""#"""
 
 import time
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 from ansible.module_utils.errors import AnsibleValidationError
 
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
-
-
-def get_ansible_module_args():
-    return dict(
-        hostname=dict(type="str"),
-        vmid=dict(type="str"),
-        state=dict(type="str", default="present", choices=["present", "absent", "rollback"]),
-        force=dict(type="bool", default=False),
-        unbind=dict(type="bool", default=False),
-        vmstate=dict(type="bool", default=False),
-        description=dict(type="str"),
-        timeout=dict(type="int", default=30),
-        snapname=dict(default="ansible_snap"),
-        retention=dict(type="int", default=0),
-    )
-
-
-def get_ansible_module():
-    module_args = proxmox_auth_argument_spec()
-    module_args.update(get_ansible_module_args())
-
-    return AnsibleModule(
-        argument_spec=module_args,
-        supports_check_mode=True,
-        required_if=[
-            ("unbind", True, ["api_password"]),
-        ],
-    )
 
 
 def validate_params(params):
@@ -188,6 +144,29 @@ def validate_params(params):
         api_password = params.get("api_password")
         if api_user != "root@pam" or not api_password:
             raise AnsibleValidationError("Parameter 'unbind=True' requires 'api_user' and 'api_password' options.")
+
+
+def module_args():
+    return dict(
+        vmid=dict(required=False),
+        hostname=dict(),
+        timeout=dict(type="int", default=30),
+        state=dict(default="present", choices=["present", "absent", "rollback"]),
+        description=dict(type="str"),
+        snapname=dict(type="str", default="ansible_snap"),
+        force=dict(type="bool", default=False),
+        unbind=dict(type="bool", default=False),
+        vmstate=dict(type="bool", default=False),
+        retention=dict(type="int", default=0),
+    )
+
+
+def module_options():
+    return dict(
+        required_if=[
+            ("unbind", True, ["api_password"]),
+        ],
+    )
 
 
 class ProxmoxSnapAnsible(ProxmoxAnsible):
@@ -208,14 +187,14 @@ class ProxmoxSnapAnsible(ProxmoxAnsible):
                 mountpoints[key] = value
         return mountpoints
 
-    def _container_mp_disable(self, vm, vmid, timeout, unbind, mountpoints, vmstatus):
+    def _container_mp_disable(self, vm, vmid, timeout, unbind, mountpoints, vmstatus):  # noqa: PLR0913
         # shutdown container if running
         if vmstatus == "running":
             self.shutdown_instance(vm, vmid, timeout)
         # delete all mountpoints configs
         self.vmconfig(vm, vmid).put(delete=" ".join(mountpoints))
 
-    def _container_mp_restore(self, vm, vmid, timeout, unbind, mountpoints, vmstatus):
+    def _container_mp_restore(self, vm, vmid, timeout, unbind, mountpoints, vmstatus):  # noqa: PLR0913
         # NOTE: requires auth as `root@pam`, API tokens are not supported
         # see https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/lxc/{vmid}/config
         # restore original config
@@ -260,7 +239,7 @@ class ProxmoxSnapAnsible(ProxmoxAnsible):
             for snap in sorted(snapshots, key=lambda x: x["snaptime"])[: len(snapshots) - retention]:
                 self.snapshot(vm, vmid)(snap["name"]).delete()
 
-    def snapshot_create(self, vm, vmid, timeout, snapname, description, vmstate, unbind, retention):
+    def snapshot_create(self, vm, vmid, timeout, snapname, description, vmstate, unbind, retention):  # noqa: PLR0913
         if self.module.check_mode:
             return True
 
@@ -328,8 +307,8 @@ class ProxmoxSnapAnsible(ProxmoxAnsible):
         return False
 
 
-def main():
-    module = get_ansible_module()
+def main():  # noqa: PLR0912, PLR0915
+    module = create_proxmox_module(module_args(), **module_options())
 
     try:
         validate_params(module.params)
@@ -400,7 +379,7 @@ def main():
                     continue
 
             if not snap_exist:
-                module.exit_json(changed=False, msg=f"Snapshot {snapname} does not exist")
+                module.fail_json(changed=False, msg=f"Snapshot {snapname} does not exist")
             if proxmox.snapshot_rollback(vm, vmid, timeout, snapname):
                 if module.check_mode:
                     module.exit_json(changed=True, msg=f"Snapshot {snapname} would be rolled back")

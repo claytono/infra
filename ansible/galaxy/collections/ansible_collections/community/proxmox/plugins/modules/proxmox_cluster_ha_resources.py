@@ -73,9 +73,6 @@ author:
 EXAMPLES = r"""
 - name: Add VM to HA group
   community.proxmox.proxmox_cluster_ha_resources:
-    api_host: "{{ ansible_host }}"
-    api_password: "{{ proxmox_root_pw | default(lookup('ansible.builtin.env', 'PROXMOX_PASSWORD', default='')) }}"
-    api_user: root@pam
     name: vm:100
     state: "present"
     group: ha0
@@ -85,18 +82,12 @@ EXAMPLES = r"""
 
 - name: Delete vm from HA group
   community.proxmox.proxmox_cluster_ha_resources:
-    api_host: "{{ ansible_host }}"
-    api_password: "{{ proxmox_root_pw | default(lookup('ansible.builtin.env', 'PROXMOX_PASSWORD', default='')) }}"
-    api_user: root@pam
     state: "absent"
     name: vm:100
   delegate_to: localhost
 
 - name: Add VM to HA group based on 'ha_' tag
   community.proxmox.proxmox_cluster_ha_resources:
-    api_host: "{{ ansible_host }}"
-    api_password: "{{ proxmox_root_pw | default(lookup('ansible.builtin.env', 'PROXMOX_PASSWORD', default='')) }}"
-    api_user: root@pam
     name: "{{ proxmox_type }}:{{ proxmox_vmid }}"
     state: "present"
     group: "{{ proxmox_tags | split(';') | select('match', '^ha_') }}"
@@ -117,12 +108,26 @@ new_groups:
     returned: when changed
 """
 
-from ansible.module_utils.basic import AnsibleModule
-
 from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
-    proxmox_auth_argument_spec,
+    create_proxmox_module,
 )
+
+
+def module_args():
+    return dict(
+        state=dict(choices=["present", "absent"], required=True),
+        name=dict(type="str", required=True),
+        comment=dict(type="str", default="", required=False),
+        group=dict(type="str", required=False),
+        max_relocate=dict(type="int", default=1, required=False),
+        max_restart=dict(type="int", default=1, required=False),
+        hastate=dict(choices=["started", "stopped", "disabled", "ignored"], default="started", required=False),
+    )
+
+
+def module_options():
+    return dict(supports_check_mode=False)
 
 
 class ProxmoxClusterHAResourcesAnsible(ProxmoxAnsible):
@@ -139,7 +144,7 @@ class ProxmoxClusterHAResourcesAnsible(ProxmoxAnsible):
     def _delete(self, sid):
         return self.proxmox_api.cluster.ha.resources(sid).delete()
 
-    def create(self, resources, sid, comment, group, max_relocate, max_restart, state):
+    def create(self, resources, sid, comment, group, max_relocate, max_restart, state):  # noqa: PLR0913
         data = {
             "comment": comment,
             "group": group,
@@ -177,27 +182,12 @@ class ProxmoxClusterHAResourcesAnsible(ProxmoxAnsible):
 
 
 def run_module():
-    module_args = proxmox_auth_argument_spec()
-
-    acl_args = dict(
-        state=dict(choices=["present", "absent"], required=True),
-        name=dict(type="str", required=True),
-        comment=dict(type="str", default="", required=False),
-        group=dict(type="str", required=False),
-        max_relocate=dict(type="int", default=1, required=False),
-        max_restart=dict(type="int", default=1, required=False),
-        hastate=dict(choices=["started", "stopped", "disabled", "ignored"], default="started", required=False),
-    )
-
-    module_args.update(acl_args)
+    module = create_proxmox_module(module_args(), **module_options())
+    proxmox = ProxmoxClusterHAResourcesAnsible(module)
 
     result = dict(
         changed=False,
     )
-
-    module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
-
-    proxmox = ProxmoxClusterHAResourcesAnsible(module)
 
     sid = module.params["name"]
     comment = module.params["comment"]

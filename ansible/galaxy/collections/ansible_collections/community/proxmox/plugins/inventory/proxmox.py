@@ -121,7 +121,7 @@ DOCUMENTATION = """
         - If strict mode is enabled, any error during host filter compositing will lead to an AnsibleError being raised, otherwise the host will be ignored.
         - Facts collected when O(want_facts) is set to V(true) can be used in the filters.
         - When O(want_facts) is set to V(false) full facts are not available and filters can only used on a limited set of facts
-          proxmox_vmid, proxmox_name, proxmox_status, proxmox_vmtype, proxmox_tags.
+          proxmox_vmid, proxmox_name, proxmox_status, proxmox_vmtype, proxmox_tags, proxmox_template.
         type: list
         elements: str
         default: []
@@ -188,7 +188,6 @@ plugin: community.proxmox.proxmox
 url: http://192.168.1.2:8006
 user: ansible@pve
 password: secure
-validate_certs: false  # only do this when you trust the network!
 want_facts: true
 want_proxmox_nodes_ansible_host: false
 compose:
@@ -271,13 +270,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         return self.session
 
     def _get_auth(self):
-        validate_certs = self.get_option("validate_certs")
-
-        if validate_certs is False:
-            from requests.packages.urllib3 import disable_warnings
-
-            disable_warnings()
-
         if self.proxmox_password:
             credentials = urlencode({"username": self.proxmox_user, "password": self.proxmox_password})
             a = self._get_session()
@@ -385,7 +377,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def _get_lxc_interfaces(self, properties, node, vmid):
         status_key = self._fact("status")
 
-        if status_key not in properties or not properties[status_key] == "running":
+        if status_key not in properties or properties[status_key] != "running":
             return
 
         ret = self._get_json(f"{self.proxmox_url}/api2/json/nodes/{node}/lxc/{vmid}/interfaces", ignore_errors=[501])
@@ -432,7 +424,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 result.append(
                     {
                         "name": iface["name"],
-                        "mac-address": iface["hardware-address"] if "hardware-address" in iface else "",
+                        "mac-address": iface.get("hardware-address", ""),
                         "ip-addresses": [f"{ip['ip-address']}/{ip['prefix']}" for ip in iface["ip-addresses"]]
                         if "ip-addresses" in iface
                         else [],
@@ -443,7 +435,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         return result
 
-    def _get_vm_config(self, properties, node, vmid, vmtype, name):
+    def _get_vm_config(self, properties, node, vmid, vmtype, name):  # noqa: PLR0912
         ret = self._get_json(f"{self.proxmox_url}/api2/json/nodes/{node}/{vmtype}/{vmid}/config")
 
         plaintext_configs = [
@@ -484,9 +476,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 if config == "lxc":
                     out_val = {}
                     for k, v in value:
-                        if k.startswith("lxc."):
-                            k = k[len("lxc.") :]
-                        out_val[k] = v
+                        out_key = k[len("lxc.") :] if k.startswith("lxc.") else k
+                        out_val[out_key] = v
                     value = out_val
 
                 if (
@@ -552,7 +543,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             except Exception as e:  # pylint: disable=broad-except
                 message = f"Could not evaluate host filter {host_filter} for host {name} - {e}"
                 if self.strict:
-                    raise AnsibleError(message)
+                    raise AnsibleError(message) from e
                 display.warning(message)
         return True
 
@@ -569,17 +560,16 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         """Handle an item from the list of LXC containers and Qemu VM. The
         return value will be either None if the item was skipped or the name of
         the item if it was added to the inventory."""
-        if item.get("template"):
-            return None
-
         properties = dict()
         name, vmid, status = item["name"], item["vmid"], item["status"]
+        is_template = bool(item.get("template", 0))
 
         properties[self._fact("node")] = node
         properties[self._fact("vmid")] = vmid
         properties[self._fact("vmtype")] = ittype
         properties[self._fact("name")] = name
         properties[self._fact("status")] = status
+        properties[self._fact("template")] = is_template
 
         tags = item.get("tags")
         if tags:
@@ -601,15 +591,18 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         # add the host to the inventory
         self._add_host(name, properties)
+        if is_template:
+            self.inventory.add_child(self._group("all_templates"), name)
+            return name
+
         node_type_group = self._group(f"{node}_{ittype}")
         self.inventory.add_child(self._group(f"all_{ittype}"), name)
         self.inventory.add_child(node_type_group, name)
 
         item_status = item["status"]
-        if item_status == "running":
-            if want_facts and ittype == "qemu" and self.get_option("qemu_extended_statuses"):
-                # get more details about the status of the qemu VM
-                item_status = properties.get(self._fact("qmpstatus"), item_status)
+        if item_status == "running" and want_facts and ittype == "qemu" and self.get_option("qemu_extended_statuses"):
+            # get more details about the status of the qemu VM
+            item_status = properties.get(self._fact("qmpstatus"), item_status)
         self.inventory.add_child(self._group(f"all_{item_status}"), name)
 
         return name
@@ -629,9 +622,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 if name and name in added_hosts:
                     self.inventory.add_child(pool_group, name)
 
-    def _populate(self):
+    def _populate(self):  # noqa: PLR0912
         # create common groups
-        default_groups = ["lxc", "qemu", "running", "stopped"]
+        default_groups = ["lxc", "qemu", "running", "stopped", "templates"]
 
         if self.get_option("qemu_extended_statuses"):
             default_groups.extend(["prelaunch", "paused"])
