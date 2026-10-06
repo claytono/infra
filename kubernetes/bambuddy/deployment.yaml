@@ -35,7 +35,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: bambuddy
-        image: ghcr.io/maziggy/bambuddy:1.2.5.5@sha256:dc627d618cc3d3252ae4ab33af74c4679c66a9a06e0e3bbb7aefa32d1a4d4a07
+        image: ghcr.io/maziggy/bambuddy:1.2.5.7@sha256:807f67511fa8c2b644b09de50a5d41794372214d00bd04fda59f576d9958d280
         args:
         - uvicorn
         - backend.app.main:app
