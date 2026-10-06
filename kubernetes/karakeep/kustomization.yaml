@@ -26,4 +26,4 @@ images:
   newName: ghcr.io/karakeep-app/karakeep-chrome
   newTag: 151.0.7922.47-r1@sha256:5b19bbb160e9ff60681a3abd97e1c4ec9f64212301410de658c3900ab7ef31e7
 - name: getmeili/meilisearch
-  newTag: v1.53.1@sha256:8d6643d86d71fad6ad3cba92cde7ccfce9e4d6c384bda67598eb553571c32431
+  newTag: v1.54.0@sha256:0bf32debcbfa8ba4e418679025f4935884972171513c92f0584689ff994a61df
