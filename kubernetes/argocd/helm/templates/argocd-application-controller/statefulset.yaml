@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: application-controller
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.5.1"
+    app.kubernetes.io/version: "v3.5.3"
 spec:
   replicas: 1
   revisionHistoryLimit: 5
@@ -29,7 +29,7 @@ spec:
         app.kubernetes.io/component: application-controller
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.5.1"
+        app.kubernetes.io/version: "v3.5.3"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-application-controller
@@ -38,10 +38,16 @@ spec:
       - args:
         - /usr/local/bin/argocd-application-controller
         - --metrics-port=8082
-        image: quay.io/argoproj/argocd:v3.5.1
+        image: quay.io/argoproj/argocd:v3.5.3
         imagePullPolicy: IfNotPresent
         name: application-controller
         env:
+          - name: GRPC_ENABLE_TXT_SERVICE_CONFIG
+            valueFrom:
+              configMapKeyRef:
+                name: argocd-cmd-params-cm
+                key: controller.grpc.enable.txt.service.config
+                optional: true
           - name: ARGOCD_CONTROLLER_REPLICAS
             value: "1"
           - name: ARGOCD_APPLICATION_CONTROLLER_NAME

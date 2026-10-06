@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: server
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/version: "v3.5.1"
+    app.kubernetes.io/version: "v3.5.3"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -28,14 +28,14 @@ spec:
         app.kubernetes.io/component: server
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/version: "v3.5.1"
+        app.kubernetes.io/version: "v3.5.3"
     spec:
       terminationGracePeriodSeconds: 30
       serviceAccountName: argocd-server
       automountServiceAccountToken: true
       containers:
       - name: server
-        image: quay.io/argoproj/argocd:v3.5.1
+        image: quay.io/argoproj/argocd:v3.5.3
         imagePullPolicy: IfNotPresent
         args:
         - /usr/local/bin/argocd-server
@@ -44,6 +44,12 @@ spec:
         env:
           - name: ARGOCD_SERVER_NAME
             value: argocd-server
+          - name: GRPC_ENABLE_TXT_SERVICE_CONFIG
+            valueFrom:
+              configMapKeyRef:
+                name: argocd-cmd-params-cm
+                key: server.grpc.enable.txt.service.config
+                optional: true
           - name: ARGOCD_SERVER_INSECURE
             valueFrom:
               configMapKeyRef:
@@ -425,6 +431,7 @@ spec:
       - name: tls-certs
         configMap:
           name: argocd-tls-certs-cm
+          optional: true
       - name: styles
         configMap:
           name: argocd-styles-cm
