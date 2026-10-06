@@ -76,8 +76,6 @@ jobs:
     uses: claytono/github-actions/.github/workflows/claytono-renovate-eval.yaml@main  # zizmor: ignore[unpinned-uses]
     with:
       pr_number: ${{ inputs.pr_number || '' }}
-      # Start small while the pass-based rollout is verified.
-      batch_size: 2
       continuation: ${{ inputs.continuation || false }}
       dry_run: ${{ inputs.dry_run || false }}
       provider: ${{ inputs.provider }}
