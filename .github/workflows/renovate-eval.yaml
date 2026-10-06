@@ -71,6 +71,7 @@ jobs:
       issues: write
       checks: read
       statuses: read
+    cache-mode: read
     # Intentionally tracks main so evaluator workflow changes take effect immediately.
     # Renovate pinDigest updates for this reusable workflow are disabled in .renovaterc.
     uses: claytono/github-actions/.github/workflows/claytono-renovate-eval.yaml@main  # zizmor: ignore[unpinned-uses]
