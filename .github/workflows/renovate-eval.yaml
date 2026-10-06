@@ -10,13 +10,14 @@ on:  # zizmor: ignore[dangerous-triggers]
   # Hourly pass, off the top of the hour to avoid scheduler load.
   schedule:
   - cron: 23 * * * *
-  # Any workflow finished on a Renovate branch, so its PR may now be ready. The
-  # job filter below drops runs that are not Renovate pull_request runs, so new
-  # check workflows need no change here.
+  # A check workflow finished on a Renovate branch, so its PR may now be ready.
+  # CI and ESPHome are the workflows most often finishing last on a Renovate
+  # push. Triggering on every workflow started about 11 passes per push, each
+  # replacing the last while pending; PRs whose final check is elsewhere wait
+  # for a later pass or the hourly one. The job filter below drops runs that
+  # are not Renovate pull_request runs.
   workflow_run:
-    workflows:
-    - '*'
-    - '!Renovate PR Evaluation'
+    workflows: [CI, ESPHome]
     types: [completed]
   workflow_dispatch:
     inputs:
