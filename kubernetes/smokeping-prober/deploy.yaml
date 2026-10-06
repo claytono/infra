@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: smokeping-prober
-        image: quay.io/superq/smokeping-prober:v0.10.0@sha256:614b8fca5cad698d254a77a61bda643fea867a87dbc17851c9332a2fef1b555f
+        image: quay.io/superq/smokeping-prober:v0.12.0@sha256:2524b895bdae244984e937ecb8fdd755baedbf2bb108204bd1a1dc6732706303
         imagePullPolicy: IfNotPresent
         args:
         - --config.file=/config/config.yaml
