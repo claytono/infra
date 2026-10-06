@@ -8,3 +8,4 @@ interfaces_pkgs:
   - resolvconf
 
 interfaces_net_path: /etc/network/interfaces.d
+interfaces_nm_config_path: /etc/NetworkManager/conf.d

@@ -15,19 +15,22 @@ zone={{ item.zone }}
 
 {% for bridge in interfaces_bridge_interfaces %}
 {%   if item.device in bridge.ports %}
-master={{ bridge.device }}
-slave-type=bridge
+controller={{ bridge.device }}
+port-type=bridge
 {%   endif %}
 {% endfor %}
-
-{% if item.mtu is defined %}
-[ethernet]
-mtu={{ item.mtu }}
-{% endif %}
 
 {% if item.type | default('ethernet')  == 'ipoib' %}
 [infiniband]
 transport-mode=datagram
+{% if item.mtu is defined %}
+mtu={{ item.mtu }}
+{% endif %}
+{% else %}
+{% if item.mtu is defined %}
+[ethernet]
+mtu={{ item.mtu }}
+{% endif %}
 {% endif %}
 
 {% if item.device is match(vlan_interface_regex) %}
@@ -60,6 +63,9 @@ address1={{ (item.address ~'/'~ item.netmask) | ansible.utils.ipaddr('host/prefi
 {%   if item.gateway is defined and item.gateway | length %}
 gateway={{ item.gateway }}
 {%   endif %}
+{% if item.defroute is defined and not item.defroute%}
+never-default=true
+{% endif %}
 {% else %}
 method=disabled
 {% endif %}
@@ -138,6 +144,9 @@ route{{ loop.index }}={{ (route.network ~'/'~ route.netmask) | ansible.utils.ipa
 {%     endif %}
 {#     TODO: dev, table, options #}
 {%   endfor %}
+{% if item.defroute is defined and not item.defroute%}
+never-default=true
+{% endif %}
 {% else %}
 method=disabled
 {% endif %}

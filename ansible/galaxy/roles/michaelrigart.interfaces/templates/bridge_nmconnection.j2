@@ -8,6 +8,7 @@ interface-name={{ item.device }}
 zone={{ item.zone }}
 {% endif %}
 
+{# note that a bridge interface is virtually ethernet even if it's ports are not #}
 {% if item.mtu is defined %}
 [ethernet]
 mtu={{ item.mtu }}
@@ -30,6 +31,9 @@ address1={{ (item.address ~'/'~ item.netmask) | ansible.utils.ipaddr('host/prefi
 {%   if item.gateway is defined and item.gateway | length %}
 gateway={{ item.gateway }}
 {%   endif %}
+{% if item.defroute is defined and not item.defroute%}
+never-default=true
+{% endif %}
 {% else %}
 method=disabled
 {% endif %}
@@ -108,6 +112,9 @@ route{{ loop.index }}={{ (route.network ~'/'~ route.netmask) | ansible.utils.ipa
 {%     endif %}
 {#     TODO: dev, table, options #}
 {%   endfor %}
+{% if item.defroute is defined and not item.defroute%}
+never-default=true
+{% endif %}
 {% else %}
 method=disabled
 {% endif %}

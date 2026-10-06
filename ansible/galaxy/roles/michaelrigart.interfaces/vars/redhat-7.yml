@@ -6,3 +6,4 @@ interfaces_pkgs:
   - libselinux-python
 
 interfaces_net_path: /etc/sysconfig/network-scripts
+interfaces_nm_config_path: /etc/NetworkManager/conf.d
