@@ -22,7 +22,7 @@ spec:
         fsGroup: 10001
       containers:
       - name: grimmory
-        image: grimmory/grimmory:v3.3.3@sha256:fffd0ae0bfccd64ca00441e8fa58a14e286b9115e5df1cb47eecf294ad09e6ff
+        image: grimmory/grimmory:v3.5.0@sha256:bf6fe21c6e247597f7869664a440b5a34242e2d2940575cae39c17bfaa66dc0b
         ports:
         - containerPort: 6060
           name: http
