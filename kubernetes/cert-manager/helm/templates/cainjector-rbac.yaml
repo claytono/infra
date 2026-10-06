@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cainjector"
-    app.kubernetes.io/version: "v1.21.1"
+    app.kubernetes.io/version: "v1.21.2"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["cert-manager.io"]
@@ -42,7 +42,7 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cainjector"
-    app.kubernetes.io/version: "v1.21.1"
+    app.kubernetes.io/version: "v1.21.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -67,7 +67,7 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cainjector"
-    app.kubernetes.io/version: "v1.21.1"
+    app.kubernetes.io/version: "v1.21.2"
     app.kubernetes.io/managed-by: Helm
 rules:
   # Used for leader election by the controller
@@ -98,7 +98,7 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "cainjector"
-    app.kubernetes.io/version: "v1.21.1"
+    app.kubernetes.io/version: "v1.21.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
