@@ -9,13 +9,13 @@ metadata:
     app.kubernetes.io/component: "autoscaling-runner-set"
     app.kubernetes.io/name: codex-dotfiles
     app.kubernetes.io/instance: codex-dotfiles
-    app.kubernetes.io/version: "0.14.2"
+    app.kubernetes.io/version: "0.15.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: gha-rs
     actions.github.com/scale-set-name: codex-dotfiles
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 5aeed01d099579cfdaf25e60417b57ab46d7dce21872463ff44ca1c52f3af07
+    actions.github.com/values-hash: b2144fef043a0c5d62b48d46e9b5fc1d2991a3402d87cddc5fe4f5e150f09cd
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -26,6 +26,10 @@ spec:
     - codex
   maxRunners: 4
   minRunners: 0
+  listenerConfig:
+    scaler:
+      burst: 100
+      qps: 50
   template:
     metadata:
       labels:
