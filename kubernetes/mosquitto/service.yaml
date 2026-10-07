@@ -7,6 +7,7 @@ metadata:
     name: mosquitto
   annotations:
     external-dns.alpha.kubernetes.io/hostname: mqtt.k.oneill.net
+    external-dns.kubernetes.io/hostname: mqtt.k.oneill.net
     metallb.io/allow-shared-ip: plexmediaserver
   name: mosquitto
 
