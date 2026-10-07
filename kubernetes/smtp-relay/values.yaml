@@ -6,6 +6,7 @@ service:
   port: 587
   annotations:
     external-dns.alpha.kubernetes.io/hostname: smtp.k.oneill.net
+    external-dns.kubernetes.io/hostname: smtp.k.oneill.net
     metallb.io/allow-shared-ip: plexmediaserver
   spec:
     loadBalancerIP: 172.19.74.21

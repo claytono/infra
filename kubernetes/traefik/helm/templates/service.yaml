@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
   annotations:
     external-dns.alpha.kubernetes.io/hostname: traefik.k.oneill.net
+    external-dns.kubernetes.io/hostname: traefik.k.oneill.net
 spec:
   loadBalancerIP: 172.19.74.34
   type: LoadBalancer

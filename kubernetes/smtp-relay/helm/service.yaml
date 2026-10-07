@@ -12,6 +12,7 @@ metadata:
     type: standard
   annotations:
     external-dns.alpha.kubernetes.io/hostname: smtp.k.oneill.net
+    external-dns.kubernetes.io/hostname: smtp.k.oneill.net
     metallb.io/allow-shared-ip: plexmediaserver
 spec:
   type: LoadBalancer
