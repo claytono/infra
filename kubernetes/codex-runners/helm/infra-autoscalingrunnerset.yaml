@@ -9,13 +9,13 @@ metadata:
     app.kubernetes.io/component: "autoscaling-runner-set"
     app.kubernetes.io/name: codex-infra
     app.kubernetes.io/instance: codex-infra
-    app.kubernetes.io/version: "0.14.2"
+    app.kubernetes.io/version: "0.15.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: gha-rs
     actions.github.com/scale-set-name: codex-infra
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 05691cfb042a4d93e7c1ad647e672eacf0ef525b3e0ad032d5f44a8d8b46ddc
+    actions.github.com/values-hash: a3161e78d8d91b16c77d1d8a49288fff0a38c7e638c69034dfdc73e450480dc
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -26,6 +26,10 @@ spec:
     - codex
   maxRunners: 4
   minRunners: 0
+  listenerConfig:
+    scaler:
+      burst: 100
+      qps: 50
   template:
     metadata:
       labels:

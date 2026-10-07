@@ -9,13 +9,13 @@ metadata:
     app.kubernetes.io/component: "autoscaling-runner-set"
     app.kubernetes.io/name: codex-go-unifi-mcp
     app.kubernetes.io/instance: codex-go-unifi-mcp
-    app.kubernetes.io/version: "0.14.2"
+    app.kubernetes.io/version: "0.15.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: gha-rs
     actions.github.com/scale-set-name: codex-go-unifi-mcp
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 8e9e0e640f6050c54b5dd03763def93745e4c58a53922b2e9c0115bf2c7a41f
+    actions.github.com/values-hash: 2a6c66f8c9510a023f09d626912570035c774ea72a0ae8af8225d20d91dad16
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -26,6 +26,10 @@ spec:
     - codex
   maxRunners: 4
   minRunners: 0
+  listenerConfig:
+    scaler:
+      burst: 100
+      qps: 50
   template:
     metadata:
       labels:
