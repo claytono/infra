@@ -23,6 +23,10 @@ interfaces_ether_interfaces:
     netmask: "255.255.255.0"
     allowclass: allow-hotplug
     wpaconf: /etc/wpa_supplicant/wpa_supplicant.conf
+    # The ez Share card's access point only exists while the CPAP is
+    # present, so this link is often down (e.g. while traveling). Don't
+    # treat that as drift; wpa_supplicant rejoins when it reappears.
+    ignore_status_check: true
 
 wifi_ssid: "ez Share"
 wifi_psk: !vault |
