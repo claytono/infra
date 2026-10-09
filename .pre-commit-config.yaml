@@ -102,9 +102,12 @@ repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.16.8
   hooks:
+  # apt_info.py is vendored unmodified from upstream.
   - id: ruff
     args: [--fix]
+    exclude: ^ansible/roles/unattended_upgrades/files/apt_info\.py$
   - id: ruff-format
+    exclude: ^ansible/roles/unattended_upgrades/files/apt_info\.py$
 
 - repo: https://github.com/igorshubovych/markdownlint-cli
   rev: v0.49.1

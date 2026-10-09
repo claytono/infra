@@ -321,6 +321,12 @@
         group: node_exporter
       when: "node_exporter_enabled | default(false)"
 
+- name: Unattended upgrades
+  hosts: kubernetes
+  roles:
+    - role: unattended_upgrades
+      tags: unattended_upgrades
+
 - name: Netdata monitoring agent
   hosts: all,!kubernetes
   roles:

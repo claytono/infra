@@ -1,0 +1,106 @@
+---
+- name: Install unattended-upgrades
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: present
+
+- name: Delay Debian point releases with snapshot.debian.org
+  when: unattended_upgrades_snapshot_delay_days | int > 0
+  block:
+    - name: Install snapshot advance script
+      ansible.builtin.template:
+        src: apt-snapshot-advance.j2
+        dest: /usr/local/sbin/apt-snapshot-advance
+        mode: "0755"
+
+    - name: Create apt-daily drop-in directory
+      ansible.builtin.file:
+        path: /etc/systemd/system/apt-daily.service.d
+        state: directory
+        mode: "0755"
+
+    - name: Advance the snapshot before each apt-daily run
+      ansible.builtin.copy:
+        content: |
+          [Service]
+          ExecStartPre=-/usr/local/sbin/apt-snapshot-advance
+        dest: /etc/systemd/system/apt-daily.service.d/snapshot.conf
+        mode: "0644"
+      notify: Reload systemd
+
+    - name: Take the first snapshot
+      ansible.builtin.command: /usr/local/sbin/apt-snapshot-advance
+      args:
+        creates: /etc/apt/apt.conf.d/51unattended-upgrades-snapshot
+
+- name: Remove snapshot delay
+  when: unattended_upgrades_snapshot_delay_days | int <= 0
+  block:
+    - name: Remove snapshot configuration
+      ansible.builtin.file:
+        path: /etc/apt/apt.conf.d/51unattended-upgrades-snapshot
+        state: absent
+      notify: Update apt lists
+
+    - name: Remove snapshot advance drop-in and script
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/systemd/system/apt-daily.service.d/snapshot.conf
+        - /usr/local/sbin/apt-snapshot-advance
+      notify: Reload systemd
+
+- name: Configure unattended-upgrades
+  ansible.builtin.template:
+    src: 52unattended-upgrades-local.j2
+    dest: /etc/apt/apt.conf.d/52unattended-upgrades-local
+    mode: "0644"
+    validate: apt-config -c %s dump
+
+- name: Enable apt periodic timers
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - apt-daily.timer
+    - apt-daily-upgrade.timer
+
+- name: Export apt metrics to node_exporter
+  when: node_exporter_enabled | default(false)
+  block:
+    - name: Install apt metrics dependencies
+      ansible.builtin.apt:
+        name:
+          - python3-apt
+          - python3-prometheus-client
+        state: present
+
+    - name: Create /usr/local/libexec
+      ansible.builtin.file:
+        path: /usr/local/libexec
+        state: directory
+        mode: "0755"
+
+    - name: Install apt_info.py
+      ansible.builtin.copy:
+        src: apt_info.py
+        dest: /usr/local/libexec/apt_info.py
+        mode: "0755"
+
+    - name: Install apt metrics service and timer
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        mode: "0644"
+      loop:
+        - apt-info-textfile.service
+        - apt-info-textfile.timer
+
+    - name: Enable apt metrics timer
+      ansible.builtin.systemd:
+        name: apt-info-textfile.timer
+        daemon_reload: true
+        enabled: true
+        state: started

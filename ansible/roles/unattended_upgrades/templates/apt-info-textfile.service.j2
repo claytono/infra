@@ -1,0 +1,9 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description=Write apt metrics for the node_exporter textfile collector
+
+[Service]
+Type=oneshot
+User=node_exporter
+Group=node_exporter
+ExecStart=/bin/sh -c '/usr/local/libexec/apt_info.py >/var/lib/node_exporter/textfile_collector/apt.prom.tmp && mv /var/lib/node_exporter/textfile_collector/apt.prom.tmp /var/lib/node_exporter/textfile_collector/apt.prom'
