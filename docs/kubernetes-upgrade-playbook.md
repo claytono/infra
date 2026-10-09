@@ -115,7 +115,7 @@ Watch the Semaphore job, then run the checks in
    ```bash
    pluto detect-all-in-cluster --target-versions k8s=v1.XX.0
 
-   CRD_SCHEMA_URL='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+   CRD_SCHEMA_URL='https://raw.githubusercontent.com/datreeio/CRDs-catalog/f1e7f6bc0537bf0622ffe6e47dbaa85914fabbec/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
    kubeconform -schema-location default \
      -schema-location "$CRD_SCHEMA_URL" \
      -kubernetes-version 1.XX.0 kubernetes/
