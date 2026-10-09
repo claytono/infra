@@ -1,0 +1,7 @@
+{{ ansible_managed | comment('c') }}
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Mail "{{ unattended_upgrades_mail }}";
+Unattended-Upgrade::MailReport "{{ unattended_upgrades_mail_report }}";
+Unattended-Upgrade::SyslogEnable "true";

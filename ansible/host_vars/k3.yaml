@@ -1,6 +1,8 @@
 ---
 host_ipv4: "172.19.74.74"
 
+unattended_upgrades_snapshot_delay_days: 7
+
 manage_network: true
 interfaces_ether_interfaces:
   - device: enp1s0f0

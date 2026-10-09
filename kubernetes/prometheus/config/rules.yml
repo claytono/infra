@@ -72,3 +72,20 @@ groups:
     annotations:
       message: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in {{ $labels.phase }}
         phase for more than 15 minutes
+  - alert: AptUpgradesPending
+    expr: sum by (instance) (apt_upgrades_pending{origin=~".*Debian:.*"}) > 0
+    for: 10d
+    annotations:
+      message: '{{ $labels.instance }} has had {{ $value }} Debian upgrade(s) pending
+        for more than 10 days'
+  - alert: AptPackageListsStale
+    expr: time() - apt_package_cache_timestamp_seconds > 3 * 86400
+    for: 1d
+    annotations:
+      message: '{{ $labels.instance }} has not refreshed its apt package lists in
+        more than 3 days'
+  - alert: NodeRebootRequired
+    expr: node_reboot_required == 1
+    for: 10d
+    annotations:
+      message: '{{ $labels.instance }} has needed a reboot for more than 10 days'

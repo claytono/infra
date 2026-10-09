@@ -1,0 +1,26 @@
+#!/bin/sh
+{{ ansible_managed | comment }}
+set -eu
+
+conf=/etc/apt/apt.conf.d/51unattended-upgrades-snapshot
+id=$(date -u -d "{{ unattended_upgrades_snapshot_delay_days }} days ago" +%Y%m%dT%H%M%SZ)
+
+# Security updates stay live. Debian's archive gets a longer validity, since
+# trixie-updates' Release file expires 7 days after it is published.
+settings=$(cat <<EOF
+APT::Snapshot "$id";
+Acquire::Snapshots::URI::Override::Label::Debian-Security "no";
+Acquire::Min-ValidTime::Debian "{{ (unattended_upgrades_snapshot_delay_days | int + 7) * 86400 }}";
+EOF
+)
+
+# The snapshot ID is part of each source's URL, so the settings only go into
+# the config once the lists for that ID have downloaded. Otherwise a failed
+# update would leave apt with no lists for the configured URLs.
+tmp=$(mktemp /etc/apt/.snapshot.XXXXXX)
+trap 'rm -f "$tmp"' EXIT
+printf '%s\n' "$settings" >"$tmp"
+flock -w 3600 /var/lib/apt/daily_lock apt-get -q --error-on=any -c "$tmp" update
+
+chmod 0644 "$tmp"
+mv "$tmp" "$conf"

@@ -1,0 +1,10 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description=Write apt metrics for the node_exporter textfile collector
+
+[Timer]
+OnBootSec=2min
+OnCalendar=*:0/15
+
+[Install]
+WantedBy=timers.target
