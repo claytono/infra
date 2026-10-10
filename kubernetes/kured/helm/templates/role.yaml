@@ -1,0 +1,21 @@
+---
+# Source: kured/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: kured
+  name: kured
+  labels:
+    app.kubernetes.io/name: kured
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Allow kured to lock/unlock itself
+  - apiGroups:     ["extensions"]
+    resources:     ["daemonsets"]
+    resourceNames: ["kured"]
+    verbs:         ["update", "patch"]
+  - apiGroups:     ["apps"]
+    resources:     ["daemonsets"]
+    resourceNames: ["kured"]
+    verbs:         ["update", "patch"]

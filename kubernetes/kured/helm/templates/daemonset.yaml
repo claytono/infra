@@ -1,0 +1,124 @@
+---
+# Source: kured/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kured
+  namespace: kured
+  labels:
+    app.kubernetes.io/name: kured
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/managed-by: Helm
+spec:
+  revisionHistoryLimit: 10
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kured
+      app.kubernetes.io/instance: kured
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kured
+        app.kubernetes.io/instance: kured
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: kured
+      hostNetwork: false
+      hostPID: true
+      restartPolicy: Always
+      containers:
+        - name: kured
+          image: "ghcr.io/kubereboot/kured:1.23.0"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            readOnlyRootFilesystem: true
+          resources:
+            {}
+          command:
+            - /usr/bin/kured
+          args:
+            - --ds-name=kured
+            - --ds-namespace=kured
+            - --metrics-port=8080
+            - --lock-release-delay=30m
+            - --alert-filter-regexp=^(NodeDown|PodStuckNotRunning|CNPG.*)$
+            - --alert-firing-only=true
+            - --alert-filter-match-only=true
+            - --blocking-pod-selector=app.kubernetes.io/name=resticprofile
+            - --end-time=05:15
+            - --period=10m
+            - --drain-timeout=30m
+            - --prometheus-url=http://prometheus.default.svc.cluster.local:9090
+            - --reboot-days=su
+            - --reboot-days=mo
+            - --reboot-days=tu
+            - --reboot-days=we
+            - --reboot-days=fr
+            - --reboot-days=sa
+            - --reboot-sentinel=/sentinel/reboot-required
+            
+            - --reboot-command=/bin/systemctl reboot
+            - --reboot-delay=60s
+            - --start-time=04:15
+            - --time-zone=America/New_York
+            - --annotate-nodes=true
+            - --log-format=text
+            - --concurrency=1
+          volumeMounts:
+          - mountPath: /sentinel
+            name: sentinel
+            readOnly: true
+          ports:
+            - containerPort: 8080
+              name: metrics
+          env:
+            # Pass in the name of the node on which this pod is scheduled
+            # for use with drain/uncordon operations and lock acquisition
+            - name: KURED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+              
+            - name: KURED_NOTIFY_URL
+              valueFrom:
+                secretKeyRef:
+                  key: KURED_NOTIFY_URL
+                  name: kured-notify
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /metrics
+              port: metrics
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /metrics
+              port: metrics
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: sentinel
+          hostPath:
+            path: /var/run
+            type: Directory
+
