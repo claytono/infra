@@ -1,0 +1,10 @@
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+
+metadata:
+  name: monitoring
+
+value: 1000000
+globalDefault: false
+description: Prometheus and Alertmanager

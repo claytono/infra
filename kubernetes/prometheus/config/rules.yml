@@ -8,6 +8,10 @@ groups:
     expr: hass_sensor_unit_m{entity="sensor.desk_ultrasonic_sensor"} >  bool 0.9
 - name: alert.rules
   rules:
+  - alert: Watchdog
+    expr: vector(1)
+    annotations:
+      message: Always firing; Alertmanager forwards it to Healthchecks as a heartbeat
   - alert: NodeDown
     expr: up{job="node resources", instance!="xtal:9100"} == 0
     for: 5m

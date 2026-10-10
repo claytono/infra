@@ -108,6 +108,8 @@ meilisearch:
   enabled: true
   environment:
     MEILI_UPGRADE_DB: 'true'
+    MEILI_MAX_INDEXING_MEMORY: 2Gb
+    MEILI_EXPERIMENTAL_REDUCE_INDEXING_MEMORY_USAGE: 'true'
   auth:
     existingMasterKeySecret: karakeep-meilisearch
   persistence:

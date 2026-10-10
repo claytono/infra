@@ -13,6 +13,7 @@ commonAnnotations:
 resources:
 - deploy.yaml
 - ingress.yaml
+- priorityclass.yaml
 - pvc.yaml
 - rbac.yaml
 - service.yaml

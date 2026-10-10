@@ -28,10 +28,20 @@ route:
     # The child route trees.
   routes:
   - match:
+      alertname: Watchdog
+    receiver: healthchecks-watchdog
+    group_wait: 0s
+    group_interval: 1m
+    repeat_interval: 5m
+  - match:
       realert: daily
     repeat_interval: 1d
 
 receivers:
+- name: healthchecks-watchdog
+  webhook_configs:
+  - url_file: /secrets/HEALTHCHECKS_WATCHDOG_URL
+    send_resolved: false
 - name: default
   slack_configs:
   - api_url_file: /secrets/SLACK_WEBHOOK_URL
