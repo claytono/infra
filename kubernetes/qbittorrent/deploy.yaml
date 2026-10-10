@@ -27,7 +27,7 @@ spec:
       - name: qbittorrent
         # Before upgrading qBittorrent, verify the target version is supported by
         # the qbit_manage image pinned in ../qbit-manage/deploy.yaml.
-        image: ghcr.io/qbittorrent/docker-qbittorrent-nox:5.2.3-lt2-1@sha256:f269c2aae56f1bf8caddd77a59e7ba2a278919d8401213266b8fe154c6ac1043
+        image: ghcr.io/qbittorrent/docker-qbittorrent-nox:5.2.4-lt2-1@sha256:f3f7ae6679270fa4f2ab724c6c87dc5471beb6fade88861ce7ad834048ab6c26
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsGroup: 10001
@@ -67,7 +67,7 @@ spec:
               name: qbittorrent
               key: cross-seed-api-key
       - name: qbittorrent-log
-        image: ghcr.io/qbittorrent/docker-qbittorrent-nox:5.2.3-lt2-1@sha256:f269c2aae56f1bf8caddd77a59e7ba2a278919d8401213266b8fe154c6ac1043
+        image: ghcr.io/qbittorrent/docker-qbittorrent-nox:5.2.4-lt2-1@sha256:f3f7ae6679270fa4f2ab724c6c87dc5471beb6fade88861ce7ad834048ab6c26
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsGroup: 10001
