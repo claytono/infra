@@ -2,3 +2,4 @@
 unattended_upgrades_mail: root
 unattended_upgrades_mail_report: only-on-error
 unattended_upgrades_snapshot_delay_days: 0
+unattended_upgrades_upgrade_time: ""

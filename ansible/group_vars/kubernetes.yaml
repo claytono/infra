@@ -5,6 +5,8 @@ kernel_parameters: "nofb vga=normal"
 
 node_exporter_enabled: true
 
+unattended_upgrades_upgrade_time: "03:45"
+
 # The githubixx.containerd role default only moves once per containerd minor.
 # renovate: datasource=github-releases depName=containerd/containerd
 containerd_version: "2.3.5"

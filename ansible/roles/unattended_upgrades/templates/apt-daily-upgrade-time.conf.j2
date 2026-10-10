@@ -1,0 +1,5 @@
+{{ ansible_managed | comment }}
+[Timer]
+OnCalendar=
+OnCalendar=*-*-* {{ unattended_upgrades_upgrade_time }}
+RandomizedDelaySec=10m

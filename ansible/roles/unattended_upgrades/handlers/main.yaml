@@ -3,6 +3,11 @@
   ansible.builtin.systemd:
     daemon_reload: true
 
+- name: Restart apt-daily-upgrade timer
+  ansible.builtin.systemd:
+    name: apt-daily-upgrade.timer
+    state: restarted
+
 - name: Update apt lists
   ansible.builtin.apt:
     update_cache: true
