@@ -1,0 +1,25 @@
+---
+extraEnvVars:
+- name: KURED_NOTIFY_URL
+  valueFrom:
+    secretKeyRef:
+      name: kured-notify
+      key: KURED_NOTIFY_URL
+
+configuration:
+  timeZone: America/New_York
+  startTime: "04:15"
+  endTime: "05:15"
+  rebootDays: [su, mo, tu, we, fr, sa]
+  period: 10m
+  concurrency: 1
+  drainTimeout: 30m
+  rebootDelay: 60s
+  lockReleaseDelay: 30m
+  prometheusUrl: http://prometheus.default.svc.cluster.local:9090
+  alertFilterRegexp: ^(NodeDown|PodStuckNotRunning|CNPG.*)$
+  alertFilterMatchOnly: true
+  alertFiringOnly: true
+  blockingPodSelector:
+  - app.kubernetes.io/name=resticprofile
+  annotateNodes: true
