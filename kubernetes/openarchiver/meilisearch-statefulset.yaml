@@ -33,6 +33,10 @@ spec:
           value: 'true'
         - name: MEILI_UPGRADE_DB
           value: 'true'
+        - name: MEILI_MAX_INDEXING_MEMORY
+          value: 2Gb
+        - name: MEILI_EXPERIMENTAL_REDUCE_INDEXING_MEMORY_USAGE
+          value: 'true'
         - name: MEILI_MASTER_KEY
           valueFrom:
             secretKeyRef:
