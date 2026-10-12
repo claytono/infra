@@ -13,20 +13,9 @@ resources:
 - ara-basic-auth-secret.yaml
 - middleware-basic-auth.yaml
 - ingress.yaml
-- helm/deployment.yaml
-- helm/extra-objects.yaml
-- helm/pvc.yaml
-- helm/service.yaml
-
-patches:
-- path: patch-deployment-password.yaml
-  target:
-    kind: Deployment
-    name: ara-ara
-
-images:
-- name: docker.io/recordsansible/ara-api
-  newTag: latest@sha256:9dfd6e18f474c2437081a0397310a264aa368b8364aea772c3b5b22bdd788cf5
+- pvc.yaml
+- deploy.yaml
+- service.yaml
 
 commonAnnotations:
   argoManaged: 'true'
