@@ -1,9 +1,0 @@
----
-# Source: ara/templates/extra-objects.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  annotations:
-    reloader.stakater.com/match: "true"
-  name: ara-reloader-trigger
-

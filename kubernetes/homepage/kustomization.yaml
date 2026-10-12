@@ -8,7 +8,13 @@ commonAnnotations:
   argoManaged: 'true'
 
 resources:
-- helm/templates/common.yaml
+- serviceaccount.yaml
+- serviceaccount-token.yaml
+- clusterrole.yaml
+- clusterrolebinding.yaml
+- deploy.yaml
+- service.yaml
+- ingress.yaml
 - externalsecret-auth.yaml
 - externalsecret-oidc.yaml
 - password-generator.yaml
@@ -31,19 +37,3 @@ configMapGenerator:
   - settings.yaml
   - widgets.yaml
   - services.yaml
-
-patches:
-
-- target:
-    kind: Deployment
-    name: homepage
-  patch: |-
-    - op: add
-      path: /metadata/annotations/reloader.stakater.com~1auto
-      value: "true"
-    - op: add
-      path: /spec/template/spec/containers/0/volumeMounts/-
-      value:
-        name: homepage-config
-        subPath: custom.js
-        mountPath: /app/config/custom.js
