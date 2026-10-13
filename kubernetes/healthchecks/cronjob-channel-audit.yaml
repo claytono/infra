@@ -20,7 +20,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: audit
-            image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
+            image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:8e70ac2e85d09a5bb7ef09753b80671a60a71c8d24f195e4890d71e03865e36d
             command:
             - /usr/local/bin/python3
             - /scripts/audit-channels

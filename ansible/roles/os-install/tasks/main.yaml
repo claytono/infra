@@ -70,10 +70,10 @@
     loop_var: host
   notify: Restart os-install services
 
-- name: Deploy Proxmox default answer file
+- name: Deploy Proxmox answer server
   ansible.builtin.copy:
-    src: proxmox-default.toml
-    dest: /etc/os-install/proxmox-default.toml
+    src: proxmox-answer-server.py
+    dest: /etc/os-install/proxmox-answer-server.py
     mode: "0644"
   notify: Restart os-install services
 
