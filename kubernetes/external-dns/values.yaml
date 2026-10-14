@@ -2,13 +2,21 @@
 provider:
   name: cloudflare
 
+sources:
+- service
+
 policy: sync
-registry: noop
+# The prefix and wildcard replacement name the ownership TXT records
+# (extdns-a-<name>, extdns-a-wildcard for *.k.oneill.net), which use the
+# default owner ID "default". Changing the prefix, the wildcard
+# replacement or the owner ID orphans every existing record.
+txtPrefix: extdns-
 triggerLoopOnEvent: true
 domainFilters:
 - k.oneill.net
 extraArgs:
 - --zone-id-filter=5a8d9de1c40f089d2f98f49a4569e1cd
+- --txt-wildcard-replacement=wildcard
 env:
 - name: CF_API_TOKEN
   valueFrom:
