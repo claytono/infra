@@ -161,5 +161,13 @@ locals {
       note        = "Gaming PC"
       enable_ipv6 = false
     }
+    # Handheld PCs
+    minipops = {
+      mac         = "90:47:c2:d0:ae:4e"
+      ip          = "172.19.74.51"
+      hostname    = "minipops.oneill.net"
+      note        = "MSI Claw 8 EX AI+ handheld"
+      enable_ipv6 = false
+    }
   }
 }
