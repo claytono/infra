@@ -23,18 +23,35 @@ Scoped API tokens for services are minted by OpenTofu and stored in 1Password:
 
 - `cloudflare-ddns` — DNS Write for both zones (`opentofu/cloudflare-ddns.tf`)
 - `cloudflare-dns-write` — DNS Write for oneill.net
-  (`opentofu/cloudflare-dns-write.tf`), used by external-dns and cert-manager
+  (`opentofu/cloudflare-dns-write.tf`), used by external-dns, cert-manager and
+  acme-sh
 - `cloudflare-pages-deploy` — Pages Write (`opentofu/cloudflare-pages.tf`)
 
 ## Kubernetes Ingress DNS (k.oneill.net)
 
 Kubernetes services are exposed under `k.oneill.net` (a subdomain of
 oneill.net). Records are managed by **external-dns**
-(`kubernetes/external-dns/`) using the Cloudflare provider.
+(`kubernetes/external-dns/`) using the Cloudflare provider and the
+`cloudflare-dns-write` API token pulled from 1Password via External Secrets.
 
-External-dns watches Kubernetes Ingress resources and automatically creates A
-records in the Cloudflare oneill.net zone. It uses the `cloudflare-dns-write`
-API token pulled from 1Password via External Secrets.
+A single `*.k.oneill.net` A record points every name at Traefik. It comes from
+the hostname annotation on the Traefik Service
+(`kubernetes/traefik/values.yaml`), so it follows Traefik's load balancer IP.
+External-dns reads only Services (`sources: [service]`); Ingresses get no
+per-host records and need no DNS change. This keeps the free-plan zone well
+under its 200-record limit.
+
+A LoadBalancer Service that is not behind Traefik needs an
+`external-dns.kubernetes.io/hostname` annotation. Its explicit record takes
+precedence over the wildcard.
+
+External-dns uses the TXT registry: each record it owns has an ownership TXT
+record named `extdns-a-<name>` (`extdns-a-wildcard` for the wildcard) with the
+default owner ID `default`. Never change `txtPrefix` or
+`--txt-wildcard-replacement`, and never set `txtOwnerId`; doing so orphans every
+existing record. External-dns ignores records without an ownership TXT record,
+so a record created by hand under `k.oneill.net` is never updated or deleted by
+it.
 
 ## Cert-Manager DNS-01 Solver
 

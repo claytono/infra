@@ -54,8 +54,8 @@ service:
   spec:
     loadBalancerIP: 172.19.74.34
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: traefik.k.oneill.net
-    external-dns.kubernetes.io/hostname: traefik.k.oneill.net
+    external-dns.alpha.kubernetes.io/hostname: '*.k.oneill.net'
+    external-dns.kubernetes.io/hostname: '*.k.oneill.net'
 
 additionalArguments:
 - --accesslog

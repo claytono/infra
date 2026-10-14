@@ -57,12 +57,13 @@ spec:
             - --interval=1m
             - --events
             - --source=service
-            - --source=ingress
             - --policy=sync
-            - --registry=noop
+            - --registry=txt
+            - --txt-prefix=extdns-
             - --domain-filter=k.oneill.net
             - --provider=cloudflare
             - "--zone-id-filter=5a8d9de1c40f089d2f98f49a4569e1cd"
+            - "--txt-wildcard-replacement=wildcard"
           ports:
             - name: http
               protocol: TCP
