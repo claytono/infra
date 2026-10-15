@@ -17,6 +17,8 @@
 locals {
   # IPv6 prefix for Default VLAN (172.19.74.0/24)
   infrastructure_ipv6_prefix = "2600:4040:2eec:a000"
+  # IPv6 prefix for IOT VLAN (172.20.4.0/22)
+  iot_ipv6_prefix = "2600:4040:2eec:a001"
 
   infrastructure_hosts = {
     # Proxmox VE hosts
