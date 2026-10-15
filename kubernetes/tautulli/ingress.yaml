@@ -9,7 +9,6 @@ metadata:
   annotations:
     ak-type: basic-auth
     ak-path-exclude: /api(/|$)
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Tautulli
     gethomepage.dev/description: Plex Monitoring and Statistics
@@ -20,7 +19,6 @@ spec:
   tls:
   - hosts:
     - tautulli.k.oneill.net
-    secretName: tautulli-tls
   rules:
   - host: tautulli.k.oneill.net
     http:

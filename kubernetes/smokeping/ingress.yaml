@@ -6,7 +6,6 @@ metadata:
   name: smokeping
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Smokeping
     gethomepage.dev/group: Monitoring
@@ -17,7 +16,6 @@ spec:
   tls:
   - hosts:
     - smokeping.k.oneill.net
-    secretName: smokeping-tls
   rules:
   - host: smokeping.k.oneill.net
     http:

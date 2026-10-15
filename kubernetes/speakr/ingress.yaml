@@ -6,7 +6,6 @@ metadata:
   name: speakr
   namespace: speakr
   annotations:
-    cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Speakr
     gethomepage.dev/description: Audio Transcription & Search
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - speakr.k.oneill.net
-    secretName: speakr-tls
   rules:
   - host: speakr.k.oneill.net
     http:

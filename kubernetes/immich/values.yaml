@@ -41,7 +41,6 @@ server:
     main:
       enabled: true
       annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
         ak-type: oidc
         ak-oidc-callback: /auth/login
         ak-path-exclude: /api(/|$)
@@ -61,7 +60,6 @@ server:
       tls:
       - hosts:
         - immich.k.oneill.net
-        secretName: immich-tls
 
 machine-learning:
   controllers:

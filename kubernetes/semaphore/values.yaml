@@ -31,11 +31,9 @@ ingress:
     - path: /
       pathType: Prefix
   tls:
-  - secretName: semaphore-tls
-    hosts:
+  - hosts:
     - semaphore.k.oneill.net
   annotations:
-    cert-manager.io/cluster-issuer: zerossl
     ak-type: oidc
     ak-oidc-callback: /api/auth/oidc/authentik/redirect
     gethomepage.dev/enabled: 'true'

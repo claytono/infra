@@ -7,13 +7,11 @@ metadata:
   annotations:
     ak-oidc-callback: /api/auth/callback/homepage-oidc
     ak-type: oidc
-    cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
   tls:
   - hosts:
     - homepage.k.oneill.net
-    secretName: homepage-tls
   rules:
   - host: homepage.k.oneill.net
     http:

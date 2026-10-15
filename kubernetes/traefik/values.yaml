@@ -57,6 +57,11 @@ service:
     external-dns.alpha.kubernetes.io/hostname: '*.k.oneill.net'
     external-dns.kubernetes.io/hostname: '*.k.oneill.net'
 
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: k-oneill-net-wildcard-tls
+
 additionalArguments:
 - --accesslog
 - --accesslog.format=json
@@ -75,6 +80,14 @@ api:
 ingressRoute:
   dashboard:
     enabled: true
+    annotations:
+      gethomepage.dev/enabled: 'true'
+      gethomepage.dev/name: Traefik
+      gethomepage.dev/description: Ingress controller dashboard
+      gethomepage.dev/group: Infrastructure
+      gethomepage.dev/icon: traefik.png
+      gethomepage.dev/href: https://traefik.k.oneill.net/dashboard/
+      gethomepage.dev/pod-selector: app.kubernetes.io/name=traefik
     entryPoints:
     - websecure
     matchRule: Host(`traefik.k.oneill.net`)
@@ -82,5 +95,3 @@ ingressRoute:
     - name: redirect-dashboard
     - name: ak-forward-auth-simple
       namespace: authentik
-    tls:
-      secretName: traefik-dashboard-tls

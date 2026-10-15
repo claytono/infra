@@ -7,7 +7,6 @@ metadata:
   annotations:
     ak-type: simple
     ak-path-exclude: /api/.*
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Prometheus
     gethomepage.dev/group: Monitoring
@@ -17,7 +16,6 @@ spec:
   tls:
   - hosts:
     - prometheus.k.oneill.net
-    secretName: prometheus-tls
   rules:
   - host: prometheus.k.oneill.net
     http:

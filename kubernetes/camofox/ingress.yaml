@@ -6,7 +6,6 @@ metadata:
   name: camofox
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: Shared Browser Automation
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/group: Infrastructure
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - camofox.k.oneill.net
-    secretName: camofox-tls
   rules:
   - host: camofox.k.oneill.net
     http:

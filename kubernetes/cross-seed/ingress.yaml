@@ -6,14 +6,11 @@ metadata:
   name: cross-seed
   labels:
     app: cross-seed
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
   tls:
   - hosts:
     - cross-seed.k.oneill.net
-    secretName: cross-seed-tls
   rules:
   - host: cross-seed.k.oneill.net
     http:

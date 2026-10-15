@@ -12,7 +12,6 @@ metadata:
     heritage: Helm
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Monitoring
     gethomepage.dev/icon: netdata.png
@@ -22,7 +21,6 @@ spec:
   tls:
     - hosts:
       - netdata.k.oneill.net
-      secretName: netdata-tls
   rules:
     - host: netdata.k.oneill.net
       http:

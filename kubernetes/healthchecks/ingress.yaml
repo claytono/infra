@@ -8,7 +8,6 @@ metadata:
     ak-type: simple
     ak-namespace: healthchecks
     ak-path-exclude: /api,/ping
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Healthchecks
     gethomepage.dev/group: Monitoring
@@ -16,8 +15,7 @@ metadata:
 
 spec:
   tls:
-  - secretName: healthchecks-tls
-    hosts:
+  - hosts:
     - hc.k.oneill.net
   rules:
   - host: hc.k.oneill.net

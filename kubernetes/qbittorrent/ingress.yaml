@@ -7,7 +7,6 @@ metadata:
   labels:
     app: qbittorrent
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: qBittorrent
     gethomepage.dev/group: Downloads
@@ -17,7 +16,6 @@ spec:
   tls:
   - hosts:
     - qbittorrent.k.oneill.net
-    secretName: qbittorrent-tls
   rules:
   - host: qbittorrent.k.oneill.net
     http:

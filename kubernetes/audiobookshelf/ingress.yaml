@@ -11,7 +11,6 @@ metadata:
     ak-oidc-extra-redirects: |-
       shelfplayer://callback
       https://audiobookshelf.k.oneill.net/auth/openid/mobile-redirect
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Audiobookshelf
     gethomepage.dev/description: Audiobook Server
@@ -23,7 +22,6 @@ spec:
   tls:
   - hosts:
     - audiobookshelf.k.oneill.net
-    secretName: audiobookshelf-tls
   rules:
   - host: audiobookshelf.k.oneill.net
     http:

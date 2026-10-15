@@ -6,7 +6,6 @@ metadata:
   name: felix-www
   namespace: felix
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
     ak-type: simple
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Felix
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - felix.k.oneill.net
-    secretName: felix-www-tls
   rules:
   - host: felix.k.oneill.net
     http:

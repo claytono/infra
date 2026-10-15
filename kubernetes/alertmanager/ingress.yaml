@@ -9,7 +9,6 @@ metadata:
   annotations:
     ak-type: simple
     ak-path-exclude: /api/.*
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Alertmanager
     gethomepage.dev/group: Monitoring
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - alertmanager.k.oneill.net
-    secretName: alertmanager-tls
   rules:
   - host: alertmanager.k.oneill.net
     http:

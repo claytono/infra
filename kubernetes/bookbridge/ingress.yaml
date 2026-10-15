@@ -6,7 +6,6 @@ metadata:
   name: bookbridge
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: BookBridge
     gethomepage.dev/description: Reading Progress Sync
@@ -18,7 +17,6 @@ spec:
   tls:
   - hosts:
     - bookbridge.k.oneill.net
-    secretName: bookbridge-tls
   rules:
   - host: bookbridge.k.oneill.net
     http:
@@ -37,14 +35,11 @@ kind: Ingress
 
 metadata:
   name: bookbridge-sync
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
   tls:
   - hosts:
     - bookbridge-sync.k.oneill.net
-    secretName: bookbridge-sync-tls
   rules:
   - host: bookbridge-sync.k.oneill.net
     http:

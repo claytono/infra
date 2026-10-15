@@ -6,7 +6,6 @@ metadata:
   name: radarr
   annotations:
     ak-type: basic-auth
-    cert-manager.io/cluster-issuer: letsencrypt
     ak-path-exclude: /api(/|$)
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Radarr
@@ -18,7 +17,6 @@ spec:
   tls:
   - hosts:
     - radarr.k.oneill.net
-    secretName: radarr-tls
   rules:
   - host: radarr.k.oneill.net
     http:

@@ -5,7 +5,6 @@ kind: Ingress
 metadata:
   name: seerr
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Seerr
     gethomepage.dev/description: Request Manager
@@ -16,7 +15,6 @@ spec:
   tls:
   - hosts:
     - seerr.k.oneill.net
-    secretName: seerr-tls
   rules:
   - host: seerr.k.oneill.net
     http:

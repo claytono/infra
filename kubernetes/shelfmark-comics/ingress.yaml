@@ -7,7 +7,6 @@ metadata:
   annotations:
     ak-type: oidc
     ak-oidc-callback: /api/auth/oidc/callback
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Shelfmark (Comics)
     gethomepage.dev/description: Comic Search
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - shelfmark-comics.k.oneill.net
-    secretName: shelfmark-comics-tls
   rules:
   - host: shelfmark-comics.k.oneill.net
     http:

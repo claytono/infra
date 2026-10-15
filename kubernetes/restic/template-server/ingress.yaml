@@ -8,14 +8,11 @@ metadata:
     app.kubernetes.io/instance: restic
     app.kubernetes.io/name: restic-template-server
     app.kubernetes.io/component: restic-template-server
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
   tls:
   - hosts:
     - restic-template.k.oneill.net
-    secretName: restic-template-server-tls
   rules:
   - host: restic-template.k.oneill.net
     http:

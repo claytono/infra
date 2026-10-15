@@ -8,7 +8,6 @@ metadata:
     app: qbit-manage
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: qBit Manage
     gethomepage.dev/group: Downloads
@@ -18,7 +17,6 @@ spec:
   tls:
   - hosts:
     - qbit-manage.k.oneill.net
-    secretName: qbit-manage-tls
   rules:
   - host: qbit-manage.k.oneill.net
     http:
