@@ -120,3 +120,45 @@ resource "unifi_firewall_rule" "dmz_block_to_internal" {
 
   logging = true
 }
+
+# --- LANv6_IN rules ---
+# The LAN_IN rules above apply only to IPv4. IoT and Default both have
+# delegated IPv6 prefixes, and LANv6_IN accepts everything unless these rules
+# say otherwise. The rules match prefixes because the provider rejects any
+# network type except ADDRv4 and NETv4. The controller requires IPv6 rule
+# indices in the 25000 range.
+
+# Allow MQTT TLS from IoT to mosquitto's IPv6 load balancer address
+resource "unifi_firewall_rule" "iot_allow_mqtt_tls_v6" {
+  name       = "Allow IoT MQTT TLS (IPv6)"
+  action     = "accept"
+  ruleset    = "LANv6_IN"
+  rule_index = 25100
+
+  # The controller rejects a port unless the IPv4 protocol is also set.
+  protocol         = "tcp"
+  protocol_v6      = "tcp"
+  src_address_ipv6 = "${local.iot_ipv6_prefix}::/64"
+  dst_address_ipv6 = "${local.infrastructure_ipv6_prefix}::74:21"
+  dst_port         = "8883"
+
+  state_new = true
+}
+
+# Block IoT → Default. basement-clock has no IPv6 address, so its IPv4 allow
+# has no IPv6 counterpart; if it gains one, it would try Traefik's AAAA
+# record and be dropped here.
+resource "unifi_firewall_rule" "iot_block_to_internal_v6" {
+  name       = "Block IoT to Internal (IPv6)"
+  action     = "drop"
+  ruleset    = "LANv6_IN"
+  rule_index = 25200
+
+  protocol_v6      = "all"
+  src_address_ipv6 = "${local.iot_ipv6_prefix}::/64"
+  dst_address_ipv6 = "${local.infrastructure_ipv6_prefix}::/64"
+
+  state_new = true
+
+  logging = true
+}
