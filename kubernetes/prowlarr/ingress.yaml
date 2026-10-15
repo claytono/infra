@@ -10,7 +10,6 @@ metadata:
       /\d+/api.*
       /api.*
       /\d+/download.*
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Prowlarr
     gethomepage.dev/description: Indexer Manager
@@ -21,7 +20,6 @@ spec:
   tls:
   - hosts:
     - prowlarr.k.oneill.net
-    secretName: prowlarr-tls
   rules:
   - host: prowlarr.k.oneill.net
     http:

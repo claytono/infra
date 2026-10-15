@@ -19,8 +19,8 @@ resource "authentik_outpost" "embedded" {
     docker_labels                    = null
     kubernetes_replicas              = 1
     kubernetes_namespace             = "authentik"
-    kubernetes_ingress_annotations   = { "cert-manager.io/cluster-issuer" = "letsencrypt" }
-    kubernetes_ingress_secret_name   = "authentik-outpost-tls"
+    kubernetes_ingress_annotations   = {}
+    kubernetes_ingress_secret_name   = ""
     kubernetes_ingress_class_name    = "traefik"
     kubernetes_ingress_path_type     = null
     kubernetes_httproute_annotations = {}

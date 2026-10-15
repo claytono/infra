@@ -5,6 +5,14 @@ kind: IngressRoute
 metadata:
   name: traefik-dashboard
   namespace: traefik
+  annotations:
+    gethomepage.dev/description: Ingress controller dashboard
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Infrastructure
+    gethomepage.dev/href: https://traefik.k.oneill.net/dashboard/
+    gethomepage.dev/icon: traefik.png
+    gethomepage.dev/name: Traefik
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=traefik
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik-traefik
@@ -23,7 +31,5 @@ spec:
       - name: redirect-dashboard
       - name: ak-forward-auth-simple
         namespace: authentik
-  tls:
-    secretName: traefik-dashboard-tls
 
 

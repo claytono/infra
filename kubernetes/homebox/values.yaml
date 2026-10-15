@@ -25,7 +25,6 @@ podAnnotations:
 ingress:
   enabled: true
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
     ak-type: oidc
     ak-oidc-callback: /api/v1/users/login/oidc/callback
     gethomepage.dev/enabled: 'true'
@@ -39,8 +38,7 @@ ingress:
     - path: /
       pathType: Prefix
   tls:
-  - secretName: homebox-tls
-    hosts:
+  - hosts:
     - homebox.k.oneill.net
 
 # PostgreSQL configuration - disabled since using CloudNativePG

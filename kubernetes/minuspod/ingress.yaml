@@ -6,7 +6,6 @@ metadata:
   name: minuspod
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: MinusPod
     gethomepage.dev/description: Podcast Ad Removal
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - minuspod.k.oneill.net
-    secretName: minuspod-tls
   rules:
   - host: minuspod.k.oneill.net
     http:

@@ -47,7 +47,6 @@ ingress:
   annotations:
     ak-type: oidc
     ak-oidc-callback: /login/generic_oauth
-    cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Grafana
     gethomepage.dev/group: Monitoring
@@ -56,8 +55,7 @@ ingress:
   - grafana.k.oneill.net
   path: /
   tls:
-  - secretName: grafana-tls
-    hosts:
+  - hosts:
     - grafana.k.oneill.net
 
 # Add reloader annotation for secret updates

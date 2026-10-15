@@ -29,7 +29,6 @@ server:
   ingress:
     enabled: true
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt
       gethomepage.dev/enabled: 'true'
       gethomepage.dev/name: Authentik
       gethomepage.dev/description: Identity Provider & SSO
@@ -39,8 +38,7 @@ server:
     hosts:
     - auth.k.oneill.net
     tls:
-    - secretName: authentik-tls
-      hosts:
+    - hosts:
       - auth.k.oneill.net
 
   # Additional environment variables from secrets

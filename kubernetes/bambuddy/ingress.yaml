@@ -8,7 +8,6 @@ metadata:
   annotations:
     ak-type: oidc
     ak-oidc-callback: /api/v1/auth/oidc/callback
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Bambuddy
     gethomepage.dev/description: 3D printer management
@@ -20,7 +19,6 @@ spec:
   tls:
   - hosts:
     - bambuddy.k.oneill.net
-    secretName: bambuddy-tls
   rules:
   - host: bambuddy.k.oneill.net
     http:

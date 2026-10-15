@@ -5,7 +5,6 @@ kind: Ingress
 metadata:
   name: meshcentral
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Mesh Central
     gethomepage.dev/description: AMT/vPro management
@@ -16,7 +15,6 @@ spec:
   tls:
   - hosts:
     - meshcentral.k.oneill.net
-    secretName: meshcentral-tls
   rules:
   - host: meshcentral.k.oneill.net
     http:

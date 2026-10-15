@@ -6,7 +6,6 @@ metadata:
   name: dawarich
   namespace: dawarich
   annotations:
-    cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Dawarich
     gethomepage.dev/description: Location History Tracking
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - dawarich.k.oneill.net
-    secretName: dawarich-tls
   rules:
   - host: dawarich.k.oneill.net
     http:

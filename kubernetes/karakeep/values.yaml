@@ -19,9 +19,7 @@ ingress:
     tls:
     - hosts:
       - karakeep.k.oneill.net
-      secretName: karakeep-tls
     annotations:
-      cert-manager.io/cluster-issuer: zerossl
       ak-type: oidc
       ak-oidc-callback: /api/auth/callback/custom
       gethomepage.dev/enabled: 'true'

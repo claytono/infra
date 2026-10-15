@@ -21,7 +21,6 @@ dashboard:
     enabled: true
     annotations:
       ak-type: simple
-      cert-manager.io/cluster-issuer: letsencrypt
       gethomepage.dev/enabled: 'true'
       gethomepage.dev/name: Goldilocks
       gethomepage.dev/description: VPA generation and web UI
@@ -35,5 +34,4 @@ dashboard:
       - path: /
         type: Prefix
     tls:
-    - secretName: goldilocks-tls
-      hosts: [goldilocks.k.oneill.net]
+    - hosts: [goldilocks.k.oneill.net]

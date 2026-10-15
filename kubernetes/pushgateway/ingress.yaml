@@ -6,14 +6,11 @@ metadata:
   name: pushgateway
   labels:
     k8s-app: pushgateway
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
   tls:
   - hosts:
     - pushgateway.k.oneill.net
-    secretName: pushgateway-tls
   rules:
   - host: pushgateway.k.oneill.net
     http:

@@ -6,7 +6,6 @@ metadata:
   name: readest-hardcover-sync
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Readest Sync
     gethomepage.dev/group: Media
@@ -16,7 +15,6 @@ spec:
   tls:
   - hosts:
     - readest-hardcover-sync.k.oneill.net
-    secretName: readest-hardcover-sync-tls
   rules:
   - host: readest-hardcover-sync.k.oneill.net
     http:

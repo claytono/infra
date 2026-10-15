@@ -173,7 +173,6 @@ metadata:
       app.immich:///oauth-callback
     ak-path-exclude: /api(/|$)
     ak-type: oidc
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: Photo & Video Backup
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Media
@@ -186,7 +185,6 @@ spec:
   tls:
     - hosts:
         - "immich.k.oneill.net"
-      secretName: "immich-tls"
   rules:
     - host: "immich.k.oneill.net"
       http:

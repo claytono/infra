@@ -13,7 +13,6 @@ persistence:
 ingress:
   enabled: true
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Home Assistant
     gethomepage.dev/group: Smart Home
@@ -25,8 +24,7 @@ ingress:
     - path: /
       pathType: Prefix
   tls:
-  - secretName: hass-tls
-    hosts:
+  - hosts:
     - hass.k.oneill.net
 
 # Environment variables for PostgreSQL connection

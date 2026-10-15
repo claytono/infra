@@ -12,7 +12,6 @@ metadata:
   annotations:
     ak-oidc-callback: /api/v1/users/login/oidc/callback
     ak-type: oidc
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: Inventory and Organization System
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Productivity
@@ -22,7 +21,7 @@ spec:
   tls:
     - hosts:
         - "homebox.k.oneill.net"
-      secretName: homebox-tls
+      secretName: 
   rules:
     - host: "homebox.k.oneill.net"
       http:

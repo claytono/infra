@@ -60,6 +60,26 @@ Let's Encrypt certificate issuance. The ClusterIssuer
 (`kubernetes/cert-manager/letsencrypt.yaml`) references the
 `cloudflare-dns-write` API token for DNS record manipulation.
 
+## k.oneill.net Wildcard Certificate
+
+Traefik serves one `*.k.oneill.net` certificate for every Ingress. The
+Certificate (`kubernetes/traefik/certificate.yaml`) is the default certificate
+of Traefik's default `TLSStore` (`tlsStore` in
+`kubernetes/traefik/values.yaml`), and the `websecure` entry point enables TLS
+on every route.
+
+An Ingress keeps a `tls` entry listing its hosts, so Homepage links to it over
+https, but sets no `secretName` and no `cert-manager.io/cluster-issuer`
+annotation. Traefik prefers any loaded certificate whose SAN matches the host
+exactly, so a per-host certificate on one Ingress overrides the wildcard for
+that name.
+
+The Authentik embedded outpost generates its own Ingress for the proxy
+providers. Its `kubernetes_ingress_secret_name` is empty and
+`kubernetes_ingress_annotations` is `{}`
+(`kubernetes/scripts/templates/outpost.tf.j2`), so that Ingress also has no
+`tls` section and uses the wildcard.
+
 ## DDNS
 
 `favonia/cloudflare-ddns` runs in Kubernetes (`kubernetes/cloudflare-ddns/`).

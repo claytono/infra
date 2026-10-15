@@ -5,14 +5,12 @@ kind: Ingress
 metadata:
   name: loki
   annotations:
-    cert-manager.io/cluster-issuer: zerossl
     traefik.ingress.kubernetes.io/router.middlewares: loki-basic-auth@kubernetescrd
 
 spec:
   tls:
   - hosts:
     - loki.k.oneill.net
-    secretName: loki-tls
   rules:
   - host: loki.k.oneill.net
     http:

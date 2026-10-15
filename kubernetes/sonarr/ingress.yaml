@@ -8,7 +8,6 @@ metadata:
     app: sonarr
   annotations:
     ak-type: basic-auth
-    cert-manager.io/cluster-issuer: letsencrypt
     ak-path-exclude: /api(/|$).*
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Sonarr
@@ -20,7 +19,6 @@ spec:
   tls:
   - hosts:
     - sonarr.k.oneill.net
-    secretName: sonarr-tls
   rules:
   - host: sonarr.k.oneill.net
     http:

@@ -1,14 +1,17 @@
 ---
+# Traefik serves this certificate for every k.oneill.net host through the
+# default TLSStore (tlsStore in values.yaml). Ingresses keep tls.hosts so
+# Homepage links to them over https, but set no secretName.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 
 metadata:
-  name: traefik-dashboard-tls
+  name: k-oneill-net-wildcard
 
 spec:
-  secretName: traefik-dashboard-tls
+  secretName: k-oneill-net-wildcard-tls
   issuerRef:
-    name: zerossl
+    name: letsencrypt
     kind: ClusterIssuer
   dnsNames:
-  - traefik.k.oneill.net
+  - '*.k.oneill.net'

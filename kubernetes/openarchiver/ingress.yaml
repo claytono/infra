@@ -6,7 +6,6 @@ metadata:
   name: openarchiver
   namespace: openarchiver
   annotations:
-    cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: OpenArchiver
     gethomepage.dev/description: Archive Browser
@@ -17,7 +16,6 @@ spec:
   tls:
   - hosts:
     - openarchiver.k.oneill.net
-    secretName: openarchiver-tls
   rules:
   - host: openarchiver.k.oneill.net
     http:

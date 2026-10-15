@@ -12,7 +12,6 @@ metadata:
   annotations:
     ak-oidc-callback: "/login/generic_oauth"
     ak-type: "oidc"
-    cert-manager.io/cluster-issuer: "zerossl"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Monitoring"
     gethomepage.dev/icon: "grafana.png"
@@ -21,7 +20,6 @@ spec:
   tls:
     - hosts:
       - grafana.k.oneill.net
-      secretName: grafana-tls
   rules:
     - host: "grafana.k.oneill.net"
       http:

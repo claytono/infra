@@ -45,6 +45,7 @@ resources:
 - helm/templates/poddisruptionbudget.yaml
 - helm/templates/service.yaml
 - helm/templates/service-metrics.yaml
+- helm/templates/tlsstore.yaml
 
 labels:
 

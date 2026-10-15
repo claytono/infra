@@ -6,14 +6,11 @@ metadata:
   name: velero-encrypt
   labels:
     app.kubernetes.io/name: velero-encrypt
-  annotations:
-    cert-manager.io/cluster-issuer: zerossl
 
 spec:
   tls:
   - hosts:
     - rclone-s3-velero.k.oneill.net
-    secretName: rclone-s3-velero-tls
   rules:
   - host: rclone-s3-velero.k.oneill.net
     http:

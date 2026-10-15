@@ -5,14 +5,11 @@ kind: Ingress
 metadata:
   name: felix
   namespace: felix
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
 
 spec:
   tls:
   - hosts:
     - felix-gateway.k.oneill.net
-    secretName: felix-gateway-tls
   rules:
   - host: felix-gateway.k.oneill.net
     http:

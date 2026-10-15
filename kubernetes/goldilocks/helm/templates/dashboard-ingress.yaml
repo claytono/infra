@@ -12,7 +12,6 @@ metadata:
     app.kubernetes.io/component: dashboard
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/description: VPA generation and web UI
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Monitoring
@@ -23,7 +22,7 @@ spec:
   tls:
     - hosts:
         - "goldilocks.k.oneill.net"
-      secretName: goldilocks-tls
+      secretName: 
   rules:
     - host: "goldilocks.k.oneill.net"
       http:

@@ -5,7 +5,6 @@ kind: Ingress
 metadata:
   name: plexmediaserver
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Plex
     gethomepage.dev/description: Plex Media Server
@@ -16,7 +15,6 @@ spec:
   tls:
   - hosts:
     - plex.k.oneill.net
-    secretName: plexmediaserver-tls
   rules:
   - host: plex.k.oneill.net
     http:

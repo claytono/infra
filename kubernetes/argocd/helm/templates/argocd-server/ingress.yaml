@@ -15,7 +15,6 @@ metadata:
   annotations:
     ak-oidc-callback: "/api/dex/callback"
     ak-type: "oidc"
-    cert-manager.io/cluster-issuer: "letsencrypt"
     gethomepage.dev/description: "GitOps Continuous Delivery"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Infrastructure"
@@ -36,5 +35,4 @@ spec:
   tls:
     - hosts:
       - argocd.k.oneill.net
-      secretName: argocd-server-tls
 

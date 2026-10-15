@@ -7,7 +7,6 @@ metadata:
   annotations:
     ak-type: oidc
     ak-oidc-callback: /api/v2/auth/callback/authentik
-    cert-manager.io/cluster-issuer: letsencrypt
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Storyteller
     gethomepage.dev/description: Immersive Ebook and Audiobook Reading
@@ -19,7 +18,6 @@ spec:
   tls:
   - hosts:
     - storyteller.k.oneill.net
-    secretName: storyteller-tls
   rules:
   - host: storyteller.k.oneill.net
     http:

@@ -7,14 +7,12 @@ metadata:
   name: ara-api
   namespace: ara
   annotations:
-    cert-manager.io/cluster-issuer: zerossl
     traefik.ingress.kubernetes.io/router.middlewares: ara-basic-auth@kubernetescrd
 
 spec:
   tls:
   - hosts:
     - ara.k.oneill.net
-    secretName: ara-tls
   rules:
   - host: ara.k.oneill.net
     http:
@@ -37,7 +35,6 @@ metadata:
   namespace: ara
   annotations:
     ak-type: simple
-    cert-manager.io/cluster-issuer: zerossl
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: ARA
     gethomepage.dev/description: Ansible Run Analysis
@@ -49,7 +46,6 @@ spec:
   tls:
   - hosts:
     - ara.k.oneill.net
-    secretName: ara-tls
   rules:
   - host: ara.k.oneill.net
     http:
