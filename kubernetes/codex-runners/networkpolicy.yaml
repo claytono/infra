@@ -12,6 +12,8 @@ spec:
   policyTypes:
   - Ingress
   - Egress
+  # IPv4 only. The LAN uses global IPv6 addresses, so an IPv6 rule could not
+  # exclude it without naming the ISP prefix; IPv6 egress is denied instead.
   egress:
   - to:
     - ipBlock:
@@ -22,9 +24,3 @@ spec:
         - 169.254.0.0/16
         - 172.16.0.0/12
         - 192.168.0.0/16
-  - to:
-    - ipBlock:
-        cidr: ::/0
-        except:
-        - fc00::/7
-        - fe80::/10
