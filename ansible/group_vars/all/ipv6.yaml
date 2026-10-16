@@ -1,4 +1,7 @@
 ---
 infrastructure_ipv6_prefix: "2600:4040:2eec:a000"
-infrastructure_ipv6_gateway: "2600:4040:2eec:a000::1"
+infrastructure_ipv6_gateway: "{{ infrastructure_ipv6_prefix }}::1"
 infrastructure_ipv6_netmask: "64"
+# Verizon delegates a /56, and the UDM numbers each VLAN's /64 from it.
+# Default is the first /64, so its prefix is also the delegation's.
+ipv6_delegated_prefix: "{{ infrastructure_ipv6_prefix }}::/56"
