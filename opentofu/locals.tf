@@ -15,6 +15,7 @@
 # Proxmox VE hosts IP plan: 172.19.74.4x (p1=.41)
 
 locals {
+  # The Fios delegation is also hard-coded elsewhere; see docs/ipv6.md.
   # IPv6 prefix for Default VLAN (172.19.74.0/24)
   infrastructure_ipv6_prefix = "2600:4040:2eec:a000"
   # IPv6 prefix for IOT VLAN (172.20.4.0/22)

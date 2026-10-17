@@ -7,7 +7,8 @@ sources:
 
 policy: sync
 # The prefix and wildcard replacement name the ownership TXT records
-# (extdns-a-<name>, extdns-a-wildcard for *.k.oneill.net), which use the
+# (extdns-a-<name> and extdns-aaaa-<name>; extdns-a-wildcard and
+# extdns-aaaa-wildcard for *.k.oneill.net), which use the
 # default owner ID "default". Changing the prefix, the wildcard
 # replacement or the owner ID orphans every existing record.
 txtPrefix: extdns-

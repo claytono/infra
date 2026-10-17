@@ -49,6 +49,7 @@ rules:
 - apiGroups: ["authorization.k8s.io"]
   resources: ["subjectaccessreviews"]
   verbs: ["create"]
+
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -79,6 +80,7 @@ rules:
 - apiGroups: ["authorization.k8s.io"]
   resources: ["subjectaccessreviews"]
   verbs: ["create"]
+
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -98,6 +100,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: metallb:controller
+
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -117,6 +120,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: metallb:speaker
+
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -160,6 +164,7 @@ rules:
 - apiGroups: ["metallb.io"]
   resources: ["servicebgpstatuses","servicebgpstatuses/status"]
   verbs: ["*"]
+
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -208,6 +213,7 @@ rules:
 - apiGroups: ["metallb.io"]
   resources: ["bfdprofiles"]
   verbs: ["get", "list","watch"]
+
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -229,6 +235,7 @@ subjects:
   name: metallb-controller
 - kind: ServiceAccount
   name: metallb-speaker
+
 ---
 # Source: metallb/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

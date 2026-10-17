@@ -1,29 +1,53 @@
 ---
+# Each LoadBalancer Service selects one of these pools with the
+# metallb.io/address-pool annotation instead of naming its addresses, so every
+# load balancer address is defined here. A pool holds one IPv4 address and, for
+# dual-stack Services, one IPv6 address. Services that share a pool also share
+# a metallb.io/allow-shared-ip key. See
+# .agents/rules/kubernetes/load-balancers.md.
+#
+# The IPv6 addresses use the Fios delegation; see docs/ipv6.md.
+
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 
 metadata:
-  name: default
+  name: shared
   namespace: metallb-system
 
 spec:
+  # mosquitto, netdata streaming, Plex, smtp-relay and soju
   addresses:
-  - 172.19.74.32/27
+  - 172.19.74.21/32
+  - 2600:4040:2eec:a000::74:21/128
+  autoAssign: false
 
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 
 metadata:
-  name: static
+  name: syslog
   namespace: metallb-system
 
 spec:
   addresses:
-  - 172.19.74.20/32
-  - 172.19.74.21/32
-  - 172.19.74.22/32
-  - 172.19.74.23/32
+  - 172.19.74.33/32
+  - 2600:4040:2eec:a000::74:33/128
+  autoAssign: false
+
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+
+metadata:
+  name: traefik
+  namespace: metallb-system
+
+spec:
+  addresses:
+  - 172.19.74.34/32
+  - 2600:4040:2eec:a000::74:34/128
   autoAssign: false
 
 ---
@@ -31,35 +55,16 @@ apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 
 metadata:
-  name: l2advertisement1
+  name: lan
   namespace: metallb-system
 
 spec:
   # Control plane is hosted in a VM that is also on the same host as the
   # tailscale subnet router, so we want to exclude metallb from putting IPS on
-  # that host, since tailscale can't reach it.
+  # that host, since tailscale can't reach it. Without ipAddressPools, this
+  # advertises every pool.
   nodeSelectors:
   - matchExpressions:
     - key: node-role.kubernetes.io/control-plane
       operator: DoesNotExist
       values: []
-  ipAddressPools:
-  - default
-
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-
-metadata:
-  name: l2advertisement2
-  namespace: metallb-system
-
-spec:
-  # See above
-  nodeSelectors:
-  - matchExpressions:
-    - key: node-role.kubernetes.io/control-plane
-      operator: DoesNotExist
-      values: []
-  ipAddressPools:
-  - static

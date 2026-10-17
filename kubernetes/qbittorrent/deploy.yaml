@@ -21,6 +21,18 @@ spec:
     metadata:
       labels:
         app: qbittorrent
+      annotations:
+        # Peer traffic uses qBittorrent's own LAN addresses on the lan
+        # interface, which its Network Interface preference is bound to. The
+        # web UI listens on all addresses, so besides the Traefik Ingress it
+        # is reachable on port 8080 at both lan addresses from the LAN and
+        # tailnet, as the old LoadBalancer address was. The WAN firewall
+        # admits only port 51414.
+        k8s.v1.cni.cncf.io/networks: |-
+          [{
+            "name": "lan-qbittorrent",
+            "interface": "lan"
+          }]
     spec:
       terminationGracePeriodSeconds: 1800
       containers:

@@ -146,6 +146,22 @@ resource "cloudflare_dns_record" "bambuddy_printer" {
   ttl     = 1
 }
 
+resource "cloudflare_dns_record" "qbittorrent_lan" {
+  zone_id = cloudflare_zone.oneill_net.id
+  name    = "qbittorrent-lan.oneill.net"
+  type    = "A"
+  content = "172.19.74.22"
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "qbittorrent_lan_v6" {
+  zone_id = cloudflare_zone.oneill_net.id
+  name    = "qbittorrent-lan.oneill.net"
+  type    = "AAAA"
+  content = "${var.infrastructure_ipv6_prefix}::74:22"
+  ttl     = 1
+}
+
 # Infrastructure hosts - automatically synced with UniFi DHCP reservations
 # Host definitions are in ../../locals.tf (infrastructure_hosts) and shared
 # with unifi_user resources to ensure DNS and DHCP stay automatically in sync.

@@ -13,6 +13,7 @@ resources:
 - pvc.yaml
 - service.yaml
 - ingress.yaml
+- nad.yaml
 
 configMapGenerator:
 - name: qbittorrent-scripts

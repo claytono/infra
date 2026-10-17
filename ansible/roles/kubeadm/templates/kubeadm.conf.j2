@@ -23,16 +23,15 @@ clusterName: kubernetes
 controlPlaneEndpoint: "{{ ansible_facts['fqdn'] }}:6443"
 controllerManager:
   extraArgs:
-  - name: allocate-node-cidrs
-    value: "true"
   - name: cloud-provider
     value: external
-  - name: cluster-cidr
-    value: 10.244.0.0/16
 etcd:
   local:
     dataDir: /var/lib/etcd
 kubernetesVersion: v{{ kubernetes_version }}
+networking:
+  podSubnet: 10.244.0.0/16,fd03:19:74::/56
+  serviceSubnet: 10.96.0.0/12,fd03:19:74:ffff::/112
 ---
 kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1

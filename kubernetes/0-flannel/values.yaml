@@ -1,6 +1,7 @@
 ---
 # Flannel configuration - only non-default values
 podCidr: 10.244.0.0/16
+podCidrv6: fd03:19:74::/56
 
 flannel:
   # Override default backend from vxlan to host-gw to match current deployment

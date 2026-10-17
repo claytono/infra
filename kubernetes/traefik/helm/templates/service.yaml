@@ -12,8 +12,9 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: '*.k.oneill.net'
     external-dns.kubernetes.io/hostname: '*.k.oneill.net'
+    metallb.io/address-pool: traefik
 spec:
-  loadBalancerIP: 172.19.74.34
+  ipFamilyPolicy: RequireDualStack
   type: LoadBalancer
   selector:
     app.kubernetes.io/name: traefik

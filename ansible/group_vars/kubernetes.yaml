@@ -1,4 +1,10 @@
 ---
+# The kubelet's node IPs, IPv4 first. They come from each node's network
+# configuration, so the kubeadm role does not need to know how it is laid out.
+kubeadm_node_ips:
+- "{{ host_ipv4 }}"
+- "{{ interfaces_ether_interfaces[0].ip6.address }}"
+
 ip_forwarding_enabled: true
 
 kernel_parameters: "nofb vga=normal"

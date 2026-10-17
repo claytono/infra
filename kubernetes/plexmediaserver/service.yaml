@@ -8,11 +8,11 @@ metadata:
     app.kubernetes.io/name: plexmediaserver
     app.kubernetes.io/instance: plexmediaserver
   annotations:
+    metallb.io/address-pool: shared
     metallb.io/allow-shared-ip: plexmediaserver
 
 spec:
   type: LoadBalancer
-  loadBalancerIP: 172.19.74.21
   ports:
   - port: 32400
     targetPort: 32400
@@ -31,11 +31,11 @@ metadata:
     app.kubernetes.io/name: plexmediaserver
     app.kubernetes.io/instance: plexmediaserver
   annotations:
+    metallb.io/address-pool: shared
     metallb.io/allow-shared-ip: plexmediaserver
 
 spec:
   type: LoadBalancer
-  loadBalancerIP: 172.19.74.21
   ports:
   - name: plex-dlna
     port: 1900

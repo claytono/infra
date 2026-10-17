@@ -1,0 +1,59 @@
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+
+metadata:
+  name: lan-qbittorrent
+  annotations:
+    # The Deployment's pods need this before they start.
+    argocd.argoproj.io/sync-wave: '-1'
+
+spec:
+  # qBittorrent's own LAN addresses. Its peer traffic leaves from these rather
+  # than from the node's masqueraded address, so peers can connect back to
+  # ::74:22 directly and to 172.19.74.22 through the UDM's port forward.
+  #
+  # sbr (source-based routing) gives each address its own routing table, with
+  # a default route through that address's gateway. Traffic from 172.19.74.22
+  # or ::74:22 leaves through this interface; all other traffic keeps using
+  # the pod network. The gateways are in addresses, not routes, because sbr
+  # reads them there and a second main-table default route would conflict
+  # with the pod network's.
+  #
+  # passthru and tuning keep the UDM's router advertisements off the
+  # interface; see .agents/rules/kubernetes/lan-attachments.md.
+  #
+  # The fixed MAC keeps the UDM's neighbor entry and client record stable
+  # across restarts. The IPv6 addresses use the Fios delegation; see
+  # docs/ipv6.md.
+  config: |-
+    {
+      "cniVersion": "1.0.0",
+      "name": "lan-qbittorrent",
+      "plugins": [
+        { "type": "passthru" },
+        {
+          "type": "tuning",
+          "sysctl": { "net.ipv6.conf.default.accept_ra": "0" }
+        },
+        {
+          "type": "macvlan",
+          "mode": "bridge",
+          "mac": "02:00:ac:13:4a:16",
+          "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "172.19.74.22/24",
+                "gateway": "172.19.74.1"
+              },
+              {
+                "address": "2600:4040:2eec:a000::74:22/64",
+                "gateway": "2600:4040:2eec:a000::1"
+              }
+            ]
+          }
+        },
+        { "type": "sbr" }
+      ]
+    }

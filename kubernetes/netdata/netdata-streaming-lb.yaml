@@ -7,12 +7,13 @@ metadata:
   namespace: netdata
   annotations:
     metallb.io/allow-shared-ip: plexmediaserver
-    metallb.io/loadBalancerIPs: 172.19.74.21
+    metallb.io/address-pool: shared
     external-dns.alpha.kubernetes.io/hostname: netdata-stream.k.oneill.net
     external-dns.kubernetes.io/hostname: netdata-stream.k.oneill.net
 
 spec:
   type: LoadBalancer
+  ipFamilyPolicy: RequireDualStack
   ports:
   - port: 19999
     targetPort: http

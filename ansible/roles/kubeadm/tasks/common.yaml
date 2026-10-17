@@ -31,6 +31,14 @@
     mode: "0644"
   notify: Reload sysctl
 
+- name: "Configure kubelet dual-stack node IPs"
+  ansible.builtin.copy:
+    dest: /etc/default/kubelet
+    content: |
+      KUBELET_EXTRA_ARGS=--node-ip={{ kubeadm_node_ips | join(',') }}
+    mode: "0644"
+  notify: "Restart kubelet"
+
 - name: "Add Kubernetes APT key"
   ansible.builtin.copy:
     # Copy from role's files directory to remote host

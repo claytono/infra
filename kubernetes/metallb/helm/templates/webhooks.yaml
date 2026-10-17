@@ -31,6 +31,7 @@ spec:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/component: controller
+
 ---
 # Source: metallb/templates/webhooks.yaml
 apiVersion: admissionregistration.k8s.io/v1
@@ -163,3 +164,4 @@ webhooks:
     resources:
     - l2advertisements
   sideEffects: None
+

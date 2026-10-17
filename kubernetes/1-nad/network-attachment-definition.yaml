@@ -9,12 +9,24 @@ metadata:
 spec:
   # Static IPAM does not allocate or enforce this subnet. Workloads must supply
   # per-pod ips from 172.19.74.0/24 in their Multus annotation.
+  #
+  # passthru and tuning keep the UDM's router advertisements off the
+  # interface; see .agents/rules/kubernetes/lan-attachments.md.
   config: |-
     {
-      "cniVersion": "0.3.1",
+      "cniVersion": "1.0.0",
       "name": "lan-172-19-74",
-      "type": "macvlan",
-      "mode": "bridge",
-      "capabilities": { "ips": true },
-      "ipam": { "type": "static" }
+      "plugins": [
+        { "type": "passthru" },
+        {
+          "type": "tuning",
+          "sysctl": { "net.ipv6.conf.default.accept_ra": "0" }
+        },
+        {
+          "type": "macvlan",
+          "mode": "bridge",
+          "capabilities": { "ips": true },
+          "ipam": { "type": "static" }
+        }
+      ]
     }
