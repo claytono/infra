@@ -34,24 +34,24 @@ oneill.net). Records are managed by **external-dns**
 (`kubernetes/external-dns/`) using the Cloudflare provider and the
 `cloudflare-dns-write` API token pulled from 1Password via External Secrets.
 
-A single `*.k.oneill.net` A record points every name at Traefik. It comes from
-the hostname annotation on the Traefik Service
-(`kubernetes/traefik/values.yaml`), so it follows Traefik's load balancer IP.
-External-dns reads only Services (`sources: [service]`); Ingresses get no
-per-host records and need no DNS change. This keeps the free-plan zone well
-under its 200-record limit.
+A single `*.k.oneill.net` record set points every name at Traefik: an A record
+and, since Traefik's Service is dual-stack, an AAAA record. It comes from the
+hostname annotation on the Traefik Service (`kubernetes/traefik/values.yaml`),
+so it follows Traefik's load balancer IP. External-dns reads only Services
+(`sources: [service]`); Ingresses get no per-host records and need no DNS
+change. This keeps the free-plan zone well under its 200-record limit.
 
 A LoadBalancer Service that is not behind Traefik needs an
 `external-dns.kubernetes.io/hostname` annotation. Its explicit record takes
 precedence over the wildcard.
 
 External-dns uses the TXT registry: each record it owns has an ownership TXT
-record named `extdns-a-<name>` (`extdns-a-wildcard` for the wildcard) with the
-default owner ID `default`. Never change `txtPrefix` or
-`--txt-wildcard-replacement`, and never set `txtOwnerId`; doing so orphans every
-existing record. External-dns ignores records without an ownership TXT record,
-so a record created by hand under `k.oneill.net` is never updated or deleted by
-it.
+record named `extdns-<type>-<name>`, for example `extdns-a-wildcard` and
+`extdns-aaaa-wildcard` for the wildcard, with the default owner ID `default`.
+Never change `txtPrefix` or `--txt-wildcard-replacement`, and never set
+`txtOwnerId`; doing so orphans every existing record. External-dns ignores
+records without an ownership TXT record, so a record created by hand under
+`k.oneill.net` is never updated or deleted by it.
 
 ## Cert-Manager DNS-01 Solver
 

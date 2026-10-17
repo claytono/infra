@@ -10,10 +10,13 @@ including:
 
 - **[overview.md](.agents/rules/overview.md)** - Development environment (Nix)
 - **[workflow.md](.agents/rules/workflow.md)** - Development workflow principles
+- **[ipv6.md](.agents/rules/ipv6.md)** - IPv6 addressing; points to
+  [docs/ipv6.md](docs/ipv6.md)
 - **[backups.md](.agents/rules/backups.md)** - Restic backup architecture for
   hosts and Kubernetes storage
 - **[kubernetes/](.agents/rules/kubernetes/)** - Kubernetes deployment patterns
-  (GitOps, Helm rendering, External Secrets, resource requests and limits)
+  (GitOps, Helm rendering, External Secrets, resource requests and limits,
+  LoadBalancer addresses, LAN attachments)
 - **[ansible/](.agents/rules/ansible/)** - Ansible usage guidelines
 - **[opentofu/](.agents/rules/opentofu/)** - OpenTofu/Terraform usage
 - **[tooling/](.agents/rules/tooling/)** - Pre-commit hooks, CI/CD, and

@@ -162,3 +162,24 @@ resource "unifi_firewall_rule" "iot_block_to_internal_v6" {
 
   logging = true
 }
+
+# --- WANv6_IN rules ---
+# WANv6_IN drops new connections from the internet unless a rule here accepts
+# them. IPv4 needs a port forward instead; qBittorrent's was created by hand on
+# the UDM.
+
+# Allow BitTorrent peers to reach qBittorrent's macvlan address
+resource "unifi_firewall_rule" "allow_qbittorrent_v6" {
+  name       = "Allow qBittorrent (IPv6)"
+  action     = "accept"
+  ruleset    = "WANv6_IN"
+  rule_index = 25100
+
+  # The controller rejects a port unless the IPv4 protocol is also set.
+  protocol         = "tcp_udp"
+  protocol_v6      = "tcp_udp"
+  dst_address_ipv6 = "${local.infrastructure_ipv6_prefix}::74:22"
+  dst_port         = "51414"
+
+  state_new = true
+}

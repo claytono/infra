@@ -9,11 +9,12 @@ metadata:
     external-dns.alpha.kubernetes.io/hostname: mqtt.k.oneill.net
     external-dns.kubernetes.io/hostname: mqtt.k.oneill.net
     metallb.io/allow-shared-ip: plexmediaserver
+    metallb.io/address-pool: shared
   name: mosquitto
 
 spec:
   type: LoadBalancer
-  loadBalancerIP: 172.19.74.21
+  ipFamilyPolicy: RequireDualStack
   selector:
     app.kubernetes.io/name: mosquitto
     app.kubernetes.io/instance: mosquitto

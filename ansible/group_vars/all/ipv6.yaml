@@ -1,4 +1,5 @@
 ---
+# The Fios delegation is also hard-coded elsewhere; see docs/ipv6.md.
 infrastructure_ipv6_prefix: "2600:4040:2eec:a000"
 infrastructure_ipv6_gateway: "{{ infrastructure_ipv6_prefix }}::1"
 infrastructure_ipv6_netmask: "64"

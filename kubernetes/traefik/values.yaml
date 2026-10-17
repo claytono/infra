@@ -52,8 +52,9 @@ ports:
 
 service:
   spec:
-    loadBalancerIP: 172.19.74.34
+    ipFamilyPolicy: RequireDualStack
   annotations:
+    metallb.io/address-pool: traefik
     external-dns.alpha.kubernetes.io/hostname: '*.k.oneill.net'
     external-dns.kubernetes.io/hostname: '*.k.oneill.net'
 
