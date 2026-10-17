@@ -1,0 +1,64 @@
+---
+# H2D Ben2Box activated-carbon filter control
+#
+# The Ben2Box filters air drawn from the H2D's enclosure. Run the fan when
+# all three are true:
+#   - airduct_mode == 'heating' -- vents physically closed, chamber sealed
+#     (per Bambu's H2 Series Cooling Fan System wiki page). The H2D does not
+#     automatically switch back to 'cooling' after a print, so this stays
+#     true through the chamber cooldown.
+#   - enclosure_door == 'off' -- HA door device_class: off = closed. If the
+#     door is open fumes bypass the Ben2Box intake path anyway.
+#   - chamber_temperature >= 30 degC -- bounds post-print runtime. Chamber
+#     outgassing drops to ~zero as it approaches ambient; this lets the fan
+#     scrub while the chamber is still warm, then stop on its own.
+
+automation:
+- alias: Turn on H2D Ben2Box fan when chamber is sealed and warm
+  id: h2d_ben2box_fan_on
+  description: Run activated-carbon filter while H2D chamber is sealed and above 30C
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.h2d_0948ad570200807_airduct_mode
+    - binary_sensor.h2d_0948ad570200807_enclosure_door
+  - platform: numeric_state
+    entity_id: sensor.h2d_0948ad570200807_chamber_temperature
+    above: 30
+  condition:
+  - condition: state
+    entity_id: sensor.h2d_0948ad570200807_airduct_mode
+    state: heating
+  - condition: state
+    entity_id: binary_sensor.h2d_0948ad570200807_enclosure_door
+    state: 'off'
+  - condition: numeric_state
+    entity_id: sensor.h2d_0948ad570200807_chamber_temperature
+    above: 30
+  action:
+  - service: fan.turn_on
+    target:
+      entity_id: fan.h2d_ben2box_h2d_ben2box_fan
+    data:
+      percentage: 50
+
+- alias: Turn off H2D Ben2Box fan when chamber is unsealed or cool
+  id: h2d_ben2box_fan_off
+  description: Stop filter when vents open, door opens, or chamber drops below 30C
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.h2d_0948ad570200807_airduct_mode
+    - binary_sensor.h2d_0948ad570200807_enclosure_door
+  - platform: numeric_state
+    entity_id: sensor.h2d_0948ad570200807_chamber_temperature
+    below: 30
+  condition: >
+    {{ not (is_state('sensor.h2d_0948ad570200807_airduct_mode', 'heating')
+            and is_state('binary_sensor.h2d_0948ad570200807_enclosure_door', 'off')
+            and (states('sensor.h2d_0948ad570200807_chamber_temperature') | float(0))
+    >= 30) }}
+  action:
+  - service: fan.turn_off
+    target:
+      entity_id: fan.h2d_ben2box_h2d_ben2box_fan
