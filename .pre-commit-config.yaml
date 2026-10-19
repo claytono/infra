@@ -100,7 +100,7 @@ repos:
     args: [-i, '2', -ci]
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.16.8
+  rev: v0.16.10
   hooks:
   # apt_info.py is vendored unmodified from upstream.
   - id: ruff
