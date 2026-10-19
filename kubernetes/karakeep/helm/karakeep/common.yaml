@@ -253,7 +253,7 @@ spec:
           - name: EMBEDDING_OPENAI_BASE_URL
             value: http://ollama.ollama.svc.cluster.local:11434/v1
           - name: EMBEDDING_TEXT_MODEL
-            value: snowflake-arctic-embed2
+            value: snowflake-arctic-embed2:mine
           - name: EMBEDDING_TEXT_MODEL_DIMENSION_OVERRIDE
             value: "1024"
           - name: INFERENCE_CONTEXT_LENGTH

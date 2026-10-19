@@ -75,7 +75,7 @@ controllers:
           OLLAMA_BASE_URL: http://ollama.ollama.svc.cluster.local:11434
           EMBEDDING_OPENAI_BASE_URL: http://ollama.ollama.svc.cluster.local:11434/v1
           EMBEDDING_OPENAI_API_KEY: ollama
-          EMBEDDING_TEXT_MODEL: snowflake-arctic-embed2
+          EMBEDDING_TEXT_MODEL: snowflake-arctic-embed2:mine
           EMBEDDING_DIMENSIONS: '1024'
           EMBEDDING_TEXT_MODEL_DIMENSION_OVERRIDE: '1024'
           EMBEDDING_CONTEXT_LENGTH: '6000'
