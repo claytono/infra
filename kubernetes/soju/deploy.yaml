@@ -81,7 +81,8 @@ spec:
         persistentVolumeClaim:
           claimName: soju-data
       - name: runtime
-        emptyDir: {}
+        emptyDir:
+          medium: Memory
       - name: tls
         secret:
           secretName: soju-tls
