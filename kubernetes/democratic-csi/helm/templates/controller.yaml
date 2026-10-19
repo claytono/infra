@@ -23,6 +23,7 @@ spec:
   template:
     metadata:
       annotations:
+        reloader.stakater.com/auto: "true"
         checksum/configmap: 541936c0b6604ba82cb0d61ff7fd5bb8dacbf3647ddef67d962e08dc64b55592
       labels:
         app.kubernetes.io/name: democratic-csi
