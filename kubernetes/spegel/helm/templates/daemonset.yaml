@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: spegel
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.7.4"
+    app.kubernetes.io/version: "v0.8.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   revisionHistoryLimit: 10
@@ -33,7 +33,7 @@ spec:
       priorityClassName: system-node-critical
       initContainers:
       - name: configuration
-        image: "ghcr.io/spegel-org/spegel@sha256:26c60b05e08ac738e8442bc389c5780bff0e1d8153956e45d810a2f1008cf56f"
+        image: "ghcr.io/spegel-org/spegel@sha256:b48194957bf9b5bdcea2700536a302ade23315082b05e5a44c0822f5c301850a"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true
@@ -42,7 +42,7 @@ spec:
           - --log-level=INFO
           - --containerd-registry-config-path=/etc/containerd/certs.d
           - --mirror-targets
-          - http://$(NODE_IP):30021
+          - http://$(NODE_IP):30020
           - --resolve-tags=true
           - --prepend-existing=false
         env:
@@ -60,7 +60,7 @@ spec:
             mountPath: /etc/containerd/certs.d
       containers:
       - name: registry
-        image: "ghcr.io/spegel-org/spegel@sha256:26c60b05e08ac738e8442bc389c5780bff0e1d8153956e45d810a2f1008cf56f"
+        image: "ghcr.io/spegel-org/spegel@sha256:b48194957bf9b5bdcea2700536a302ade23315082b05e5a44c0822f5c301850a"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true
@@ -74,6 +74,7 @@ spec:
           - --metrics-addr=:9090
           - --containerd-sock=/run/containerd/containerd.sock
           - --containerd-namespace=k8s.io
+          - --containerd-registry-config-path=/etc/containerd/certs.d
           - --bootstrap-kind=dns
           - --dns-bootstrap-domain=spegel-bootstrap.spegel.svc.cluster.local.
           - --registry-filters
