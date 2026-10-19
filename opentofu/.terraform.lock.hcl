@@ -52,6 +52,7 @@ provider "registry.opentofu.org/bpg/proxmox" {
     "zh:5c048b8b0e7ce4678835f246245eba667e130184b4c7c415a4cc3359229b2278",
     "zh:c86f8d020d999d64e0fde8039564f292768cab93fb7c804172c9456b7e2314d4",
     "zh:e95ea99482bbdaef14d0f6893d39bfa813c8a0f84c694e959f1d44e314261117",
+    "zh:f26e0763dbe6a6b2195c94b44696f2110f7f55433dc142839be16b9697fa5597",
     "zh:f3d26d1866f068661835eeeb4ff8bcc5b08aaf1630a4c0868b31c3511367fd07",
   ]
 }
@@ -75,6 +76,7 @@ provider "registry.opentofu.org/cloudflare/cloudflare" {
     "zh:ab0322bcb0d4e465f8603b39f7e743c836b22ae775c03ed677ad999a6a1b8bf4",
     "zh:c47e38911c92e0b2ffe7be1d36d96b79dd2af79bc61745d6afe5a730cae9f287",
     "zh:df3f13ae57104ce2f7619cc6c050ab90a5a3299470cdbd2ab8dd3809b84edcb8",
+    "zh:f809ab383cca0a5f83072981c64208cbd7fa67e986a86ee02dd2c82333221e32",
     "zh:fb7de9d22b02367036c146bd683c8968ec4bbb56aca3185fa84146d118a2bf96",
   ]
 }
@@ -150,7 +152,7 @@ provider "registry.opentofu.org/filipowm/unifi" {
 
 provider "registry.opentofu.org/goauthentik/authentik" {
   version     = "2026.8.0"
-  constraints = ">= 2025.8.0, ~> 2026.8.0"
+  constraints = "~> 2026.8.0"
   hashes = [
     "h1:/8P0A9jG1PaJ0Nia+snQfTrbaEWmTyHTH/qOBg0TjCc=",
     "h1:1NzqPubJZID/joZQZOobqwsepGsEymQq+faeEX93Lbs=",

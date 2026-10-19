@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Regenerate the lockfile in every OpenTofu configuration directory.
+#
+# A root's lockfile also records the provider constraints of the modules it
+# calls, so a change in one directory can leave another directory's lockfile
+# stale. Rather than track which roots use which modules, regenerate all of
+# them, including directories that have no lockfile yet. `init` installs
+# modules, which `providers lock` needs on a fresh checkout, and
+# `providers lock` rewrites the lockfile with the current constraints and
+# hashes for every platform we run on.
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+git ls-files -z -- ':(glob)opentofu/**/*.tf' ':(glob)opentofu/**/*.tf.json' |
+  xargs -0 -n1 dirname | sort -u |
+  while IFS= read -r dir; do
+    lockfile="$dir/.terraform.lock.hcl"
+    if ! output=$(
+      cd "$dir" &&
+        tofu init -backend=false -input=false -no-color 2>&1 &&
+        tofu providers lock -no-color \
+          -platform=linux_amd64 -platform=darwin_arm64 2>&1
+    ); then
+      printf 'Failed to regenerate %s:\n%s\n' "$lockfile" "$output" >&2
+      exit 1
+    fi
+  done
