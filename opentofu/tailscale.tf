@@ -23,6 +23,7 @@ resource "tailscale_acl" "main" {
             "tag:byparr": ["tag:k8s-operator"],
             "tag:camofox": ["tag:k8s-operator"],
             "tag:felix": ["tag:k8s-operator"],
+            "tag:ollama": ["tag:k8s-operator"],
         },
 
         // Define access control lists for users, groups, autogroups, tags,

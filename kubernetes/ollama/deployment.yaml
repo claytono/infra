@@ -34,19 +34,42 @@ spec:
         - name: http
           containerPort: 11434
           protocol: TCP
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /etc/ollama/scripts/apply-modelfiles.sh
         readinessProbe:
-          httpGet:
-            path: /
-            port: http
+          # Ready once the model karakeep and memex use is built, not just
+          # once the server answers.
+          exec:
+            command:
+            - ollama
+            - show
+            - snowflake-arctic-embed2:mine
           initialDelaySeconds: 10
           periodSeconds: 10
+          timeoutSeconds: 5
         resources:
           limits:
             nvidia.com/gpu: 1
         volumeMounts:
         - name: models
           mountPath: /root/.ollama
+        - name: modelfiles
+          mountPath: /etc/ollama/models
+          readOnly: true
+        - name: scripts
+          mountPath: /etc/ollama/scripts
+          readOnly: true
       volumes:
       - name: models
         persistentVolumeClaim:
           claimName: ollama-models
+      - name: modelfiles
+        configMap:
+          name: ollama-modelfiles
+      - name: scripts
+        configMap:
+          name: ollama-scripts
+          defaultMode: 0555

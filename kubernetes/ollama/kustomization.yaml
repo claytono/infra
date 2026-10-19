@@ -9,6 +9,19 @@ resources:
 - deployment.yaml
 - pvc.yaml
 - service.yaml
+- tailscale-ingress.yaml
+
+configMapGenerator:
+- name: ollama-modelfiles
+  files:
+  - snowflake-arctic-embed2.Modelfile
+  options:
+    disableNameSuffixHash: true
+- name: ollama-scripts
+  files:
+  - scripts/apply-modelfiles.sh
+  options:
+    disableNameSuffixHash: true
 
 commonAnnotations:
   argoManaged: 'true'

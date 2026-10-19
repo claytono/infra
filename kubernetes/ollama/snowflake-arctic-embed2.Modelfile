@@ -1,0 +1,5 @@
+# Shared by karakeep and memex. Embedding inputs must fit in one batch,
+# and Ollama's 2048-token default rejects memex messages of up to ~8k
+# tokens. The batch size changes memory use, not the vectors.
+FROM snowflake-arctic-embed2
+PARAMETER num_batch 8192
