@@ -29,6 +29,7 @@ jobs:
             - 'flake.lock'
             - '.pre-commit-config.yaml'
             - '.github/workflows/terraform.yaml'
+            - 'scripts/tofu-lock-all'
 
     - name: Install Nix
       if: env.ACT != 'true' && steps.changes.outputs.terraform == 'true'
@@ -56,5 +57,13 @@ jobs:
     - name: Run terraform checks
       if: steps.changes.outputs.terraform == 'true' || env.ACT == 'true'
       run: |-
-        nix develop --extra-experimental-features 'nix-command flakes' --option sandbox false --command pre-commit run terraform_validate
-        nix develop --extra-experimental-features 'nix-command flakes' --option sandbox false --command pre-commit run terraform_providers_lock
+        nix develop --extra-experimental-features 'nix-command flakes' --option sandbox false --command scripts/tofu-lock-all
+        # git status also reports lockfiles created for directories that had none.
+        stale=$(git status --porcelain --untracked-files=all -- '*.terraform.lock.hcl')
+        if [ -n "$stale" ]; then
+          echo "$stale"
+          git diff -- '*.terraform.lock.hcl'
+          echo "::error::OpenTofu lockfiles are stale or missing. Run scripts/tofu-lock-all and commit the result."
+          exit 1
+        fi
+        nix develop --extra-experimental-features 'nix-command flakes' --option sandbox false --command pre-commit run terraform_validate --all-files

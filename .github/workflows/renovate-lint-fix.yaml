@@ -69,6 +69,22 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: Check for OpenTofu changes
+      id: tofu-changes
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- opentofu/; then
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        else
+          status=$?
+          if [ "$status" -ne 1 ]; then
+            exit "$status"
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        fi
+
     # A plain `pre-commit run` checks staged files, but an Actions checkout has
     # none. Hook updates need an all-files audit; other updates only need the
     # Renovate PR's changed files. Continue so generated fixes can be committed.
@@ -86,6 +102,16 @@ jobs:
         LINT_BASE_REF: ${{ github.event.pull_request.base.sha }}
         LINT_HEAD_REF: ${{ github.event.pull_request.head.sha }}
         PRE_COMMIT_CONFIG_CHANGED: ${{ steps.pre-commit-changes.outputs.changed }}
+
+    # Renovate writes provider lockfiles itself, so they are regenerated here
+    # to normalize them. This runs outside the lint step so a failure is not
+    # swallowed by its `|| true`; the job fails after other fixes are pushed.
+    # Validation runs in the Terraform checks workflow instead.
+    - name: Regenerate OpenTofu lockfiles
+      id: tofu-lock
+      if: steps.tofu-changes.outputs.changed == 'true'
+      continue-on-error: true
+      run: nix develop --command ./scripts/tofu-lock-all
 
     - name: Check for changes
       id: check-changes
@@ -115,3 +141,9 @@ jobs:
 
         echo "Pushing fixes to branch: $BRANCH_NAME"
         git push "https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}" "HEAD:$BRANCH_NAME"
+
+    - name: Fail if lockfile regeneration failed
+      if: steps.tofu-lock.outcome == 'failure'
+      run: |-
+        echo "::error::scripts/tofu-lock-all failed; see the Regenerate OpenTofu lockfiles step."
+        exit 1
