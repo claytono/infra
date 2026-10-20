@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-go-unifi-mcp
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: c5acf4c380abc84ac302a0df191e787e6c58a7e3dcfb144d823e057ff582baa
+    actions.github.com/values-hash: a0efb72d70852ab18547cc4af6c3f46113402b216c30e2f395576fc441d3d4f
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -74,7 +74,7 @@ spec:
         - name: runner
           command:
             - /home/runner/run.sh
-          image: ghcr.io/actions/actions-runner:2.337.0@sha256:e5496277be5d09bc968b3d64911b74e219ac4a3f2edce956a3ecf9271bea1ef4
+          image: ghcr.io/actions/actions-runner:2.338.0@sha256:4ffadc0002b2581327e06101fc8c06cd189232baf79fe561fac9caeb76f5e807
           env:
             - name: CODEX_HOME
               value: /home/runner/.codex
