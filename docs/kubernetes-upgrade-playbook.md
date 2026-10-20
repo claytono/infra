@@ -28,10 +28,11 @@ When a version change is deployed, the plays in `ansible/kubernetes.yaml`
    `-e kubeadm_allow_minor_upgrade=true`. A node whose version is changing gets
    no packages installed here.
 2. **Control plane** (k1). Installs the new kubeadm, runs `kubeadm upgrade plan`
-   and `kubeadm upgrade apply --dry-run` (both must pass), cordons k1, runs
-   `kubeadm upgrade apply`, installs kubectl, kubernetes-cni and kubelet,
-   restarts kubelet, waits for the API server, for k1 Ready at the new version
-   and for its pods, then uncordons. If k1 does not come back, the run stops.
+   and `kubeadm upgrade apply --dry-run` (both must pass), cordons k1 (drains it
+   for a minor upgrade), runs `kubeadm upgrade apply`, installs kubectl,
+   kubernetes-cni and kubelet, restarts kubelet, waits for the API server, for
+   k1 Ready at the new version and for its pods, then uncordons. If k1 does not
+   come back, the run stops.
 3. **Workers**, one at a time: k3, k4, k5, then k2 last (its
    `kubeadm_upgrade_tier` is `last`). Each refuses to start unless the API
    server is already at the target version, then runs the same sequence with
@@ -164,7 +165,7 @@ Watch the Semaphore job, then run the checks in
    cd ansible
    ansible-playbook -l k1 kubernetes.yaml \
      -e kubeadm_allow_minor_upgrade=true
-   # check the control plane, then:
+   # check that kubectl logs/exec work and a site behind Traefik loads, then:
    ansible-playbook -l k2,k3,k4,k5 kubernetes.yaml \
      -e kubeadm_allow_minor_upgrade=true
    ```
@@ -173,6 +174,12 @@ Watch the Semaphore job, then run the checks in
    version jumps (e.g., 3.5 → 3.6). Drains can take several minutes because of
    PodDisruptionBudgets and iSCSI volume detachment, and on a small cluster some
    evicted pods stay Pending until the node is uncordoned.
+
+   If the upgrade will still be running at 03:00, suspend the nightly
+   `ansible-idempotency-test` CronJob first
+   (`kubectl -n semaphore patch cronjob ansible-idempotency-test -p '{"spec":{"suspend":true}}'`).
+   Resume it once `main` matches the cluster again, normally after the pin PR
+   merges; on resume it immediately runs the 03:00 job it missed.
 
 3. **Merge the pin PR.** The cluster already matches it, so the merge deploy is
    a no-op.
@@ -231,9 +238,8 @@ If the control plane upgrade fails or is unhealthy:
 
 2. Workers reconnect automatically once the API server is back. Workers are only
    upgraded after k1 succeeds, so after a k1 rollback they are normally still on
-   the old version. If any were upgraded, a kubelet one minor newer than the API
-   server is outside the supported skew: roll it back by setting the previous
-   versions in `group_vars` and finishing it by hand.
+   the old version. If any were already upgraded, that is off the paved path and
+   is worked out at the time.
 
 3. Set `ansible/group_vars/kubernetes.yaml` back to the version k1 is on.
    Otherwise the next deploy, including unrelated ones and the nightly
@@ -334,9 +340,9 @@ ssh k1 sudo kubeadm config print init-defaults
 
 ### Dependency Requirements
 
-kubeadm requires cri-tools from the same minor version. Renovate moves
-`cri_tools_version` when a matching release exists; the role installs kubeadm
-and cri-tools together.
+Renovate moves `cri_tools_version` when a matching release exists; the role
+installs kubeadm and cri-tools together. kubeadm itself has not needed `crictl`
+since 1.31.
 
 ### Troubleshooting
 
