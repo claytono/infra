@@ -57,6 +57,7 @@ options:
       - name: proxmox_api_password
     env:
       - name: PROXMOX_PASSWORD
+    secret: true
   api_token_id:
     description:
       - API token ID (for example V(user@pam!token_name)).
@@ -76,6 +77,7 @@ options:
       - name: proxmox_api_token_secret
     env:
       - name: PROXMOX_TOKEN_SECRET
+    secret: true
   node:
     description: Proxmox node name where the VM resides.
     required: true
@@ -219,6 +221,14 @@ for _name in ("urllib3", "requests", "py.warnings"):
 FILE_WRITE_CHUNK = 45000
 FILE_WRITE_RETRIES = 5
 
+# The QEMU guest agent starts processes without a login environment, so HOME is
+# unset. POSIX sh (dash) then leaves ``~`` unexpanded, which breaks ansible-core's
+# remote tmpdir discovery (``echo ~``) and makes it create a literal ``/~`` directory.
+# Exporting HOME up-front fixes tilde expansion for the command itself and for any
+# child process it spawns, including ansible-core's inner ``/bin/sh -c`` wrapper and
+# the Python module interpreter.
+HOME_GUARD = 'export HOME="${HOME:-$(getent passwd "$(id -u)" | cut -d: -f6)}"; '
+
 
 class Connection(ConnectionBase):
     """Connection plugin that uses the Proxmox QEMU Guest Agent API."""
@@ -294,11 +304,11 @@ class Connection(ConnectionBase):
                 self._connected = True
                 display.vvv(f"QEMU guest agent responsive on VM {self.get_option('vmid')}")
                 return self
-            except Exception:
+            except Exception as e:
                 if attempt < attempts - 1:
                     display.vvv(
                         f"Guest agent not ready on VM {self.get_option('vmid')}, "
-                        f"retrying in {interval}s ({attempt + 1}/{attempts})"
+                        f"retrying in {interval}s ({attempt + 1}/{attempts}): {e}"
                     )
                     time.sleep(interval)
                 else:
@@ -315,7 +325,7 @@ class Connection(ConnectionBase):
         display.vvv(f"EXEC via guest agent: {cmd}")
 
         try:
-            data = self._agent().exec.post(command=[shell, "-c", cmd])
+            data = self._agent().exec.post(command=[shell, "-c", HOME_GUARD + cmd])
         except Exception as exc:
             raise AnsibleConnectionFailure(f"Failed to execute command on VM {self.get_option('vmid')}: {exc}") from exc
 

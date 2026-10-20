@@ -15,7 +15,7 @@ from ansible_collections.community.internal_test_tools.tests.unit.plugins.module
     set_module_args,
 )
 
-from ansible_collections.community.proxmox.plugins.modules import proxmox_node_firewall
+from ansible_collections.community.proxmox.plugins.modules import proxmox_node_firewall_options
 
 
 def exit_json(*args, **kwargs):
@@ -61,10 +61,10 @@ SAMPLE_API_NODE_FIREWALL_OPTIONS = {
 }
 
 
-class TestProxmoxNodeFirewallModule(ModuleTestCase):
+class TestProxmoxNodeFirewallOptionsModule(ModuleTestCase):
     def setUp(self):
         super().setUp()
-        self.module = proxmox_node_firewall
+        self.module = proxmox_node_firewall_options
 
         self.mock_module_helper = patch.multiple(
             basic.AnsibleModule,
@@ -149,6 +149,29 @@ class TestProxmoxNodeFirewallModule(ModuleTestCase):
         payload = self.mock_api_fw_options.put.call_args[1]
         assert payload["enable"] == 1
         assert payload["nftables"] == 1
+
+    def test_disable_firewall_on_node_without_host_fw(self):
+        self.mock_api_fw_options.get.side_effect = [{}, {"enable": 0}]
+
+        result = self._run_module(build_module_args(state="disabled"))
+
+        assert result["changed"] is True
+        assert result["msg"] == "Node firewall options updated"
+        assert result["enabled"] is False
+
+        assert self.mock_api_fw_options.put.called
+        payload = self.mock_api_fw_options.put.call_args[1]
+        assert payload["enable"] == 0
+
+    def test_idempotent_when_host_fw_only_disables_the_firewall(self):
+        self.mock_api_fw_options.get.return_value = {"enable": 0}
+
+        result = self._run_module(build_module_args(state="disabled"))
+
+        assert result["changed"] is False
+        assert result["msg"] == "Node firewall options already match desired state"
+        assert result["enabled"] is False
+        assert not self.mock_api_fw_options.put.called
 
     def test_disable_firewall_updates_enable_flag(self):
         self.mock_api_fw_options.get.side_effect = [
