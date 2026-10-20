@@ -15,6 +15,7 @@ spec:
       template:
         spec:
           automountServiceAccountToken: false
+          priorityClassName: usb-device-priority
           nodeSelector:
             feature.node.kubernetes.io/usb-ff_148f_7601.present: 'true'
           containers:
