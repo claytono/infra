@@ -1,0 +1,91 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+####################################################################
+# WARNING: These are designed specifically for Ansible tests       #
+# and should not be used as examples of how to write Ansible roles #
+####################################################################
+
+- name: Copy keyfiles
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: '{{ remote_tmp_dir }}/{{ item }}'
+  loop:
+    - keyfile1
+    - keyfile2
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: '{{ lookup("first_found", search) }}'
+  vars:
+    search:
+      files:
+        - '{{ ansible_facts.distribution | lower }}-{{ ansible_facts.distribution_major_version }}.yml'
+        - '{{ ansible_facts.distribution | lower }}-{{ ansible_facts.distribution_version }}.yml'
+        - '{{ ansible_facts.distribution | lower }}.yml'
+        - '{{ ansible_facts.os_family | lower }}.yml'
+        - default.yml
+      paths:
+        - vars
+
+- name: Make sure cryptsetup is installed
+  ansible.builtin.package:
+    name: '{{ cryptsetup_package }}'
+    state: present
+  become: true
+
+- name: Install additionally required packages
+  ansible.builtin.package:
+    name: '{{ luks_extra_packages }}'
+    state: present
+  become: true
+  when: luks_extra_packages | length > 0
+
+- name: Determine cryptsetup version
+  ansible.builtin.command: cryptsetup --version
+  register: cryptsetup_version
+
+- name: Extract cryptsetup version
+  ansible.builtin.set_fact:
+    cryptsetup_version: >-
+      {{ cryptsetup_version.stdout_lines[0] | regex_search('cryptsetup ([0-9]+\.[0-9]+\.[0-9]+)') | split | last }}
+
+- name: Create cryptfile
+  ansible.builtin.command: dd if=/dev/zero of={{ remote_tmp_dir.replace('~', ansible_facts.env.HOME) }}/cryptfile bs=1M count=32
+
+- name: Figure out next loopback device
+  ansible.builtin.command: losetup -f
+  become: true
+  register: cryptfile_device_output
+
+- name: Create lookback device
+  ansible.builtin.command: losetup -f {{ remote_tmp_dir.replace('~', ansible_facts.env.HOME) }}/cryptfile
+  become: true
+
+- name: Store some common data for tests
+  ansible.builtin.set_fact:
+    cryptfile_device: "{{ cryptfile_device_output.stdout_lines[0] }}"
+    cryptfile_passphrase1: "uNiJ9vKG2mUOEWDiQVuBHJlfMHE"
+    cryptfile_passphrase2: "HW4Ak2HtE2vvne0qjJMPTtmbV4M"
+    cryptfile_passphrase3: "qQJqsjabO9pItV792k90VvX84MM"
+
+- block:
+    - ansible.builtin.include_tasks: run-test.yml
+      with_fileglob:
+        - "tests/*.yml"
+
+  always:
+    - name: Make sure LUKS device is gone
+      community.crypto.luks_device:
+        device: "{{ cryptfile_device }}"
+        state: absent
+      become: true
+      ignore_errors: true
+
+    - ansible.builtin.command: losetup -d "{{ cryptfile_device }}"
+      become: true
+
+    - ansible.builtin.file:
+        dest: "{{ remote_tmp_dir.replace('~', ansible_facts.env.HOME) }}/cryptfile"
+        state: absent

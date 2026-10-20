@@ -1,0 +1,201 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- block:
+    - name: Generate account keys
+      community.crypto.openssl_privatekey:
+        path: "{{ remote_tmp_dir }}/{{ item }}.pem"
+        type: ECC
+        curve: secp256r1
+        force: true
+      loop: "{{ account_keys }}"
+
+    - name: Parse account keys (to ease debugging some test failures)
+      community.crypto.openssl_privatekey_info:
+        path: "{{ remote_tmp_dir }}/{{ item }}.pem"
+        return_private_key_data: true
+      loop: "{{ account_keys }}"
+
+  vars:
+    account_keys:
+      - accountkey
+
+- name: Get directory
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    method: directory-only
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  register: directory
+- ansible.builtin.debug: var=directory
+
+- name: Create an account
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    url: "{{ directory.directory.newAccount }}"
+    method: post
+    content: '{"termsOfServiceAgreed":true}'
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  register: account_creation
+  # account_creation.headers.location contains the account URI
+  # if creation was successful
+- ansible.builtin.debug: var=account_creation
+
+- name: Get account information
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ account_creation.headers.location }}"
+    method: get
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  register: account_get
+- ansible.builtin.debug: var=account_get
+
+- name: Update account contacts
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ account_creation.headers.location }}"
+    method: post
+    content: '{{ account_info | to_json }}'
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  vars:
+    account_info:
+      # For valid values, see
+      # https://www.rfc-editor.org/rfc/rfc8555.html#section-7.3
+      contact:
+        - mailto:me@example.com
+  register: account_update
+- ansible.builtin.debug: var=account_update
+
+- name: Create certificate order
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ directory.directory.newOrder }}"
+    method: post
+    content: '{{ create_order | to_json }}'
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  vars:
+    create_order:
+      # For valid values, see
+      # https://www.rfc-editor.org/rfc/rfc8555.html#section-7.4 and
+      # https://www.rfc-editor.org/rfc/rfc8738.html
+      identifiers:
+        - type: dns
+          value: example.com
+        - type: dns
+          value: example.org
+  register: new_order
+- ansible.builtin.debug: var=new_order
+
+- name: Get order information
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ new_order.headers.location }}"
+    method: get
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  register: order
+- ansible.builtin.debug: var=order
+
+- name: Get authzs for order
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ item }}"
+    method: get
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  loop: "{{ order.output_json.authorizations }}"
+  register: authz
+- ansible.builtin.debug: var=authz
+
+- name: Get HTTP-01 challenge URLs
+  ansible.builtin.set_fact:
+    http01challenge_urls: >-
+      {{
+        authz.results
+        | map(attribute='output_json')
+        | map(attribute='challenges')
+        | map('selectattr', 'type', 'equalto', 'http-01')
+        | map('first')
+        | map(attribute='url')
+        | list
+      }}
+
+- name: Get HTTP-01 challenge for authz
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ item }}"
+    method: get
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  register: http01challenge
+  loop: "{{ http01challenge_urls }}"
+- ansible.builtin.debug: var=http01challenge
+
+- name: Get HTTP-01 activation URLs
+  ansible.builtin.set_fact:
+    activation_urls: >-
+      {{
+        http01challenge.results
+        | map(attribute='output_json')
+        | map(attribute='url')
+        | list
+      }}
+
+- name: Activate HTTP-01 challenge manually
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ item }}"
+    method: post
+    content: '{}'
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  register: activation
+  loop: "{{ activation_urls }}"
+- ansible.builtin.debug: var=activation
+
+- name: Get HTTP-01 challenge results
+  community.crypto.acme_inspect:
+    acme_directory: "{{ acme_directory_url }}"
+    acme_version: 2
+    validate_certs: false
+    account_key_src: "{{ remote_tmp_dir }}/accountkey.pem"
+    account_uri: "{{ account_creation.headers.location }}"
+    url: "{{ item }}"
+    method: get
+    select_crypto_backend: "{{ select_crypto_backend }}"
+  register: validation_result
+  loop: "{{ http01challenge_urls }}"
+  until: "validation_result.output_json.status not in ['pending', 'processing']"
+  retries: 20
+  delay: 1
+- ansible.builtin.debug: var=validation_result
