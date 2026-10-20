@@ -6,7 +6,7 @@
 
 
 DOCUMENTATION = r"""
-module: proxmox_cluster_firewall
+module: proxmox_cluster_firewall_options
 short_description: Cluster-level firewall options management for Proxmox VE cluster
 version_added: "2.0.0"
 author:
@@ -88,6 +88,9 @@ seealso:
   - name: Proxmox VE cluster-wide configuration
     description: Complete reference of Proxmox VE Firewall
     link: https://pve.proxmox.com/pve-docs/chapter-pve-firewall.html#pve_firewall_cluster_wide_setup
+  - module: community.proxmox.proxmox_node_firewall_options
+  - module: community.proxmox.proxmox_firewall
+  - module: community.proxmox.proxmox_cluster_firewall_security_group
 
 extends_documentation_fragment:
   - community.proxmox.proxmox.actiongroup_proxmox
@@ -97,7 +100,7 @@ extends_documentation_fragment:
 
 EXAMPLES = r"""
 - name: Set cluster-wide firewall options
-  community.proxmox.proxmox_cluster_firewall:
+  community.proxmox.proxmox_cluster_firewall_options:
     state: enabled
     ebtables: true
     input_policy: DROP
@@ -109,7 +112,7 @@ EXAMPLES = r"""
       rate: 5/second
 
 - name: Block ingress and allow egress traffic
-  community.proxmox.proxmox_cluster_firewall:
+  community.proxmox.proxmox_cluster_firewall_options:
     state: enabled
     ebtables: true
     input_policy: DROP
@@ -117,7 +120,7 @@ EXAMPLES = r"""
     forward_policy: ACCEPT
 
 - name: Set cluster-wide firewall ratelimiting options
-  community.proxmox.proxmox_cluster_firewall:
+  community.proxmox.proxmox_cluster_firewall_options:
     state: enabled
     ebtables: true
     log_ratelimit:
@@ -126,7 +129,7 @@ EXAMPLES = r"""
       rate: 5/second
 
 - name: Disable cluster-wide firewall
-  community.proxmox.proxmox_cluster_firewall:
+  community.proxmox.proxmox_cluster_firewall_options:
     state: disabled
 """
 
@@ -246,7 +249,7 @@ def module_options():
     return {}
 
 
-class ProxmoxClusterFirewallAnsible(ProxmoxAnsible):
+class ProxmoxClusterFirewallOptionsAnsible(ProxmoxAnsible):
     def __init__(self, module):
         super().__init__(module)
         self.params = module.params
@@ -366,7 +369,7 @@ class ProxmoxClusterFirewallAnsible(ProxmoxAnsible):
 
 def main():
     module = create_proxmox_module(module_args(), **module_options())
-    proxmox = ProxmoxClusterFirewallAnsible(module)
+    proxmox = ProxmoxClusterFirewallOptionsAnsible(module)
     proxmox.validate_params()
 
     try:

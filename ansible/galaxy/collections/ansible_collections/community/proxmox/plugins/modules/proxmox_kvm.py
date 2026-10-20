@@ -29,6 +29,10 @@ options:
     description:
       - Specify if the QEMU Guest Agent should be enabled/disabled.
     type: str
+  allow_ksm:
+    description:
+      - Allow memory pages of this guest to be merged via KSM (Kernel Samepage Merging).
+    type: bool
   args:
     description:
       - Pass arbitrary arguments to kvm.
@@ -881,6 +885,7 @@ from ansible_collections.community.proxmox.plugins.module_utils.proxmox import (
     ProxmoxAnsible,
     ansible_to_proxmox_bool,
     create_proxmox_module,
+    is_root_without_api_token,
 )
 from ansible_collections.community.proxmox.plugins.module_utils.version import LooseVersion
 
@@ -898,6 +903,7 @@ def module_args():
         archive=dict(type="str"),
         acpi=dict(type="bool"),
         agent=dict(type="str"),
+        allow_ksm=dict(type="bool"),
         args=dict(type="str"),
         audio=dict(type="dict"),
         autostart=dict(type="bool"),
@@ -1216,6 +1222,9 @@ class ProxmoxKvmAnsible(ProxmoxAnsible):
             kwargs["numa"] = kwargs["numa_enabled"]
             del kwargs["numa_enabled"]
 
+        if "allow_ksm" in kwargs:
+            kwargs["allow-ksm"] = kwargs.pop("allow_ksm")
+
         # PVE api expects strings for the following params
         if "nameservers" in self.module.params:
             nameservers = self.module.params.pop("nameservers")
@@ -1234,14 +1243,16 @@ class ProxmoxKvmAnsible(ProxmoxAnsible):
                     self.module.fail_json(msg=f"{tag} is not a valid tag")
             kwargs["tags"] = ",".join(kwargs["tags"])
 
-        # -args and skiplock require root@pam user - but can not use api tokens
-        if self.module.params["api_user"] == "root@pam" and self.module.params["args"] is not None:
-            kwargs["args"] = self.module.params["args"]
-        elif self.module.params["api_user"] != "root@pam" and self.module.params["args"] is not None:
-            self.module.fail_json(msg="args parameter require root@pam user. ")
+        # `args` and `skiplock` require `root@pam` user but cannot use API tokens.
+        if is_root_without_api_token(self.module.params):
+            if self.module.params["args"] is not None:
+                kwargs["args"] = self.module.params["args"]
+        else:
+            if self.module.params["args"] is not None:
+                self.module.fail_json(msg="args parameter require root@pam user. ")
 
-        if self.module.params["api_user"] != "root@pam" and self.module.params["skiplock"] is not None:
-            self.module.fail_json(msg="skiplock parameter require root@pam user. ")
+            if self.module.params["skiplock"] is not None:
+                self.module.fail_json(msg="skiplock parameter require root@pam user. ")
 
         if update:
             result = proxmox_node.qemu(vmid).config.set(
@@ -1469,6 +1480,7 @@ def main():  # noqa: PLR0912, PLR0915
                 archive=module.params["archive"],
                 acpi=module.params["acpi"],
                 agent=module.params["agent"],
+                allow_ksm=module.params["allow_ksm"],
                 audio=module.params["audio"],
                 autostart=module.params["autostart"],
                 balloon=module.params["balloon"],

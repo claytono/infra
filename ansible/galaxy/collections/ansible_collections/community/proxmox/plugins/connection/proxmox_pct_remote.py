@@ -74,6 +74,7 @@ options:
       - name: ansible_ssh_password
       - name: ansible_paramiko_pass
       - name: ansible_paramiko_password
+    secret: true
   use_rsa_sha2_algorithms:
     description:
       - Whether or not to enable RSA SHA2 algorithms for pubkeys and hostkeys.
@@ -256,11 +257,11 @@ EXAMPLES = r"""
 # $ mkdir -p /opt/ansible-pct/.ssh
 # $ ssh-keygen -t ed25519 -C 'ansible' -N "" -f /opt/ansible-pct/.ssh/ansible <<< y > /dev/null
 # $ cat /opt/ansible-pct/.ssh/ansible
-# $ mv /opt/ansible-pct/.ssh/ansible.pub /opt/ansible-pct/.ssh/authorized-keys
+# $ mv /opt/ansible-pct/.ssh/ansible.pub /opt/ansible-pct/.ssh/authorized_keys
 # $ rm /opt/ansible-pct/.ssh/ansible*
 # $ chown -R ansible:ansible /opt/ansible-pct/.ssh
 # $ chmod 700 /opt/ansible-pct/.ssh
-# $ chmod 600 /opt/ansible-pct/.ssh/authorized-keys
+# $ chmod 600 /opt/ansible-pct/.ssh/authorized_keys
 # $ echo 'ansible ALL = (root) NOPASSWD: /usr/sbin/pct' > /etc/sudoers.d/ansible_pct
 #
 # Save the displayed private key and add it to your ssh-agent
@@ -303,7 +304,7 @@ EXAMPLES = r"""
 #     - name: Set public key as authorized key
 #       ansible.builtin.copy:
 #         src: /opt/ansible-pct/.ssh/ansible.pub
-#         dest: /opt/ansible-pct/.ssh/authorized-keys
+#         dest: /opt/ansible-pct/.ssh/authorized_keys
 #         remote_src: yes
 #         owner: ansible
 #         group: ansible
@@ -593,6 +594,17 @@ class Connection(ConnectionBase):
             raise AnsibleAuthenticationFailure(f"Failed to authenticate: {e}") from e
         except Exception as e:
             self._raise_paramiko_connect_exception(e, port)
+
+    def _raise_paramiko_connect_exception(self, e: Exception, port: int) -> t.NoReturn:
+        msg = to_text(e)
+        if "PID check failed" in msg:
+            raise AnsibleError("paramiko version issue, please upgrade paramiko on the machine running ansible") from e
+        if "Private key file is encrypted" in msg:
+            msg = (
+                f"ssh {self.get_option('remote_user')}@{self.get_option('remote_addr')}:{port} : "
+                f"{msg}\nTo connect as a different user, use -u <username>."
+            )
+        raise AnsibleConnectionFailure(msg) from e
 
     def _connect(self) -> Connection:
         """Open an SSH session to the Proxmox host via Paramiko."""
