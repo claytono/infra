@@ -229,6 +229,12 @@ kubectl run test-dns --image=nicolaka/netshoot --rm -it --restart=Never \
   -- dig kubernetes.default.svc.cluster.local
 ```
 
+An upgrade renews the certificates in the first table of
+`kubeadm certs check-expiration` but never the CAs in the second. If a CA
+expires within the next year, plan to rotate it before then. An expired CA
+breaks whatever it signs; for `front-proxy-ca` that is aggregated APIs such as
+metrics-server.
+
 ## Rollback Plan
 
 If the control plane upgrade fails or is unhealthy:
