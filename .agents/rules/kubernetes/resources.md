@@ -37,9 +37,9 @@ metadata:
 - `InPlaceOrRecreate`: the default. The VPA updater resizes running pods, in
   place where possible, during its 1–5 AM maintenance window
   (`kubernetes/vpa/`).
-- `Initial`: for cluster-critical namespaces (kube-system, kube-flannel,
-  metallb-system, traefik, external-secrets) and Plex. VPA sets requests when a
-  pod is created and never touches it afterwards.
+- `Initial`: for cluster-critical namespaces (metallb-system, traefik,
+  external-secrets) and Plex. VPA sets requests when a pod is created and never
+  touches it afterwards.
 
 ## Writing manifests
 
@@ -84,10 +84,11 @@ to it, for example:
 
 - A device resource such as `nvidia.com/gpu`, which Kubernetes only accepts
   under `limits` (see `kubernetes/plexmediaserver/deploy.yaml`).
-- Workloads in `vpa` and `cert-manager`. The VPA admission webhook skips those
-  namespaces (it cannot depend on itself or on the certificates cert-manager
-  issues for it), so VPA never applies requests there; keep their explicit
-  requests.
+- Workloads in `vpa`, `cert-manager`, `kube-system` and `kube-flannel`. The VPA
+  admission webhook fails closed, so it skips the namespaces it needs to
+  recover: itself, cert-manager for its certificates, and the pod network and
+  system components it is reached through. VPA never applies requests there;
+  keep their explicit requests.
 - A limit containing a known leak or runaway process until it is fixed.
 
 No policy enforces leaving resources out: existing manifests that predate this

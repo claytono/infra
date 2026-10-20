@@ -26,6 +26,7 @@ spec:
         app.kubernetes.io/name: vpa
         app.kubernetes.io/instance: vpa
     spec:
+      priorityClassName: system-cluster-critical
       serviceAccountName: vpa-recommender
       securityContext:
         runAsNonRoot: true
