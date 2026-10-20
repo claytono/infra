@@ -54,11 +54,6 @@ controllers:
     containers:
       karakeep:
         env:
-          DATABASE_URL:
-            valueFrom:
-              secretKeyRef:
-                name: karakeep-postgres-app
-                key: uri
           OAUTH_WELLKNOWN_URL: https://auth.k.oneill.net/application/o/karakeep/.well-known/openid-configuration
           OAUTH_PROVIDER_NAME: Authentik
           DISABLE_PASSWORD_AUTH: 'true'
@@ -101,6 +96,15 @@ controllers:
         - --hide-scrollbars
         - --disable-blink-features=AutomationControlled
         - --window-size=1440,900
+        # VPA sets requests. Keep only the memory limit: Chrome's memory
+        # depends on the pages it crawls, and the limit stops one page from
+        # starving the node. Three pages at once stayed under 1Gi with
+        # karakeep-chrome 154.
+        resources:
+          requests:
+          limits:
+            cpu:
+            memory: 1Gi
 
 meilisearch:
   enabled: true
