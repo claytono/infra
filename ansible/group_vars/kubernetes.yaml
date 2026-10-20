@@ -45,12 +45,12 @@ containerd_config: |
 
 # Our goal is to stay one version behind
 kubernetes_short_version: "1.36"
-kubernetes_version: "1.35.9"
-kubeadm_version: "1.35.9-1.1"
-kubelet_version: "1.35.9-1.1"
-kubectl_version: "1.35.9-1.1"
-cri_tools_version: "1.35.0-1.1"
-kubernetes_cni_version: "1.8.0-1.1"
+kubernetes_version: "1.36.5"
+kubeadm_version: "1.36.5-1.1"
+kubelet_version: "1.36.5-1.1"
+kubectl_version: "1.36.5-1.1"
+cri_tools_version: "1.36.0-1.1"
+kubernetes_cni_version: "1.9.1-1.1"
 
 kubernetes_master: "k1.oneill.net"
 
