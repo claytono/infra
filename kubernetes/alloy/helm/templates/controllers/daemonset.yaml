@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: alloy
-    app.kubernetes.io/version: "v1.19.2"
+    app.kubernetes.io/version: "v1.20.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -31,7 +31,7 @@ spec:
       serviceAccountName: alloy
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.19.2
+          image: docker.io/grafana/alloy:v1.20.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -69,7 +69,7 @@ spec:
             - mountPath: /var/lib/alloy
               name: alloy-storage
         - name: config-reloader
-          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.91.0@sha256:7d9e4eea5f1139e602508871f422b0116c60e87c662f3dcd234d5ab60cd0d8c1
+          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.94.0@sha256:142a1f11df8dd165f00375b0b1826aecb9c9adeb05c39855893138d7c7575ff7
           imagePullPolicy: IfNotPresent
           args:
             - --watched-dir=/etc/alloy
