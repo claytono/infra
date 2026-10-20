@@ -1,4 +1,9 @@
 ---
+# The admission webhook fails closed, so pod creation outside the excluded
+# namespaces depends on it. Let VPA preempt ordinary workloads to stay
+# scheduled.
+priorityClassName: system-cluster-critical
+
 recommender:
   extraArgs:
     target-cpu-percentile: "0.75"           # 75th percentile (default: 0.9)
@@ -53,8 +58,11 @@ admissionController:
     failurePolicy: Fail
     annotations:
       cert-manager.io/inject-ca-from: vpa/vpa-webhook-cert
+    # Skip namespaces the webhook depends on, so a webhook outage cannot
+    # block the pods needed to recover it: VPA itself, cert-manager for its
+    # certificate, and the cluster's networking and system components.
     namespaceSelector:
       matchExpressions:
       - key: kubernetes.io/metadata.name
         operator: NotIn
-        values: [vpa, cert-manager]
+        values: [vpa, cert-manager, kube-system, kube-flannel]
