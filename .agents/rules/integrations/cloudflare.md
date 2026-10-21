@@ -83,7 +83,10 @@ providers. Its `kubernetes_ingress_secret_name` is empty and
 ## DDNS
 
 `favonia/cloudflare-ddns` runs in Kubernetes (`kubernetes/cloudflare-ddns/`).
-Updates `luser.fnord.net` and `luser.oneill.net` with the current public IP.
+Updates `luser.fnord.net` and `luser.oneill.net` with the current public IPv4
+address and luser's IPv6 address. The pod detects its node's IPv6 address, so
+each domain sets `hostid6=::74:161` to keep the detected prefix and use luser's
+host bits.
 
 The deployment uses the `cloudflare-ddns` API token (DNS Write, both zones)
 pulled from 1Password via External Secrets.
