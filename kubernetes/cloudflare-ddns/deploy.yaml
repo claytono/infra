@@ -45,5 +45,7 @@ spec:
             secretKeyRef:
               name: cloudflare-ddns
               key: CLOUDFLARE_API_TOKEN
+        # The pod detects its node's IPv6 address, so hostid6 keeps the
+        # detected prefix and substitutes luser's host bits.
         - name: DOMAINS
-          value: luser.fnord.net,luser.oneill.net
+          value: luser.fnord.net{hostid6=::74:161},luser.oneill.net{hostid6=::74:161}

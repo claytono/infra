@@ -183,3 +183,20 @@ resource "unifi_firewall_rule" "allow_qbittorrent_v6" {
 
   state_new = true
 }
+
+# Allow SSH to luser, which luser.fnord.net and luser.oneill.net point at over
+# IPv6. Over IPv4, SSH reaches luser through the UDM's port forward.
+resource "unifi_firewall_rule" "allow_luser_ssh_v6" {
+  name       = "Allow SSH to luser (IPv6)"
+  action     = "accept"
+  ruleset    = "WANv6_IN"
+  rule_index = 25200
+
+  # The controller rejects a port unless the IPv4 protocol is also set.
+  protocol         = "tcp"
+  protocol_v6      = "tcp"
+  dst_address_ipv6 = "${local.infrastructure_ipv6_prefix}::74:161"
+  dst_port         = "22"
+
+  state_new = true
+}
