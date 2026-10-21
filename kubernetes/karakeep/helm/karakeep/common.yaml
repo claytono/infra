@@ -225,6 +225,8 @@ spec:
             value: http://karakeep-chrome:9222
           - name: CRAWLER_FULL_PAGE_ARCHIVE
             value: "true"
+          - name: CRAWLER_JOB_TIMEOUT_SEC
+            value: "120"
           - name: CRAWLER_NUM_WORKERS
             value: "3"
           - name: CRAWLER_STORE_PDF

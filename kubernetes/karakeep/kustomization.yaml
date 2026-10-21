@@ -20,7 +20,7 @@ commonAnnotations:
 
 images:
 - name: ghcr.io/karakeep-app/karakeep
-  newTag: 0.33.2@sha256:b069e4307dec06ea06d16989c6861c30a1ff208568be44ed5fb5d422cd3e950c
+  newTag: 0.34.0@sha256:151cdd6b5f2e21635645983e126f411675bfa35becb02c028c1a727f45f899c6
 - name: gcr.io/zenika-hub/alpine-chrome
   newName: ghcr.io/karakeep-app/karakeep-chrome
   newTag: 154.0.8037.57-r1@sha256:c51a8c8e6c3c1040a50fa0ecfd0b2fc298401b4229262636552458151f6f18fa
