@@ -14,6 +14,8 @@ spec:
   instances: 1
   imageName: ghcr.io/tensorchord/cloudnative-vectorchord:17-0.4.3
   enablePDB: false
+  primaryUpdateMethod: switchover
+  smartShutdownTimeout: 0
 
   postgresql:
     shared_preload_libraries:
