@@ -32,3 +32,5 @@ configMapGenerator:
   - config/prometheus.yml
   - config/rules.yml
   - config/cnpg-rules.yml
+  options:
+    disableNameSuffixHash: true
