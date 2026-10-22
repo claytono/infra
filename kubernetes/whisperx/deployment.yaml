@@ -25,7 +25,7 @@ spec:
       priorityClassName: gpu-priority
       containers:
       - name: whisperx
-        image: learnedmachine/whisperx-asr-service:0.4.2@sha256:324be2729a9ce44fcd0814d43ee52dbeabc022021d3b49d694c544f46bd9f66d
+        image: learnedmachine/whisperx-asr-service:0.4.3@sha256:d46cbc82ae9b2421c4412db6b18910e30ae21d4f823f61eb68c93f0a4e3768b1
         ports:
         - name: http
           containerPort: 9000
