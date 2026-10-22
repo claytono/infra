@@ -189,8 +189,8 @@
         "ansible/**/*.yaml"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[A-Z0-9_]*VERSION=(?<currentValue>\\d+(?:\\.\\d+)+)",
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[a-z0-9_]+_version:\\s*\"?(?<currentValue>\\d+(?:\\.\\d+)+)\"?"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: depType=(?<depType>\\S+))?\\n[A-Z0-9_]*VERSION=(?<currentValue>\\d+(?:\\.\\d+)+)",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: depType=(?<depType>\\S+))?\\n[a-z0-9_]+_version:\\s*\"?(?<currentValue>\\d+(?:\\.\\d+)+)\"?"
       ]
     },
     {
@@ -526,6 +526,20 @@
         "automerge"
       ],
       "description": "Auto-merge Docker digest updates in Ansible if CI passes"
+    },
+    {
+      "matchDepTypes": [
+        "automerge"
+      ],
+      "schedule": [
+        "after 2am and before 8am on thursday"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "addLabels": [
+        "automerge"
+      ],
+      "description": "Auto-merge versions whose renovate annotation sets depType=automerge, if CI passes"
     },
     {
       "matchDatasources": [

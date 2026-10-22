@@ -20,6 +20,28 @@
     state: present
     autoremove: true
 
+- name: "Read installed dool version"
+  ansible.builtin.command:
+    cmd: dpkg-query -W -f=${Version} dool
+  register: common_dool_installed
+  changed_when: false
+  failed_when: false
+
+# Debian 13's dstat package is a wrapper from PCP, which runs PCP's daemons,
+# and Debian doesn't package dool, so install the upstream release instead.
+# The apt module downloads a URL before comparing versions, so only call it
+# when the installed version differs.
+- name: "Install dool"
+  ansible.builtin.apt:
+    deb: "https://github.com/scottchiefbaker/dool/releases/download/v{{ common_dool_version }}/dool-{{ common_dool_version }}.deb"
+  when: common_dool_installed.stdout != common_dool_version
+
+- name: "Run dool as dstat"
+  ansible.builtin.file:
+    src: /usr/bin/dool
+    dest: /usr/local/bin/dstat
+    state: link
+
 - name: "Set system timezone"
   ansible.builtin.file:
     src: "/usr/share/zoneinfo/{{ timezone }}"
