@@ -1,5 +1,5 @@
 # QEMU Raspberry Pi 3B emulator for testing RPi OS images
-FROM debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a
+FROM debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system-arm \
