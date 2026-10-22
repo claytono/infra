@@ -1,5 +1,6 @@
 ---
 timezone: America/New_York
+system_locale: en_US.UTF-8
 
 # Used by chrony role to conditionally configure UFW firewall rules
 enable_ufw: false

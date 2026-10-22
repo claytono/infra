@@ -1,0 +1,35 @@
+---
+- name: "Install locales"
+  ansible.builtin.apt:
+    name: locales
+    state: present
+
+- name: "Generate the system locale"
+  community.general.locale_gen:
+    name: "{{ system_locale }}"
+    state: present
+
+# locale_gen only checks the compiled locales, and locales upgrades rebuild
+# them from /etc/locale.gen, so keep the line enabled there too. This runs
+# after locale_gen, which uncomments the line in place when it builds the
+# locale, so it only adds a line when the locale was built but disabled.
+- name: "Enable the system locale in /etc/locale.gen"
+  ansible.builtin.lineinfile:
+    path: /etc/locale.gen
+    line: "{{ system_locale }} {{ system_locale.split('.')[1] }}"
+
+# Debian keeps the locale in /etc/locale.conf, which systemd reads, and links
+# /etc/default/locale to it for pam_env, so logins and services agree.
+- name: "Set the system locale"
+  ansible.builtin.copy:
+    content: "LANG={{ system_locale }}\n"
+    dest: /etc/locale.conf
+    mode: "0644"
+  notify: Reload systemd manager
+
+- name: "Link /etc/default/locale to /etc/locale.conf"
+  ansible.builtin.file:
+    src: ../locale.conf
+    dest: /etc/default/locale
+    state: link
+    force: true

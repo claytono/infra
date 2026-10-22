@@ -370,6 +370,8 @@ manage_resolv_conf: false
 hostname: $HOSTNAME
 manage_etc_hosts: true
 
+locale: en_US.UTF-8
+
 apt:
   preserve_sources_list: true
 
