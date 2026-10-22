@@ -5,7 +5,9 @@ kind: Deployment
 metadata:
   name: prometheus
   annotations:
-    reloader.stakater.com/auto: 'true'
+    # Prometheus reloads its config and rules itself (--config.auto-reload);
+    # restart only for the scrape credentials secret.
+    secret.reloader.stakater.com/reload: prometheus
 
 spec:
   replicas: 1
@@ -29,6 +31,7 @@ spec:
         image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
         args:
         - --config.file=/etc/prometheus/prometheus.yml
+        - --config.auto-reload
         - --web.external-url=https://prometheus.k.oneill.net
         - --storage.tsdb.retention.time=730d
         ports:
