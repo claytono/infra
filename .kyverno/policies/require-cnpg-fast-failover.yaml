@@ -1,0 +1,45 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+
+metadata:
+  name: require-cnpg-fast-failover
+
+# Our database clients are a handful of apps holding long-lived pooled
+# connections, not a fleet of web front ends that drain gracefully. What
+# matters is that a primary is accepting connections again as fast as
+# possible; clients reconnect on their own.
+#
+# primaryUpdateMethod: switchover - when the primary has to restart (image or
+# configuration change), CNPG promotes a replica first and then restarts the
+# old primary as a replica. The default, restart, restarts the primary in
+# place, so the database is down until it comes back.
+#
+# smartShutdownTimeout: 0 - whenever an instance stops, CNPG first tries a
+# smart shutdown, which refuses new connections and waits up to this many
+# seconds (default 180) for existing ones to close. Ours never close on their
+# own, so the full wait elapses with every new connection refused. 0 skips
+# straight to a fast shutdown, which ends sessions immediately.
+#
+# Enforced on every cluster, including single-instance ones where
+# primaryUpdateMethod has no effect, so all clusters share one configuration
+# and adding a replica later needs no further change.
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: require-switchover-and-fast-shutdown
+    match:
+      any:
+      - resources:
+          kinds:
+          - postgresql.cnpg.io/v1/Cluster
+    validate:
+      message: >-
+        Database clusters must set spec.primaryUpdateMethod to 'switchover' and
+        spec.smartShutdownTimeout to 0. The CNPG defaults restart the primary
+        in place and wait up to 180 seconds for clients that never disconnect,
+        leaving the database unavailable for minutes.
+      pattern:
+        spec:
+          primaryUpdateMethod: switchover
+          smartShutdownTimeout: 0

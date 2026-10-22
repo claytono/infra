@@ -9,6 +9,9 @@ esphome:
 esp8266:
   board: esp01_1m
   restore_from_flash: true
+  # The default drives the relay off at the start of every boot, before
+  # restore_mode applies, which power-cycles the load on any restart.
+  early_pin_init: false
 
 preferences:
   flash_write_interval: 10min
