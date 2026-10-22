@@ -21,6 +21,14 @@ server:
   # Enable 2 replicas for high availability
   replicas: 2
 
+  # Every request, including /-/health/live/, passes through the tenant
+  # middleware, which queries Postgres. During a database outage the liveness
+  # probe kills both servers and the embedded outpost with them, and the
+  # restarted pods crash-loop until the database returns. Crashed and hung
+  # gunicorn workers are already restarted by Authentik itself; readiness
+  # still removes an unhealthy server from the Service.
+  livenessProbe:
+
   # Reloader annotations to restart when secrets change
   podAnnotations:
     reloader.stakater.com/auto: 'true'
