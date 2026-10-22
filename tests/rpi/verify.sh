@@ -89,6 +89,15 @@ else
     FAILED=1
 fi
 
+# Test 9: cloud-init set and generated the system locale
+# shellcheck disable=SC2016 # $LANG must expand on the Pi, not locally.
+if ssh_cmd '. /etc/default/locale && [ "$LANG" = en_US.UTF-8 ] && locale -a | grep -qx en_US.utf8' 2>/dev/null; then
+    echo "PASS: System locale is en_US.UTF-8"
+else
+    echo "FAIL: System locale is not en_US.UTF-8"
+    FAILED=1
+fi
+
 if [[ $FAILED -eq 0 ]]; then
     echo ""
     echo "All tests passed!"

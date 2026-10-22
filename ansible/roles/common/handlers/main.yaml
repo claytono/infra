@@ -15,3 +15,9 @@
 - name: Reload sysctl
   ansible.builtin.command: sysctl --system
   changed_when: true
+
+# systemd re-reads /etc/locale.conf on reload, so services started afterwards
+# get the new locale without a reboot.
+- name: Reload systemd manager
+  ansible.builtin.systemd:
+    daemon_reload: true

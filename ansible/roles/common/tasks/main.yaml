@@ -33,6 +33,10 @@
     dest: /etc/timezone
     mode: "0644"
 
+- name: Configure system locale
+  ansible.builtin.import_tasks: locale.yaml
+  tags: locale
+
 - name: Configure persistent journal
   ansible.builtin.include_tasks: journald.yaml
   when: "'pi' in group_names"
