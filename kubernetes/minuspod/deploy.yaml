@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: minuspod
-        image: ttlequals0/minuspod:stable@sha256:2b3cd12a5b9a225c5383f6deea10032a629893a78e1e8e41950958fe5c51fa83
+        image: ttlequals0/minuspod:stable@sha256:c52f2598ea671f770ed7363561bb0897579ffb6cb71415d26ff5243cc9c9fb0a
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
@@ -59,13 +59,27 @@ spec:
               name: minuspod-openrouter-env
               key: OPENROUTER_API_KEY
         - name: WHISPER_BACKEND
-          value: openai-api
-        - name: WHISPER_API_BASE_URL
-          value: http://whisperx.whisperx.svc.cluster.local:9000/v1
-        - name: WHISPER_API_MODEL
-          value: large-v3
+          value: parakeet
         - name: WHISPER_LANGUAGE
           value: en
+        # Make glibc return freed memory to the OS. Without these, the
+        # Parakeet backend grew about 0.65 GiB per episode and never shrank;
+        # with them it stays near 2 GiB while transcribing and drops below
+        # 1 GiB when the model unloads, with no measurable CPU cost.
+        # Two malloc arenas instead of up to eight per core, so freed memory
+        # doesn't sit stranded across many per-thread heaps.
+        - name: MALLOC_ARENA_MAX
+          value: '2'
+        # Serve allocations of 128 KiB or more with mmap, so freeing them
+        # unmaps them immediately. Setting it also stops glibc from raising
+        # the threshold on its own (up to 32 MiB), which is what let large
+        # buffers stay in the heap after use.
+        - name: MALLOC_MMAP_THRESHOLD_
+          value: '131072'
+        # Release free memory at the top of the heap once it passes 128 KiB.
+        # Setting it keeps glibc from raising this threshold as well.
+        - name: MALLOC_TRIM_THRESHOLD_
+          value: '131072'
         - name: TRANSCRIBE_CONCURRENT_CHUNKS
           value: '1'
         - name: MINUSPOD_TRUSTED_PROXY_COUNT
