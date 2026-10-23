@@ -27,7 +27,6 @@ telegram_api_key: "fake"
 mqtt_password: "fake"
 netatmo_client_id: fake
 netatmo_client_secret: fake
-gmail_smtp_password: "fake"
 twilio_account_sid: fake
 twilio_auth_token: fake
 twilio_number: "+15555555555"
