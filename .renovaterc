@@ -413,7 +413,8 @@
       ],
       "matchManagers": [
         "kustomize",
-        "kubernetes"
+        "kubernetes",
+        "helm-values"
       ],
       "matchPackageNames": [
         "!ttlequals0/minuspod"
@@ -427,7 +428,7 @@
       "addLabels": [
         "automerge"
       ],
-      "description": "Auto-merge Docker image digest updates in Kubernetes if CI passes"
+      "description": "Auto-merge Docker image digest updates in Kubernetes manifests and Helm values if CI passes. An image that also appears in a values.yaml shares one PR with its other uses, and Renovate auto-merges a PR only when every update in it allows auto-merge."
     },
     {
       "matchDatasources": [
