@@ -4,7 +4,7 @@
 #       -> sends email to cloud -> cloud receives ping -> stays green
 #
 # The CronJob is in kubernetes/healthchecks/cronjob-canary-ping.yaml
-# This tests: healthchecks app, DB, sendalerts, SMTP relay, Gmail delivery
+# This tests: healthchecks app, DB, sendalerts, SMTP relay, Fastmail delivery
 
 # Look up email channel on cloud instance
 data "healthchecksio_channel" "cloud_email" {

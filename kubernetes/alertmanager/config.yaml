@@ -53,5 +53,5 @@ receivers:
     text: '{{ template "slack.alertmanager.text" . }}'
 - name: email
   email_configs:
-  - to: clayton.oneill@gmail.com
+  - to: clayton@oneill.net
     send_resolved: true
