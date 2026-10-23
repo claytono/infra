@@ -1,7 +1,7 @@
 #!/bin/bash -xve
 
 # renovate: datasource=github-releases depName=GAM-team/got-your-back
-VERSION=1.95
+VERSION=1.97
 ARCH=$(uname -m)
 URL="https://github.com/GAM-team/got-your-back/releases/download/v${VERSION}/gyb-${VERSION}-linux-${ARCH}-glibc2.35.tar.xz"
 
@@ -11,8 +11,12 @@ apt install curl xz-utils -y
 
 curl -L -o gyb.tar.xz "$URL"
 tar xvf gyb.tar.xz
-mv gyb/gyb /usr/local/bin
-rm -rf gyb gyb.tar.xz
+# Since 1.97 the release is a launcher plus a lib/ directory it loads
+# from beside itself, so install the whole directory and link the
+# launcher onto the PATH.
+mv gyb /opt/gyb
+ln -s /opt/gyb/gyb /usr/local/bin/gyb
+rm gyb.tar.xz
 
 cd /data
 
