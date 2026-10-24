@@ -10,6 +10,9 @@
 #     L = Long test every Saturday at 3:00-4:00 AM
 # -m root: Send alerts to root (forwarded to {{ relaymail_overwrite_to_target | default('root') }} via Postfix)
 # -M exec: Use smartd-runner for email delivery (Debian/Ubuntu default)
+{# -d TYPE limits DEVICESCAN to smartd_devicescan_types. Unset means
+   auto-detection, which the Pis' USB bridges need. A Jinja comment so hosts
+   without the variable keep a byte-identical smartd.conf. -#}
 #
 # Email notifications are sent for:
 # - SMART health status failures
@@ -18,4 +21,4 @@
 # - Temperature excursions (if supported)
 # - Changes in SMART attributes beyond thresholds
 
-DEVICESCAN -a -o on -S on -s (S/../.././02|L/../../6/03) -m root -M exec /usr/share/smartmontools/smartd-runner
+DEVICESCAN {% for type in smartd_devicescan_types | default([]) %}-d {{ type }} {% endfor %}-a -o on -S on -s (S/../.././02|L/../../6/03) -m root -M exec /usr/share/smartmontools/smartd-runner
