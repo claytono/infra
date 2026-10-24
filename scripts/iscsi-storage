@@ -52,6 +52,38 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+# Set by --yes on the commands that change workloads
+SKIP_CONFIRM=false
+
+# Parse a command's options; the first argument is its usage function
+parse_command_args() {
+    local usage_fn=$1
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help) "$usage_fn" ;;
+            -y|--yes) SKIP_CONFIRM=true ;;
+            *)
+                log_error "Unknown option: $1"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+}
+
+# Ask before changing workloads; --yes answers for the user
+confirm() {
+    local prompt=$1
+    if [[ "$SKIP_CONFIRM" == true ]]; then
+        log_info "$prompt (confirmed by --yes)"
+        return 0
+    fi
+    read -p "$(echo -e "${YELLOW}${prompt} [y/N]${NC} ")" -n 1 -r
+    echo
+    [[ $REPLY =~ ^[Yy]$ ]]
+}
+
 usage() {
     cat <<EOF
 Usage: $(basename "$0") <command> [options]
@@ -198,9 +230,11 @@ EOF
 
 usage_restart() {
     cat <<EOF
-Usage: $(basename "$0") restart
+Usage: $(basename "$0") restart [--yes]
 
 Restart pods using iSCSI storage (quick recovery).
+
+  -y, --yes   Skip the confirmation prompt
 
 Deletes all pods that use synology-iscsi PVCs and waits for them to be
 recreated and become healthy. This is useful for quick recovery from
@@ -214,9 +248,11 @@ EOF
 
 usage_down() {
     cat <<EOF
-Usage: $(basename "$0") down
+Usage: $(basename "$0") down [--yes]
 
 Scale down workloads for storage maintenance.
+
+  -y, --yes   Skip the confirmation prompt
 
 Discovers all workloads using synology-iscsi storage, annotates them with
 their current replica count, then scales them all to 0 replicas.
@@ -231,9 +267,11 @@ EOF
 
 usage_up() {
     cat <<EOF
-Usage: $(basename "$0") up
+Usage: $(basename "$0") up [--yes]
 
 Restore workloads after storage maintenance.
+
+  -y, --yes   Skip the confirmation prompt
 
 Finds workloads annotated by 'down', scales them back to their original
 replica counts, removes the annotation, and monitors pod health until
@@ -300,7 +338,7 @@ cmd_status() {
 }
 
 cmd_restart() {
-    [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]] && usage_restart
+    parse_command_args usage_restart "$@"
     log_info "Finding iSCSI persistent volume claims..."
     local iscsi_pvcs
     iscsi_pvcs=$(discover_iscsi_pvcs)
@@ -348,9 +386,7 @@ cmd_restart() {
     done
 
     echo
-    read -p "$(echo -e "${YELLOW}Proceed with restarting ${#pod_to_delete[@]} pod(s)? [y/N]${NC} ")" -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ! confirm "Proceed with restarting ${#pod_to_delete[@]} pod(s)?"; then
         log_info "Aborted"
         return 0
     fi
@@ -381,7 +417,7 @@ cmd_restart() {
 }
 
 cmd_down() {
-    [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]] && usage_down
+    parse_command_args usage_down "$@"
 
     log_info "Discovering iSCSI workloads..."
     local workloads
@@ -417,9 +453,7 @@ cmd_down() {
     echo "$workloads" | jq -r '.[] | "  - \(.namespace)/\(.kind)/\(.name) (replicas: \(.replicas))"'
 
     echo
-    read -p "$(echo -e "${YELLOW}Scale down $count workload(s) to 0 replicas? [y/N]${NC} ")" -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ! confirm "Scale down $count workload(s) to 0 replicas?"; then
         log_info "Aborted"
         return 0
     fi
@@ -471,7 +505,7 @@ cmd_down() {
 }
 
 cmd_up() {
-    [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]] && usage_up
+    parse_command_args usage_up "$@"
 
     log_info "Finding workloads with maintenance annotations..."
 
@@ -519,9 +553,7 @@ cmd_up() {
     echo "$workloads_json" | jq -r '.[] | "  - \(.namespace)/\(.kind)/\(.name) (\(.annotation))"'
 
     echo
-    read -p "$(echo -e "${YELLOW}Restore $count workload(s)? [y/N]${NC} ")" -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ! confirm "Restore $count workload(s)?"; then
         log_info "Aborted"
         return 0
     fi
