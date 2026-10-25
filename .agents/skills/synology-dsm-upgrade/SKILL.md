@@ -129,16 +129,14 @@ export.
     ```bash
     scripts/iscsi-storage status
     ssh p1 sudo qm list
-    ssh luser 'findmnt -t nfs,nfs4 -n -o TARGET,OPTIONS | cut -c1-120; sudo fuser -vm $(findmnt -t nfs,nfs4 -n -o TARGET) 2>&1'
     kubectl get cronjobs -A -o custom-columns=NS:.metadata.namespace,NAME:.metadata.name,SCHEDULE:.spec.schedule,TZ:.spec.timeZone
     kubectl -n velero get schedules -o custom-columns=NAME:.metadata.name,SCHEDULE:.spec.schedule,PAUSED:.spec.paused
     ```
 
     For each VM `qm list` shows as `running`, check
     `ssh p1 sudo qm config <vmid>` for a disk on `proxmox-ssd:`. Expect k1
-    (VMID 134) as the only running VM on `proxmox-ssd`. On luser, report any
-    process using a `soft` mount: it gets I/O errors during the outage. If
-    `daily-iscsi-backups` is already paused, stop and ask the user.
+    (VMID 134) as the only running VM on `proxmox-ssd`. If `daily-iscsi-backups`
+    is already paused, stop and ask the user.
 
 **GATE 1**: present the target version, release-note highlights, the precheck
 result, the inventory and the next scheduled run of each CronJob and Velero
