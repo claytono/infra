@@ -52,7 +52,12 @@ spec:
         - name: UI_BASE_URL
           value: https://minuspod.k.oneill.net
         - name: LLM_PROVIDER
-          value: openrouter
+          value: anthropic
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minuspod-anthropic-env
+              key: ANTHROPIC_API_KEY
         - name: OPENROUTER_API_KEY
           valueFrom:
             secretKeyRef:
