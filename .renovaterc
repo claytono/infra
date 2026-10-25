@@ -401,6 +401,16 @@
       "description": "Block radarr 6.x"
     },
     {
+      "description": "Hermes Agent: rank the old dated tags (v2026.x) below numbered releases so Renovate offers the move to v0.x",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/nousresearch/hermes-agent"
+      ],
+      "versioning": "regex:^v(?:20\\d{2}\\.\\d+\\.\\d+(?:\\.\\d+)?|(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+))$"
+    },
+    {
       "matchManagers": [
         "pre-commit"
       ],
