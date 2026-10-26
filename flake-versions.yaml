@@ -10,7 +10,7 @@ bats: 1.14.0
 ccache: 4.14.1
 curl: 8.22.0
 efficient-compression-tool: 0.9.5
-go-unifi-mcp: b80e9aa86cd5f28f2500bb6ccce785d507a984f3
+go-unifi-mcp: 98990c5168432a677e3056a47740d08117a6abbe
 jq: 1.8.2
 kopia: 0.23.1
 kubecolor: 0.8.0
