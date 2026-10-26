@@ -188,16 +188,6 @@
 
           pythonEnv = mkPythonEnv pkgs;
 
-          # This repo does not use pre-commit's .NET support. Keep the SDK
-          # placeholder used for aarch64-darwin and skip the upstream tests
-          # that require the real dotnet executable.
-          # https://github.com/NixOS/nixpkgs/issues/294088
-          pre-commit = (pkgs.pre-commit.override {
-            dotnet-sdk = pkgs.emptyDirectory;
-          }).overrideAttrs (oldAttrs: {
-            disabledTests = (oldAttrs.disabledTests or []) ++ [ "test_dotnet_" ];
-          });
-
         in
         {
           default = pkgs.mkShell {
