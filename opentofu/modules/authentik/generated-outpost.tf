@@ -43,6 +43,7 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.netdata.id,
     authentik_provider_proxy.prometheus.id,
     authentik_provider_proxy.prowlarr.id,
+    authentik_provider_proxy.pulshealth.id,
     authentik_provider_proxy.qbit-manage.id,
     authentik_provider_proxy.radarr.id,
     authentik_provider_proxy.readest-hardcover-sync.id,

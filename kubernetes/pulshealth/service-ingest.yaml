@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: pulshealth-ingest
+  labels:
+    app: pulshealth
+
+spec:
+  selector:
+    app: pulshealth
+  ports:
+  - name: http
+    port: 8080
+    targetPort: ingest
+    protocol: TCP

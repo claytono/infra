@@ -718,6 +718,23 @@
       "matchPackageNames": [
         "containerd/containerd"
       ]
+    },
+    {
+      "description": "PulsHealth's ingest, api and web images are one release, and kubernetes/pulshealth/render fails unless their tags match, so update them in one PR.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/pulshealth/**"
+      ],
+      "groupName": "pulshealth"
+    },
+    {
+      "description": "PulsHealth's TimescaleDB image follows upstream PulsHealth's pinned database image and is updated by hand (.renovate-eval.md, PulsHealth Updates).",
+      "matchPackageNames": [
+        "docker.io/timescale/timescaledb-ha"
+      ],
+      "enabled": false
     }
   ],
   "gitIgnoredAuthors": [
