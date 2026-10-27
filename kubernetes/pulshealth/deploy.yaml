@@ -1,0 +1,208 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: pulshealth
+  labels:
+    app: pulshealth
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pulshealth
+  template:
+    metadata:
+      labels:
+        app: pulshealth
+      annotations:
+        reloader.stakater.com/auto: 'true'
+    spec:
+      automountServiceAccountToken: false
+      initContainers:
+      # Upstream's schema migrator, in place of Compose's one-shot `migrate`
+      # service. The apps share its pod so that none of them starts until it
+      # has applied every migration successfully. The only container given
+      # the superuser password.
+      - name: migrate
+        image: docker.io/timescale/timescaledb-ha:pg17.11-ts2.29.2@sha256:078e1753d0cf680103e1d70121ead63335ad5952328650d43ccab593097e7ae2
+        command:
+        - bash
+        - /puls/bin/migrate.sh
+        env:
+        - name: PGHOST
+          value: pulshealth-postgres-rw
+        - name: PGPORT
+          value: '5432'
+        - name: PGSSLMODE
+          value: verify-full
+        - name: PGSSLROOTCERT
+          value: /etc/pulshealth-db/ca.crt
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_DB
+          value: pulshealth
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-postgres-superuser
+              key: password
+        - name: MIGRATIONS_DIR
+          value: /puls/migrations
+        - name: GRAFANA_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-db-roles
+              key: GRAFANA_DB_PASSWORD
+        - name: API_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-db-roles
+              key: API_DB_PASSWORD
+        - name: INGEST_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-db-roles
+              key: INGEST_DB_PASSWORD
+        # Calendar zone for the daily views; must match the iPhone's.
+        - name: PULS_TIME_ZONE
+          value: America/New_York
+        volumeMounts:
+        - name: migrate-bin
+          mountPath: /puls/bin
+          readOnly: true
+        - name: migrations
+          mountPath: /puls/migrations
+          readOnly: true
+        - name: db-ca
+          mountPath: /etc/pulshealth-db
+          readOnly: true
+      containers:
+      - name: ingest
+        image: ghcr.io/pulshealth/ingest:0.3.0@sha256:99f9245f7df29770d65b451bea0105b5c47ee0a769872bce1703ac734adf4c40
+        env:
+        - name: INGEST_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-db-roles
+              key: INGEST_DB_PASSWORD
+        - name: DATABASE_URL
+          value: postgres://ingest:$(INGEST_DB_PASSWORD)@pulshealth-postgres-rw:5432/pulshealth?sslmode=verify-full&sslrootcert=/etc/pulshealth-db/ca.crt
+        - name: LISTEN_ADDR
+          value: :8080
+        # Per-device tokens only; no shared PULS_TOKEN.
+        - name: PULS_ALLOW_SHARED_TOKEN
+          value: 'false'
+        # Not read by the server: `ingest devices issue` puts it in the
+        # pairing link it prints.
+        - name: PULS_PUBLIC_URL
+          value: https://pulshealth-ingest.cow-banjo.ts.net
+        ports:
+        - name: ingest
+          containerPort: 8080
+        # No liveness probe: /healthz pings the database, so one would restart
+        # ingest whenever Postgres restarts.
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: ingest
+        volumeMounts:
+        - name: db-ca
+          mountPath: /etc/pulshealth-db
+          readOnly: true
+      - name: api
+        image: ghcr.io/pulshealth/api:0.3.0@sha256:938c6610df687333b6ff3ef9f76d0bd2a187b488dd6a91eaf6d91684af0c4367
+        env:
+        - name: API_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-db-roles
+              key: API_DB_PASSWORD
+        - name: DATABASE_URL
+          value: postgres://api_reader:$(API_DB_PASSWORD)@pulshealth-postgres-rw:5432/pulshealth?sslmode=verify-full&sslrootcert=/etc/pulshealth-db/ca.crt
+        - name: PULS_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-api-token
+              key: PULS_API_TOKEN
+        - name: LISTEN_ADDR
+          value: :8081
+        - name: PULS_USER_ID
+          value: 5ea4d000-0000-4000-8000-000000000001
+        - name: PULS_MULTI_USER
+          value: 'false'
+        # Must match the zone the migrator stores on the database; the api
+        # refuses to start otherwise.
+        - name: PULS_TIME_ZONE
+          value: America/New_York
+        ports:
+        - name: api
+          containerPort: 8081
+        # No liveness probe: /healthz pings the database, so one would restart
+        # the api whenever Postgres restarts.
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: api
+        volumeMounts:
+        - name: db-ca
+          mountPath: /etc/pulshealth-db
+          readOnly: true
+      - name: web
+        image: ghcr.io/pulshealth/web:0.3.0@sha256:eeb678d648b6a75665691882fa9ffd2cdecfd3c5f4721ba70ee3f106ed66db91
+        env:
+        - name: GRAFANA_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pulshealth-db-roles
+              key: GRAFANA_DB_PASSWORD
+        # The read-only grafana role, as upstream's viewer uses outside
+        # accounts mode.
+        - name: DATABASE_URL
+          value: postgres://grafana:$(GRAFANA_DB_PASSWORD)@pulshealth-postgres-rw:5432/pulshealth?sslmode=verify-full&sslrootcert=/etc/pulshealth-db/ca.crt
+        - name: PULS_USER_ID
+          value: 5ea4d000-0000-4000-8000-000000000001
+        - name: PULS_TIME_ZONE
+          value: America/New_York
+        # No WEB_AUTH_PASSWORD: Authentik in front of the Ingress is the only
+        # login.
+        - name: WEB_ACCOUNTS
+          value: 'false'
+        # Each page runs several queries at once; with upstream's default of 4
+        # connections, a few pages loading together time out waiting for one.
+        - name: WEB_DB_POOL_SIZE
+          value: '16'
+        ports:
+        - name: web
+          containerPort: 3000
+        # No liveness probe: /api/healthz pings the database, so one would
+        # restart the viewer whenever Postgres restarts.
+        readinessProbe:
+          httpGet:
+            path: /api/healthz
+            port: web
+        volumeMounts:
+        - name: db-ca
+          mountPath: /etc/pulshealth-db
+          readOnly: true
+      volumes:
+      - name: migrate-bin
+        configMap:
+          name: pulshealth-migrate-bin
+      - name: migrations
+        projected:
+          sources:
+          - configMap:
+              name: pulshealth-migrate-sql
+          - configMap:
+              name: pulshealth-migrate-scripts
+      # Only ca.crt: the same Secret holds CNPG's CA private key.
+      - name: db-ca
+        secret:
+          secretName: pulshealth-postgres-ca
+          items:
+          - key: ca.crt
+            path: ca.crt

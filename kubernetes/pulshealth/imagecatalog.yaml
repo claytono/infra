@@ -1,0 +1,16 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ImageCatalog
+
+metadata:
+  name: pulshealth-timescaledb
+
+spec:
+  images:
+  # CNPG reads the PostgreSQL major from an imageName tag and rejects
+  # Timescale's (pg17.11-ts2.29.2: "invalid version tag"), so this catalog
+  # declares the major. Must be the TimescaleDB image upstream PulsHealth's
+  # compose file runs the database with, for the release the app images run,
+  # which ./render checks.
+  - major: 17
+    image: docker.io/timescale/timescaledb-ha:pg17.11-ts2.29.2@sha256:078e1753d0cf680103e1d70121ead63335ad5952328650d43ccab593097e7ae2

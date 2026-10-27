@@ -1,0 +1,32 @@
+---
+# Authentik forward auth is the viewer's only login: WEB_AUTH_PASSWORD is
+# unset in deploy.yaml.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: pulshealth-web
+  annotations:
+    ak-type: simple
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: PulsHealth
+    gethomepage.dev/description: Apple Health viewer
+    gethomepage.dev/group: Productivity
+    gethomepage.dev/icon: mdi-heart-pulse
+    gethomepage.dev/pod-selector: app=pulshealth
+
+spec:
+  tls:
+  - hosts:
+    - pulshealth.k.oneill.net
+  rules:
+  - host: pulshealth.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pulshealth-web
+            port:
+              number: 3000

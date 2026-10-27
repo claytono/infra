@@ -1,0 +1,53 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+
+metadata:
+  name: pulshealth-postgres
+
+spec:
+  inheritedMetadata:
+    annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port: '9187'
+
+  instances: 1
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ImageCatalog
+    name: pulshealth-timescaledb
+    major: 17
+  # timescaledb-ha runs PostgreSQL as postgres (UID/GID 1000), not CNPG's 26.
+  postgresUID: 1000
+  postgresGID: 1000
+  # Upstream's migrator creates the extension and the scoped roles, and owns
+  # its SECURITY DEFINER functions, all as the superuser.
+  enableSuperuserAccess: true
+  enablePDB: false
+  primaryUpdateMethod: switchover
+  smartShutdownTimeout: 0
+
+  postgresql:
+    shared_preload_libraries:
+    - timescaledb
+    parameters:
+      timescaledb.telemetry_level: 'off'
+      # timescaledb-tune's value for under 8 GB of memory (PostgreSQL's
+      # default is 64); TimescaleDB locks every chunk a statement touches.
+      max_locks_per_transaction: '128'
+      # TimescaleDB needs max_worker_processes >= 3 + its background workers
+      # + max_parallel_workers; CNPG's defaults (32 and 32) would leave its
+      # job workers no room.
+      max_parallel_workers: '8'
+      timescaledb.max_background_workers: '8'
+
+  storage:
+    size: 20Gi
+    pvcTemplate:
+      accessModes:
+      - ReadWriteOncePod
+
+  bootstrap:
+    initdb:
+      database: pulshealth
+      owner: pulshealth

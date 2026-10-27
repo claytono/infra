@@ -24,6 +24,7 @@ resource "tailscale_acl" "main" {
             "tag:camofox": ["tag:k8s-operator"],
             "tag:felix": ["tag:k8s-operator"],
             "tag:ollama": ["tag:k8s-operator"],
+            "tag:pulshealth": ["tag:k8s-operator"],
         },
 
         // Define access control lists for users, groups, autogroups, tags,
