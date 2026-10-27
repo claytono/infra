@@ -60,6 +60,16 @@ logger:
     # to silence this module's errors without granting unused
     # NET_ADMIN/NET_RAW capabilities.
     habluetooth.manager: fatal
+  filters:
+    # rest_command logs the rendered payload of any call that gets an
+    # HTTP error. For the Eight Sleep login that payload holds the account
+    # password (packages/eight_sleep_warmup.yaml), so drop those lines; the
+    # script reports login failures to Slack instead.
+    homeassistant.components.rest_command:
+    - auth-api\.8slp\.net
+    # Matches the login body itself, in case a redirect changes the URL
+    # the warning reports.
+    - grant_type
 
 homekit:
   filter:

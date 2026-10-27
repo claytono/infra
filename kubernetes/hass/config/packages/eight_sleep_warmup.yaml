@@ -1,0 +1,310 @@
+---
+# Undo manual warm-ups made late in the night.
+#
+# A manual change on the Eight Sleep Pod is stored as a per-phase override,
+# and Autopilot stops adjusting until the next phase starts. During Dawn
+# (bed_state_type smart:final), the last phase, that freezes the level for
+# the rest of the night. A warm-up made after getting back into bed then
+# stays in place until morning.
+#
+# Twenty minutes after the level rises during Dawn, clear the overrides
+# through the Eight Sleep API so Autopilot takes over again. Over 102
+# nights, sleep resumed within 9 minutes of a Dawn warm-up 90% of the time
+# (14 at most), so 20 minutes leaves the warmth in place until then.
+#
+# HA cannot tell a manual change from an Autopilot one, so every rise
+# starts the wait. When it runs out, the script reads Eight Sleep's list of
+# manual changes and clears it only if it holds a Dawn entry (finalSleep),
+# so a wait started by Autopilot ends without a clear or a message.
+# Any drop during the wait cancels it: after a manual change Autopilot
+# stops adjusting, so a drop then can only be someone turning it down.
+#
+# The eight_sleep custom integration has no service for clearing, so log
+# in and PUT {"overrideLevels": {}} with rest_commands. Never retry the
+# login in a loop: Eight Sleep answers repeated failed logins with
+# long-lasting 429s.
+
+# Eight Sleep API calls. The script below runs them in order: log in for a
+# bearer token and the account's user ID, read the current overrides, then
+# clear them if there is a Dawn entry. They are plain HTTP calls; whether
+# they worked is decided by the script from the returned status and body.
+rest_command:
+  # The whole JSON body (app client ID/secret plus the account login) is
+  # one secret rendered by the hass-secrets-file ExternalSecret, since
+  # !secret cannot be embedded inside a payload template. A failed call
+  # logs its payload, so configuration.yaml filters this URL out of the
+  # rest_command logger.
+  eight_sleep_login:
+    url: https://auth-api.8slp.net/v1/tokens
+    method: post
+    content_type: application/json
+    payload: !secret eight_sleep_login_payload
+    timeout: 20
+
+  # Deliberately fails, for exercising the script's login-failure path.
+  # It uses a made-up account, but whether Eight Sleep's lockout after
+  # failed logins counts per account or per source IP is unknown, so run
+  # it once per test, never repeatedly.
+  eight_sleep_login_bogus:
+    url: https://auth-api.8slp.net/v1/tokens
+    method: post
+    content_type: application/json
+    payload: >-
+      {"client_id": "bogus", "client_secret": "bogus",
+      "grant_type": "password", "username": "nobody@example.invalid",
+      "password": "bogus"}
+    timeout: 20
+
+  # Reads the side's temperature settings, including overrideLevels: the
+  # manual changes still in effect, one entry per phase.
+  eight_sleep_get_temperature:
+    url: 'https://app-api.8slp.net/v1/users/{{ user_id }}/temperature'
+    method: get
+    headers:
+      Authorization: 'Bearer {{ token }}'
+    timeout: 20
+
+  # Replaces the per-phase overrides (e.g. {"bedtime": 24}) with none, which
+  # drops the Pod back to the level Autopilot scheduled for the current
+  # phase without restarting the phase. user_id and token come from the
+  # login response.
+  eight_sleep_clear_override:
+    url: 'https://app-api.8slp.net/v1/users/{{ user_id }}/temperature'
+    method: put
+    headers:
+      Authorization: 'Bearer {{ token }}'
+    content_type: application/json
+    payload: '{"overrideLevels": {}}'
+    timeout: 20
+
+# The wait between a rise and the hand-back. restore keeps it running
+# across HA restarts. Always start it with an explicit duration: after a
+# restore, a start without one reuses the time that was left.
+timer:
+  eight_sleep_warmup_handback:
+    name: Eight Sleep warm-up hand-back
+    duration: '00:20:00'
+    restore: true
+
+# On while a hand-back is pending. A timer that runs out while HA is
+# starting fires before automations are listening, so the hand-back
+# automation also checks this on startup.
+input_boolean:
+  eight_sleep_handback_due:
+    name: Eight Sleep hand-back due
+    icon: mdi:timer-sand
+
+script:
+  # Runs once per call and never retries: a failed login is reported and
+  # the script stops, since repeated failed logins trigger long-lasting
+  # 429s.
+  #
+  # rest_command returns HTTP errors as a normal response but raises on
+  # timeouts and connection errors. continue_on_error keeps those raised
+  # errors from aborting the script, so each call is followed by a check
+  # that alerts on both outcomes; a raised error leaves the response
+  # variable undefined.
+  eight_sleep_clear_warmup:
+    alias: Clear Eight Sleep warm-up override
+    description: >-
+      Log in to Eight Sleep and, if the side has a Dawn override, clear
+      its per-phase overrides so Autopilot takes over. Reports to Slack
+      when a Dawn warm-up was cleared, or when a call fails.
+    mode: single
+    fields:
+      note:
+        description: Text appended to the success message, e.g. " (dry run)".
+        example: ' (dry run)'
+      login_command:
+        description: >-
+          Login action to call. Set to rest_command.eight_sleep_login_bogus to
+          test the failure path.
+        example: rest_command.eight_sleep_login_bogus
+    sequence:
+    # For the log line and the check before clearing. Target Heating Level
+    # is Eight Sleep's exact level; the app shows it divided by 10.
+    - variables:
+        level_before: >-
+          {{ state_attr('sensor.clayton_s_eight_sleep_side_bed_state',
+          'Target Heating Level') }}
+    # Normally the real login; the bogus one lets the failure alert be
+    # tested without touching the account.
+    - service: "{{ login_command | default('rest_command.eight_sleep_login') }}"
+      response_variable: login
+      continue_on_error: true
+    - if:
+      - condition: template
+        value_template: >
+          {{ login is not defined or login.status != 200
+             or login.content is not mapping
+             or not login.content.get('access_token')
+             or not login.content.get('userId') }}
+      then:
+      - service: notify.clayton
+        data:
+          message: >-
+            Eight Sleep login failed ({{ 'HTTP %s' % login.status if login is
+            defined else 'no response' }}) — the Pod was NOT handed back to
+            Autopilot.
+      - stop: Eight Sleep login failed
+    # Read the overrides first. Dawn's entry is finalSleep. Without one
+    # there is no Dawn warm-up to undo (Autopilot's own rises also start
+    # the countdown), so stop without clearing. If the read fails, clear
+    # anyway and stay silent.
+    - service: rest_command.eight_sleep_get_temperature
+      data:
+        user_id: '{{ login.content.userId }}'
+        token: '{{ login.content.access_token }}'
+      response_variable: settings
+      continue_on_error: true
+    - variables:
+        overrides: >-
+          {{ settings.content.get('overrideLevels')
+             if settings is defined and settings.content is mapping else none }}
+    - service: system_log.write
+      data:
+        logger: eight_sleep_warmup
+        level: info
+        message: >-
+          Overrides before clear: {{ overrides if overrides is not none
+          else 'unavailable' }} (phase {{
+          states('sensor.clayton_s_eight_sleep_side_bed_state_type') }}, level
+          {{ level_before }})
+    - if:
+      - condition: template
+        value_template: "{{ overrides is mapping and 'finalSleep' not in overrides }}"
+      then:
+      - stop: No Dawn warm-up to undo
+    # A level change since this run started has restarted or cancelled
+    # the wait, so leave the overrides to that.
+    - condition: template
+      value_template: >-
+        {{ state_attr('sensor.clayton_s_eight_sleep_side_bed_state',
+           'Target Heating Level') == level_before }}
+    - service: rest_command.eight_sleep_clear_override
+      data:
+        user_id: '{{ login.content.userId }}'
+        token: '{{ login.content.access_token }}'
+      response_variable: clear
+      continue_on_error: true
+    - if:
+      - condition: template
+        value_template: '{{ clear is not defined or not (200 <= clear.status < 300) }}'
+      then:
+      - service: notify.clayton
+        data:
+          message: >-
+            Eight Sleep override clear failed ({{ 'HTTP %s' % clear.status if
+            clear is defined else 'no response' }}) — the Pod was NOT handed
+            back to Autopilot.
+      - stop: Eight Sleep override clear failed
+    # finalSleep holds the level that was set by hand; the app shows it
+    # divided by 10.
+    - if:
+      - condition: template
+        value_template: "{{ overrides is mapping and 'finalSleep' in overrides }}"
+      then:
+      - service: notify.clayton
+        data:
+          message: >-
+            Handed the Pod back to Autopilot after a warm-up to
+            {{ '%+.1f' % (overrides.finalSleep / 10) }}{{ note | default('') }}.
+
+automation:
+- alias: Start or cancel the Eight Sleep Dawn hand-back
+  id: eight_sleep_dawn_handback_timer
+  description: >-
+    During Dawn, a rise in the Pod's level starts the 20-minute hand-back
+    wait and a drop cancels it.
+  mode: queued
+  trigger:
+  - platform: state
+    entity_id: sensor.clayton_s_eight_sleep_side_bed_state
+    attribute: Target Heating Level
+  condition:
+  # A real level change, not the sensor appearing or going unavailable.
+  - condition: template
+    value_template: >
+      {{ trigger.from_state is not none and trigger.to_state is not none
+         and trigger.from_state.attributes.get('Target Heating Level') is number
+         and trigger.to_state.attributes.get('Target Heating Level') is number }}
+  # Only Dawn: earlier phases end on their own, which lets Autopilot
+  # resume, so their overrides are left alone.
+  - condition: state
+    entity_id: sensor.clayton_s_eight_sleep_side_bed_state_type
+    state: smart:final
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: >
+          {{ trigger.to_state.attributes['Target Heating Level']
+             > trigger.from_state.attributes['Target Heating Level'] }}
+      sequence:
+      # A further rise restarts the wait from the full 20 minutes.
+      - service: timer.start
+        target:
+          entity_id: timer.eight_sleep_warmup_handback
+        data:
+          duration: '00:20:00'
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.eight_sleep_handback_due
+    default:
+    - service: timer.cancel
+      target:
+        entity_id: timer.eight_sleep_warmup_handback
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.eight_sleep_handback_due
+
+- alias: Hand the Eight Sleep Pod back to Autopilot after a Dawn warm-up
+  id: eight_sleep_dawn_handback
+  description: >-
+    When the hand-back wait runs out, or HA starts with a hand-back still
+    due, clear the overrides if the Pod is on and still in Dawn.
+  mode: single
+  trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.eight_sleep_warmup_handback
+  - platform: homeassistant
+    event: start
+  condition:
+  - condition: state
+    entity_id: input_boolean.eight_sleep_handback_due
+    state: 'on'
+  # On startup a restored timer may still be running; it will finish and
+  # trigger this again.
+  - condition: state
+    entity_id: timer.eight_sleep_warmup_handback
+    state: idle
+  action:
+  # At startup the Eight Sleep entities may not have loaded yet.
+  - wait_template: >
+      {{ states('sensor.clayton_s_eight_sleep_side_bed_state_type')
+         not in ['unknown', 'unavailable'] }}
+    timeout:
+      minutes: 5
+  # A rise during the wait above restarted the countdown and a drop
+  # cancelled the hand-back; leave it to those.
+  - condition: state
+    entity_id: timer.eight_sleep_warmup_handback
+    state: idle
+  - condition: state
+    entity_id: input_boolean.eight_sleep_handback_due
+    state: 'on'
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.eight_sleep_handback_due
+  # Skip if the Pod was turned off or Dawn ended during the wait.
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: climate.clayton_s_eight_sleep_side_climate
+      state: 'off'
+  - condition: state
+    entity_id: sensor.clayton_s_eight_sleep_side_bed_state_type
+    state: smart:final
+  - service: script.eight_sleep_clear_warmup

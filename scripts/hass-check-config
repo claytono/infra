@@ -32,6 +32,7 @@ twilio_auth_token: fake
 twilio_number: "+15555555555"
 my_phone: "+15555555555"
 opengarage_device_key: fake
+eight_sleep_login_payload: "{}"
 EOF
 
 # Run Home Assistant config check in Docker
