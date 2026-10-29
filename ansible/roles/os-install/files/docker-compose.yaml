@@ -13,7 +13,7 @@ services:
 
   nginx:
     # renovate: datasource=docker
-    image: nginx:1.31-alpine@sha256:060849a174666c53439dc7cecbf8f67e225c7cbfb1a44ca97915d9a172a81e6d
+    image: nginx:1.31-alpine@sha256:785835ea65db4bba6f021acc0f3be91b0fef76a53fe41f8588c6698d2aed0606
     restart: unless-stopped
     ports:
       # Keep 8081 for iPXE boot (can't use HTTPS)
