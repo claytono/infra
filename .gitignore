@@ -17,6 +17,16 @@ ansible/.ansible
 ansible/galaxy/**/*.png
 ansible/galaxy/**/FILES.json
 ansible/galaxy/**/MANIFEST.json
+# Upstream dev/test dependency files. Nothing installs from them, but
+# GitHub scans them and raises Dependabot alerts for packages we never
+# run. Keep anything under files/ or templates/, since a role may deploy it.
+ansible/galaxy/**/uv.lock
+ansible/galaxy/**/poetry.lock
+ansible/galaxy/**/pyproject.toml
+ansible/galaxy/**/Pipfile*
+ansible/galaxy/**/*requirements*.txt
+!ansible/galaxy/**/files/**
+!ansible/galaxy/**/templates/**
 
 # OpenTofu/Terraform
 *.tfstate
