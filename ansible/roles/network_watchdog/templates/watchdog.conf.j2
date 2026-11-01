@@ -1,0 +1,20 @@
+{{ ansible_managed | comment }}
+# Network checks only. systemd owns the hardware watchdog
+# (RuntimeWatchdogSec in /usr/lib/systemd/system.conf.d/), and only one
+# process can open it, so watchdog-device is deliberately unset.
+
+interval = {{ network_watchdog_interval }}
+{% if wifi_ssid is defined %}
+# The first repair restarts Wi-Fi. watchdog then waits another retry-timeout
+# and, with the network still down, reboots without calling repair again, so
+# the two halves add up to network_watchdog_timeout.
+retry-timeout = {{ network_watchdog_timeout // 2 }}
+repair-maximum = 1
+{% else %}
+retry-timeout = {{ network_watchdog_timeout }}
+{% endif %}
+test-timeout = 60
+test-directory = /etc/watchdog.d
+
+realtime = yes
+priority = 1

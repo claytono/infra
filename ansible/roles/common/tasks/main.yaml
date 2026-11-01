@@ -59,6 +59,20 @@
   ansible.builtin.import_tasks: locale.yaml
   tags: locale
 
+# Without a real-time clock, boot starts at a stale saved time. journald
+# names a journal left open by a crash after that time, so vacuum deletes
+# it as the oldest file. fake-hwclock restores the clock before that.
+- name: Check for a real-time clock
+  ansible.builtin.stat:
+    path: /sys/class/rtc/rtc0
+  register: common_rtc
+
+- name: Install fake-hwclock on hosts without a real-time clock
+  ansible.builtin.apt:
+    name: fake-hwclock
+    state: present
+  when: not common_rtc.stat.exists
+
 - name: Configure persistent journal
   ansible.builtin.include_tasks: journald.yaml
   when: "'pi' in group_names"
@@ -74,6 +88,19 @@
   ansible.builtin.import_tasks: wifi_power_save.yaml
   when: disable_wifi_power_save | default(false) | bool
   tags: wifi_power_save
+
+# Takes effect at the next boot. The [all] filter applies the overlay to every
+# model whatever section config.txt ends in.
+- name: Configure onboard Wi-Fi
+  ansible.builtin.blockinfile:
+    path: /boot/firmware/config.txt
+    marker: "# {mark} ANSIBLE MANAGED BLOCK onboard Wi-Fi"
+    block: |
+      [all]
+      dtoverlay=disable-wifi
+    state: "{{ 'present' if disable_onboard_wifi | default(false) | bool else 'absent' }}"
+  when: "'pi' in group_names"
+  tags: onboard_wifi
 
 - name: "Check if Proxmox is installed"
   ansible.builtin.stat:

@@ -1,0 +1,6 @@
+---
+# watchdog discovers test-directory scripts only at startup
+- name: Restart watchdog
+  ansible.builtin.service:
+    name: watchdog
+    state: restarted

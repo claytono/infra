@@ -1,0 +1,23 @@
+#!/bin/sh
+{{ ansible_managed | comment }}
+# watchdog test: fail only when no target answers. watchdog calls "repair"
+# once the failure has lasted retry-timeout; a non-zero exit makes it reboot.
+
+case "$1" in
+  test)
+{% for target in network_watchdog_targets %}
+    # {{ target.description }}
+    ping -c 3 -W 5 {{ target.address }} >/dev/null 2>&1 && exit 0
+{% endfor %}
+    exit 1
+    ;;
+  repair)
+{% if wifi_ssid is defined %}
+    # Restart Wi-Fi and report success so watchdog tests again. If ifup fails,
+    # fall through and let watchdog reboot now.
+    ifdown {{ network_watchdog_wifi_interface }}
+    ifup {{ network_watchdog_wifi_interface }} && exit 0
+{% endif %}
+    exit "${2:-1}"
+    ;;
+esac
