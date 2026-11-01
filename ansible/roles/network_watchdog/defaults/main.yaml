@@ -1,0 +1,17 @@
+---
+# Reboot when every target has been unreachable for this many seconds. Any
+# successful check resets the timer, so intermittent loss never reboots.
+network_watchdog_timeout: 900
+
+# Seconds between checks
+network_watchdog_interval: 30
+
+# Interface the first repair restarts on Wi-Fi hosts
+network_watchdog_wifi_interface: wlan0
+
+# Static IPs so a DNS failure cannot look like a network failure
+network_watchdog_targets:
+  - address: 172.19.74.1
+    description: UDMP (gateway)
+  - address: 172.19.74.31
+    description: infra1 (static IP, wired)

@@ -1,0 +1,40 @@
+---
+- name: Install watchdog
+  ansible.builtin.apt:
+    name: watchdog
+    state: present
+
+# wd_keepalive only keeps a watchdog device alive, and we use none. Left on, a
+# stop fails on purpose to trigger it, which cancels every restart.
+- name: Disable wd_keepalive fallback
+  ansible.builtin.lineinfile:
+    path: /etc/default/watchdog
+    regexp: ^run_wd_keepalive=
+    line: run_wd_keepalive=0
+  notify: Restart watchdog
+
+- name: Configure watchdog
+  ansible.builtin.template:
+    src: watchdog.conf.j2
+    dest: /etc/watchdog.conf
+    mode: "0644"
+  notify: Restart watchdog
+
+- name: Create watchdog test directory
+  ansible.builtin.file:
+    path: /etc/watchdog.d
+    state: directory
+    mode: "0755"
+
+- name: Install network check
+  ansible.builtin.template:
+    src: network-check.j2
+    dest: /etc/watchdog.d/network-check
+    mode: "0755"
+  notify: Restart watchdog
+
+- name: Enable watchdog service
+  ansible.builtin.service:
+    name: watchdog
+    enabled: true
+    state: started

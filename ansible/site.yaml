@@ -334,6 +334,12 @@
       when: "netdata_enabled | default(false)"
       tags: netdata
 
+- name: Network watchdog
+  hosts: pi
+  roles:
+    - role: network_watchdog
+      tags: network_watchdog
+
 - name: Docker host maintenance
   hosts: docker
   tasks:

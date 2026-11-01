@@ -8,6 +8,12 @@ wifi_country: "US"
 wifi_ssid: "bleh"
 wifi_psk: "{{ vault_wifi_psk_bleh }}"
 
+# The onboard radio's 5 GHz signal sits at the APs' minimum-RSSI join cutoff
+# from the garage. A USB adapter (MT7612U) on the wall replaces it and comes up
+# as wlan0 once the onboard radio is off. Without the adapter there is no
+# Wi-Fi at all.
+disable_onboard_wifi: true
+
 interfaces_ether_interfaces:
   - device: wlan0
     bootproto: static
