@@ -14,8 +14,10 @@
 #
 # HA cannot tell a manual change from an Autopilot one, so every rise
 # starts the wait. When it runs out, the script reads Eight Sleep's list of
-# manual changes and clears it only if it holds a Dawn entry (finalSleep),
-# so a wait started by Autopilot ends without a clear or a message.
+# manual changes and clears it only if it holds a Dawn entry (finalSleep)
+# warmer than Autopilot's planned Dawn level. A wait started by Autopilot
+# ends without a clear or a message, and so does a cool-down that ends at
+# or below that level, even one finished with a one-step nudge back up.
 # Any drop during the wait cancels it: after a manual change Autopilot
 # stops adjusting, so a drop then can only be someone turning it down.
 #
@@ -26,7 +28,7 @@
 
 # Eight Sleep API calls. The script below runs them in order: log in for a
 # bearer token and the account's user ID, read the current overrides, then
-# clear them if there is a Dawn entry. They are plain HTTP calls; whether
+# clear them if there is a Dawn warm-up. They are plain HTTP calls; whether
 # they worked is decided by the script from the returned status and body.
 rest_command:
   # The whole JSON body (app client ID/secret plus the account login) is
@@ -55,8 +57,9 @@ rest_command:
       "password": "bogus"}
     timeout: 20
 
-  # Reads the side's temperature settings, including overrideLevels: the
-  # manual changes still in effect, one entry per phase.
+  # Reads the side's temperature settings, including overrideLevels (the
+  # manual changes still in effect, one entry per phase) and smart (the
+  # level Autopilot plans for each phase).
   eight_sleep_get_temperature:
     url: 'https://app-api.8slp.net/v1/users/{{ user_id }}/temperature'
     method: get
@@ -107,9 +110,10 @@ script:
   eight_sleep_clear_warmup:
     alias: Clear Eight Sleep warm-up override
     description: >-
-      Log in to Eight Sleep and, if the side has a Dawn override, clear
-      its per-phase overrides so Autopilot takes over. Reports to Slack
-      when a Dawn warm-up was cleared, or when a call fails.
+      Log in to Eight Sleep and, if the side has a Dawn override warmer
+      than Autopilot's planned Dawn level, clear its per-phase overrides
+      so Autopilot takes over. Reports to Slack when a Dawn warm-up was
+      cleared, or when a call fails.
     mode: single
     fields:
       note:
@@ -151,6 +155,12 @@ script:
     # there is no Dawn warm-up to undo (Autopilot's own rises also start
     # the countdown), so stop without clearing. If the read fails, clear
     # anyway and stay silent.
+    #
+    # smart.finalSleepLevel is Autopilot's planned Dawn level, the base its
+    # Dawn adjustments move around. Treat a Dawn entry at or below it as a
+    # cool-down, often one that ended with a one-step nudge back up (which
+    # also starts the countdown), and leave it in place. If the planned
+    # level is missing, fall back to clearing any Dawn entry.
     - service: rest_command.eight_sleep_get_temperature
       data:
         user_id: '{{ login.content.userId }}'
@@ -161,6 +171,10 @@ script:
         overrides: >-
           {{ settings.content.get('overrideLevels')
              if settings is defined and settings.content is mapping else none }}
+        planned: >-
+          {{ settings.content.smart.get('finalSleepLevel')
+             if settings is defined and settings.content is mapping
+             and settings.content.get('smart') is mapping else none }}
     - service: system_log.write
       data:
         logger: eight_sleep_warmup
@@ -169,12 +183,19 @@ script:
           Overrides before clear: {{ overrides if overrides is not none
           else 'unavailable' }} (phase {{
           states('sensor.clayton_s_eight_sleep_side_bed_state_type') }}, level
-          {{ level_before }})
+          {{ level_before }}, planned Dawn level {{ planned }})
     - if:
       - condition: template
         value_template: "{{ overrides is mapping and 'finalSleep' not in overrides }}"
       then:
       - stop: No Dawn warm-up to undo
+    - if:
+      - condition: template
+        value_template: >-
+          {{ overrides is mapping and overrides.finalSleep is number
+             and planned is number and overrides.finalSleep <= planned }}
+      then:
+      - stop: Dawn change is not a warm-up
     # A level change since this run started has restarted or cancelled
     # the wait, so leave the overrides to that.
     - condition: template
