@@ -4,6 +4,7 @@ locals {
   cachix_github_repositories = toset([
     "dotfiles",
     "go-unifi-mcp",
+    "health-hub",
   ])
 
   # Repositories that run the shared claytono-renovate-eval workflow. Its
