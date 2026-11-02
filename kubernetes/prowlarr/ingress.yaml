@@ -5,7 +5,7 @@ kind: Ingress
 metadata:
   name: prowlarr
   annotations:
-    ak-type: basic-auth
+    ak-type: simple
     ak-path-exclude: |-
       /\d+/api.*
       /api.*

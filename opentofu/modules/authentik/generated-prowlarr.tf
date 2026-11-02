@@ -12,9 +12,6 @@ resource "authentik_provider_proxy" "prowlarr" {
   invalidation_flow     = data.authentik_flow.default_invalidation.id
   access_token_validity = "days=365"
 
-  basic_auth_enabled            = true
-  basic_auth_username_attribute = "username"
-  basic_auth_password_attribute = "password"
 
   skip_path_regex = <<-EOT
 ^https://prowlarr.k.oneill.net/\d+/api.*

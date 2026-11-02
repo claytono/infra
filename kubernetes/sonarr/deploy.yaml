@@ -36,6 +36,8 @@ spec:
           value: '10001'
         - name: TZ
           value: EST5EDT
+        - name: SONARR__AUTH__METHOD
+          value: External
         lifecycle:
           postStart:
             exec:

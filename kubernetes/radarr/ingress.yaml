@@ -5,7 +5,7 @@ kind: Ingress
 metadata:
   name: radarr
   annotations:
-    ak-type: basic-auth
+    ak-type: simple
     ak-path-exclude: /api(/|$)
     gethomepage.dev/enabled: 'true'
     gethomepage.dev/name: Radarr
