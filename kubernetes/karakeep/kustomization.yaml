@@ -23,6 +23,6 @@ images:
   newTag: 0.34.0@sha256:151cdd6b5f2e21635645983e126f411675bfa35becb02c028c1a727f45f899c6
 - name: gcr.io/zenika-hub/alpine-chrome
   newName: ghcr.io/karakeep-app/karakeep-chrome
-  newTag: 154.0.8037.57-r1@sha256:c51a8c8e6c3c1040a50fa0ecfd0b2fc298401b4229262636552458151f6f18fa
+  newTag: 156.0.8078.47-r1@sha256:4ad61127638dd27bfe685222787c5780dd1d083d23a7658c39af657775814c44
 - name: getmeili/meilisearch
   newTag: v1.54.3@sha256:e68913ab7d6f5b159529e472cfd362ce3c741fafd3c127961b2142abbe41b3c9
