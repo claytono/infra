@@ -2,7 +2,7 @@
 services:
   nut_webgui:
     # renovate: datasource=docker
-    image: ghcr.io/superioone/nut_webgui:0.10.4@sha256:fc4cf34d158d5702cb86bc326557bdb761ccdf18f6e93f688de428571070fd2b
+    image: ghcr.io/superioone/nut_webgui:0.10.5@sha256:ba1be812b61392f9c9caa6e23e40382df34341118b79c0619bbfe23426bda9f5
     restart: unless-stopped
     env_file:
       - nut_webgui.env
