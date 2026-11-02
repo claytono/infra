@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: spegel
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.8.0"
+    app.kubernetes.io/version: "v0.8.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   revisionHistoryLimit: 10
@@ -33,7 +33,7 @@ spec:
       priorityClassName: system-node-critical
       initContainers:
       - name: configuration
-        image: "ghcr.io/spegel-org/spegel@sha256:b48194957bf9b5bdcea2700536a302ade23315082b05e5a44c0822f5c301850a"
+        image: "ghcr.io/spegel-org/spegel@sha256:bdc1d14e4ab76e9a74520d331f485d09a596110118bd1a7706fa0411f17b3703"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true
@@ -60,7 +60,7 @@ spec:
             mountPath: /etc/containerd/certs.d
       containers:
       - name: registry
-        image: "ghcr.io/spegel-org/spegel@sha256:b48194957bf9b5bdcea2700536a302ade23315082b05e5a44c0822f5c301850a"
+        image: "ghcr.io/spegel-org/spegel@sha256:bdc1d14e4ab76e9a74520d331f485d09a596110118bd1a7706fa0411f17b3703"
         imagePullPolicy: IfNotPresent
         securityContext:
             readOnlyRootFilesystem: true

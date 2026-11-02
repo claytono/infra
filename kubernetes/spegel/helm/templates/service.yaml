@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.8.0"
+    app.kubernetes.io/version: "v0.8.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -32,7 +32,7 @@ metadata:
   labels:
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.8.0"
+    app.kubernetes.io/version: "v0.8.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: NodePort
@@ -58,7 +58,7 @@ metadata:
   labels:
     app.kubernetes.io/name: spegel
     app.kubernetes.io/instance: spegel
-    app.kubernetes.io/version: "v0.8.0"
+    app.kubernetes.io/version: "v0.8.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
