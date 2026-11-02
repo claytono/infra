@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.19.0"
+    app.kubernetes.io/version: "v0.20.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -17,6 +17,7 @@ subjects:
 - kind: ServiceAccount
   name: node-feature-discovery
   namespace: node-feature-discovery
+
 ---
 # Source: node-feature-discovery/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -26,7 +27,7 @@ metadata:
   labels:
     app.kubernetes.io/name: node-feature-discovery
     app.kubernetes.io/instance: node-feature-discovery
-    app.kubernetes.io/version: "v0.19.0"
+    app.kubernetes.io/version: "v0.20.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
