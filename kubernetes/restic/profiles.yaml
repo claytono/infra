@@ -43,7 +43,7 @@ hetzner:
     exclude:
     - /source/backups/arq
     - /source/backups/restic
-    - /source/k8s-pv/*-resticprofile-cache*
+    - /source/k8s-pv-slow/*-resticprofile-cache*
     - /source/k8s-pv/*-prometheus-data/
     - /source/shared/video/tv
     - /source/shared/video/channels
