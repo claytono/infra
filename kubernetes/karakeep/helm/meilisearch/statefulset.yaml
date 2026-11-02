@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: meilisearch
     app.kubernetes.io/instance: karakeep
-    app.kubernetes.io/version: "v1.13.0"
+    app.kubernetes.io/version: "v1.55.0"
     app.kubernetes.io/component: search-engine
     app.kubernetes.io/part-of: meilisearch
     app.kubernetes.io/managed-by: Helm
@@ -23,12 +23,12 @@ spec:
       labels:
         app.kubernetes.io/name: meilisearch
         app.kubernetes.io/instance: karakeep
-        app.kubernetes.io/version: "v1.13.0"
+        app.kubernetes.io/version: "v1.55.0"
         app.kubernetes.io/component: search-engine
         app.kubernetes.io/part-of: meilisearch
         app.kubernetes.io/managed-by: Helm
       annotations:
-        checksum/config: fc496f8e7457de8c064d49afeac3c06280869f29dcd1e2ddc37f4040576a20b8
+        checksum/config: 48cca11be706905734528f83bc7b60165e8a358e57f38a39dab536c5d55e2246
     spec:
       serviceAccountName: karakeep-meilisearch
       securityContext:
@@ -48,7 +48,7 @@ spec:
             
       containers:
         - name: meilisearch
-          image: "getmeili/meilisearch:v1.13.0"
+          image: "getmeili/meilisearch:v1.55.0"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -77,18 +77,21 @@ spec:
             periodSeconds: 1
             initialDelaySeconds: 1
             failureThreshold: 60
+            timeoutSeconds: 1
           livenessProbe:
             httpGet:
               path: /health
               port: http
             periodSeconds: 10
             initialDelaySeconds: 0
+            timeoutSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
               port: http
             periodSeconds: 10
             initialDelaySeconds: 0
+            timeoutSeconds: 10
           resources:
             {}
 

@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.33.1
+    app.kubernetes.io/version: 0.34.0
   namespace: karakeep
 stringData:
   MEILI_MASTER_KEY: 'bogus'
@@ -25,7 +25,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.33.1
+    app.kubernetes.io/version: 0.34.0
   namespace: karakeep
 spec:
   accessModes:
@@ -51,7 +51,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep-chrome
-    app.kubernetes.io/version: 0.33.1
+    app.kubernetes.io/version: 0.34.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -76,7 +76,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
     app.kubernetes.io/service: karakeep
-    app.kubernetes.io/version: 0.33.1
+    app.kubernetes.io/version: 0.34.0
   namespace: karakeep
 spec:
   type: ClusterIP
@@ -102,7 +102,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.33.1
+    app.kubernetes.io/version: 0.34.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -188,7 +188,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.33.1
+    app.kubernetes.io/version: 0.34.0
   namespace: karakeep
 spec:
   revisionHistoryLimit: 3
@@ -282,7 +282,7 @@ spec:
               name: karakeep-meilisearch
           - secretRef:
               name: karakeep-oidc
-          image: ghcr.io/karakeep-app/karakeep:0.33.1
+          image: ghcr.io/karakeep-app/karakeep:0.34.0
           livenessProbe:
             httpGet:
               path: /api/health
@@ -322,7 +322,7 @@ metadata:
     app.kubernetes.io/instance: karakeep
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: karakeep
-    app.kubernetes.io/version: 0.33.1
+    app.kubernetes.io/version: 0.34.0
   annotations:
     ak-oidc-callback: /api/auth/callback/custom
     ak-type: oidc
