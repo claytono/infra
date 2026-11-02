@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: radarr
-        image: linuxserver/radarr:5.28.0@sha256:c984533510abe0219a70e80d15bd0d212b7df21baa0913759c4ce6cc9092240b
+        image: linuxserver/radarr:6.3.0@sha256:fe051413dfd91b383ba04910552e83fb0306895fefee275c48dafe7bb90807dc
         ports:
         - containerPort: 7878
         volumeMounts:
@@ -40,6 +40,8 @@ spec:
           value: '10001'
         - name: TZ
           value: EST5EDT
+        - name: RADARR__AUTH__METHOD
+          value: External
       volumes:
       - name: config
         persistentVolumeClaim:

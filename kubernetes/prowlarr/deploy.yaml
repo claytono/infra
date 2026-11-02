@@ -34,6 +34,8 @@ spec:
           value: '10001'
         - name: TZ
           value: EST5EDT
+        - name: PROWLARR__AUTH__METHOD
+          value: External
       volumes:
       - name: config
         persistentVolumeClaim:
