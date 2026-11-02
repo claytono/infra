@@ -394,13 +394,6 @@
       "description": "Track official Plex version tags"
     },
     {
-      "matchPackageNames": [
-        "linuxserver/radarr"
-      ],
-      "allowedVersions": "< 6",
-      "description": "Block radarr 6.x"
-    },
-    {
       "description": "Hermes Agent: rank the old dated tags (v2026.x) below numbered releases so Renovate offers the move to v0.x",
       "matchDatasources": [
         "docker"
