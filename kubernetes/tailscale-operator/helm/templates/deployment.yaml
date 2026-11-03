@@ -27,7 +27,7 @@ spec:
             secretName: operator-oauth
       containers:
         - name: operator
-          image: tailscale/k8s-operator:v1.102.4
+          image: tailscale/k8s-operator:v1.104.1
           imagePullPolicy: Always
           env:
             - name: OPERATOR_INITIAL_TAGS
@@ -55,7 +55,7 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /oauth/client_secret
             - name: PROXY_IMAGE
-              value: tailscale/tailscale:v1.102.4
+              value: tailscale/tailscale:v1.104.1
             - name: PROXY_TAGS
               value: tag:k8s
             - name: APISERVER_PROXY
@@ -70,6 +70,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.uid
+            - name: OPERATOR_SHARED_ACME_ACCOUNT_KEY
+              value: "false"
           volumeMounts:
             - name: oauth
               mountPath: /oauth
