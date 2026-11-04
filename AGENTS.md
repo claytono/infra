@@ -21,6 +21,9 @@ including:
 - **[opentofu/](.agents/rules/opentofu/)** - OpenTofu/Terraform usage
 - **[tooling/](.agents/rules/tooling/)** - Pre-commit hooks, CI/CD, and
   Authentik integration
+- **[tooling/github-repos.md](.agents/rules/tooling/github-repos.md)** -
+  Checklist for creating a GitHub repo, making one public, or adding, renaming
+  or removing a pull-request workflow
 - **[integrations/](.agents/rules/integrations/)** - Home Assistant and other
   integrations
 - **[integrations/synology.md](.agents/rules/integrations/synology.md)** -
