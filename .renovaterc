@@ -2,7 +2,7 @@
   "extends": [
     "config:best-practices"
   ],
-  "description": "Run manually reviewed Renovate updates from midnight through 3:59 AM Eastern on the first and third Mondays of each month.",
+  "description": "Run manually reviewed Renovate updates from midnight through 3:59 AM Eastern on Mondays, split by package name so each week carries about half the review load: first and third Mondays here, second and fourth Mondays in the first packageRules entry.",
   "timezone": "America/New_York",
   "schedule": [
     "* 0-3 1-7,15-21 * 1"
@@ -307,6 +307,37 @@
     }
   ],
   "packageRules": [
+    {
+      "description": "Move packages whose name ends in a segment starting with k-z to the second and fourth Mondays; digits and a-j keep the top-level schedule. Matching the last path segment keeps registry prefixes such as ghcr.io from skewing the split. These schedule rules come before the Thursday automerge rules so those still win for automerged updates.",
+      "matchPackageNames": [
+        "/^(.*\\/)?[k-z][^/]*$/i"
+      ],
+      "schedule": [
+        "* 0-3 8-14,22-28 * 1"
+      ]
+    },
+    {
+      "description": "Keep the Kubernetes packages group in one week: cri-tools sorts before k, but its group goes with kubeadm, kubelet, kubectl and kubernetes-cni. Mirrors the group's datasources below.",
+      "matchDatasources": [
+        "custom.kubernetes-deb-kubeadm",
+        "custom.kubernetes-deb-kubelet",
+        "custom.kubernetes-deb-kubectl",
+        "custom.kubernetes-deb-cri-tools",
+        "custom.kubernetes-deb-kubernetes-cni"
+      ],
+      "schedule": [
+        "* 0-3 8-14,22-28 * 1"
+      ]
+    },
+    {
+      "description": "Keep the pulshealth group in one week: its images are named api, ingest and web, which would otherwise straddle the split.",
+      "matchPackageNames": [
+        "ghcr.io/pulshealth/**"
+      ],
+      "schedule": [
+        "* 0-3 1-7,15-21 * 1"
+      ]
+    },
     {
       "description": "Group meilisearch updates across services",
       "groupName": "meilisearch",
