@@ -3,6 +3,7 @@
 # Recyclarr Configuration (v8 format)
 # Radarr: HD Bluray + WEB, UHD Bluray + WEB
 # Sonarr: WEB-1080p, WEB-2160p
+# Deliberate departures from TRaSH: .agents/rules/tooling/recyclarr.md
 ###############################################################################
 
 radarr:
