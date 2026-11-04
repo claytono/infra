@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: cleanuparr
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cleanuparr
+      app.kubernetes.io/name: cleanuparr
+      app.kubernetes.io/instance: cleanuparr
+  template:
+    metadata:
+      labels:
+        app: cleanuparr
+        app.kubernetes.io/name: cleanuparr
+        app.kubernetes.io/instance: cleanuparr
+    spec:
+      containers:
+      - name: cleanuparr
+        image: ghcr.io/cleanuparr/cleanuparr:2.10.12@sha256:d0212e4c66bd0522e23c5e5da5d3006bd5ff0e0de1e3ecfcf892e039d55721e2
+        ports:
+        - containerPort: 11011
+        env:
+        - name: TZ
+          value: America/New_York
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: cleanuparr-config

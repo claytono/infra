@@ -21,6 +21,7 @@ radarr:
 
     quality_profiles:
     - trash_id: d1d67249d3890e49bc12e275d989a7e9  # HD Bluray + WEB
+      name: 1080p (TRaSH)
       reset_unmatched_scores:
         enabled: true
       qualities:
@@ -30,6 +31,11 @@ radarr:
         - WEBDL-1080p
         - WEBRip-1080p
       - name: Bluray-720p
+        # WEB 720p fallback so movies only released as 720p WEB still download.
+      - name: WEB 720p
+        qualities:
+        - WEBDL-720p
+        - WEBRip-720p
       - name: Bluray-480p
       - name: WEB 480p
         qualities:
@@ -38,6 +44,7 @@ radarr:
       - name: DVD
       - name: SDTV
     - trash_id: 64fb5f9858489bdac2af690e27c8f42f  # UHD Bluray + WEB
+      name: 2160p (TRaSH)
       reset_unmatched_scores:
         enabled: true
       qualities:
@@ -46,6 +53,13 @@ radarr:
         qualities:
         - WEBDL-2160p
         - WEBRip-2160p
+        # 1080p fallback so a 4K request without a 4K release gets 1080p
+        # instead of falling through to SD.
+      - name: Bluray-1080p
+      - name: WEB 1080p
+        qualities:
+        - WEBDL-1080p
+        - WEBRip-1080p
       - name: Bluray-480p
       - name: WEB 480p
         qualities:
@@ -128,16 +142,16 @@ radarr:
     - trash_ids:
       - dc98083864ea246d05a42df0d05f81cc  # x265 (HD)
       assign_scores_to:
-      - name: HD Bluray + WEB
+      - name: 1080p (TRaSH)
         score: 100
-      - name: UHD Bluray + WEB
+      - name: 2160p (TRaSH)
         score: 100
     - trash_ids:
       - 839bea857ed2c0a8e084f3cbdbd65ecb  # x265 (no HDR/DV)
       assign_scores_to:
-      - name: HD Bluray + WEB
+      - name: 1080p (TRaSH)
         score: 0
-      - name: UHD Bluray + WEB
+      - name: 2160p (TRaSH)
         score: 0
 
 sonarr:
@@ -159,14 +173,23 @@ sonarr:
 
     quality_profiles:
     - trash_id: 72dae194fc92bf828f32cde7744e51a1  # WEB-1080p
+      name: 1080p (TRaSH)
       reset_unmatched_scores:
         enabled: true
+      # Stop upgrading once a file is a tiered HEVC WEB-DL or tier 1 x265
+      # encode; every H.264 release scores below this (see custom_formats).
+      upgrade:
+        allowed: true
+        until_quality: WEB 1080p
+        until_score: 1900
       qualities:
+        # Bluray shares the WEB group so trusted x265 Bluray encodes compete
+        # with WEB-DLs on custom format score instead of always ranking lower.
       - name: WEB 1080p
         qualities:
         - WEBDL-1080p
         - WEBRip-1080p
-      - name: Bluray-1080p
+        - Bluray-1080p
       - name: HDTV-1080p
       - name: WEB 720p
         qualities:
@@ -181,20 +204,28 @@ sonarr:
       - name: DVD
       - name: SDTV
     - trash_id: d1498e7d189fbe6c7110ceaabb7473e6  # WEB-2160p
+      name: 2160p (TRaSH)
       reset_unmatched_scores:
         enabled: true
+      upgrade:
+        allowed: true
+        until_quality: WEB 2160p
+        until_score: 1900
       qualities:
+        # Bluray shares each WEB group so a lower-resolution WEB release can
+        # never replace a Bluray file, and same-resolution releases compete
+        # on custom format score.
       - name: WEB 2160p
         qualities:
         - WEBDL-2160p
         - WEBRip-2160p
+        - Bluray-2160p
+      - name: Bluray-2160p Remux
       - name: WEB 1080p
         qualities:
         - WEBDL-1080p
         - WEBRip-1080p
-      - name: Bluray-2160p Remux
-      - name: Bluray-2160p
-      - name: Bluray-1080p
+        - Bluray-1080p
       - name: HDTV-1080p
       - name: WEB 720p
         qualities:
@@ -212,7 +243,7 @@ sonarr:
     custom_format_groups:
       add:
         # Golden Rule = TRaSH's x265 policy. Selecting both CFs removes the
-        # default -10000 penalty. Score override to +100 is in custom_formats.
+        # default -10000 penalty. HEVC scoring is in custom_formats.
       - trash_id: 158188097a58d7687dee647e04af0da3  # [Required] Golden Rule HD
         select:
         - 9b64dff695c2115facf1b6ea59c9bd07  # x265 (no HDR/DV)
@@ -264,21 +295,52 @@ sonarr:
         # - 7e1724c5da59e7474803ad25be98f6a3  # [HDR Formats] HDR
         # - abe720fab2d27682adc2a735136cec02  # [Streaming Services] General
 
-    # x265 scoring: prefer x265 (HD) at +100, hold x265 (no HDR/DV) at 0.
-    # Both CFs match SDR x265, so scoring both would double-count.
-    # Explicit score 0 prevents reset_unmatched_scores from defaulting to -10000.
+    # HEVC preference. TRaSH's x265 CFs can't tell untouched H.265 WEB-DLs
+    # from x265 re-encodes, so both stay at 0; explicit 0 prevents
+    # reset_unmatched_scores from defaulting them to -10000. The local CFs in
+    # custom-formats/sonarr do the ranking, stacked on the WEB tier scores:
+    #   untouched HEVC WEB-DL (tiered group)   1600-1700 + 500  (always wins)
+    #   tier 1 x265 Bluray encode              1975
+    #   tier 1 x265 WEB encode                 1925
+    #   ---- until_score 1900 ----
+    #   tier 1 H.264 WEB-DL                    1700 (max 1857 with streaming
+    #                                          service, boost and repack)
+    # Tier 1 encoder groups come from the Dictionarry database's 1080p
+    # Efficient tiers. Other x265 groups get no bonus and only win when
+    # nothing tiered exists.
     custom_formats:
     - trash_ids:
       - 47435ece6b99a0b477caf360e79ba0bb  # x265 (HD)
       assign_scores_to:
-      - name: WEB-1080p
-        score: 100
-      - name: WEB-2160p
-        score: 100
+      - name: 1080p (TRaSH)
+        score: 0
+      - name: 2160p (TRaSH)
+        score: 0
+    - trash_ids:
+      - 55d172ac59e67aaeb4790a5a5aa92f6a  # HEVC WEB-DL (local)
+      assign_scores_to:
+      - name: 1080p (TRaSH)
+        score: 500
+      - name: 2160p (TRaSH)
+        score: 500
+    - trash_ids:
+      - 7919adb3b6ee999536e29e71a9172a70  # x265 Encode Tier 1 (Bluray) (local)
+      assign_scores_to:
+      - name: 1080p (TRaSH)
+        score: 1975
+      - name: 2160p (TRaSH)
+        score: 1975
+    - trash_ids:
+      - 0722db5aad75517c3e0e560d912a10e2  # x265 Encode Tier 1 (WEB) (local)
+      assign_scores_to:
+      - name: 1080p (TRaSH)
+        score: 1925
+      - name: 2160p (TRaSH)
+        score: 1925
     - trash_ids:
       - 9b64dff695c2115facf1b6ea59c9bd07  # x265 (no HDR/DV)
       assign_scores_to:
-      - name: WEB-1080p
+      - name: 1080p (TRaSH)
         score: 0
-      - name: WEB-2160p
+      - name: 2160p (TRaSH)
         score: 0

@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: cleanuparr
+  labels:
+    app: cleanuparr
+
+spec:
+  ports:
+  - port: 11011
+    targetPort: 11011
+    protocol: TCP
+    name: http
+  selector:
+    app: cleanuparr

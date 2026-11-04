@@ -124,11 +124,12 @@
       "description": "Docker images with comment annotations (generic)",
       "managerFilePatterns": [
         "ansible/**/*.yaml",
-        "ansible/**/*.yml"
+        "ansible/**/*.yml",
+        "tools/**"
       ],
       "matchStringsStrategy": "recursive",
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=docker\\s*\\n\\s*[a-z0-9_]+:\\s*\"?[^\"\\n]+\"?",
+        "#\\s*renovate:\\s*datasource=docker\\s*\\n\\s*[A-Za-z0-9_]+(?::\\s*|=)\"?[^\"\\n]+\"?",
         "(?<depName>[^:\"\\s]+):(?<currentValue>[^@\"\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
       ],
       "datasourceTemplate": "docker",
