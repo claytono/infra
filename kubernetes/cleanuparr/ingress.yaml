@@ -1,0 +1,31 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: cleanuparr
+  annotations:
+    ak-type: oidc
+    ak-oidc-callback: /api/auth/oidc/callback
+    ak-oidc-extra-redirects: https://cleanuparr.k.oneill.net/api/account/oidc/link/callback
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Cleanuparr
+    gethomepage.dev/description: Download queue cleanup and searches
+    gethomepage.dev/group: Downloads
+    gethomepage.dev/icon: cleanuparr.png
+
+spec:
+  tls:
+  - hosts:
+    - cleanuparr.k.oneill.net
+  rules:
+  - host: cleanuparr.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cleanuparr
+            port:
+              number: 11011

@@ -1,0 +1,13 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/recyclarr/recyclarr/master/schemas/settings-schema.json
+
+# Settings reference: https://recyclarr.dev/wiki/yaml/settings-reference/
+
+resource_providers:
+  # Custom formats TRaSH Guides doesn't provide, used to prefer HEVC releases.
+  # The data directory is mounted at /config inside the container.
+
+- name: local-sonarr-cfs
+  type: custom-formats
+  service: sonarr
+  path: /config/custom-formats/sonarr
