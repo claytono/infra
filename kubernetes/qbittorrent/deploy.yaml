@@ -37,8 +37,9 @@ spec:
       terminationGracePeriodSeconds: 1800
       containers:
       - name: qbittorrent
-        # Before upgrading qBittorrent, verify the target version is supported by
-        # the qbit_manage image pinned in ../qbit-manage/deploy.yaml.
+        # qbit_manage's qBittorrent version check is bypassed, so we check
+        # compatibility ourselves before and after every qBittorrent upgrade.
+        # See .agents/rules/kubernetes/qbittorrent.md.
         image: ghcr.io/qbittorrent/docker-qbittorrent-nox:5.2.4-lt2-1@sha256:f3f7ae6679270fa4f2ab724c6c87dc5471beb6fade88861ce7ad834048ab6c26
         imagePullPolicy: IfNotPresent
         securityContext:
