@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: minuspod
-        image: ttlequals0/minuspod:stable@sha256:c52f2598ea671f770ed7363561bb0897579ffb6cb71415d26ff5243cc9c9fb0a
+        image: ttlequals0/minuspod:stable@sha256:4225c6193879894d16b318959c5cafdaf3304250ca5c1293af6d1b4358dd5e2d
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
