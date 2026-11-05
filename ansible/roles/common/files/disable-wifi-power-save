@@ -12,25 +12,52 @@ case "${1:-}" in
 		;;
 esac
 
-set --
-for wireless_path in /sys/class/net/*/wireless; do
-	[ -d "${wireless_path}" ] || continue
-	interface=${wireless_path%/wireless}
-	set -- "$@" "${interface##*/}"
-done
+# ifupdown runs this hook with IFACE set for each interface it brings up, and
+# a failing hook fails ifup for that interface. As a hook it only touches
+# IFACE and reports problems without failing.
+fail() {
+	printf '%s\n' "$1" >&2
+	[ -n "${IFACE:-}" ] || exit 1
+}
 
-if [ "$#" -eq 0 ]; then
-	echo "no wireless interfaces found"
+set --
+if [ -n "${IFACE:-}" ]; then
+	set -- "${IFACE}"
+else
+	for wireless_path in /sys/class/net/*/wireless; do
+		[ -d "${wireless_path}" ] || continue
+		interface=${wireless_path%/wireless}
+		set -- "$@" "${interface##*/}"
+	done
+
+	if [ "$#" -eq 0 ]; then
+		echo "no wireless interfaces found"
+	fi
 fi
 
 changed=false
 for interface in "$@"; do
 	[ -d "/sys/class/net/${interface}/wireless" ] || continue
-	state=$(/usr/sbin/iw dev "${interface}" get power_save)
+	if ! state=$(/usr/sbin/iw dev "${interface}" get power_save); then
+		fail "wireless iface ${interface}: failed to read power saving"
+		continue
+	fi
 
 	case "${state}" in
 		"Power save: on")
-			/usr/sbin/iw dev "${interface}" set power_save off
+			# Drivers without power saving, such as mt76x2u, report it as on
+			# but reject the change.
+			if ! output=$(/usr/sbin/iw dev "${interface}" set power_save off 2>&1); then
+				case "${output}" in
+					*"Operation not supported"*)
+						printf 'wireless iface %s: power saving not supported\n' "${interface}"
+						;;
+					*)
+						fail "wireless iface ${interface}: failed to disable power saving: ${output}"
+						;;
+				esac
+				continue
+			fi
 			printf 'wireless iface %s: disabled\n' "${interface}"
 			changed=true
 			;;
@@ -38,8 +65,7 @@ for interface in "$@"; do
 			printf 'wireless iface %s: already disabled\n' "${interface}"
 			;;
 		*)
-			printf 'wireless iface %s: unexpected state: %s\n' "${interface}" "${state}" >&2
-			exit 1
+			fail "wireless iface ${interface}: unexpected state: ${state}"
 			;;
 	esac
 done
