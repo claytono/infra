@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-dotfiles
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: 91518e9d65285964a5bebb39d3d0198d80e027a497d79817bba44266a76e644
+    actions.github.com/values-hash: f4a0c7213e3ff13dbb5af8bdc73c76991ab14b40dac739b6aab7cc0e656507f
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -59,7 +59,7 @@ spec:
               value: /auth/auth.json
             - name: CODEX_HOME
               value: /home/runner/.codex
-          image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:637619278855a77885a94312efa7decd8479ca6cec5f959e134cbab96582821e
+          image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:e80c05a310400cfc90af00b5b7271ef9ad24816e3265e1162af8a678e1aad099
           name: copy-codex-auth
           volumeMounts:
             - mountPath: /auth
