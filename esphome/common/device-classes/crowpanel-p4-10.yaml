@@ -129,6 +129,12 @@ touchscreen:
 
 update:
 - platform: esp32_hosted
+  id: c6_update
   type: http
   name: C6 Coprocessor Update
   source: https://esphome.github.io/esp-hosted-firmware/manifest/esp32c6.json
+  # Keep the C6 firmware matched to the host's esp_hosted library after every
+  # ESPHome upgrade; a large mismatch leaves the SDIO link down after restarts.
+  on_update_available:
+    then:
+    - update.perform: c6_update
