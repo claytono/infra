@@ -154,6 +154,15 @@ radarr:
         score: 0
       - name: 2160p (TRaSH)
         score: 0
+      # The TV can't play Dolby Vision, so DV without an HDR10 fallback is
+      # rejected at every resolution, not only 2160p as in the TRaSH group.
+    - trash_ids:
+      - 923b6abef9b17f937fab56cfcf89e1f1  # DV (w/o HDR fallback)
+      assign_scores_to:
+      - name: 1080p (TRaSH)
+        score: -10000
+      - name: 2160p (TRaSH)
+        score: -10000
 
 sonarr:
   sonarr:
@@ -345,3 +354,20 @@ sonarr:
         score: 0
       - name: 2160p (TRaSH)
         score: 0
+      # HDR rejections match Radarr: DV without an HDR10 fallback at every
+      # resolution, and the fake DV/HDR10+ groups TRaSH only lists for Radarr
+      # (copied into custom-formats/sonarr).
+    - trash_ids:
+      - 9b27ab6498ec0f31a3353992e19434ca  # DV (w/o HDR fallback)
+      assign_scores_to:
+      - name: 1080p (TRaSH)
+        score: -10000
+      - name: 2160p (TRaSH)
+        score: -10000
+    - trash_ids:
+      - 3feaf5e4625cf8859879360e0ce99995  # Generated Dynamic HDR (local)
+      assign_scores_to:
+      - name: 1080p (TRaSH)
+        score: -10000
+      - name: 2160p (TRaSH)
+        score: -10000
