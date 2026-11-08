@@ -35,6 +35,15 @@ The 1080p profile accepts 720p WEB and the 2160p profile accepts 1080p, so a
 movie without a release at the preferred resolution still downloads instead of
 dropping to SD or never downloading.
 
+## HDR rules match in both apps
+
+Sonarr and Radarr score HDR the same way. HDR gets +500 at 2160p and 0 at 1080p.
+The TV can't play Dolby Vision, so DV without an HDR10 fallback is -10000 in
+every profile, not only 2160p as in the TRaSH group. Generated Dynamic HDR (fake
+DV or HDR10+ from known groups) is -10000 everywhere; TRaSH publishes it only
+for Radarr, so Sonarr uses a copy in `data/custom-formats/sonarr/`. Keep the two
+apps in step when changing any HDR score.
+
 ## After editing
 
 Run `tools/recyclarr/recyclarr sync`, then check the profiles in Sonarr and
