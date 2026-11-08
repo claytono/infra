@@ -684,7 +684,7 @@
     },
     {
       "description": "Home Assistant: One month behind latest (auto-managed)",
-      "allowedVersions": "/^2026\\.9\\./",
+      "allowedVersions": "/^2026\\.10\\./",
       "matchDatasources": [
         "docker"
       ],
