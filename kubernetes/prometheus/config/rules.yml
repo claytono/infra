@@ -26,9 +26,8 @@ groups:
       (up{job="node resources", instance="xtal:9100"} == 0)
       and on()
       (
-        histogram_count(
-          increase(smokeping_response_duration_seconds{host="xtal.oneill.net"}[5m])
-        ) > 0
+        increase(smokeping_response_duration_seconds_count{host="xtal.oneill.net"}[5m])
+        > 0
       )
     for: 35m
     annotations:
