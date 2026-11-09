@@ -2,10 +2,10 @@
   "extends": [
     "config:best-practices"
   ],
-  "description": "Run manually reviewed Renovate updates from midnight through 3:59 AM Eastern on Mondays, split by package name so each week carries about half the review load: first and third Mondays here, second and fourth Mondays in the first packageRules entry.",
+  "description": "Run manually reviewed Renovate updates from midnight through 11:59 AM Eastern on Mondays, a window wide enough to catch at least one of Mend's best-effort runs, which start every few hours with no fixed time. Updates are split by package name so each week carries about half the review load: first and third Mondays here, second and fourth Mondays in the first packageRules entry.",
   "timezone": "America/New_York",
   "schedule": [
-    "* 0-3 1-7,15-21 * 1"
+    "* 0-11 1-7,15-21 * 1"
   ],
   "ignorePaths": [
     "ansible/galaxy/**"
@@ -313,7 +313,7 @@
         "/^(.*\\/)?[k-z][^/]*$/i"
       ],
       "schedule": [
-        "* 0-3 8-14,22-28 * 1"
+        "* 0-11 8-14,22-28 * 1"
       ]
     },
     {
@@ -326,7 +326,7 @@
         "custom.kubernetes-deb-kubernetes-cni"
       ],
       "schedule": [
-        "* 0-3 8-14,22-28 * 1"
+        "* 0-11 8-14,22-28 * 1"
       ]
     },
     {
@@ -335,7 +335,7 @@
         "ghcr.io/pulshealth/**"
       ],
       "schedule": [
-        "* 0-3 1-7,15-21 * 1"
+        "* 0-11 1-7,15-21 * 1"
       ]
     },
     {
