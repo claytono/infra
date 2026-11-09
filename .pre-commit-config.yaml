@@ -1,6 +1,11 @@
 ---
 exclude: ^ansible/galaxy/|^kubernetes/.*/helm/|^kubernetes/.*/crds/|^kubernetes/.*/upstream/
 
+# nodeenv's default "latest" can resolve to a Node pre-release it can't
+# install, and CI would otherwise use the runner's Node instead.
+default_language_version:
+  node: lts
+
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v6.0.0
