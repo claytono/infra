@@ -15,6 +15,7 @@ locals {
     "dotfiles",
     "go-unifi-mcp",
     "github-actions",
+    "health-hub",
   ])
 
   tailscale_ssh_github_repositories = toset([
