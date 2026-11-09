@@ -25,6 +25,10 @@ spec:
         args:
         - --config.file=/config/config.yaml
         - --privileged
+        # Four classic buckets per doubling up to 0.8192s, then the default
+        # edges. Text-format scrapers see only classic buckets, and the default
+        # factor-of-two edges put most pings for a host into one bucket.
+        - --buckets=5e-05,5.946e-05,7.071e-05,8.409e-05,0.0001,0.0001189,0.0001414,0.0001682,0.0002,0.0002378,0.0002828,0.0003364,0.0004,0.0004757,0.0005657,0.0006727,0.0008,0.0009514,0.001131,0.001345,0.0016,0.001903,0.002263,0.002691,0.0032,0.003805,0.004525,0.005382,0.0064,0.007611,0.009051,0.01076,0.0128,0.01522,0.0181,0.02153,0.0256,0.03044,0.0362,0.04305,0.0512,0.06089,0.07241,0.08611,0.1024,0.1218,0.1448,0.1722,0.2048,0.2435,0.2896,0.3444,0.4096,0.4871,0.5793,0.6889,0.8192,1.6384,3.2768,6.5536,13.1072,26.2144
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
