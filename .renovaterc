@@ -141,7 +141,7 @@
         "/.*\\.ya?ml$/"
       ],
       "matchStrings": [
-        "imageName:\\s*(?<depName>ghcr\\.io/cloudnative-pg/postgresql):(?<currentValue>[A-Za-z0-9._-]+)(?:@(?<currentDigest>sha256:[A-Fa-f0-9]{64}))?"
+        "imageName:\\s*(?<depName>ghcr\\.io/cloudnative-pg/(?:postgresql|postgis)):(?<currentValue>[A-Za-z0-9._-]+)(?:@(?<currentDigest>sha256:[A-Fa-f0-9]{64}))?"
       ],
       "datasourceTemplate": "docker",
       "registryUrlTemplate": "https://ghcr.io",
@@ -488,7 +488,8 @@
         "docker"
       ],
       "matchPackageNames": [
-        "ghcr.io/cloudnative-pg/postgresql"
+        "ghcr.io/cloudnative-pg/postgresql",
+        "ghcr.io/cloudnative-pg/postgis"
       ],
       "matchUpdateTypes": [
         "digest"
@@ -578,40 +579,37 @@
       "description": "Auto-merge versions whose renovate annotation sets depType=automerge, if CI passes"
     },
     {
+      "description": "Read the Python version in uv image tags such as python3.14-trixie-slim",
       "matchDatasources": [
         "docker"
       ],
-      "matchPackageNames": [
-        "ghcr.io/cloudnative-pg/postgresql"
+      "matchDepNames": [
+        "ghcr.io/astral-sh/uv"
       ],
-      "matchCurrentVersion": "/^17\\./",
-      "matchUpdateTypes": [
-        "patch",
-        "digest"
+      "versioning": "regex:^python(?<major>\\d+)\\.(?<minor>\\d+)-(?<compatibility>[a-z]+(?:-slim)?)$"
+    },
+    {
+      "description": "Read CloudNativePG's PostGIS tags such as 17.7-3.6.1-standard-trixie: the PostgreSQL major and minor, then the PostGIS version",
+      "matchDatasources": [
+        "docker"
       ],
-      "schedule": [
-        "after 2am and before 8am on thursday"
+      "matchDepNames": [
+        "ghcr.io/cloudnative-pg/postgis"
       ],
-      "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "db-image",
-        "automerge"
-      ],
-      "description": "Auto-merge PostgreSQL 17.x updates"
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)-(?<patch>\\d+)\\.(?<build>\\d+)\\.(?<revision>\\d+)-(?<compatibility>standard-[a-z]+)$"
     },
     {
       "matchDatasources": [
         "docker"
       ],
       "matchPackageNames": [
-        "ghcr.io/cloudnative-pg/postgresql"
+        "ghcr.io/cloudnative-pg/postgresql",
+        "ghcr.io/cloudnative-pg/postgis"
       ],
       "matchUpdateTypes": [
         "major"
       ],
       "automerge": false,
-      "draftPR": true,
       "addLabels": [
         "db-major-upgrade"
       ],
@@ -669,7 +667,8 @@
         "docker"
       ],
       "matchPackageNames": [
-        "ghcr.io/cloudnative-pg/postgresql"
+        "ghcr.io/cloudnative-pg/postgresql",
+        "ghcr.io/cloudnative-pg/postgis"
       ]
     },
     {

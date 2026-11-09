@@ -292,7 +292,10 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
         "postgresql-stable": {
             "description": "PostgreSQL: Major versions at least 6 months old (auto-managed)",
             "matchDatasources": ["docker"],
-            "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
+            "matchPackageNames": [
+                "ghcr.io/cloudnative-pg/postgresql",
+                "ghcr.io/cloudnative-pg/postgis",
+            ],
             "get_allowed": get_postgresql_allowed_versions,
         },
         "kubernetes-next-minor": {
