@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: speakr
-        image: learnedmachine/speakr:0.10.14-alpha@sha256:42a8716ebc05ef6f8456b885917fa8ed8d0b454484d57ebedabe7c53de7e30b6
+        image: learnedmachine/speakr:0.10.16-alpha@sha256:bb5e373c4849a78c8622c27a362368a7d8c47898b25eb603dfb54dbcd0bffe80
         ports:
         - name: http
           containerPort: 8899
