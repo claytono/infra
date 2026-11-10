@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: msgvault
+  namespace: msgvault
+
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: msgvault
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP

@@ -1,0 +1,106 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: msgvault
+  namespace: msgvault
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  # The iSCSI volume is ReadWriteOnce.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: msgvault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: msgvault
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        # msgvault requires /data/tokens to stay mode 0700; a recursive
+        # chmod on every start would break it.
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+      # msgvault refuses to start unless it owns its data directory, and a
+      # new iSCSI volume's root belongs to root. It also refuses to read a
+      # config file it does not own, so the ConfigMap's copy is installed
+      # fresh on every start; edits made in the web UI last until a restart.
+      # msgvault has no variable expansion in its config, so the IMAP user is
+      # substituted here to keep the address out of the repository.
+      - name: prepare-data-dir
+        image: alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
+        command:
+        - sh
+        - -c
+        - |
+          chown 1000:1000 /data
+          sed "s|\${IMAP_USER}|$IMAP_USER|" /config/config.toml >/tmp/config.toml
+          install -o 1000 -g 1000 -m 0600 /tmp/config.toml /data/config.toml
+        envFrom:
+        - secretRef:
+            name: msgvault-imap
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+          readOnly: true
+      containers:
+      - name: msgvault
+        image: ghcr.io/kenn-io/msgvault:0.23.0@sha256:1807039e4da90709eba0a51a7515b1fb8e1eef1e80a3a39b2b10ae9a6b5b620e
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MSGVAULT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: msgvault-secrets
+              key: api-key
+        - name: MSGVAULT_TELEMETRY_ENABLED
+          value: '0'
+        # Used only by `msgvault add-imap` when rebuilding (see README.md).
+        envFrom:
+        - secretRef:
+            name: msgvault-imap
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        # Schema migrations run before the listener starts.
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+          failureThreshold: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 30
+          failureThreshold: 5
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: msgvault-data
+      - name: config
+        configMap:
+          name: msgvault-config
