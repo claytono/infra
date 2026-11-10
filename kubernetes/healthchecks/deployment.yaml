@@ -22,6 +22,16 @@ spec:
         app.kubernetes.io/instance: healthchecks
     spec:
       terminationGracePeriodSeconds: 60
+      # Same wait as upstream docker-compose.yml: uWSGI runs migrate as a
+      # pre-app hook, and if Postgres is unreachable it kills sendalerts but
+      # keeps serving HTTP, so the pod looks healthy while sending no alerts
+      initContainers:
+      - name: wait-for-postgres
+        image: healthchecks/healthchecks:v4.4@sha256:aa08a61b0dcfd83f1332eab195d5cec1b595ae076eb8388cadf8a3d597114f9b
+        command:
+        - bash
+        - -c
+        - until </dev/tcp/healthchecks-postgres-rw/5432; do sleep 1; done
       containers:
       - name: healthchecks
         image: healthchecks/healthchecks:v4.4@sha256:aa08a61b0dcfd83f1332eab195d5cec1b595ae076eb8388cadf8a3d597114f9b
@@ -86,8 +96,12 @@ spec:
           periodSeconds: 5
           failureThreshold: 30
         readinessProbe:
-          tcpSocket:
+          httpGet:
+            path: /api/v3/status/
             port: http
+            httpHeaders:
+            - name: Host
+              value: hc.k.oneill.net
           periodSeconds: 10
           failureThreshold: 3
         livenessProbe:
