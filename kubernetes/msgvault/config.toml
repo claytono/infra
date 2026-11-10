@@ -1,0 +1,39 @@
+[server]
+bind_addr = "0.0.0.0"
+api_port = 8080
+api_key_env = "MSGVAULT_API_KEY"
+# Pod network; Traefik reaches the pod over IPv4. Forwarded scheme and
+# host are only honoured from here, and the web UI's CSRF check needs them.
+trusted_proxies = ["10.244.0.0/16"]
+daemon_auto_start = false
+daemon_auto_restart = "never"
+
+[telemetry]
+enabled = false
+
+# Day boundaries for per-person activity ("last contact") counts.
+[activity]
+timezone = "America/New_York"
+
+[[accounts]]
+# The init container substitutes the IMAP user from the msgvault-imap Secret.
+email = "imaps://${IMAP_USER}@imap.fastmail.com:993"
+schedule = "*/15 * * * *"
+enabled = true
+
+[vector]
+enabled = true
+
+[vector.embeddings]
+endpoint = "http://ollama.ollama.svc.cluster.local:11434/v1"
+model = "snowflake-arctic-embed2:mine"
+dimension = 1024
+query_prefix = "query: "
+# Ollama silently truncates past its 8192-token context; ~24k chars
+# keeps each chunk under ~6k tokens.
+max_input_chars = 24000
+batch_size = 32
+timeout = "120s"
+
+[vector.embed.schedule]
+run_after_sync = true

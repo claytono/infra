@@ -1,0 +1,32 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: msgvault
+  namespace: msgvault
+  annotations:
+    ak-type: simple
+    # API clients authenticate with msgvault's own API key.
+    ak-path-exclude: /api/v1/,/api/ping$,/health$,/mcp
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: msgvault
+    gethomepage.dev/description: Mail Archive
+    gethomepage.dev/group: Productivity
+    gethomepage.dev/icon: mdi-email-search
+
+spec:
+  tls:
+  - hosts:
+    - msgvault.k.oneill.net
+  rules:
+  - host: msgvault.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: msgvault
+            port:
+              name: http
