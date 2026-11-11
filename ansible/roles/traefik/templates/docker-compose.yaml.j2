@@ -1,8 +1,7 @@
 ---
 services:
   traefik:
-    # renovate: datasource=docker
-    image: traefik:v3.7.4@sha256:fcdef599e6259359833dd2e1d49f9e964f66825d69bd3dd468f51102ce013d03
+    image: {{ traefik_image }}
     restart: unless-stopped
 {% if traefik_network_mode | default('bridge') == 'host' %}
     network_mode: host
