@@ -22,6 +22,18 @@ locals {
     "github-actions",
     "dotfiles",
   ])
+
+  # Repositories whose workflows push commits or open pull requests with the
+  # PAT secret. Pushes made with GITHUB_TOKEN do not trigger CI.
+  push_updates_github_repositories = toset([
+    "infra",
+    "dotfiles",
+    "github-actions",
+    "go-unifi-mcp",
+    "pybirdfy",
+    "readest-hardcover-sync",
+    "renovate-docker-datasource",
+  ])
 }
 
 # Infra repository secrets
@@ -90,6 +102,22 @@ resource "github_actions_secret" "claude_code_oauth_token" {
 moved {
   from = github_actions_secret.infra_claude_code_oauth_token
   to   = github_actions_secret.claude_code_oauth_token["infra"]
+}
+
+resource "github_actions_secret" "push_updates_pat" {
+  for_each = local.push_updates_github_repositories
+
+  repository  = each.key
+  secret_name = "PAT"
+  value       = data.onepassword_item.github_push_updates_token.credential
+}
+
+# Lets renovate-docker-datasource's daily job clone the private repositories
+# it reads images from
+resource "github_actions_secret" "renovate_docker_datasource_read_token" {
+  repository  = "renovate-docker-datasource"
+  secret_name = "READ_TOKEN"
+  value       = data.onepassword_item.github_contents_read_token.credential
 }
 
 resource "github_actions_variable" "renovate_eval_provider" {

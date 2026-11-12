@@ -228,6 +228,19 @@ data "onepassword_item" "claude_code_oauth_token" {
   title = "claude-code-api-token"
 }
 
+# Classic GitHub token that workflows use to push updates and open pull
+# requests, so that CI runs on them
+data "onepassword_item" "github_push_updates_token" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "github-push-updates-token"
+}
+
+# Fine-grained GitHub token with read access to the contents of every repo
+data "onepassword_item" "github_contents_read_token" {
+  vault = data.onepassword_vault.infra.uuid
+  title = "github-contents-read-token"
+}
+
 # Cloudflare credentials from 1Password (for DNS management)
 data "onepassword_item" "cloudflare_opentofu" {
   vault = data.onepassword_vault.infra.uuid
