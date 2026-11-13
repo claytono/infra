@@ -1,6 +1,7 @@
 {
   "extends": [
-    "config:best-practices"
+    "config:best-practices",
+    "github>claytono/renovate-docker-datasource"
   ],
   "description": "Run manually reviewed Renovate updates from midnight through 11:59 AM Eastern on Mondays, a window wide enough to catch at least one of Mend's best-effort runs, which start every few hours with no fixed time. Updates are split by package name so each week carries about half the review load: first and third Mondays here, second and fourth Mondays in the first packageRules entry.",
   "timezone": "America/New_York",
@@ -342,7 +343,8 @@
       "description": "Group meilisearch updates across services",
       "groupName": "meilisearch",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "getmeili/meilisearch",
@@ -361,7 +363,8 @@
       "description": "Group curl image updates across services",
       "groupName": "curlimages/curl",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "curlimages/curl"
@@ -397,7 +400,8 @@
     },
     {
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "ghcr.io/qbittorrent/docker-qbittorrent-nox"
@@ -407,7 +411,8 @@
     },
     {
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "ghcr.io/maziggy/bambuddy"
@@ -417,7 +422,8 @@
     },
     {
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "plexinc/pms-docker"
@@ -428,7 +434,8 @@
     {
       "description": "Hermes Agent: rank the old dated tags (v2026.x) below numbered releases so Renovate offers the move to v0.x",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "docker.io/nousresearch/hermes-agent"
@@ -467,7 +474,8 @@
     },
     {
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchUpdateTypes": [
         "digest"
@@ -485,7 +493,8 @@
     },
     {
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "ghcr.io/cloudnative-pg/postgresql",
@@ -541,7 +550,8 @@
     },
     {
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchManagers": [
         "custom.regex",
@@ -581,7 +591,8 @@
     {
       "description": "Read the Python version in uv image tags such as python3.14-trixie-slim",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchDepNames": [
         "ghcr.io/astral-sh/uv"
@@ -591,7 +602,8 @@
     {
       "description": "Read CloudNativePG's PostGIS tags such as 17.7-3.6.1-standard-trixie: the PostgreSQL major and minor, then the PostGIS version",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchDepNames": [
         "ghcr.io/cloudnative-pg/postgis"
@@ -600,7 +612,8 @@
     },
     {
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "ghcr.io/cloudnative-pg/postgresql",
@@ -654,7 +667,8 @@
       "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
       "allowedVersions": "/^(11\\.8|11\\.4|10\\.11)(?:\\.|$)/",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "mariadb"
@@ -664,7 +678,8 @@
       "description": "PostgreSQL: Major versions at least 6 months old (auto-managed)",
       "allowedVersions": "/^(18|17|16|15|14)\\./",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "ghcr.io/cloudnative-pg/postgresql",
@@ -685,7 +700,8 @@
       "description": "Home Assistant: One month behind latest (auto-managed)",
       "allowedVersions": "/^2026\\.10\\./",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "homeassistant/home-assistant"
@@ -746,7 +762,8 @@
     {
       "description": "PulsHealth's ingest, api and web images are one release, and kubernetes/pulshealth/render fails unless their tags match, so update them in one PR.",
       "matchDatasources": [
-        "docker"
+        "docker",
+        "custom.docker-first-seen"
       ],
       "matchPackageNames": [
         "ghcr.io/pulshealth/**"

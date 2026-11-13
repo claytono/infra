@@ -35,13 +35,11 @@ Always use the multi-arch manifest digest when available. This allows Kubernetes
 to pull the correct architecture automatically. Only fall back to
 platform-specific digests for images that don't publish multi-arch manifests.
 
-## Registry Preference
+## Release Dates
 
-Prefer Docker Hub (`docker.io`) over other registries (GHCR, quay.io, etc.) when
-an image is available on both. Docker Hub supports per-tag release timestamps
-via `tag_last_pushed`, which Renovate uses to enforce `minimumReleaseAge`. GHCR
-and other registries do not support this, so Renovate cannot enforce
-stabilization delays for images hosted there.
+Renovate's 14-day wait for a versioned image tag uses the date recorded by
+claytono/renovate-docker-datasource, which dates tags on every registry, so the
+registry an image comes from does not affect the wait.
 
 ## Why skopeo
 
