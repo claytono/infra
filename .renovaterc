@@ -35,6 +35,7 @@
     ],
     "ignorePaths": [
       "kubernetes/**/helm/**",
+      "kubernetes/*/upstream/**",
       "kubernetes/restic/cronjobs/**"
     ]
   },
@@ -598,6 +599,17 @@
         "ghcr.io/astral-sh/uv"
       ],
       "versioning": "regex:^python(?<major>\\d+)\\.(?<minor>\\d+)-(?<compatibility>[a-z]+(?:-slim)?)$"
+    },
+    {
+      "description": "Read Storyteller's web-v tags such as web-v2.14.18; the GPU variants such as web-v2.14.18-cuda don't match and are never offered",
+      "matchDatasources": [
+        "docker",
+        "custom.docker-first-seen"
+      ],
+      "matchDepNames": [
+        "registry.gitlab.com/storyteller-platform/storyteller"
+      ],
+      "versioning": "regex:^web-v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     },
     {
       "description": "Read CloudNativePG's PostGIS tags such as 17.7-3.6.1-standard-trixie: the PostgreSQL major and minor, then the PostGIS version",
