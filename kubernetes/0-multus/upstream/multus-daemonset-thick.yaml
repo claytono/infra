@@ -165,7 +165,7 @@ spec:
       priorityClassName: system-node-critical
       containers:
         - name: kube-multus
-          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick
+          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:24406387876bf7f3c8c9015c178faff3f06f2010d8d00ae113fb55759acc3f35
           command: [ "/usr/src/multus-cni/bin/multus-daemon" ]
           resources:
             requests:
@@ -212,7 +212,7 @@ spec:
                   fieldPath: spec.nodeName
       initContainers:
         - name: install-multus-binary
-          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick
+          image: ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick@sha256:24406387876bf7f3c8c9015c178faff3f06f2010d8d00ae113fb55759acc3f35
           command:
             - "/usr/src/multus-cni/bin/install_multus"
             - "-d"
