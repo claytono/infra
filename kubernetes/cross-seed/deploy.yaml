@@ -25,7 +25,7 @@ spec:
         runAsGroup: 10001
       initContainers:
       - name: cleanup
-        image: ghcr.io/cross-seed/cross-seed:6.13.9@sha256:9279fa3b4c6f09915614ec819c6dc97e1e844d863b35c009ababd54bad0489d5
+        image: ghcr.io/cross-seed/cross-seed:6.13.9@sha256:c310f84e040b82c140424f6377fa36487335261037175ef9cec3aefc92b93076
         restartPolicy: Always
         command: [node, /script/cleanup.js]
         env:
@@ -58,7 +58,7 @@ spec:
           readOnly: true
       containers:
       - name: cross-seed
-        image: ghcr.io/cross-seed/cross-seed:6.13.9@sha256:9279fa3b4c6f09915614ec819c6dc97e1e844d863b35c009ababd54bad0489d5
+        image: ghcr.io/cross-seed/cross-seed:6.13.9@sha256:c310f84e040b82c140424f6377fa36487335261037175ef9cec3aefc92b93076
         command: [cross-seed, daemon]
         ports:
         - containerPort: 2468
