@@ -68,7 +68,7 @@ spec:
               key: api-key
         - name: MSGVAULT_TELEMETRY_ENABLED
           value: '0'
-        # Used only by `msgvault add-imap` when rebuilding (see README.md).
+        # Used only by `msgvault add-imap` when rebuilding the archive.
         envFrom:
         - secretRef:
             name: msgvault-imap
