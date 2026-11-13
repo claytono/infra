@@ -18,7 +18,9 @@ timezone = "America/New_York"
 [[accounts]]
 # The init container substitutes the IMAP user from the msgvault-imap Secret.
 email = "imaps://${IMAP_USER}@imap.fastmail.com:993"
-schedule = "*/15 * * * *"
+# A sync rescans every message ID and takes 12 to 20 minutes, so a
+# 15-minute schedule ran syncs back to back.
+schedule = "*/20 * * * *"
 enabled = true
 
 [vector]

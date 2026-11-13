@@ -18,7 +18,7 @@ Secret puts both into the pod's environment.
      sh -c 'msgvault add-imap --host imap.fastmail.com --username "$IMAP_USER"'
    ```
 
-2. Wait for the first full sync. The account syncs every 15 minutes; copying
+2. Wait for the first full sync. The account syncs every 20 minutes; copying
    about 500,000 messages took 11 hours in November 2026. Check progress on the
    web UI's Sources page.
 
@@ -32,4 +32,6 @@ Secret puts both into the pod's environment.
        >/data/tmp/embed-build.log 2>&1 &'
    ```
 
-   Semantic and hybrid search return `index_building` until it finishes.
+   Semantic and hybrid search return `index_building` until it finishes. The
+   build holds msgvault's scheduler, so scheduled syncs wait until it is done.
+   If the pod restarts, run the same command again to resume the build.
