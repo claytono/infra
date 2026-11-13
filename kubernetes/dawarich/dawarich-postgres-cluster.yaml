@@ -12,7 +12,7 @@ spec:
       prometheus.io/port: '9187'
 
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgis:17.7-3.6.1-standard-trixie@sha256:55d442b1e588a829b3c12d6cf1f6ac9401b046d80ec7d07f3934d737277bef80
+  imageName: ghcr.io/cloudnative-pg/postgis:17.7-3.6.1-standard-trixie@sha256:d7ef4f25f5833a1056673f964c2ddf6d6b38e72dc62f75623238c50dc2075fe6
   enablePDB: false
   primaryUpdateMethod: switchover
   smartShutdownTimeout: 0
