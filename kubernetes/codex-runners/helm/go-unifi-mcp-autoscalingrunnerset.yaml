@@ -15,7 +15,7 @@ metadata:
     actions.github.com/scale-set-name: codex-go-unifi-mcp
     actions.github.com/scale-set-namespace: codex-runners
   annotations:
-    actions.github.com/values-hash: ac0e52127382f682db21dacaae9d5f5be02754a6df8039bf5758c64cf8d3dfc
+    actions.github.com/values-hash: 772c5e1e04309ed7c96b4eed688dd952c0ddb84308b9644be0c3628a4ab2bfa
     actions.github.com/cleanup-manager-role-binding: codex-runners-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: codex-runners-gha-rs-manager
 spec:
@@ -59,7 +59,7 @@ spec:
               value: /auth/auth.json
             - name: CODEX_HOME
               value: /home/runner/.codex
-          image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:e80c05a310400cfc90af00b5b7271ef9ad24816e3265e1162af8a678e1aad099
+          image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:81a1340fea1e72ad4a8e9a016128b0c61041cf182ea49fd788023e52842bc147
           name: copy-codex-auth
           volumeMounts:
             - mountPath: /auth
