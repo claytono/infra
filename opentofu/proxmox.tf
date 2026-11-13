@@ -1,7 +1,9 @@
 # Proxmox VM resources managed by OpenTofu
 #
 # VM defaults for new VMs:
-# - cpu.type = x86-64-v3 (live migration compatible across Haswell+)
+# - cpu.type = host. p1 is the only Proxmox node, so live migration doesn't
+#   constrain the CPU model, and x86-64-v3 hides rdtscp, which some
+#   software (msgvault's vector index) executes without checking for it.
 # - scsi_hardware = virtio-scsi-single (enables iothread per disk)
 # - disk.iothread = true (dedicated I/O thread)
 # - disk.discard = "on" (TRIM support)
@@ -31,7 +33,7 @@ resource "proxmox_virtual_environment_vm" "k1" {
   cpu {
     cores   = 2
     sockets = 1
-    type    = "x86-64-v3"
+    type    = "host"
   }
 
   memory {
@@ -82,7 +84,7 @@ resource "proxmox_virtual_environment_vm" "k2" {
   cpu {
     cores   = 4
     sockets = 1
-    type    = "x86-64-v3"
+    type    = "host"
   }
 
   memory {
