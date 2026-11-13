@@ -285,13 +285,13 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
     managed_rules = {
         "mariadb-lts": {
             "description": "MariaDB: LTS versions at least 6 months old (auto-managed)",
-            "matchDatasources": ["docker"],
+            "matchDatasources": ["docker", "custom.docker-first-seen"],
             "matchPackageNames": ["mariadb"],
             "get_allowed": get_mariadb_allowed_versions,
         },
         "postgresql-stable": {
             "description": "PostgreSQL: Major versions at least 6 months old (auto-managed)",
-            "matchDatasources": ["docker"],
+            "matchDatasources": ["docker", "custom.docker-first-seen"],
             "matchPackageNames": [
                 "ghcr.io/cloudnative-pg/postgresql",
                 "ghcr.io/cloudnative-pg/postgis",
@@ -312,7 +312,7 @@ def update_renovaterc(renovaterc_path: Path, dry_run: bool = False) -> bool:
         },
         "home-assistant-n-minus-1": {
             "description": "Home Assistant: One month behind latest (auto-managed)",
-            "matchDatasources": ["docker"],
+            "matchDatasources": ["docker", "custom.docker-first-seen"],
             "matchPackageNames": ["homeassistant/home-assistant"],
             "get_allowed": get_home_assistant_allowed_versions,
         },
