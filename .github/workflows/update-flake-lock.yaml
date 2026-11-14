@@ -58,11 +58,11 @@ jobs:
           {{ env.GIT_COMMIT_MESSAGE }}
           ```
 
-    - name: Apply labels and enable automerge
+    - name: Label and enable automerge
       if: steps.update-flake-lock.outputs.pull-request-number != ''
       env:
         GH_TOKEN: ${{ secrets.PAT }}
         FLAKE_PR_NUMBER: ${{ steps.update-flake-lock.outputs.pull-request-number }}
       run: |-
-        gh pr edit "$FLAKE_PR_NUMBER" --add-label nix,automerge
+        gh pr edit "$FLAKE_PR_NUMBER" --add-label nix
         gh pr merge --auto --rebase "$FLAKE_PR_NUMBER"

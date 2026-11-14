@@ -1,34 +1,14 @@
 {
   "extends": [
-    "config:best-practices",
-    "github>claytono/renovate-docker-datasource"
+    "github>claytono/renovate-config"
   ],
   "description": "Run manually reviewed Renovate updates from midnight through 11:59 AM Eastern on Mondays, a window wide enough to catch at least one of Mend's best-effort runs, which start every few hours with no fixed time. Updates are split by package name so each week carries about half the review load: first and third Mondays here, second and fourth Mondays in the first packageRules entry.",
-  "timezone": "America/New_York",
   "schedule": [
     "* 0-11 1-7,15-21 * 1"
   ],
   "ignorePaths": [
     "ansible/galaxy/**"
   ],
-  "rebaseWhen": "behind-base-branch",
-  "branchTopic": "{{{depNameSanitized}}}-{{{newVersion}}}{{#if isLockfileUpdate}}-lockfile{{/if}}",
-  "automergeStrategy": "rebase",
-  "minimumReleaseAge": "14 days",
-  "minimumReleaseAgeBehaviour": "timestamp-optional",
-  "prHourlyLimit": 0,
-  "prConcurrentLimit": 0,
-  "internalChecksFilter": "strict",
-  "semanticCommits": "disabled",
-  "addLabels": [
-    "renovate"
-  ],
-  "pre-commit": {
-    "enabled": true
-  },
-  "lockFileMaintenance": {
-    "enabled": true
-  },
   "kubernetes": {
     "managerFilePatterns": [
       "/kubernetes/.+\\.yaml$/"
@@ -310,12 +290,15 @@
   ],
   "packageRules": [
     {
-      "description": "Move packages whose name ends in a segment starting with k-z to the second and fourth Mondays; digits and a-j keep the top-level schedule. Matching the last path segment keeps registry prefixes such as ghcr.io from skewing the split. These schedule rules come before the Thursday automerge rules so those still win for automerged updates.",
+      "description": "Move packages whose name ends in a segment starting with k-z to the second and fourth Mondays; digits and a-j keep the top-level schedule. Matching the last path segment keeps registry prefixes such as ghcr.io from skewing the split. These schedule rules leave digest updates out, so those keep the shared preset's Thursday window.",
       "matchPackageNames": [
         "/^(.*\\/)?[k-z][^/]*$/i"
       ],
       "schedule": [
         "* 0-11 8-14,22-28 * 1"
+      ],
+      "matchUpdateTypes": [
+        "!digest"
       ]
     },
     {
@@ -329,6 +312,9 @@
       ],
       "schedule": [
         "* 0-11 8-14,22-28 * 1"
+      ],
+      "matchUpdateTypes": [
+        "!digest"
       ]
     },
     {
@@ -338,6 +324,9 @@
       ],
       "schedule": [
         "* 0-11 1-7,15-21 * 1"
+      ],
+      "matchUpdateTypes": [
+        "!digest"
       ]
     },
     {
@@ -376,7 +365,7 @@
         "lockFileMaintenance"
       ],
       "enabled": false,
-      "description": "Disable lockFileMaintenance globally (re-enabled per-manager below)"
+      "description": "Keep lock file maintenance off: scripts/tofu-lock-all regenerates the OpenTofu lockfiles, and the update-flake-lock workflow updates flake.lock"
     },
     {
       "matchManagers": [
@@ -448,7 +437,10 @@
         "pre-commit"
       ],
       "automerge": false,
-      "description": "Require manual review of pre-commit hook updates"
+      "description": "Require manual review of pre-commit hook updates, which run next to more secrets here than in other repositories, on the first and third Mondays with the other manually reviewed updates",
+      "schedule": [
+        "* 0-11 1-7,15-21 * 1"
+      ]
     },
     {
       "matchUpdateTypes": [
@@ -462,15 +454,7 @@
       "matchPackageNames": [
         "!ttlequals0/minuspod"
       ],
-      "minimumReleaseAge": "0 days",
-      "schedule": [
-        "after 2am and before 8am on thursday"
-      ],
       "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "automerge"
-      ],
       "description": "Auto-merge Docker image digest updates in Kubernetes manifests and Helm values if CI passes. An image that also appears in a values.yaml shares one PR with its other uses, and Renovate auto-merges a PR only when every update in it allows auto-merge."
     },
     {
@@ -488,7 +472,6 @@
       "matchPackageNames": [
         "ttlequals0/minuspod"
       ],
-      "minimumReleaseAge": "0 days",
       "automerge": false,
       "description": "Evaluate MinusPod stable digest updates"
     },
@@ -507,47 +490,8 @@
       "matchManagers": [
         "custom.regex"
       ],
-      "minimumReleaseAge": "0 days",
-      "schedule": [
-        "after 2am and before 8am on thursday"
-      ],
       "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "automerge"
-      ],
       "description": "Auto-merge CNPG digest refreshes for regex-managed imageName"
-    },
-    {
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchPackageNames": [
-        "claytono/github-actions"
-      ],
-      "matchUpdateTypes": [
-        "pinDigest"
-      ],
-      "enabled": false,
-      "description": "Do not pin the reusable Renovate evaluation workflow; it intentionally tracks main"
-    },
-    {
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchUpdateTypes": [
-        "digest"
-      ],
-      "minimumReleaseAge": "0 days",
-      "schedule": [
-        "after 2am and before 8am on thursday"
-      ],
-      "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "automerge"
-      ],
-      "description": "Auto-merge GitHub Actions digest updates if CI passes"
     },
     {
       "matchDatasources": [
@@ -564,30 +508,18 @@
       "matchUpdateTypes": [
         "digest"
       ],
-      "minimumReleaseAge": "0 days",
-      "schedule": [
-        "after 2am and before 8am on thursday"
-      ],
       "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "automerge"
-      ],
       "description": "Auto-merge Docker digest updates in Ansible if CI passes"
     },
     {
       "matchDepTypes": [
         "automerge"
       ],
-      "schedule": [
-        "after 2am and before 8am on thursday"
-      ],
       "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "automerge"
-      ],
-      "description": "Auto-merge versions whose renovate annotation sets depType=automerge, if CI passes"
+      "description": "Auto-merge versions whose renovate annotation sets depType=automerge, if CI passes",
+      "schedule": [
+        "* 0-11 * * 4"
+      ]
     },
     {
       "description": "Read the Python version in uv image tags such as python3.14-trixie-slim",
@@ -664,15 +596,7 @@
       "matchUpdateTypes": [
         "digest"
       ],
-      "minimumReleaseAge": "0 days",
-      "schedule": [
-        "after 2am and before 8am on thursday"
-      ],
       "automerge": true,
-      "automergeType": "pr",
-      "addLabels": [
-        "automerge"
-      ],
       "description": "Auto-merge digest updates for CI/test Dockerfiles"
     },
     {
@@ -727,7 +651,7 @@
       "enabled": false
     },
     {
-      "description": "Kubernetes cluster packages: one PR for the whole version set. The pkgs.k8s.io Packages index carries no publish timestamps, so the release-age gate never applies; review before merge is the gate instead; deliberately no automerge label so renovate-eval always runs.",
+      "description": "Kubernetes cluster packages: one PR for the whole version set. The pkgs.k8s.io Packages index carries no publish timestamps, so the release-age gate never applies; review before merge is the gate instead; deliberately not auto-merged so renovate-eval always runs.",
       "matchDatasources": [
         "custom.kubernetes-deb-kubeadm",
         "custom.kubernetes-deb-kubelet",
@@ -789,8 +713,5 @@
       ],
       "enabled": false
     }
-  ],
-  "gitIgnoredAuthors": [
-    "github-actions[bot]@users.noreply.github.com"
   ]
 }
