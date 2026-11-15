@@ -32,6 +32,7 @@ spec:
       automountServiceAccountToken: true
       securityContext:
         runAsUser: 0
+      priorityClassName: daemonset
       terminationGracePeriodSeconds: 3600
       volumes:
         - name: cloud-credentials

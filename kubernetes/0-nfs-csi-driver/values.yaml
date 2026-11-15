@@ -14,5 +14,8 @@ controller:
   enableSnapshotter: false
   defaultOnDeletePolicy: retain
 
+node:
+  priorityClassName: system-node-critical
+
 feature:
   enableFSGroupPolicy: true

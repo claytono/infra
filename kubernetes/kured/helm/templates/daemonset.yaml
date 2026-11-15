@@ -30,6 +30,7 @@ spec:
       hostNetwork: false
       hostPID: true
       restartPolicy: Always
+      priorityClassName: daemonset
       containers:
         - name: kured
           image: "ghcr.io/kubereboot/kured:1.23.0"

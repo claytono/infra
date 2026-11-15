@@ -23,6 +23,7 @@ configuration:
 deployNodeAgent: true
 
 nodeAgent:
+  priorityClassName: daemonset
   privileged: false
 
 uploaderType: kopia

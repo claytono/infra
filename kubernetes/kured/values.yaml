@@ -1,4 +1,6 @@
 ---
+priorityClassName: daemonset
+
 extraEnvVars:
 - name: KURED_NOTIFY_URL
   valueFrom:

@@ -32,6 +32,7 @@ spec:
       hostPID: true
       hostIPC: true
       hostNetwork: true
+      priorityClassName: "daemonset"
       initContainers:
         - name: init-persistence
           image: "alpine:latest"

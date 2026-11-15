@@ -7,4 +7,4 @@ metadata:
 
 value: 1000000
 globalDefault: false
-description: Prometheus and Alertmanager
+description: Metrics and alerting (Prometheus, Alertmanager, VictoriaMetrics)

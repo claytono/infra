@@ -101,6 +101,8 @@ alloy:
     enabled: true
 
 controller:
+  priorityClassName: daemonset
+
   # Tolerate control-plane taint to run on all nodes
   tolerations:
   - key: node-role.kubernetes.io/control-plane
