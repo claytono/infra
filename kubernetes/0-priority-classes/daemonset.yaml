@@ -1,0 +1,15 @@
+---
+# DaemonSet pods are bound to one node, so when that node is full they can
+# only run by preempting something; a workload that loses its place can move
+# to another node. The value is above monitoring so it yields too. It stays below system-node-critical on purpose: kubelet never
+# evicts pods at 2000000000 or above, even under memory pressure, and these
+# agents should still be evictable if one bloats.
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+
+metadata:
+  name: daemonset
+
+value: 10000000
+globalDefault: false
+description: Per-node DaemonSet agents; preempts ordinary workloads

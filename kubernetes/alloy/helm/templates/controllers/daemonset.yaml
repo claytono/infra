@@ -92,6 +92,7 @@ spec:
             runAsUser: 65534
             seccompProfile:
               type: RuntimeDefault
+      priorityClassName: daemonset
       dnsPolicy: ClusterFirst
       tolerations:
         - effect: NoSchedule

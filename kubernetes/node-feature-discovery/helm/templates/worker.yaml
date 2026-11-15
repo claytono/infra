@@ -31,6 +31,7 @@ spec:
         checksum/config: 8e3cdcc8af1750f2185132dc2ccc12728eac88f2c12b07a881f79a7f105b81fc
     spec:
       dnsPolicy: ClusterFirstWithHostNet
+      priorityClassName: "system-node-critical"
       imagePullSecrets: 
       serviceAccountName: node-feature-discovery-worker
       securityContext:

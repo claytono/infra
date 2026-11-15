@@ -31,7 +31,7 @@ spec:
       hostNetwork: true # original nfs connection would be broken without hostNetwork setting
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: csi-nfs-node-sa
-      priorityClassName: system-cluster-critical
+      priorityClassName: system-node-critical
       securityContext:
         seccompProfile:
           type: RuntimeDefault

@@ -6,6 +6,9 @@ prometheus:
 frrk8s:
   enabled: false
 
+speaker:
+  priorityClassName: daemonset
+
 controller:
   tolerations:
   - key: node-role.kubernetes.io/master
