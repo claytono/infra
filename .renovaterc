@@ -612,7 +612,7 @@
     },
     {
       "description": "PostgreSQL: Major versions at least 6 months old (auto-managed)",
-      "allowedVersions": "/^(18|17|16|15|14)\\./",
+      "allowedVersions": "/^(18|17|16|15)\\./",
       "matchDatasources": [
         "docker",
         "custom.docker-first-seen"
