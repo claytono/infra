@@ -147,11 +147,34 @@ gh api repos/$repo/actions/permissions/workflow
 # default_workflow_permissions: read, can_approve_pull_request_reviews: false
 ```
 
+## Renovate
+
+The repo's Renovate config extends the shared preset and adds only rules
+particular to the repo.
+
+```json
+{
+  "extends": ["github>claytono/renovate-config"]
+}
+```
+
+Add the repo to the list claytono/renovate-docker-datasource scans, so its
+Docker image tags are dated for the 14-day wait:
+
+```bash
+list=$(gh variable get REPOSITORIES -R claytono/renovate-docker-datasource) &&
+  printf '%s\n%s\n' "$list" "$repo" | tr -s ' ' '\n' | sort -u |
+  gh variable set REPOSITORIES -R claytono/renovate-docker-datasource
+```
+
+```bash
+gh variable get REPOSITORIES -R claytono/renovate-docker-datasource
+```
+
 ## Main Repos Only
 
-infra, dotfiles, github-actions and go-unifi-mcp pin every action and image to a
-digest. Their Renovate config extends `config:best-practices`. Once Renovate has
-pinned every action, require SHA pinning:
+infra, dotfiles, github-actions and go-unifi-mcp require SHA pinning. Once
+Renovate has pinned every action, turn it on:
 
 ```bash
 gh api -X PUT repos/$repo/actions/permissions \
