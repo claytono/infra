@@ -5,7 +5,7 @@
 - name: Verify setup
   hosts: all
   vars:
-    expected_version: "1.4.2"
+    expected_version: "1.5.2"
     runc_binary_path: "/usr/local/sbin/runc"
     expected_owner: "root"
     expected_group: "root"
