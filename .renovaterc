@@ -20,6 +20,11 @@
     ]
   },
   "customDatasources": {
+    "grml": {
+      "description": "Grml releases from the download site's file listing. The grml/grml GitHub repository publishes no releases or tags, so the ISO names are the only version source.",
+      "defaultRegistryUrlTemplate": "https://download.grml.org/",
+      "format": "html"
+    },
     "kubernetes-deb-kubeadm": {
       "description": "kubeadm versions from the Kubernetes apt repository. pkgs.k8s.io is a flat repo, so the built-in deb datasource cannot read it; the Packages index is parsed directly. The package name must be baked into the transform because transformTemplates has no access to the dependency name.",
       "format": "plain",
@@ -148,8 +153,9 @@
       "matchStrings": [
         "grml_version:\\s*\"(?<currentValue>\\d{4}\\.\\d{2})\""
       ],
-      "depNameTemplate": "grml/grml",
-      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "grml",
+      "datasourceTemplate": "custom.grml",
+      "extractVersionTemplate": "^grml-full-(?<version>\\d{4}\\.\\d{2})-amd64\\.iso$",
       "versioningTemplate": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{2})$"
     },
     {
