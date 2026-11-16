@@ -46,4 +46,12 @@ rules:
       - 'create'
       - 'delete'
       - 'update'
+  - apiGroups:
+    - postgresql.cnpg.io
+    resources:
+    - clusters
+    verbs:
+    - get
+    - list
+    - watch
 
