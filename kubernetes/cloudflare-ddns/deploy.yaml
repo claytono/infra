@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: cloudflare-ddns
-        image: docker.io/favonia/cloudflare-ddns:1.17.1@sha256:5e61736b982b87d84a1120b4767c4deff0f2cc55ca3ee9dcb1dc58623039b5cb
+        image: docker.io/favonia/cloudflare-ddns:1.18.0@sha256:345b41895a8846d74c62d30bd27e61101a754f8ab8da10c68115823883803afb
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
