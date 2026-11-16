@@ -2,8 +2,19 @@
 - name: "Apt-get update"
   ansible.builtin.apt:
     update_cache: true
-    cache_valid_time: 3600
+    # Longer than a full idempotency test run, so the attempts never
+    # refresh lists that the test's warmup has just refreshed
+    cache_valid_time: 10800
   tags: apt-cache
+
+# Run only by the idempotency test's warmup (scripts/ansible-idempotency-test).
+# The when keeps it out of --tags common runs, which select never-tagged
+# tasks through the role's inherited tag.
+- name: "Apt-get update (forced)"
+  ansible.builtin.apt:
+    update_cache: true
+  when: "'apt-cache-refresh' in ansible_run_tags"
+  tags: [never, apt-cache-refresh]
 
 - name: "Remove unwanted packages"
   ansible.builtin.apt:

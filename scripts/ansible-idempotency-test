@@ -417,8 +417,8 @@ def main():
     )
     parser.add_argument(
         "--warmup-tags",
-        default="apt-cache",
-        help="Run a warmup deploy with these tags before testing (default: apt-cache, empty string to disable)",
+        default="apt-cache-refresh",
+        help="Run a warmup deploy with these tags before testing (default: apt-cache-refresh, empty string to disable)",
     )
     parser.add_argument(
         "--min-attempts",
