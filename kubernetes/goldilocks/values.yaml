@@ -5,6 +5,14 @@ image:
 controller:
   rbac:
     enableArgoproj: false
+    # Goldilocks finds a pod's workload by following its owner references.
+    # CNPG instance pods are owned directly by a Cluster; without read access
+    # the lookup fails, Goldilocks silently skips the pod, and Postgres runs
+    # with no requests.
+    extraRules:
+    - apiGroups: [postgresql.cnpg.io]
+      resources: [clusters]
+      verbs: [get, list, watch]
   resources:
     limits:
       memory: 256Mi
