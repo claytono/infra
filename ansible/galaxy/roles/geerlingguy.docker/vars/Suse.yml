@@ -12,7 +12,6 @@ docker_obsolete_packages:
   - docker-buildx-plugin
   - docker-ce-rootless-extras
   - containerd.io
-  - runc
 
 # Packages to install on openSUSE / SLES
 # Use 'runc' from repo, not 'docker-runc' (avoids conflicts on Leap 15.6)
@@ -21,17 +20,20 @@ docker_packages:
   - containerd
   - runc
 
-# Map SUSE releases to Docker repository paths
+# Map SUSE releases to Docker repository paths.
+#
+# As of 2024, download.opensuse.org/repositories/Virtualization:/containers/
+# uses numeric version paths (e.g. 15.5, 15.6, 15.7, 16.0) that match
+# ansible_facts.distribution_version directly for all Leap/SLES 15.x+ releases.
+# Only Tumbleweed and legacy SLES 12 SP5 require explicit mapping.
 docker_suse_release: >-
-  {% if ansible_facts.distribution_version is match('15\\.6') %}
-    openSUSE_Leap_15.6
-  {% elif ansible_facts.distribution_version is match('15\\.5') %}
-    openSUSE_Leap_15.5
-  {% elif ansible_facts.distribution_version is match('15\\.4') %}
-    openSUSE_Leap_15.4
-  {% else %}
+  {%- if 'Tumbleweed' in ansible_facts.distribution -%}
     openSUSE_Tumbleweed
-  {% endif %}
+  {%- elif ansible_facts.distribution_version is match('12\\.5') -%}
+    SLE_12_SP5
+  {%- else -%}
+    {{ ansible_facts.distribution_version }}
+  {%- endif -%}
 
 # Official Docker repo URL for openSUSE Leap
 docker_zypper_repo_url: >-
