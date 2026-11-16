@@ -5,6 +5,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 0.19.1+2.4.2
+
+- **UPDATE**
+  - update `containerd` to `v2.4.2`. This release includes security fixes and hardening; see the [release notes](https://github.com/containerd/containerd/releases/tag/v2.4.2).
+
 ## 0.19.0+2.4.1
 
 - **UPDATE**
