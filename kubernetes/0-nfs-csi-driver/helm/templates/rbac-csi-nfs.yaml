@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/instance: "csi-driver-nfs"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/name: "csi-driver-nfs"
-    app.kubernetes.io/version: "4.13.4"
+    app.kubernetes.io/version: "4.13.6"
 
 ---
 # Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
@@ -22,7 +22,7 @@ metadata:
     app.kubernetes.io/instance: "csi-driver-nfs"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/name: "csi-driver-nfs"
-    app.kubernetes.io/version: "4.13.4"
+    app.kubernetes.io/version: "4.13.6"
 
 ---
 # Source: csi-driver-nfs/templates/rbac-csi-nfs.yaml
@@ -34,7 +34,7 @@ metadata:
     app.kubernetes.io/instance: "csi-driver-nfs"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/name: "csi-driver-nfs"
-    app.kubernetes.io/version: "4.13.4"
+    app.kubernetes.io/version: "4.13.6"
 rules:
   - apiGroups: [""]
     resources: ["persistentvolumes"]
@@ -80,7 +80,7 @@ metadata:
     app.kubernetes.io/instance: "csi-driver-nfs"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/name: "csi-driver-nfs"
-    app.kubernetes.io/version: "4.13.4"
+    app.kubernetes.io/version: "4.13.6"
 rules:
   - apiGroups: [""]
     resources: ["persistentvolumes"]
@@ -108,7 +108,7 @@ metadata:
     app.kubernetes.io/instance: "csi-driver-nfs"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/name: "csi-driver-nfs"
-    app.kubernetes.io/version: "4.13.4"
+    app.kubernetes.io/version: "4.13.6"
 subjects:
   - kind: ServiceAccount
     name: csi-nfs-controller-sa
@@ -128,7 +128,7 @@ metadata:
     app.kubernetes.io/instance: "csi-driver-nfs"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/name: "csi-driver-nfs"
-    app.kubernetes.io/version: "4.13.4"
+    app.kubernetes.io/version: "4.13.6"
 subjects:
   - kind: ServiceAccount
     name: csi-nfs-controller-sa
