@@ -48,6 +48,7 @@ jobs:
           - debian12
           - fedora43
           - opensuseleap15
+          - opensuseleap16
 
     steps:
       - name: Check out the codebase.
@@ -62,6 +63,10 @@ jobs:
 
       - name: Install test dependencies.
         run: pip3 install ansible molecule molecule-plugins[docker] docker
+
+      # Not loaded by default on ubuntu-26.04 runners.
+      - name: Load legacy iptables modules.
+        run: sudo modprobe -a ip_tables iptable_nat iptable_filter
 
       - name: Run Molecule tests.
         run: molecule test
