@@ -27,14 +27,14 @@ spec:
       # keeps serving HTTP, so the pod looks healthy while sending no alerts
       initContainers:
       - name: wait-for-postgres
-        image: healthchecks/healthchecks:v4.4@sha256:aa08a61b0dcfd83f1332eab195d5cec1b595ae076eb8388cadf8a3d597114f9b
+        image: healthchecks/healthchecks:v5.0@sha256:ba6276c008de510930749f61646ba21f52413c211248297eb4896e4b0d1a8d2e
         command:
         - bash
         - -c
         - until </dev/tcp/healthchecks-postgres-rw/5432; do sleep 1; done
       containers:
       - name: healthchecks
-        image: healthchecks/healthchecks:v4.4@sha256:aa08a61b0dcfd83f1332eab195d5cec1b595ae076eb8388cadf8a3d597114f9b
+        image: healthchecks/healthchecks:v5.0@sha256:ba6276c008de510930749f61646ba21f52413c211248297eb4896e4b0d1a8d2e
         ports:
         - name: http
           containerPort: 8000
