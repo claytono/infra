@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: "server"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/part-of: "authentik"
-    app.kubernetes.io/version: "2026.8.4"
+    app.kubernetes.io/version: "2026.8.5"
 spec:
   replicas: 2
   revisionHistoryLimit: 3
@@ -28,15 +28,15 @@ spec:
         app.kubernetes.io/component: "server"
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/part-of: "authentik"
-        app.kubernetes.io/version: "2026.8.4"
+        app.kubernetes.io/version: "2026.8.5"
       annotations:
-        checksum/secret: b9f68c2e714d3d497233325210285b7256fcb3e71b04fc7db7412f6f4cf7df73
+        checksum/secret: 7f4df6cf0f8e4daf38d9145a15dcce606b14a3f76c8cfd9b9883154a02d680b9
         reloader.stakater.com/auto: "true"
     spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: server
-          image: ghcr.io/goauthentik/server:2026.8.4
+          image: ghcr.io/goauthentik/server:2026.8.5
           imagePullPolicy: IfNotPresent
           args:
             - server
