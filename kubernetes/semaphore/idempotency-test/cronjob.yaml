@@ -6,7 +6,7 @@ metadata:
   name: ansible-idempotency-test
 
 spec:
-  schedule: 0 3 * * *
+  schedule: 30 0 * * *
   timeZone: America/New_York
   concurrencyPolicy: Forbid
   jobTemplate:
