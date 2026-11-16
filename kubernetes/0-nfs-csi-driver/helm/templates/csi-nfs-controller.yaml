@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/instance: "csi-driver-nfs"
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/name: "csi-driver-nfs"
-    app.kubernetes.io/version: "4.13.4"
+    app.kubernetes.io/version: "4.13.6"
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -24,7 +24,7 @@ spec:
         app.kubernetes.io/instance: "csi-driver-nfs"
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/name: "csi-driver-nfs"
-        app.kubernetes.io/version: "4.13.4"
+        app.kubernetes.io/version: "4.13.6"
         app: csi-nfs-controller
     spec:
       hostNetwork: true  # controller also needs to mount nfs to create dir
@@ -81,7 +81,7 @@ spec:
               drop:
               - ALL
         - name: csi-resizer
-          image: "registry.k8s.io/sig-storage/csi-resizer:v2.2.0"
+          image: "registry.k8s.io/sig-storage/csi-resizer:v2.2.1"
           args:
             - "-csi-address=$(ADDRESS)"
             - "-v=2"
@@ -129,7 +129,7 @@ spec:
               drop:
               - ALL
         - name: nfs
-          image: "registry.k8s.io/sig-storage/nfsplugin:v4.13.4"
+          image: "registry.k8s.io/sig-storage/nfsplugin:v4.13.6"
           securityContext:
             privileged: true
             capabilities:
@@ -148,6 +148,9 @@ spec:
             - "--default-ondelete-policy=retain"
             - "--use-tar-command-in-snapshot=false"
             - "--enable-snapshot-compression=true"
+            - "--max-snapshot-archive-size=0"
+            - "--max-snapshot-file-size=0"
+            - "--max-snapshot-files=0"
           env:
             - name: NODE_ID
               valueFrom:
