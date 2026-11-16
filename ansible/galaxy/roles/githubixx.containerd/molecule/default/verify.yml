@@ -40,10 +40,10 @@
       register: containerd__version_output
       changed_when: false
 
-    - name: Assert containerd version is 2.4.1
+    - name: Assert containerd version is 2.4.2
       ansible.builtin.assert:
         that:
-          - "' v2.4.1 ' in containerd__version_output.stdout"
+          - "' v2.4.2 ' in containerd__version_output.stdout"
         fail_msg: "Unexpected containerd version: {{ containerd__version_output.stdout }}"
 
     - name: Gather service facts
