@@ -45,6 +45,9 @@
       when: item in ansible_facts.getent_group
       loop:
         - libvirt
+        - gpio
+        - spi
+        - i2c
 
 - name: Proxmox configuration
   hosts: proxmox
