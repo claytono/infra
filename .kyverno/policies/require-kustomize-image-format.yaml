@@ -1,32 +1,26 @@
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 
 metadata:
   name: require-kustomize-image-format
 
 spec:
-  validationFailureAction: Enforce
-  rules:
-  - name: deny-separate-digest-field
-    match:
-      any:
-      - resources:
-          kinds:
-          - Kustomization
-    validate:
-      message: >-
-        Kustomization images must NOT use a separate 'digest' field.
-        Renovate requires the digest to be part of newTag, e.g.:
-          newTag: 1.0.0@sha256:abc123
-        Not:
-          newTag: 1.0.0
-          digest: sha256:abc123
-      foreach:
-      - list: request.object.images || `[]`
-        deny:
-          conditions:
-            any:
-            - key: "{{ element.digest || '' }}"
-              operator: NotEquals
-              value: ''
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [kustomize.config.k8s.io]
+      apiVersions: ['*']
+      operations: [CREATE, UPDATE]
+      resources: [kustomizations]
+  validations:
+  - expression: >-
+      object.?images.orValue([]).all(image,
+      image.?digest.orValue('') == '')
+    message: >-
+      Kustomization images must NOT use a separate 'digest' field.
+      Renovate requires the digest to be part of newTag, e.g.:
+        newTag: 1.0.0@sha256:abc123
+      Not:
+        newTag: 1.0.0
+        digest: sha256:abc123

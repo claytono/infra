@@ -1,72 +1,31 @@
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 
 metadata:
   name: require-pinned-image-pull-policy
 
 spec:
-  validationFailureAction: Enforce
-  rules:
-  - name: require-if-not-present-for-pinned-images
-    match:
-      any:
-      - resources:
-          kinds:
-          - Pod
-    validate:
-      message: >-
-        Images pinned by digest must omit imagePullPolicy or set it to
-        IfNotPresent. Images using a latest tag must set it explicitly.
-      foreach:
-      - list: request.object.spec.containers || `[]`
-        preconditions:
-          all:
-          - key: "{{ contains(element.image, '@sha256:') }}"
-            operator: Equals
-            value: true
-        deny:
-          conditions:
-            any:
-            - key: "{{ element.imagePullPolicy || 'IfNotPresent' }}"
-              operator: NotEquals
-              value: IfNotPresent
-            - key: >-
-                {{ element.imagePullPolicy ||
-                contains(element.image, ':latest@sha256:') }}
-              operator: Equals
-              value: true
-      - list: request.object.spec.initContainers || `[]`
-        preconditions:
-          all:
-          - key: "{{ contains(element.image, '@sha256:') }}"
-            operator: Equals
-            value: true
-        deny:
-          conditions:
-            any:
-            - key: "{{ element.imagePullPolicy || 'IfNotPresent' }}"
-              operator: NotEquals
-              value: IfNotPresent
-            - key: >-
-                {{ element.imagePullPolicy ||
-                contains(element.image, ':latest@sha256:') }}
-              operator: Equals
-              value: true
-      - list: request.object.spec.ephemeralContainers || `[]`
-        preconditions:
-          all:
-          - key: "{{ contains(element.image, '@sha256:') }}"
-            operator: Equals
-            value: true
-        deny:
-          conditions:
-            any:
-            - key: "{{ element.imagePullPolicy || 'IfNotPresent' }}"
-              operator: NotEquals
-              value: IfNotPresent
-            - key: >-
-                {{ element.imagePullPolicy ||
-                contains(element.image, ':latest@sha256:') }}
-              operator: Equals
-              value: true
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ['']
+      apiVersions: [v1]
+      operations: [CREATE, UPDATE]
+      resources: [pods]
+  variables:
+  - name: containers
+    expression: >-
+      object.spec.?containers.orValue([]) +
+      object.spec.?initContainers.orValue([]) +
+      object.spec.?ephemeralContainers.orValue([])
+  validations:
+  - expression: >-
+      variables.containers.all(container,
+      !container.?image.orValue('').contains('@sha256:') ||
+      (has(container.imagePullPolicy) ?
+      container.imagePullPolicy == 'IfNotPresent' :
+      !container.image.contains(':latest@sha256:')))
+    message: >-
+      Images pinned by digest must omit imagePullPolicy or set it to
+      IfNotPresent. Images using a latest tag must set it explicitly.

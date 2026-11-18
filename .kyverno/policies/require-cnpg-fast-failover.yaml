@@ -1,6 +1,6 @@
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 
 metadata:
   name: require-cnpg-fast-failover
@@ -25,21 +25,19 @@ metadata:
 # primaryUpdateMethod has no effect, so all clusters share one configuration
 # and adding a replica later needs no further change.
 spec:
-  validationFailureAction: Enforce
-  rules:
-  - name: require-switchover-and-fast-shutdown
-    match:
-      any:
-      - resources:
-          kinds:
-          - postgresql.cnpg.io/v1/Cluster
-    validate:
-      message: >-
-        Database clusters must set spec.primaryUpdateMethod to 'switchover' and
-        spec.smartShutdownTimeout to 0. The CNPG defaults restart the primary
-        in place and wait up to 180 seconds for clients that never disconnect,
-        leaving the database unavailable for minutes.
-      pattern:
-        spec:
-          primaryUpdateMethod: switchover
-          smartShutdownTimeout: 0
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [postgresql.cnpg.io]
+      apiVersions: [v1]
+      operations: [CREATE, UPDATE]
+      resources: [clusters]
+  validations:
+  - expression: >-
+      object.spec.?primaryUpdateMethod.orValue('') == 'switchover' &&
+      object.spec.?smartShutdownTimeout.orValue(-1) == 0
+    message: >-
+      Database clusters must set spec.primaryUpdateMethod to 'switchover' and
+      spec.smartShutdownTimeout to 0. The CNPG defaults restart the primary
+      in place and wait up to 180 seconds for clients that never disconnect,
+      leaving the database unavailable for minutes.
