@@ -1,48 +1,39 @@
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 
 metadata:
   name: require-goldilocks-vpa-config
 
 spec:
-  validationFailureAction: Enforce
-  rules:
-  - name: require-goldilocks-enabled
-    match:
-      any:
-      - resources:
-          kinds:
-          - Namespace
-    validate:
-      message: >-
-        Every namespace MUST set the label goldilocks.fairwinds.com/enabled: "true"
-        so Goldilocks creates VPAs for its workloads. To keep VPA from changing a
-        namespace's pods, set goldilocks.fairwinds.com/vpa-update-mode: "Off"
-        instead of leaving Goldilocks disabled.
-      pattern:
-        metadata:
-          labels:
-            goldilocks.fairwinds.com/enabled: "true"
-  - name: require-vpa-annotations
-    match:
-      any:
-      - resources:
-          kinds:
-          - Namespace
-    validate:
-      message: >-
-        Every namespace MUST have both annotations:
-        1. goldilocks.fairwinds.com/vpa-update-mode (values: Off, Initial, Recreate,
-        Auto, InPlaceOrRecreate)
-        2. goldilocks.fairwinds.com/vpa-resource-policy (JSON format)
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ['']
+      apiVersions: [v1]
+      operations: [CREATE, UPDATE]
+      resources: [namespaces]
+  validations:
+  - expression: >-
+      object.metadata.?labels[?'goldilocks.fairwinds.com/enabled']
+      .orValue('') == 'true'
+    message: >-
+      Every namespace MUST set the label goldilocks.fairwinds.com/enabled: "true"
+      so Goldilocks creates VPAs for its workloads. To keep VPA from changing a
+      namespace's pods, set goldilocks.fairwinds.com/vpa-update-mode: "Off"
+      instead of leaving Goldilocks disabled.
+  - expression: >-
+      object.metadata.?annotations[?'goldilocks.fairwinds.com/vpa-update-mode']
+      .orValue('') != '' &&
+      object.metadata.?annotations[?'goldilocks.fairwinds.com/vpa-resource-policy']
+      .orValue('') != ''
+    message: >-
+      Every namespace MUST have both annotations:
+      1. goldilocks.fairwinds.com/vpa-update-mode (values: Off, Initial, Recreate,
+      Auto, InPlaceOrRecreate)
+      2. goldilocks.fairwinds.com/vpa-resource-policy (JSON format)
 
-        Standard configurations:
-        - Cluster-critical: Initial + RequestsOnly
-        - All others: InPlaceOrRecreate + RequestsOnly
-        - To stop VPA changing a namespace's pods, set the update mode to Off
-      pattern:
-        metadata:
-          annotations:
-            goldilocks.fairwinds.com/vpa-update-mode: "?*"
-            goldilocks.fairwinds.com/vpa-resource-policy: "?*"
+      Standard configurations:
+      - Cluster-critical: Initial + RequestsOnly
+      - All others: InPlaceOrRecreate + RequestsOnly
+      - To stop VPA changing a namespace's pods, set the update mode to Off
