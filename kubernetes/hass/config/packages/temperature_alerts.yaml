@@ -2,6 +2,14 @@
 # Temperature monitoring using 20-minute rolling minimum
 # Alerts only fire if minimum temp over 20 minutes exceeds threshold
 # This filters out brief door-open spikes
+#
+# The refrigerator has two alerts instead. Warm leftovers raise it to
+# about 41.5F for two to three hours, which a 20-minute window over 40F
+# reported several times a week. A door left open climbs past 45F within
+# minutes, so that alert uses a 15-minute window and calls at any hour.
+# A fridge that runs warm stays above 40F for good, so the other alert
+# waits four hours and calls only between 8 AM and 10 PM; a fridge
+# still warm in the morning calls at 8 AM.
 
 sensor:
 - platform: statistics
@@ -12,11 +20,18 @@ sensor:
     minutes: 20
 
 - platform: statistics
-  name: Refrigerator Temperature Min 20m
+  name: Refrigerator Temperature Min 15m
   entity_id: sensor.refrigerator_temperature
   state_characteristic: value_min
   max_age:
-    minutes: 20
+    minutes: 15
+
+- platform: statistics
+  name: Refrigerator Temperature Min 4h
+  entity_id: sensor.refrigerator_temperature
+  state_characteristic: value_min
+  max_age:
+    hours: 4
 
 - platform: statistics
   name: Refrigerator Freezer Temperature Min 20m
@@ -42,12 +57,20 @@ template:
       {% set temp = states("sensor.garage_freezer_temperature_min_20m") %}
       {{ temp not in ['unknown', 'unavailable'] and temp | float > 10 }}
 
-  - name: Refrigerator Too Warm
-    unique_id: refrigerator_too_warm
+  - name: Refrigerator Door Open
+    unique_id: refrigerator_door_open
     device_class: problem
     state: >
-      {% set temp = states("sensor.refrigerator_temperature_min_20m") %}
-      {{ temp not in ['unknown', 'unavailable'] and temp | float > 40 }}
+      {% set temp = states("sensor.refrigerator_temperature_min_15m") %}
+      {{ temp not in ['unknown', 'unavailable'] and temp | float > 45 }}
+
+  - name: Refrigerator Running Warm
+    unique_id: refrigerator_running_warm
+    device_class: problem
+    state: >
+      {% set temp = states("sensor.refrigerator_temperature_min_4h") %}
+      {{ temp not in ['unknown', 'unavailable'] and temp | float > 40
+         and 8 <= now().hour < 22 }}
 
   - name: Refrigerator Freezer Too Warm
     unique_id: refrigerator_freezer_too_warm
@@ -73,9 +96,17 @@ alert:
     notifiers:
     - call_me
 
-  refrigerator_too_warm:
-    name: Temperature in the refrigerator is too warm!
-    entity_id: binary_sensor.refrigerator_too_warm
+  refrigerator_door_open:
+    name: The refrigerator is above 45 degrees! Is the door open?
+    entity_id: binary_sensor.refrigerator_door_open
+    state: 'on'
+    repeat: 10
+    notifiers:
+    - call_me
+
+  refrigerator_running_warm:
+    name: The refrigerator has been above 40 degrees for four hours!
+    entity_id: binary_sensor.refrigerator_running_warm
     state: 'on'
     repeat: 10
     notifiers:
