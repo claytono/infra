@@ -2,12 +2,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: default
+namespace: plex
 
 commonAnnotations:
   argoManaged: 'true'
 
 resources:
+- namespace.yaml
 - deploy.yaml
 - ingress.yaml
 - service.yaml
@@ -17,6 +18,6 @@ resources:
 labels:
 
 - pairs:
-    app.kubernetes.io/name: plexmediaserver
-    app.kubernetes.io/instance: plexmediaserver
+    app.kubernetes.io/name: plex
+    app.kubernetes.io/instance: plex
   includeSelectors: true
