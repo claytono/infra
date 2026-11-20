@@ -3,10 +3,10 @@ apiVersion: v1
 kind: Service
 
 metadata:
-  name: plexmediaserver
+  name: plex
   labels:
-    app.kubernetes.io/name: plexmediaserver
-    app.kubernetes.io/instance: plexmediaserver
+    app.kubernetes.io/name: plex
+    app.kubernetes.io/instance: plex
   annotations:
     metallb.io/address-pool: shared
     metallb.io/allow-shared-ip: plexmediaserver
@@ -18,18 +18,18 @@ spec:
     targetPort: 32400
     protocol: TCP
   selector:
-    app.kubernetes.io/name: plexmediaserver
-    app.kubernetes.io/instance: plexmediaserver
+    app.kubernetes.io/name: plex
+    app.kubernetes.io/instance: plex
 
 ---
 apiVersion: v1
 kind: Service
 
 metadata:
-  name: plexmediaserver-udp
+  name: plex-udp
   labels:
-    app.kubernetes.io/name: plexmediaserver
-    app.kubernetes.io/instance: plexmediaserver
+    app.kubernetes.io/name: plex
+    app.kubernetes.io/instance: plex
   annotations:
     metallb.io/address-pool: shared
     metallb.io/allow-shared-ip: plexmediaserver
@@ -58,5 +58,5 @@ spec:
     targetPort: 32414
     protocol: UDP
   selector:
-    app.kubernetes.io/name: plexmediaserver
-    app.kubernetes.io/instance: plexmediaserver
+    app.kubernetes.io/name: plex
+    app.kubernetes.io/instance: plex

@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: plexmediaserver
+  name: plex
   annotations:
     reloader.stakater.com/auto: 'true'
     goldilocks.fairwinds.com/vpa-update-mode: Initial
@@ -13,21 +13,21 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: plexmediaserver
-      app.kubernetes.io/instance: plexmediaserver
+      app.kubernetes.io/name: plex
+      app.kubernetes.io/instance: plex
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: plexmediaserver
-        app.kubernetes.io/instance: plexmediaserver
+        app.kubernetes.io/name: plex
+        app.kubernetes.io/instance: plex
     spec:
       hostNetwork: true
       runtimeClassName: nvidia
       priorityClassName: gpu-priority
       containers:
-      - name: plexmediaserver
+      - name: plex
         image: plexinc/pms-docker:1.43.5.11079-b3b13e506@sha256:6d778d41daae68f89115aa87a44ae14a96b23e71a2093da173b5a9aac4091336
         imagePullPolicy: IfNotPresent
         livenessProbe:
@@ -66,7 +66,7 @@ spec:
         - name: PLEX_CLAIM
           valueFrom:
             secretKeyRef:
-              name: plexmediaserver
+              name: plex
               key: PLEX_CLAIM
         volumeMounts:
         - mountPath: /config
@@ -76,15 +76,12 @@ spec:
         - mountPath: /data
           name: video
         resources:
-          requests:
-            memory: 8192Mi
-            cpu: 2000m
           limits:
             nvidia.com/gpu: 1
       volumes:
       - name: config
         persistentVolumeClaim:
-          claimName: plexmediaserver-config
+          claimName: plex-config
       - name: transcode
         emptyDir:
           sizeLimit: 50Gi

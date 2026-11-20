@@ -83,7 +83,7 @@ Set a request or limit only for a concrete reason, and say why in a comment next
 to it, for example:
 
 - A device resource such as `nvidia.com/gpu`, which Kubernetes only accepts
-  under `limits` (see `kubernetes/plexmediaserver/deploy.yaml`).
+  under `limits` (see `kubernetes/plex/deploy.yaml`).
 - Workloads in `vpa`, `cert-manager`, `kube-system` and `kube-flannel`. The VPA
   admission webhook fails closed, so it skips the namespaces it needs to
   recover: itself, cert-manager for its certificates, and the pod network and
