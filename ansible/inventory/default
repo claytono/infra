@@ -1,4 +1,4 @@
-luser ansible_host=luser.fnord.net domain=oneill.net
+luser ansible_host=luser.oneill.net domain=oneill.net
 flux ansible_host=flux.fnord.net domain=fnord.net
 k1 ansible_host=k1.oneill.net domain=oneill.net
 k2 ansible_host=k2.oneill.net domain=oneill.net
