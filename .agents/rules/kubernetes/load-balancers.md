@@ -58,7 +58,7 @@ spec:
 
 Services that listen on different ports can share an address by selecting the
 same pool and carrying the same `metallb.io/allow-shared-ip` key. The `shared`
-pool (`172.19.74.21`) works this way with the key `plexmediaserver`.
+pool (`172.19.74.21`) works this way with the key `shared`.
 
 ## Adding or moving an address
 

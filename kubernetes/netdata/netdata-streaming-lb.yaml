@@ -6,7 +6,7 @@ metadata:
   name: netdata-streaming
   namespace: netdata
   annotations:
-    metallb.io/allow-shared-ip: plexmediaserver
+    metallb.io/allow-shared-ip: shared
     metallb.io/address-pool: shared
     external-dns.alpha.kubernetes.io/hostname: netdata-stream.k.oneill.net
     external-dns.kubernetes.io/hostname: netdata-stream.k.oneill.net
