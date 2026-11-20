@@ -1,0 +1,82 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: plex-traefik
+  annotations:
+    reloader.stakater.com/auto: 'true'
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: plex-traefik
+      app.kubernetes.io/instance: plex-traefik
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: plex-traefik
+        app.kubernetes.io/instance: plex-traefik
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: traefik
+        image: docker.io/traefik:v3.7.16@sha256:1336e85aaed293bd63d005086e0dd013b04078b26aaeb1c18b26a2f928af7e65
+        args:
+        - --entryPoints.traefik.address=:8080/tcp
+        - --entryPoints.websecure.address=:8443/tcp
+        - --entryPoints.websecure.http.tls=true
+        - --ping=true
+        - --providers.file.directory=/etc/traefik/dynamic
+        - --providers.file.watch=true
+        - --global.checkNewVersion=false
+        - --global.sendAnonymousUsage=false
+        - --log.level=INFO
+        - --accesslog
+        - --accesslog.format=json
+        # Plex clients send X-Plex-Token in the query string.
+        - --accesslog.fields.queryparameters.defaultmode=drop
+        ports:
+        - name: traefik
+          containerPort: 8080
+        - name: websecure
+          containerPort: 8443
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: traefik
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: traefik
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /etc/traefik/dynamic
+          name: config
+          readOnly: true
+        - mountPath: /etc/traefik/certs
+          name: certs
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp
+      volumes:
+      - name: config
+        secret:
+          secretName: plex-traefik-config
+      - name: certs
+        secret:
+          secretName: plex-traefik-tls
+      - name: tmp
+        emptyDir: {}
