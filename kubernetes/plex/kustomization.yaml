@@ -14,10 +14,13 @@ resources:
 - service.yaml
 - externalsecret.yaml
 - pvc-config.yaml
+- traefik-deploy.yaml
+- traefik-service.yaml
+- traefik-certificate.yaml
+- traefik-externalsecret.yaml
 
 labels:
 
 - pairs:
     app.kubernetes.io/name: plex
     app.kubernetes.io/instance: plex
-  includeSelectors: true

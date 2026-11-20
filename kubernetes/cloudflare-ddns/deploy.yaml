@@ -49,3 +49,9 @@ spec:
         # detected prefix and substitutes luser's host bits.
         - name: DOMAINS
           value: luser.fnord.net{hostid6=::74:161},luser.oneill.net{hostid6=::74:161}
+        # IPv4 only: the router forwards Plex over IPv4 alone.
+        - name: IP4_DOMAINS
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-ddns
+              key: IP4_DOMAINS

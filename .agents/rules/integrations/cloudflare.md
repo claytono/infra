@@ -88,6 +88,12 @@ address and luser's IPv6 address. The pod detects its node's IPv6 address, so
 each domain sets `hostid6=::74:161` to keep the detected prefix and use luser's
 host bits.
 
+It also keeps Plex's public hostname, under `k.oneill.net`, pointed at the
+current public IPv4 address, through `IP4_DOMAINS`. The name is deliberately not
+in this repo: it lives in the `public-hostname` field of the `plexmediaserver`
+item in 1Password and reaches the pod through External Secrets. Its explicit A
+record takes precedence over the `*.k.oneill.net` wildcard.
+
 The deployment uses the `cloudflare-ddns` API token (DNS Write, both zones)
 pulled from 1Password via External Secrets.
 

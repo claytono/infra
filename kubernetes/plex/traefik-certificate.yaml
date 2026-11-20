@@ -1,0 +1,16 @@
+---
+# A wildcard keeps the public Plex hostname out of certificate transparency
+# logs.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+
+metadata:
+  name: plex-traefik
+
+spec:
+  secretName: plex-traefik-tls
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+  - '*.k.oneill.net'
