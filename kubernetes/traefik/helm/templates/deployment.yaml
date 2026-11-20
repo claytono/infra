@@ -63,6 +63,7 @@ spec:
         - --providers.kubernetescrd
         - --providers.kubernetescrd.ingressClass=traefik
         - --providers.kubernetescrd.allowCrossNamespace=true
+        - --providers.kubernetescrd.defaultTLSResourcesNamespace=traefik
         - --providers.kubernetescrd.allowEmptyServices=true
         - --providers.kubernetesingress
         - --providers.kubernetesingress.allowEmptyServices=true

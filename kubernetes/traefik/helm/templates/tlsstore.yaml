@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/instance: traefik-traefik
     app.kubernetes.io/managed-by: Helm
 spec:
+  certificates:
+  - secretName: k-oneill-net-wildcard-tls
   defaultCertificate:
     secretName: k-oneill-net-wildcard-tls
 
