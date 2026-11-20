@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/instance: plex
   annotations:
     metallb.io/address-pool: shared
-    metallb.io/allow-shared-ip: plexmediaserver
+    metallb.io/allow-shared-ip: shared
 
 spec:
   type: LoadBalancer
@@ -32,7 +32,7 @@ metadata:
     app.kubernetes.io/instance: plex
   annotations:
     metallb.io/address-pool: shared
-    metallb.io/allow-shared-ip: plexmediaserver
+    metallb.io/allow-shared-ip: shared
 
 spec:
   type: LoadBalancer

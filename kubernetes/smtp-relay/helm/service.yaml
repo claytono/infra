@@ -14,7 +14,7 @@ metadata:
     external-dns.alpha.kubernetes.io/hostname: smtp.k.oneill.net
     external-dns.kubernetes.io/hostname: smtp.k.oneill.net
     metallb.io/address-pool: shared
-    metallb.io/allow-shared-ip: plexmediaserver
+    metallb.io/allow-shared-ip: shared
 spec:
   type: LoadBalancer
   ports:
