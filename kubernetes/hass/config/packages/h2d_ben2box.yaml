@@ -12,6 +12,12 @@
 #   - chamber_temperature >= 30 degC -- bounds post-print runtime. Chamber
 #     outgassing drops to ~zero as it approaches ambient; this lets the fan
 #     scrub while the chamber is still warm, then stop on its own.
+#
+# A speed set by hand lasts while the fan stays on, including across
+# back-to-back prints. Opening the door pauses the fan and closing it
+# resumes at whatever speed it had: ESPHome keeps the fan's last speed while
+# it is off and reuses it when turned on without one. Any other start from
+# off runs the fan at 100%.
 
 automation:
 - alias: Turn on H2D Ben2Box fan when chamber is sealed and warm
@@ -19,9 +25,10 @@ automation:
   description: Run activated-carbon filter while H2D chamber is sealed and above 30C
   trigger:
   - platform: state
-    entity_id:
-    - sensor.h2d_0948ad570200807_airduct_mode
-    - binary_sensor.h2d_0948ad570200807_enclosure_door
+    entity_id: sensor.h2d_0948ad570200807_airduct_mode
+  - platform: state
+    entity_id: binary_sensor.h2d_0948ad570200807_enclosure_door
+    id: door
   - platform: numeric_state
     entity_id: sensor.h2d_0948ad570200807_chamber_temperature
     above: 30
@@ -36,11 +43,24 @@ automation:
     entity_id: sensor.h2d_0948ad570200807_chamber_temperature
     above: 30
   action:
-  - service: fan.turn_on
-    target:
-      entity_id: fan.h2d_ben2box_h2d_ben2box_fan
-    data:
-      percentage: 50
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: door
+      sequence:
+      - service: fan.turn_on
+        target:
+          entity_id: fan.h2d_ben2box_h2d_ben2box_fan
+    - conditions:
+      - condition: state
+        entity_id: fan.h2d_ben2box_h2d_ben2box_fan
+        state: 'off'
+      sequence:
+      - service: fan.turn_on
+        target:
+          entity_id: fan.h2d_ben2box_h2d_ben2box_fan
+        data:
+          percentage: 100
 
 - alias: Turn off H2D Ben2Box fan when chamber is unsealed or cool
   id: h2d_ben2box_fan_off
