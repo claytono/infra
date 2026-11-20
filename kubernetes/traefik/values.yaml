@@ -39,6 +39,9 @@ providers:
   kubernetesCRD:
     allowCrossNamespace: true
     ingressClass: traefik
+    # A default TLSOption or TLSStore in another namespace would otherwise
+    # replace ours, or cancel it out.
+    defaultTLSResourcesNamespace: traefik
   kubernetesIngress: {}
 
 ports:
@@ -62,6 +65,16 @@ tlsStore:
   default:
     defaultCertificate:
       secretName: k-oneill-net-wildcard-tls
+    # Strict SNI ignores the default certificate, so the wildcard is also
+    # loaded as a regular one.
+    certificates:
+    - secretName: k-oneill-net-wildcard-tls
+
+# Refuse TLS handshakes whose name no loaded certificate covers, including
+# connections by IP.
+tlsOptions:
+  default:
+    sniStrict: true
 
 additionalArguments:
 - --accesslog

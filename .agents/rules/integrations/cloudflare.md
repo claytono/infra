@@ -68,6 +68,12 @@ of Traefik's default `TLSStore` (`tlsStore` in
 `kubernetes/traefik/values.yaml`), and the `websecure` entry point enables TLS
 on every route.
 
+The default `TLSOption` sets `sniStrict`, so Traefik refuses any TLS handshake
+whose server name no loaded certificate covers, including connections by IP. A
+host must therefore be one level under `k.oneill.net` or have its own
+certificate. Strict SNI ignores the default certificate, so the `TLSStore` also
+lists the wildcard under `certificates`.
+
 An Ingress keeps a `tls` entry listing its hosts, so Homepage links to it over
 https, but sets no `secretName` and no `cert-manager.io/cluster-issuer`
 annotation. Traefik prefers any loaded certificate whose SAN matches the host

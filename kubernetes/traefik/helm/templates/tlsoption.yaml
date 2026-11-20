@@ -1,0 +1,14 @@
+---
+# Source: traefik/templates/tlsoption.yaml
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  name: default
+  namespace: traefik
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-traefik
+    app.kubernetes.io/managed-by: Helm
+spec:
+  sniStrict: true
+
