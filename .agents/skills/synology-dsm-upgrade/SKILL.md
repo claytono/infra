@@ -26,13 +26,27 @@ export.
 - Get an explicit go-ahead from the user at the two gates marked **GATE**.
   Invoking this skill authorizes the `ssh` commands written here, nothing else.
 - Run `kubectl` and repo scripts from the repo root in the dev shell.
+- The shell tool stops a foreground command after 10 minutes. Give each long
+  wait its own tool call, run one that can take longer, such as step 19, in the
+  background, and keep commands that share a shell variable in one call.
 - SSH to fs2 as `root@fs2`. Synology tools are not on root's PATH over SSH; use
   the full paths below.
 - Keep run state in `.tmp/dsm-upgrade/` at the repo top (ignored by git).
 
 ## Phase 1: Preflight (no disruption)
 
-1. Current version, uptime and update offer:
+1. The scripts this skill runs must match `origin/main`. A stale worktree can
+   carry an older `scripts/iscsi-storage` that ignores `--yes`, waits at its
+   prompt and exits without scaling anything down:
+
+   ```bash
+   git fetch -q origin main && git diff --stat origin/main -- scripts/iscsi-storage .agents/skills/synology-dsm-upgrade
+   ```
+
+   Expect no output. Otherwise stop and ask the user whether to update the
+   checkout.
+
+   Then the current version, uptime and update offer:
 
    ```bash
    ssh root@fs2 'grep -E "^(productversion|buildnumber|smallfixnumber)=" /etc.defaults/VERSION; uptime; /usr/syno/sbin/synoupgrade --check'
@@ -224,14 +238,34 @@ DSM, which cannot be downgraded. Ask for the go-ahead.
 
 ## Phase 4: Restore
 
-18. Start k1 and wait for the cluster:
+18. Start k1 and wait for the cluster. Right after boot, fs2's NFS server can
+    hold new file opens for its grace period (about 90 seconds), and a
+    `qm start` then fails with `got timeout`. First wait until p1 can read k1's
+    disk:
 
     ```bash
-    ssh p1 'sudo qm start 134'
-    timeout 600 bash -c 'until kubectl get --raw /readyz >/dev/null 2>&1; do sleep 10; done'
-    kubectl wait --for=condition=Ready node --all --timeout=10m
+    ssh p1 'timeout 300 bash -c "until sudo timeout 10 head -c1 /mnt/pve/proxmox-ssd/images/134/vm-134-disk-0.qcow2 >/dev/null; do sleep 10; done"; echo rc=$?'
+    ```
+
+    Expect `rc=0`. Then start k1:
+
+    ```bash
+    ssh p1 'sudo qm start 134 && sudo qm status 134'
+    ```
+
+    Expect `status: running`. If the start fails with `got timeout`, check
+    `ssh p1 sudo qm status 134` shows `stopped`, rerun the disk check, and run
+    the start once more. Stop and report a second failure.
+
+    Wait for the API server, then the nodes:
+
+    ```bash
+    timeout 540 bash -c 'until kubectl get --raw /readyz >/dev/null 2>&1; do sleep 10; done'; echo "rc=$?"
+    kubectl wait --for=condition=Ready node --all --timeout=8m
     kubectl get pods -A --no-headers | grep -vE 'Running|Completed'
     ```
+
+    Expect `rc=0`; on `rc=124`, stop and report.
 
     Report pods that stay unhealthy after a few minutes, especially those using
     NFS.
