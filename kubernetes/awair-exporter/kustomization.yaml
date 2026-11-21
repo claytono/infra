@@ -9,8 +9,8 @@ commonAnnotations:
 
 resources:
 - deploy.yaml
-- service.yaml
 - externalsecret.yaml
+- service.yaml
 
 labels:
 

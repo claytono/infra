@@ -10,14 +10,14 @@ commonAnnotations:
 resources:
 - namespace.yaml
 - deploy.yaml
-- ingress.yaml
-- service.yaml
 - externalsecret.yaml
+- ingress.yaml
 - pvc-config.yaml
-- traefik-deploy.yaml
-- traefik-service.yaml
+- service.yaml
 - traefik-certificate.yaml
+- traefik-deploy.yaml
 - traefik-externalsecret.yaml
+- traefik-service.yaml
 
 labels:
 

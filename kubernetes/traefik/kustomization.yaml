@@ -36,9 +36,6 @@ resources:
 - helm/crds/traefik.io_tlsstores.yaml
 - helm/crds/traefik.io_traefikservices.yaml
 # Helm templates
-- helm/templates/rbac/serviceaccount.yaml
-- helm/templates/rbac/clusterrole.yaml
-- helm/templates/rbac/clusterrolebinding.yaml
 - helm/templates/deployment.yaml
 - helm/templates/ingressclass.yaml
 - helm/templates/ingressroute.yaml
@@ -47,6 +44,9 @@ resources:
 - helm/templates/service-metrics.yaml
 - helm/templates/tlsoption.yaml
 - helm/templates/tlsstore.yaml
+- helm/templates/rbac/clusterrole.yaml
+- helm/templates/rbac/clusterrolebinding.yaml
+- helm/templates/rbac/serviceaccount.yaml
 
 labels:
 

@@ -11,9 +11,9 @@ resources:
 - namespace.yaml
 - certificate.yaml
 - externalsecret.yaml
-- helm/serviceaccount.yaml
 - helm/configmap.yaml
 - helm/service.yaml
+- helm/serviceaccount.yaml
 - helm/statefulset.yaml
 
 patches:

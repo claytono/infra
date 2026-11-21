@@ -8,10 +8,10 @@ commonAnnotations:
   argoManaged: 'true'
 
 resources:
+- namespace.yaml
 - deployment.yaml
 - externalsecret.yaml
 - ingress.yaml
-- namespace.yaml
 - password-generators.yaml
 - postgres-cluster.yaml
 - pvc.yaml

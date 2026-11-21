@@ -9,11 +9,11 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- pvc.yaml
-- externalsecret.yaml
+- cronjob-renew.yaml
 - cronjob-synology.yaml
 - cronjob-udmp.yaml
-- cronjob-renew.yaml
+- externalsecret.yaml
+- pvc.yaml
 
 configMapGenerator:
 - name: acme-sh-script

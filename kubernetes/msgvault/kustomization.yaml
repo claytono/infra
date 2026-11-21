@@ -9,12 +9,12 @@ components:
 
 resources:
 - namespace.yaml
-- password-generators.yaml
+- deploy.yaml
 - externalsecret.yaml
+- ingress.yaml
+- password-generators.yaml
 - pvc.yaml
 - service.yaml
-- deploy.yaml
-- ingress.yaml
 
 configMapGenerator:
 - name: msgvault-config

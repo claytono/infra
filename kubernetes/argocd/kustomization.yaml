@@ -14,10 +14,10 @@ labels:
 
 resources:
 - namespace.yaml
-- tailscale-ingress.yaml
 - appset.yaml
 - externalsecret-oidc-config.yaml
 - externalsecret-server-secretkey.yaml
+- tailscale-ingress.yaml
 
 # Generated helm resources - do not edit below this line
 - helm/templates/argocd-application-controller/clusterrole.yaml
@@ -67,10 +67,10 @@ resources:
 - helm/templates/dex/rolebinding.yaml
 - helm/templates/dex/service.yaml
 - helm/templates/dex/serviceaccount.yaml
+- helm/templates/redis/deployment.yaml
+- helm/templates/redis/health-configmap.yaml
+- helm/templates/redis/service.yaml
 - helm/templates/redis-secret-init/job.yaml
 - helm/templates/redis-secret-init/role.yaml
 - helm/templates/redis-secret-init/rolebinding.yaml
 - helm/templates/redis-secret-init/serviceaccount.yaml
-- helm/templates/redis/deployment.yaml
-- helm/templates/redis/health-configmap.yaml
-- helm/templates/redis/service.yaml

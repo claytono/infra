@@ -9,10 +9,10 @@ resources:
 - externalsecret.yaml
 - externalsecret-oidc.yaml
 - helm/karakeep/common.yaml
-- helm/meilisearch/serviceaccount.yaml
 - helm/meilisearch/configmap.yaml
 - helm/meilisearch/pvc.yaml
 - helm/meilisearch/service.yaml
+- helm/meilisearch/serviceaccount.yaml
 - helm/meilisearch/statefulset.yaml
 
 commonAnnotations:

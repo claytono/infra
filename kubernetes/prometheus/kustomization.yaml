@@ -12,11 +12,11 @@ commonAnnotations:
 
 resources:
 - deploy.yaml
+- externalsecret.yaml
 - ingress.yaml
 - pvc.yaml
 - rbac.yaml
 - service.yaml
-- externalsecret.yaml
 
 labels:
 

@@ -10,14 +10,14 @@ commonAnnotations:
 resources:
 - namespace.yaml
 - externalsecret.yaml
-- helm/grafana/serviceaccount.yaml
-- helm/grafana/configmap.yaml
-- helm/grafana/pvc.yaml
 - helm/grafana/clusterrole.yaml
 - helm/grafana/clusterrolebinding.yaml
-- helm/grafana/service.yaml
+- helm/grafana/configmap.yaml
 - helm/grafana/deployment.yaml
 - helm/grafana/ingress.yaml
+- helm/grafana/pvc.yaml
+- helm/grafana/service.yaml
+- helm/grafana/serviceaccount.yaml
 
 labels:
 

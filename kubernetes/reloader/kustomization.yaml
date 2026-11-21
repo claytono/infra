@@ -8,10 +8,10 @@ commonAnnotations:
   argoManaged: 'true'
 
 resources:
-- helm/templates/serviceaccount.yaml
 - helm/templates/clusterrole.yaml
 - helm/templates/clusterrolebinding.yaml
 - helm/templates/deployment.yaml
+- helm/templates/serviceaccount.yaml
 
 labels:
 

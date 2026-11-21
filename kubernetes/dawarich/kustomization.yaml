@@ -9,17 +9,17 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- password-generators.yaml
+- dawarich-postgres-cluster.yaml
+- deploy-sidekiq.yaml
+- deploy-web.yaml
 - externalsecret.yaml
 - externalsecret-oidc.yaml
-- dawarich-postgres-cluster.yaml
-- pvc-public.yaml
-- pvc-watched.yaml
-- pvc-storage.yaml
-- deploy-web.yaml
-- deploy-sidekiq.yaml
-- service.yaml
 - ingress.yaml
+- password-generators.yaml
+- pvc-public.yaml
+- pvc-storage.yaml
+- pvc-watched.yaml
+- service.yaml
 - helm/valkey/pvc.yaml
 - helm/valkey/scripts.yaml
 - helm/valkey/service-internal.yaml
