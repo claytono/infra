@@ -71,6 +71,11 @@ done < <(yq -r '.repos[]' repos.yaml)
 
 rm -rf tmp
 
+# Sort first, so a sorter failure stops the render before
+# kustomization.yaml is touched.
+sorted_generated=$(printf '%s\n' "${generated_resources[@]}" |
+  "$BASEDIR/../scripts/sort-kustomization-resources")
+
 tmp_kustomization="$(mktemp)"
 awk '
   /# BEGIN generated runner scale sets/ {
@@ -87,5 +92,5 @@ awk '
     next
   }
   !in_generated { print }
-' generated=<(printf '%s\n' "${generated_resources[@]}") kustomization.yaml > "$tmp_kustomization"
+' generated=<(printf '%s\n' "$sorted_generated") kustomization.yaml > "$tmp_kustomization"
 mv "$tmp_kustomization" kustomization.yaml

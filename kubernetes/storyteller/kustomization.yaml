@@ -6,14 +6,14 @@ namespace: storyteller
 
 resources:
 - namespace.yaml
-- password-generator.yaml
-- externalsecret-secret-key.yaml
-- externalsecret-oidc.yaml
-- pvc-database.yaml
-- pvc-data.yaml
 - deployment.yaml
-- service.yaml
+- externalsecret-oidc.yaml
+- externalsecret-secret-key.yaml
 - ingress.yaml
+- password-generator.yaml
+- pvc-data.yaml
+- pvc-database.yaml
+- service.yaml
 
 configMapGenerator:
 - name: storyteller-config

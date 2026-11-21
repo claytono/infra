@@ -8,10 +8,10 @@ commonAnnotations:
   argoManaged: 'true'
 
 resources:
+- externalsecret.yaml
+- service.yaml
 - helm/templates/deployment.yaml
 - helm/templates/unpoller-config-secret.yaml
-- service.yaml
-- externalsecret.yaml
 
 # The upstream chart does not expose values for credentials from an existing
 # Secret. Patch only the runtime wiring that cannot be expressed in values.

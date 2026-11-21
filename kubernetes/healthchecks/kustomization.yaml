@@ -9,13 +9,13 @@ components:
 
 resources:
 - namespace.yaml
-- externalsecret.yaml
-- postgres-cluster.yaml
-- deployment.yaml
-- service.yaml
-- ingress.yaml
 - cronjob-canary-ping.yaml
 - cronjob-channel-audit.yaml
+- deployment.yaml
+- externalsecret.yaml
+- ingress.yaml
+- postgres-cluster.yaml
+- service.yaml
 - tailscale-ingress.yaml
 
 configMapGenerator:

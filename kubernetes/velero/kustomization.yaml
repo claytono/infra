@@ -6,7 +6,27 @@ namespace: velero
 
 resources:
 - namespace.yaml
+- externalsecret.yaml
+- healthcheck-cronjob.yaml
+- healthcheck-externalsecret.yaml
+- rclone-deployment.yaml
+- rclone-externalsecret.yaml
+- rclone-ingress.yaml
+- rclone-service.yaml
+- repo-credentials-externalsecret.yaml
+- schedule-daily.yaml
+- volume-policy-configmap.yaml
 - volumesnapshotclass.yaml
+- helm/backupstoragelocation.yaml
+- helm/clusterrolebinding.yaml
+- helm/deployment.yaml
+- helm/node-agent-daemonset.yaml
+- helm/repo-maintenance-configmap.yaml
+- helm/role.yaml
+- helm/rolebinding.yaml
+- helm/service.yaml
+- helm/serviceaccount-server.yaml
+- helm/volumesnapshotlocation.yaml
 - helm/crds/backuprepositories.yaml
 - helm/crds/backups.yaml
 - helm/crds/backupstoragelocations.yaml
@@ -20,26 +40,6 @@ resources:
 - helm/crds/schedules.yaml
 - helm/crds/serverstatusrequests.yaml
 - helm/crds/volumesnapshotlocations.yaml
-- helm/serviceaccount-server.yaml
-- helm/clusterrolebinding.yaml
-- helm/role.yaml
-- helm/rolebinding.yaml
-- helm/repo-maintenance-configmap.yaml
-- helm/service.yaml
-- helm/node-agent-daemonset.yaml
-- helm/deployment.yaml
-- helm/backupstoragelocation.yaml
-- helm/volumesnapshotlocation.yaml
-- externalsecret.yaml
-- repo-credentials-externalsecret.yaml
-- rclone-deployment.yaml
-- rclone-service.yaml
-- rclone-ingress.yaml
-- rclone-externalsecret.yaml
-- schedule-daily.yaml
-- volume-policy-configmap.yaml
-- healthcheck-externalsecret.yaml
-- healthcheck-cronjob.yaml
 
 configMapGenerator:
 - name: velero-encrypt-startup

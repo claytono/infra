@@ -9,8 +9,8 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- externalsecret-oidc.yaml
-- pvc-config.yaml
 - deploy.yaml
-- service.yaml
+- externalsecret-oidc.yaml
 - ingress.yaml
+- pvc-config.yaml
+- service.yaml

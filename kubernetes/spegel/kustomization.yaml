@@ -9,9 +9,9 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
+- helm/templates/daemonset.yaml
 - helm/templates/rbac.yaml
 - helm/templates/service.yaml
-- helm/templates/daemonset.yaml
 
 labels:
 

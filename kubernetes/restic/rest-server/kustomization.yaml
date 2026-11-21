@@ -6,7 +6,7 @@ namespace: restic
 
 resources:
 - deployment.yaml
-- service.yaml
-- ingress.yaml
-- tailscale-ingress.yaml
 - externalsecret.yaml
+- ingress.yaml
+- service.yaml
+- tailscale-ingress.yaml

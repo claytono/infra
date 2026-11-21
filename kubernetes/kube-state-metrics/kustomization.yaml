@@ -6,11 +6,11 @@ namespace: default
 
 resources:
 - helm/templates/clusterrolebinding.yaml
-- helm/templates/role.yaml
-- helm/templates/serviceaccount.yaml
-- helm/templates/deployment.yaml
-- helm/templates/service.yaml
 - helm/templates/crs-configmap.yaml
+- helm/templates/deployment.yaml
+- helm/templates/role.yaml
+- helm/templates/service.yaml
+- helm/templates/serviceaccount.yaml
 
 commonAnnotations:
   argoManaged: 'true'

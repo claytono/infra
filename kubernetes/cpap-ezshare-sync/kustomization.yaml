@@ -6,10 +6,10 @@ namespace: cpap-ezshare-sync
 
 resources:
 - namespace.yaml
-- priorityclass.yaml
-- externalsecret-healthcheck.yaml
-- pvc.yaml
 - cronjob.yaml
+- externalsecret-healthcheck.yaml
+- priorityclass.yaml
+- pvc.yaml
 
 commonAnnotations:
   argoManaged: 'true'

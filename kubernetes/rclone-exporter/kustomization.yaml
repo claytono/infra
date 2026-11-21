@@ -9,8 +9,8 @@ commonAnnotations:
 
 resources:
 - deployment.yaml
-- service.yaml
 - externalsecret.yaml
+- service.yaml
 
 configMapGenerator:
 

@@ -6,23 +6,23 @@ namespace: vpa
 
 resources:
 - namespace.yaml
+- cronjob-disable.yaml
+- cronjob-enable.yaml
+- rbac-maintenance.yaml
+- webhook-certificate.yaml
 - helm/crds/vpa-v1-crd.yaml
+- helm/templates/admission-controller-deployment.yaml
+- helm/templates/admission-controller-pdb.yaml
+- helm/templates/admission-controller-rbac.yaml
+- helm/templates/admission-controller-service.yaml
+- helm/templates/admission-controller-service-account.yaml
 - helm/templates/clusterrolebindings.yaml
 - helm/templates/clusterroles.yaml
 - helm/templates/recommender-deployment.yaml
 - helm/templates/recommender-service-account.yaml
-- helm/templates/admission-controller-pdb.yaml
-- helm/templates/admission-controller-deployment.yaml
-- helm/templates/admission-controller-service-account.yaml
-- helm/templates/admission-controller-service.yaml
-- helm/templates/admission-controller-rbac.yaml
-- helm/templates/webhooks/mutating.yaml
 - helm/templates/updater-deployment.yaml
 - helm/templates/updater-service-account.yaml
-- webhook-certificate.yaml
-- rbac-maintenance.yaml
-- cronjob-enable.yaml
-- cronjob-disable.yaml
+- helm/templates/webhooks/mutating.yaml
 
 commonAnnotations:
   argoManaged: 'true'

@@ -9,8 +9,8 @@ commonAnnotations:
 
 resources:
 - deploy.yaml
-- pvc.yaml
 - externalsecret.yaml
+- pvc.yaml
 
 labels:
 

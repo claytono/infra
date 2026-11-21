@@ -6,14 +6,14 @@ namespace: metallb-system
 
 resources:
 - namespace.yaml
+- config.yaml
 - helm/charts/crds/templates/crds.yaml
+- helm/templates/controller.yaml
+- helm/templates/exclude-l2-config.yaml
 - helm/templates/rbac.yaml
 - helm/templates/service-accounts.yaml
-- helm/templates/controller.yaml
 - helm/templates/speaker.yaml
 - helm/templates/webhooks.yaml
-- helm/templates/exclude-l2-config.yaml
-- config.yaml
 
 commonAnnotations:
   argoManaged: 'true'

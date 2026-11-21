@@ -15,12 +15,12 @@ images:
 
 resources:
 - namespace.yaml
-- immich-postgres-cluster.yaml
 - externalsecret.yaml
+- immich-postgres-cluster.yaml
 - pvc-library.yaml
 - pvc-valkey.yaml
-- helm/immich/server.yaml
 - helm/immich/machine-learning.yaml
+- helm/immich/server.yaml
 - helm/valkey/scripts.yaml
 - helm/valkey/service-internal.yaml
 - helm/valkey/services.yaml

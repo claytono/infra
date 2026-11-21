@@ -12,9 +12,9 @@ components:
 
 resources:
 - deploy.yaml
+- ingress.yaml
 - pvc.yaml
 - service.yaml
-- ingress.yaml
 
 labels:
 

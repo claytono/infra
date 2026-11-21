@@ -6,12 +6,12 @@ namespace: semaphore
 
 resources:
 - namespace.yaml
-- semaphore-postgres-cluster.yaml
 - externalsecret.yaml
 - externalsecret-ansible-vault.yaml
 - externalsecret-ara.yaml
 - externalsecret-encryption.yaml
 - externalsecret-oidc.yaml
+- semaphore-postgres-cluster.yaml
 - tailscale-ingress.yaml
 - helm/configmap.yaml
 - helm/deployment.yaml

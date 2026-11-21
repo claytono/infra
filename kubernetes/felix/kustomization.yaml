@@ -10,18 +10,18 @@ components:
 resources:
 - namespace.yaml
 - deployment.yaml
-- service.yaml
-- service-webhook.yaml
-- service-dashboard.yaml
-- service-www.yaml
+- externalsecret.yaml
 - ingress.yaml
 - ingress-dashboard.yaml
 - ingress-www.yaml
-- tailscale-ingress-webhook.yaml
-- externalsecret.yaml
-- pvc.yaml
 - postgres.yaml
+- pvc.yaml
 - rbac.yaml
+- service.yaml
+- service-dashboard.yaml
+- service-webhook.yaml
+- service-www.yaml
+- tailscale-ingress-webhook.yaml
 
 configMapGenerator:
 - name: felix-nginx-config

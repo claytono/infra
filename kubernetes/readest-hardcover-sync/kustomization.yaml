@@ -7,10 +7,10 @@ namespace: readest-hardcover-sync
 resources:
 - namespace.yaml
 - deploy.yaml
-- service.yaml
+- externalsecret.yaml
 - ingress.yaml
 - pvc.yaml
-- externalsecret.yaml
+- service.yaml
 
 commonAnnotations:
   argoManaged: 'true'

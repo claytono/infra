@@ -6,10 +6,10 @@ namespace: kube-system
 
 resources:
 - helm/apiservice.yaml
-- helm/clusterrole-aggregated-reader.yaml
 - helm/clusterrole.yaml
-- helm/clusterrolebinding-auth-delegator.yaml
+- helm/clusterrole-aggregated-reader.yaml
 - helm/clusterrolebinding.yaml
+- helm/clusterrolebinding-auth-delegator.yaml
 - helm/deployment.yaml
 - helm/rolebinding.yaml
 - helm/service.yaml
