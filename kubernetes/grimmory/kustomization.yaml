@@ -9,11 +9,11 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- mariadb-secret.yaml
-- mariadb-pvc.yaml
-- mariadb-service.yaml
-- mariadb-deployment.yaml
-- pvc.yaml
 - deployment.yaml
-- service.yaml
 - ingress.yaml
+- mariadb-deployment.yaml
+- mariadb-pvc.yaml
+- mariadb-secret.yaml
+- mariadb-service.yaml
+- pvc.yaml
+- service.yaml

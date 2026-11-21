@@ -9,12 +9,12 @@ components:
 
 resources:
 - namespace.yaml
-- ara-postgres-cluster.yaml
 - ara-basic-auth-secret.yaml
-- middleware-basic-auth.yaml
-- ingress.yaml
-- pvc.yaml
+- ara-postgres-cluster.yaml
 - deploy.yaml
+- ingress.yaml
+- middleware-basic-auth.yaml
+- pvc.yaml
 - service.yaml
 
 commonAnnotations:

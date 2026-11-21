@@ -6,9 +6,9 @@ namespace: unifi-protect-backup
 
 resources:
 - namespace.yaml
+- deployment.yaml
 - externalsecret.yaml
 - pvc.yaml
-- deployment.yaml
 
 commonAnnotations:
   argoManaged: 'true'

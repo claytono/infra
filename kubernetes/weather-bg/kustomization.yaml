@@ -7,8 +7,8 @@ namespace: weather-bg
 resources:
 - namespace.yaml
 - deployment.yaml
-- service.yaml
 - ingress.yaml
+- service.yaml
 
 configMapGenerator:
 - name: weather-bg-nginx-config

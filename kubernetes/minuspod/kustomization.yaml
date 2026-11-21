@@ -6,13 +6,13 @@ namespace: minuspod
 
 resources:
 - namespace.yaml
-- password-generators.yaml
-- externalsecret.yaml
-- pvc.yaml
 - deploy.yaml
-- service.yaml
+- externalsecret.yaml
 - ingress.yaml
 - middleware-redirect-root.yaml
+- password-generators.yaml
+- pvc.yaml
+- service.yaml
 
 commonAnnotations:
   argoManaged: 'true'

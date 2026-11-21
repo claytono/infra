@@ -12,9 +12,9 @@ components:
 
 resources:
 - namespace.yaml
+- deploy.yaml
 - externalsecret-oidc.yaml
+- ingress.yaml
 - pvc-config.yaml
 - pvc-metadata.yaml
-- deploy.yaml
 - service.yaml
-- ingress.yaml

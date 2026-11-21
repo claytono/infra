@@ -6,13 +6,13 @@ namespace: external-dns
 
 resources:
 - namespace.yaml
+- externalsecret.yaml
 - helm/crds/dnsendpoints.externaldns.k8s.io.yaml
+- helm/templates/clusterrole.yaml
+- helm/templates/clusterrolebinding.yaml
 - helm/templates/deployment.yaml
 - helm/templates/service.yaml
-- helm/templates/clusterrole.yaml
 - helm/templates/serviceaccount.yaml
-- helm/templates/clusterrolebinding.yaml
-- externalsecret.yaml
 
 commonAnnotations:
   argoManaged: 'true'

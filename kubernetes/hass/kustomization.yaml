@@ -9,13 +9,13 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- hass-postgres-cluster.yaml
 - hass-externalsecrets.yaml
-- helm/serviceaccount.yaml
-- helm/service.yaml
-- helm/statefulset.yaml
-- helm/ingress.yaml
+- hass-postgres-cluster.yaml
 - config
+- helm/ingress.yaml
+- helm/service.yaml
+- helm/serviceaccount.yaml
+- helm/statefulset.yaml
 
 images:
 - name: ghcr.io/home-assistant/home-assistant

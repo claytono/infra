@@ -5,10 +5,10 @@ kind: Kustomization
 namespace: camofox
 
 resources:
+- namespace.yaml
 - deployment.yaml
 - ingress.yaml
 - middleware-root-redirect.yaml
-- namespace.yaml
 - pvc.yaml
 - service.yaml
 - tailscale-ingress.yaml

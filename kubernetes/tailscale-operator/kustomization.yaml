@@ -7,6 +7,7 @@ namespace: tailscale
 resources:
 - namespace.yaml
 - externalsecret.yaml
+- xtal-node-exporter.yaml
 - helm/templates/apiserverproxy-rbac.yaml
 - helm/templates/deployment.yaml
 - helm/templates/ingressclass.yaml
@@ -17,11 +18,10 @@ resources:
 - helm/templates/tailscale.com_dnsconfigs.yaml
 - helm/templates/tailscale.com_peerrelays.yaml
 - helm/templates/tailscale.com_proxyclasses.yaml
-- helm/templates/tailscale.com_proxygroups.yaml
 - helm/templates/tailscale.com_proxygrouppolicies.yaml
+- helm/templates/tailscale.com_proxygroups.yaml
 - helm/templates/tailscale.com_recorders.yaml
 - helm/templates/tailscale.com_tailnets.yaml
-- xtal-node-exporter.yaml
 
 commonAnnotations:
   argoManaged: 'true'

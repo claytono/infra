@@ -6,5 +6,5 @@ namespace: restic
 
 resources:
 - namespace.yaml
-- pvc.yaml
 - externalsecret.yaml
+- pvc.yaml

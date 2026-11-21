@@ -8,16 +8,16 @@ commonAnnotations:
   argoManaged: 'true'
 
 resources:
-- serviceaccount.yaml
-- serviceaccount-token.yaml
 - clusterrole.yaml
 - clusterrolebinding.yaml
 - deploy.yaml
-- service.yaml
-- ingress.yaml
 - externalsecret-auth.yaml
 - externalsecret-oidc.yaml
+- ingress.yaml
 - password-generator.yaml
+- service.yaml
+- serviceaccount.yaml
+- serviceaccount-token.yaml
 
 labels:
 

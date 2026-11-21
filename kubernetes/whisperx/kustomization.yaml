@@ -6,9 +6,9 @@ namespace: whisperx
 
 resources:
 - namespace.yaml
+- deployment.yaml
 - externalsecret.yaml
 - pvc-cache.yaml
-- deployment.yaml
 - service.yaml
 
 commonAnnotations:
