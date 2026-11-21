@@ -10,9 +10,9 @@ commonAnnotations:
 resources:
 - namespace.yaml
 - deploy.yaml
-- service.yaml
 - ingress.yaml
 - pvc-config.yaml
+- service.yaml
 
 labels:
 

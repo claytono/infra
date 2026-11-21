@@ -9,11 +9,11 @@ commonAnnotations:
 
 resources:
 - deploy.yaml
+- externalsecret.yaml
+- ingress.yaml
+- pvc-config.yaml
 - service.yaml
 - service-metrics.yaml
-- ingress.yaml
-- externalsecret.yaml
-- pvc-config.yaml
 
 configMapGenerator:
 - name: autobrr-config

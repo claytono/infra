@@ -9,10 +9,10 @@ commonAnnotations:
 
 resources:
 - deploy.yaml
-- service.yaml
+- externalsecret.yaml
 - ingress.yaml
 - pvc.yaml
-- externalsecret.yaml
+- service.yaml
 
 labels:
 

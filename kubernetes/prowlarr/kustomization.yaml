@@ -13,8 +13,8 @@ components:
 resources:
 - deploy.yaml
 - ingress.yaml
-- service.yaml
 - pvc-config.yaml
+- service.yaml
 
 labels:
 

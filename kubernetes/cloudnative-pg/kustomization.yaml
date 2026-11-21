@@ -6,14 +6,14 @@ namespace: cnpg-system
 
 resources:
 - namespace.yaml
-- helm/templates/crds/crds.yaml
-- helm/templates/rbac.yaml
 - helm/templates/config.yaml
 - helm/templates/deployment.yaml
-- helm/templates/service.yaml
 - helm/templates/monitoring-configmap.yaml
 - helm/templates/mutatingwebhookconfiguration.yaml
+- helm/templates/rbac.yaml
+- helm/templates/service.yaml
 - helm/templates/validatingwebhookconfiguration.yaml
+- helm/templates/crds/crds.yaml
 
 commonAnnotations:
   argoManaged: 'true'

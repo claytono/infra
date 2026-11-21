@@ -8,12 +8,12 @@ commonAnnotations:
   argoManaged: 'true'
 
 resources:
-- helm/templates/serviceaccount.yaml
+- syslog-service.yaml
 - helm/templates/configmap.yaml
 - helm/templates/rbac.yaml
 - helm/templates/service.yaml
+- helm/templates/serviceaccount.yaml
 - helm/templates/controllers/daemonset.yaml
-- syslog-service.yaml
 
 labels:
 

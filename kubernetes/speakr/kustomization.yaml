@@ -6,13 +6,13 @@ namespace: speakr
 
 resources:
 - namespace.yaml
-- speakr-postgres-cluster.yaml
+- deploy-speakr.yaml
 - externalsecret.yaml
 - externalsecret-oidc.yaml
-- pvc-uploads.yaml
-- deploy-speakr.yaml
-- service-speakr.yaml
 - ingress.yaml
+- pvc-uploads.yaml
+- service-speakr.yaml
+- speakr-postgres-cluster.yaml
 
 commonAnnotations:
   argoManaged: 'true'

@@ -6,28 +6,28 @@ namespace: authentik
 
 resources:
 - namespace.yaml
-- externalsecret.yaml
 - authentik-postgres-cluster.yaml
+- externalsecret.yaml
+# Traefik forward-auth middlewares
+- middleware-forward-auth-basic.yaml
+- middleware-forward-auth-simple.yaml
 # Authentik resources
 - helm/authentik/secret.yaml
 - helm/authentik/server/deployment.yaml
 - helm/authentik/server/ingress.yaml
 - helm/authentik/server/service.yaml
-- helm/authentik/worker/deployment.yaml
-- helm/authentik/serviceAccount/templates/serviceaccount.yaml
 - helm/authentik/serviceAccount/templates/clusterrole.yaml
 - helm/authentik/serviceAccount/templates/clusterrolebinding.yaml
 - helm/authentik/serviceAccount/templates/role.yaml
 - helm/authentik/serviceAccount/templates/rolebinding.yaml
+- helm/authentik/serviceAccount/templates/serviceaccount.yaml
+- helm/authentik/worker/deployment.yaml
 # Valkey resources
 - helm/valkey/pvc.yaml
 - helm/valkey/scripts.yaml
 - helm/valkey/service-internal.yaml
 - helm/valkey/services.yaml
 - helm/valkey/statefulset.yaml
-# Traefik forward-auth middlewares
-- middleware-forward-auth-simple.yaml
-- middleware-forward-auth-basic.yaml
 
 commonAnnotations:
   argoManaged: 'true'

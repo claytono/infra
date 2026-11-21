@@ -1,0 +1,43 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+
+metadata:
+  name: require-sorted-kustomization-resources
+
+spec:
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [kustomize.config.k8s.io]
+      apiVersions: ['*']
+      operations: [CREATE, UPDATE]
+      resources: [kustomizations]
+  variables:
+  - name: resources
+    expression: object.?resources.orValue([])
+  # Sort key: each directory becomes "1<name>" and the file "0<name>" without
+  # .yaml or .yml, joined by spaces. Files then sort before subdirectories at
+  # every level, and storageclass before storageclass-slow. An entry without
+  # a YAML extension is a directory.
+  # kubernetes/scripts/sort-kustomization-resources produces the same order.
+  - name: keys
+    expression: >-
+      variables.resources.filter(r, r != 'namespace.yaml').map(r,
+        cel.bind(file, r.matches('[.]ya?ml$'),
+        cel.bind(path, r.endsWith('/') ? r.substring(0, r.size() - 1) : r,
+        cel.bind(cut, file ? path.lastIndexOf('/') : path.size(),
+        cel.bind(dirs, cut < 0 ? '' :
+          '1' + path.substring(0, cut).replace('/', ' 1'),
+        cel.bind(ext, r.endsWith('.yaml') ? 5 : 4,
+        !file ? dirs : (dirs == '' ? '' : dirs + ' ') + '0' +
+          path.substring(cut + 1, path.size() - ext)))))))
+  validations:
+  - expression: >-
+      (!('namespace.yaml' in variables.resources) ||
+        variables.resources[0] == 'namespace.yaml') &&
+      variables.keys.isSorted()
+    message: >-
+      List resources with namespace.yaml first. Then, at each directory level,
+      list files before subdirectories, each sorted by name without .yaml.
+      kubernetes/scripts/sort-kustomization-resources prints the right order.

@@ -5,6 +5,13 @@ kind: Kustomization
 namespace: cert-manager
 
 resources:
+- externalsecret.yaml
+- letsencrypt.yaml
+- self-signed.yaml
+- zerossl.yaml
+- helm/templates/cainjector-deployment.yaml
+- helm/templates/cainjector-rbac.yaml
+- helm/templates/cainjector-serviceaccount.yaml
 - helm/templates/crd-acme.cert-manager.io_challenges.yaml
 - helm/templates/crd-acme.cert-manager.io_orders.yaml
 - helm/templates/crd-cert-manager.io_certificaterequests.yaml
@@ -12,24 +19,17 @@ resources:
 - helm/templates/crd-cert-manager.io_clusterissuers.yaml
 - helm/templates/crd-cert-manager.io_issuers.yaml
 - helm/templates/deployment.yaml
-- helm/templates/webhook-deployment.yaml
-- helm/templates/webhook-serviceaccount.yaml
-- helm/templates/cainjector-deployment.yaml
-- helm/templates/webhook-service.yaml
-- helm/templates/startupapicheck-serviceaccount.yaml
-- helm/templates/service.yaml
 - helm/templates/rbac.yaml
+- helm/templates/service.yaml
+- helm/templates/serviceaccount.yaml
+- helm/templates/startupapicheck-rbac.yaml
+- helm/templates/startupapicheck-serviceaccount.yaml
+- helm/templates/webhook-deployment.yaml
 - helm/templates/webhook-mutating-webhook.yaml
 - helm/templates/webhook-rbac.yaml
-- helm/templates/serviceaccount.yaml
-- helm/templates/cainjector-rbac.yaml
-- helm/templates/startupapicheck-rbac.yaml
+- helm/templates/webhook-service.yaml
+- helm/templates/webhook-serviceaccount.yaml
 - helm/templates/webhook-validating-webhook.yaml
-- helm/templates/cainjector-serviceaccount.yaml
-- letsencrypt.yaml
-- self-signed.yaml
-- zerossl.yaml
-- externalsecret.yaml
 
 commonAnnotations:
   argoManaged: 'true'

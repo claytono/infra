@@ -5,10 +5,10 @@ kind: Kustomization
 namespace: restic
 
 resources:
-- shared
-- rest-server
-- template-server
 - cronjobs
+- rest-server
+- shared
+- template-server
 
 commonAnnotations:
   argoManaged: 'true'

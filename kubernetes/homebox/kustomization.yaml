@@ -6,17 +6,17 @@ namespace: default
 
 resources:
 
-- homebox-postgres-cluster.yaml
-- externalsecret-oidc.yaml
 - externalsecret-api-key-pepper.yaml
+- externalsecret-oidc.yaml
+- homebox-postgres-cluster.yaml
 
   # HomeBox resources
 - helm/homebox/deployment.yaml
+- helm/homebox/ingress.yaml
+- helm/homebox/pvc.yaml
 - helm/homebox/secrets.yaml
 - helm/homebox/service.yaml
-- helm/homebox/pvc.yaml
 - helm/homebox/serviceaccount.yaml
-- helm/homebox/ingress.yaml
 
 commonAnnotations:
   argoManaged: 'true'

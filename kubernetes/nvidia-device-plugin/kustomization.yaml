@@ -8,11 +8,11 @@ resources:
 - namespace.yaml
 - runtime-class.yaml
 - helm/configmap.yml
-- helm/service-account.yml
-- helm/role.yml
-- helm/role-binding.yml
 - helm/daemonset-device-plugin.yml
 - helm/daemonset-mps-control-daemon.yml
+- helm/role.yml
+- helm/role-binding.yml
+- helm/service-account.yml
 
 commonAnnotations:
   argoManaged: 'true'

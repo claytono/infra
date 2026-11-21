@@ -9,18 +9,18 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- ingress.yaml
 - externalsecret-basic-auth.yaml
+- ingress.yaml
 - middleware-basic-auth.yaml
-- helm/templates/single-binary/statefulset.yaml
-- helm/templates/serviceaccount.yaml
-- helm/templates/single-binary/service.yaml
-- helm/templates/single-binary/service-headless.yaml
-- helm/templates/gateway/deployment-gateway-nginx.yaml
-- helm/templates/gateway/service-gateway.yaml
-- helm/templates/gateway/configmap-gateway.yaml
 - helm/templates/config.yaml
 - helm/templates/runtime-configmap.yaml
+- helm/templates/serviceaccount.yaml
+- helm/templates/gateway/configmap-gateway.yaml
+- helm/templates/gateway/deployment-gateway-nginx.yaml
+- helm/templates/gateway/service-gateway.yaml
+- helm/templates/single-binary/service.yaml
+- helm/templates/single-binary/service-headless.yaml
+- helm/templates/single-binary/statefulset.yaml
 
 labels:
 

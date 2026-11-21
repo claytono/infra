@@ -10,10 +10,10 @@ commonAnnotations:
 resources:
 - deploy.yaml
 - externalsecret.yaml
-- pvc.yaml
-- service.yaml
 - ingress.yaml
 - nad.yaml
+- pvc.yaml
+- service.yaml
 
 configMapGenerator:
 - name: qbittorrent-scripts

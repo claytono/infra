@@ -12,10 +12,10 @@ components:
 
 resources:
 - deploy.yaml
-- service.yaml
-- ingress.yaml
 - externalsecret.yaml
+- ingress.yaml
 - pvc.yaml
+- service.yaml
 
 labels:
 

@@ -27,11 +27,11 @@ resources:
 - namespace.yaml
 - externalsecret.yaml
 - helm/templates/configmap.yaml
-- helm/templates/controller-rbac.yaml
 - helm/templates/controller.yaml
+- helm/templates/controller-rbac.yaml
 - helm/templates/driver.yaml
-- helm/templates/node-rbac.yaml
 - helm/templates/node.yaml
+- helm/templates/node-rbac.yaml
 - helm/templates/required.yaml
 - helm/templates/snapshot-classes.yaml
 - helm/templates/storage-classes.yaml

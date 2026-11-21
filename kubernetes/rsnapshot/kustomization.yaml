@@ -6,10 +6,10 @@ namespace: rsnapshot
 
 resources:
 - namespace.yaml
-- externalsecret.yaml
 - cronjob-daily.yaml
-- cronjob-weekly.yaml
 - cronjob-monthly.yaml
+- cronjob-weekly.yaml
+- externalsecret.yaml
 
 commonAnnotations:
   argoManaged: 'true'
