@@ -1,0 +1,39 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: vm
+  annotations:
+    ak-type: simple
+    # /api/ skips the login and goes to vmauth, which leaves reads open and
+    # requires its credential for writes. Everything else, VMUI included,
+    # goes straight to VictoriaMetrics behind the login.
+    ak-path-exclude: /api/.*
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: VictoriaMetrics
+    gethomepage.dev/group: Monitoring
+    gethomepage.dev/icon: victoriametrics.png
+
+spec:
+  tls:
+  - hosts:
+    - vm.k.oneill.net
+  rules:
+  - host: vm.k.oneill.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: victoria-metrics
+            port:
+              number: 8428
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: vmauth
+            port:
+              number: 8427

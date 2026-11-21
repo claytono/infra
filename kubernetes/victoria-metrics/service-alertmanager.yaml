@@ -5,14 +5,11 @@ kind: Service
 metadata:
   annotations:
     prometheus.io/scrape: 'true'
-  labels:
-    name: alertmanager
   name: alertmanager
 
 spec:
   selector:
     app.kubernetes.io/name: alertmanager
-    app.kubernetes.io/instance: alertmanager
   ports:
   - name: alertmanager
     protocol: TCP

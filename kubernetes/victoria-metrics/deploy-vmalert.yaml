@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: vmalert
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vmalert
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vmalert
+    spec:
+      priorityClassName: monitoring
+      containers:
+      - name: vmalert
+        image: victoriametrics/vmalert:v1.155.0@sha256:3256cba5ddaca5974eae6141105cec4ce37871f1c213f0a5c267ec0111bc68e1
+        args:
+        - -rule=/etc/vmalert/*.yaml
+        - -configCheckInterval=1m
+        - -datasource.url=http://victoria-metrics:8428
+        # Alert state is written back and restored after restarts.
+        - -remoteWrite.url=http://victoria-metrics:8428
+        - -remoteRead.url=http://victoria-metrics:8428
+        - -notifier.url=http://alertmanager:9093
+        # Links each alert's source to the rule's query in VMUI.
+        - -external.url=https://vm.k.oneill.net
+        - -external.alert.source=vmui/#/?g0.expr={{.Expr|queryEscape}}
+        ports:
+        - name: http
+          containerPort: 8880
+        volumeMounts:
+        - name: rules
+          mountPath: /etc/vmalert
+      volumes:
+      - name: rules
+        configMap:
+          name: vmalert-rules

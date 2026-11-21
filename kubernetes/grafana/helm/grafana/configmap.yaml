@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/version: "13.3.0"
 data:
   
+  plugins: victoriametrics-metrics-datasource@1.0.1
   grafana.ini: |
     [analytics]
     check_for_updates = true
@@ -48,4 +49,17 @@ data:
     root_url = https://grafana.k.oneill.net
     [unified_storage]
     index_path = /var/lib/grafana-search/bleve
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - access: proxy
+      editable: false
+      isDefault: true
+      jsonData:
+        httpMethod: GET
+        vmuiUrl: https://vm.k.oneill.net/vmui/
+      name: Victoria Metrics
+      type: victoriametrics-metrics-datasource
+      uid: "000000002"
+      url: http://victoria-metrics.victoria-metrics.svc.cluster.local:8428
 

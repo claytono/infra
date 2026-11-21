@@ -3,11 +3,12 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 
 metadata:
-  name: prometheus-data
+  name: alertmanager-data
 
 spec:
+  storageClassName: nfs-csi
   accessModes:
   - ReadWriteOncePod
   resources:
     requests:
-      storage: 100Gi
+      storage: 5Gi

@@ -18,7 +18,7 @@ configuration:
   drainTimeout: 30m
   rebootDelay: 60s
   lockReleaseDelay: 10m
-  prometheusUrl: http://prometheus.default.svc.cluster.local:9090
+  prometheusUrl: http://victoria-metrics.victoria-metrics.svc.cluster.local:8428
   alertFilterRegexp: ^(NodeDown|PodStuckNotRunning|PodNotReady|CNPG.*)$
   alertFilterMatchOnly: true
   blockingPodSelector:
