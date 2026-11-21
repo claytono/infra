@@ -1,0 +1,64 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: victoria-metrics
+
+components:
+- ../components/authentik
+
+commonAnnotations:
+  argoManaged: 'true'
+
+resources:
+- namespace.yaml
+- deploy-alertmanager.yaml
+- deploy-victoria-metrics.yaml
+- deploy-vmagent.yaml
+- deploy-vmalert.yaml
+- deploy-vmauth.yaml
+- externalsecret-alertmanager.yaml
+- externalsecret-vmagent.yaml
+- externalsecret-vmauth.yaml
+- ingress-alertmanager.yaml
+- ingress-vm.yaml
+- pvc-alertmanager-data.yaml
+- pvc-victoria-metrics-data.yaml
+- pvc-vmagent-buffer.yaml
+- rbac.yaml
+- service-alertmanager.yaml
+- service-victoria-metrics.yaml
+- service-vmagent.yaml
+- service-vmalert.yaml
+- service-vmauth.yaml
+
+configMapGenerator:
+- name: vmagent
+  files:
+  - config/vmagent.yaml
+  options:
+    disableNameSuffixHash: true
+- name: vmalert-rules
+  files:
+  - config/rules.yaml
+  - config/cnpg-rules.yaml
+  - config/victoriametrics-rules.yaml
+  options:
+    disableNameSuffixHash: true
+- name: alertmanager
+  files:
+  - config.yaml=config/alertmanager.yaml
+  options:
+    disableNameSuffixHash: true
+- name: alertmanager-templates
+  files:
+  - config/alertmanager-templates/default.tmpl
+  - config/alertmanager-templates/slack.tmpl
+  options:
+    disableNameSuffixHash: true
+
+labels:
+
+- pairs:
+    app.kubernetes.io/instance: victoria-metrics
+  includeSelectors: true

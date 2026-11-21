@@ -65,3 +65,23 @@ podAnnotations:
 # Disable local admin bootstrap; OIDC handles auth
 env:
   GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: 'true'
+
+# VictoriaMetrics' own data source plugin, installed at startup
+plugins:
+- victoriametrics-metrics-datasource@1.0.1
+
+# Converts the UI-created data source in place: name and uid must match it
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Victoria Metrics
+      uid: '000000002'
+      type: victoriametrics-metrics-datasource
+      access: proxy
+      url: http://victoria-metrics.victoria-metrics.svc.cluster.local:8428
+      isDefault: true
+      editable: false
+      jsonData:
+        httpMethod: GET
+        vmuiUrl: https://vm.k.oneill.net/vmui/

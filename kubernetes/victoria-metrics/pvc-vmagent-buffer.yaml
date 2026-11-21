@@ -1,0 +1,16 @@
+---
+# vmagent's write buffer: holds scraped data while VictoriaMetrics is
+# unreachable, and is empty the rest of the time.
+kind: PersistentVolumeClaim
+apiVersion: v1
+
+metadata:
+  name: vmagent-buffer
+
+spec:
+  storageClassName: nfs-csi
+  accessModes:
+  - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 10Gi

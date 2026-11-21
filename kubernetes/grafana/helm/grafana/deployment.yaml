@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grafana
         app.kubernetes.io/version: "13.3.0"
       annotations:
-        checksum/config: 6980542bb7ff508eb53c166d74003e6f598a62056e123961a981172b2cdeaf5e
+        checksum/config: f50a8dc9214d36bad27a94efed11f10d4f9a4152d4c1c700a7fc3a38fec835e4
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
         kubectl.kubernetes.io/default-container: grafana
         reloader.stakater.com/auto: "true"
@@ -87,6 +87,9 @@ spec:
               mountPath: "/var/lib/grafana"
             - name: search
               mountPath: "/var/lib/grafana-search"
+            - name: config
+              mountPath: "/etc/grafana/provisioning/datasources/datasources.yaml"
+              subPath: "datasources.yaml"
           ports:
             - name: grafana
               containerPort: 3000
@@ -105,6 +108,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: GF_PLUGINS_PREINSTALL_SYNC
+              valueFrom:
+                configMapKeyRef:
+                  name: grafana
+                  key: plugins
             - name: GF_PATHS_DATA
               value: /var/lib/grafana/
             - name: GF_PATHS_LOGS

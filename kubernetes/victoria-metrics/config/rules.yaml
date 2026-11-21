@@ -12,12 +12,6 @@ groups:
     expr: vector(1)
     annotations:
       message: Always firing; Alertmanager forwards it to Healthchecks as a heartbeat
-  - alert: PrometheusConfigReloadFailed
-    expr: prometheus_config_last_reload_successful{job="prometheus"} == 0
-    for: 5m
-    annotations:
-      message: Prometheus failed to reload its configuration and is still running
-        the previous config and rules
   - alert: NodeDown
     expr: up{job="node resources", instance!="xtal:9100"} == 0
     for: 5m

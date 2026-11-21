@@ -1,29 +1,10 @@
 ---
+# vmagent's scrape config. VictoriaMetrics, vmagent, vmalert and Alertmanager
+# are scraped through the prometheus.io/scrape annotations on their Services.
 global:
   scrape_interval: 15s
-  scrape_native_histograms: true
-
-rule_files:
-- /etc/prometheus/rules.yml
-- /etc/prometheus/cnpg-rules.yml
-
-alerting:
-  alertmanagers:
-
-  - scheme: https
-    static_configs:
-    - targets:
-      - alertmanager.k.oneill.net
 
 scrape_configs:
-- job_name: prometheus
-
-  # metrics_path defaults to '/metrics'
-  # scheme defaults to 'http'.
-
-  static_configs:
-  - targets: [localhost:9090]
-
 - job_name: node resources
   static_configs:
   - targets:
@@ -48,7 +29,7 @@ scrape_configs:
 - job_name: blackbox
   metrics_path: /probe
   basic_auth:
-    username: prometheus
+    username: vmagent
     password_file: /secrets/blackbox-exporter-password
   params:
     module: [icmp]
@@ -62,14 +43,14 @@ scrape_configs:
   - source_labels: [__param_target]
     target_label: instance
   - target_label: __address__
-    replacement: blackbox-exporter:9115  # The blackbox exporter's real hostname:port.
+    replacement: blackbox-exporter.default.svc:9115  # The blackbox exporter's real hostname:port.
 
 - job_name: qbittorrent-api-pod
   scrape_interval: 10s
   scrape_timeout: 5s
   metrics_path: /probe
   basic_auth:
-    username: prometheus
+    username: vmagent
     password_file: /secrets/blackbox-exporter-password
   params:
     module: [qbittorrent_api]
@@ -91,14 +72,14 @@ scrape_configs:
   - target_label: endpoint
     replacement: direct
   - target_label: __address__
-    replacement: blackbox-exporter:9115
+    replacement: blackbox-exporter.default.svc:9115
 
 - job_name: qbittorrent-api-ingress
   scrape_interval: 10s
   scrape_timeout: 5s
   metrics_path: /probe
   basic_auth:
-    username: prometheus
+    username: vmagent
     password_file: /secrets/blackbox-exporter-password
   params:
     module: [qbittorrent_api]
@@ -113,7 +94,7 @@ scrape_configs:
   - target_label: instance
     replacement: qbittorrent-ingress
   - target_label: __address__
-    replacement: blackbox-exporter:9115
+    replacement: blackbox-exporter.default.svc:9115
 
 - job_name: hass
   scrape_interval: 2s
@@ -126,55 +107,26 @@ scrape_configs:
 - job_name: kubernetes-apiservers
 
   kubernetes_sd_configs:
-  - role: endpoints
+  - role: endpointslice
 
-  # Default to scraping over https. If required, just disable this or change to
-  # `http`.
   scheme: https
-
-  # This TLS & bearer token file config is used to connect to the actual scrape
-  # endpoints for cluster components. This is separate to discovery auth
-  # configuration because discovery & scraping are two separate concerns in
-  # Prometheus. The discovery auth config is automatic if Prometheus runs inside
-  # the cluster. Otherwise, more config options have to be provided within the
-  # <kubernetes_sd_config>.
+  # Authenticates to the apiserver with vmagent's service account.
   tls_config:
     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-    # If your node certificates are self-signed or use a different CA to the
-    # master CA, then disable certificate verification below. Note that
-    # certificate verification is an integral part of a secure infrastructure
-    # so this should only be disabled in a controlled environment. You can
-    # disable certificate verification by uncommenting the line below.
-    #
-    # insecure_skip_verify: true
   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
-  # Keep only the default/kubernetes service endpoints for the https port. This
-  # will add targets for each API server which Kubernetes adds an endpoint to
-  # the default/kubernetes service.
+  # Keep only the https port of default/kubernetes: one target per apiserver.
   relabel_configs:
-  - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+  - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpointslice_port_name]
     action: keep
     regex: default;kubernetes;https
-    # Scrape config for nodes (kubelet).
-    #
-    # Rather than connecting directly to the node, the scrape is proxied though the
-    # Kubernetes apiserver.  This means it will work if Prometheus is running out of
-    # cluster, or can't connect to nodes for some other reason (e.g. because of
-    # firewalling).
 
+# Kubelet metrics, proxied through the apiserver so vmagent needs no direct
+# node access.
 - job_name: kubernetes-nodes
 
-  # Default to scraping over https. If required, just disable this or change to
-  # `http`.
   scheme: https
-
-  # This TLS & bearer token file config is used to connect to the actual scrape
-  # endpoints for cluster components. This is separate to discovery auth
-  # configuration because discovery & scraping are two separate concerns in
-  # Prometheus. The discovery auth config is automatic if Prometheus runs inside
-  # the cluster. Otherwise, more config options have to be provided within the
-  # <kubernetes_sd_config>.
+  # Authenticates to the apiserver with vmagent's service account.
   tls_config:
     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -192,32 +144,11 @@ scrape_configs:
     target_label: __metrics_path__
     replacement: /api/v1/nodes/${1}/proxy/metrics
 
-# Scrape config for Kubelet cAdvisor.
-#
-# This is required for Kubernetes 1.7.3 and later, where cAdvisor metrics
-# (those whose names begin with 'container_') have been removed from the
-# Kubelet metrics endpoint.  This job scrapes the cAdvisor endpoint to
-# retrieve those metrics.
-#
-# In Kubernetes 1.7.0-1.7.2, these metrics are only exposed on the cAdvisor
-# HTTP endpoint; use "replacement: /api/v1/nodes/${1}:4194/proxy/metrics"
-# in that case (and ensure cAdvisor's HTTP server hasn't been disabled with
-# the --cadvisor-port=0 Kubelet flag).
-#
-# This job is not necessary and should be removed in Kubernetes 1.6 and
-# earlier versions, or it will cause the metrics to be scraped twice.
+# Kubelet cAdvisor (container_*) metrics, proxied through the apiserver.
 - job_name: kubernetes-cadvisor
 
-  # Default to scraping over https. If required, just disable this or change to
-  # `http`.
   scheme: https
-
-  # This TLS & bearer token file config is used to connect to the actual scrape
-  # endpoints for cluster components. This is separate to discovery auth
-  # configuration because discovery & scraping are two separate concerns in
-  # Prometheus. The discovery auth config is automatic if Prometheus runs inside
-  # the cluster. Otherwise, more config options have to be provided within the
-  # <kubernetes_sd_config>.
+  # Authenticates to the apiserver with vmagent's service account.
   tls_config:
     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -247,17 +178,25 @@ scrape_configs:
 # * `prometheus.io/port`: If the metrics are exposed on a different port to the
 # service then set this appropriately.
 - job_name: kubernetes-service-endpoints
-  # Keep classic buckets next to native histograms so smokeping queries and
-  # rules don't depend on native-histogram functions.
-  always_scrape_classic_histograms: true
-
   kubernetes_sd_configs:
-  - role: endpoints
+  - role: endpointslice
 
   relabel_configs:
   - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
     action: keep
     regex: true
+  # One target per endpoint: skip a dual-stack Service's IPv6 slice, and
+  # endpoints of pods that are shutting down.
+  - source_labels: [__meta_kubernetes_endpointslice_address_type]
+    action: keep
+    regex: IPv4
+  - source_labels: [__meta_kubernetes_endpointslice_endpoint_conditions_terminating]
+    action: drop
+    regex: 'true'
+  # Several Service ports map to the one annotated port; keep only that one.
+  - action: keep_if_equal
+    if: '{__meta_kubernetes_service_annotation_prometheus_io_port!="", __meta_kubernetes_pod_container_port_number!=""}'
+    source_labels: [__meta_kubernetes_service_annotation_prometheus_io_port, __meta_kubernetes_pod_container_port_number]
   # CNPG inherits pod scrape annotations onto Services too; collect each pod once.
   - source_labels: [__meta_kubernetes_service_label_cnpg_io_cluster]
     action: drop
@@ -287,39 +226,7 @@ scrape_configs:
     action: replace
     target_label: scrape_interval
 
-# Example scrape config for probing services via the Blackbox Exporter.
-#
-# The relabeling allows the actual service scrape endpoint to be configured
-# via the following annotations:
-#
-# * `prometheus.io/probe`: Only probe services that have a value of `true`
-- job_name: kubernetes-services
-
-  metrics_path: /probe
-  params:
-    module: [http_2xx]
-
-  kubernetes_sd_configs:
-  - role: service
-
-  relabel_configs:
-  - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe]
-    action: keep
-    regex: true
-  - source_labels: [__address__]
-    target_label: __param_target
-  - target_label: __address__
-    replacement: blackbox-exporter.example.com:9115
-  - source_labels: [__param_target]
-    target_label: instance
-  - action: labelmap
-    regex: __meta_kubernetes_service_label_(.+)
-  - source_labels: [__meta_kubernetes_namespace]
-    target_label: kubernetes_namespace
-  - source_labels: [__meta_kubernetes_service_name]
-    target_label: kubernetes_name
-
-# Example scrape config for pods
+# Scrape config for pods
 #
 # The relabeling allows the actual pod scrape endpoint to be configured via the
 # following annotations:
@@ -339,6 +246,17 @@ scrape_configs:
   - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
     action: keep
     regex: true
+  # Pods declaring several ports would otherwise all map to the annotated
+  # port; keep only that one. A pod that declares ports must therefore list
+  # its prometheus.io/port among them, or it is not scraped at all.
+  - action: keep_if_equal
+    if: '{__meta_kubernetes_pod_annotation_prometheus_io_port!="", __meta_kubernetes_pod_container_port_number!=""}'
+    source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port, __meta_kubernetes_pod_container_port_number]
+  # A sidecar without ports (Alloy's config-reloader) would also map to the
+  # annotated port; when the pod names a default container, keep only that one.
+  - action: keep_if_equal
+    if: '{__meta_kubernetes_pod_container_port_number="", __meta_kubernetes_pod_annotation_kubectl_kubernetes_io_default_container!=""}'
+    source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_annotation_kubectl_kubernetes_io_default_container]
   - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
     action: replace
     target_label: __scheme__
@@ -454,4 +372,4 @@ scrape_configs:
   metrics_path: /api/metrics
   static_configs:
   - targets: [karakeep.karakeep:3000]
-  bearer_token_file: /secrets/karakeep-prometheus-token
+  bearer_token_file: /secrets/karakeep-metrics-token

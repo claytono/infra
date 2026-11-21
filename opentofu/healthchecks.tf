@@ -159,18 +159,24 @@ resource "healthchecksio_check" "velero_daily" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
-# Prometheus/Alertmanager heartbeat - Alertmanager forwards the always-firing
+# Alerting heartbeat - Alertmanager forwards vmalert's always-firing
 # Watchdog alert every 5 minutes; silence means alerting is down
-resource "healthchecksio_check" "prometheus_watchdog" {
+resource "healthchecksio_check" "watchdog" {
   provider = healthchecksio.selfhosted
 
-  name     = "prometheus-watchdog"
-  slug     = "prometheus-watchdog"
-  desc     = "Heartbeat from the Prometheus Watchdog alert via Alertmanager"
+  name     = "watchdog"
+  slug     = "watchdog"
+  desc     = "Heartbeat from the vmalert Watchdog alert via Alertmanager"
   tags     = ["monitoring", "kubernetes"]
   timeout  = 600 # 10 minutes
   grace    = 600 # 10 minutes
   channels = [data.healthchecksio_channel.selfhosted_email.id]
+}
+
+# Keeps the check's UUID across the rename; remove once it is applied.
+moved {
+  from = healthchecksio_check.prometheus_watchdog
+  to   = healthchecksio_check.watchdog
 }
 
 # Kubernetes control-plane backup - runs daily

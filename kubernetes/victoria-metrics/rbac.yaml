@@ -3,14 +3,16 @@ apiVersion: v1
 kind: ServiceAccount
 
 metadata:
-  name: prometheus
+  name: vmagent
 
 ---
+# Read access for vmagent's Kubernetes discovery, plus the kubelet proxy and
+# apiserver /metrics endpoints its scrape config uses.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 
 metadata:
-  name: prometheus
+  name: vmagent
 
 rules:
 - apiGroups: ['']
@@ -18,9 +20,10 @@ rules:
   - nodes
   - nodes/proxy
   - services
-  - endpoints
   - pods
-  - ingresses
+  verbs: [get, list, watch]
+- apiGroups: [discovery.k8s.io]
+  resources: [endpointslices]
   verbs: [get, list, watch]
 - nonResourceURLs: [/metrics]
   verbs: [get]
@@ -29,13 +32,13 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 
 metadata:
-  name: prometheus
+  name: vmagent
 
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: prometheus
+  name: vmagent
 
 subjects:
 - kind: ServiceAccount
-  name: prometheus
+  name: vmagent
