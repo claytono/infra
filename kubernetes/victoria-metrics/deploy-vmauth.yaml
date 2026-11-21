@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: vmauth
+  annotations:
+    secret.reloader.stakater.com/reload: vmauth
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vmauth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vmauth
+    spec:
+      priorityClassName: monitoring
+      # Sits between the vm Ingress and VictoriaMetrics; its config, with the
+      # write credential, is the vmauth Secret (externalsecret-vmauth.yaml).
+      containers:
+      - name: vmauth
+        image: victoriametrics/vmauth:v1.155.0@sha256:dfeb63e5eff4bc32ed0fa2d43d8e85b717e8442c8b5c753e83c216669665a7de
+        args:
+        - -auth.config=/etc/vmauth/auth.yaml
+        ports:
+        - name: http
+          containerPort: 8427
+        volumeMounts:
+        - name: config
+          mountPath: /etc/vmauth
+          readOnly: true
+      volumes:
+      - name: config
+        secret:
+          secretName: vmauth

@@ -31,7 +31,6 @@ resource "authentik_outpost" "embedded" {
     kubernetes_json_patches          = null
   })
   protocol_providers = [
-    authentik_provider_proxy.alertmanager.id,
     authentik_provider_proxy.ara.id,
     authentik_provider_proxy.bazarr.id,
     authentik_provider_proxy.bookbridge.id,
@@ -42,7 +41,6 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.minuspod.id,
     authentik_provider_proxy.msgvault.id,
     authentik_provider_proxy.netdata.id,
-    authentik_provider_proxy.prometheus.id,
     authentik_provider_proxy.prowlarr.id,
     authentik_provider_proxy.pulshealth.id,
     authentik_provider_proxy.qbit-manage.id,
@@ -51,5 +49,7 @@ resource "authentik_outpost" "embedded" {
     authentik_provider_proxy.smokeping.id,
     authentik_provider_proxy.sonarr.id,
     authentik_provider_proxy.tautulli.id,
+    authentik_provider_proxy.victoria-metrics-alertmanager.id,
+    authentik_provider_proxy.victoria-metrics-vm.id,
   ]
 }

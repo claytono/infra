@@ -3,13 +3,12 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 
 metadata:
-  name: alertmanager-data
-  labels:
-    k8s-app: alertmanager
+  name: victoria-metrics-data
 
 spec:
+  storageClassName: nfs-csi
   accessModes:
   - ReadWriteOncePod
   resources:
     requests:
-      storage: 5Gi
+      storage: 500Gi

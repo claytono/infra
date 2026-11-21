@@ -22,4 +22,4 @@ spec:
     message: >-
       Database clusters must set prometheus.io/scrape to 'true' and
       prometheus.io/port to '9187' under spec.inheritedMetadata.annotations
-      so Prometheus monitors their pods.
+      so vmagent scrapes their pods.

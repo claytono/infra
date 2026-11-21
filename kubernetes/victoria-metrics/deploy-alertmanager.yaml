@@ -14,14 +14,16 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: alertmanager
-      app.kubernetes.io/instance: alertmanager
   template:
     metadata:
       name: alertmanager
       labels:
         app.kubernetes.io/name: alertmanager
-        app.kubernetes.io/instance: alertmanager
     spec:
+      # The image runs as nobody; this makes the NFS data volume writable for it.
+      securityContext:
+        fsGroup: 65534
+        fsGroupChangePolicy: OnRootMismatch
       priorityClassName: monitoring
       containers:
       - name: alertmanager

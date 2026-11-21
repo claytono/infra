@@ -18,7 +18,7 @@ data:
     maxNoOfPodsToEvictPerNamespace: 1
     metricsProviders:
     - prometheus:
-        url: http://prometheus.default.svc.cluster.local:9090
+        url: http://victoria-metrics.victoria-metrics.svc.cluster.local:8428
       source: Prometheus
     profiles:
     - name: default

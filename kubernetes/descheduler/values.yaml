@@ -7,7 +7,7 @@ deschedulerPolicy:
   metricsProviders:
   - source: Prometheus
     prometheus:
-      url: http://prometheus.default.svc.cluster.local:9090
+      url: http://victoria-metrics.victoria-metrics.svc.cluster.local:8428
   profiles:
   - name: default
     pluginConfig:

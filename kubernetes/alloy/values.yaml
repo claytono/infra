@@ -96,7 +96,7 @@ alloy:
         forward_to = [loki.write.loki.receiver]
       }
 
-  # Prometheus scraping
+  # Metrics scraping
   service:
     enabled: true
 
@@ -117,7 +117,7 @@ controller:
         path: /var/lib/alloy
         type: DirectoryOrCreate
 
-  # Pod annotations for Prometheus scraping
+  # Pod annotations for metrics scraping
   podAnnotations:
     prometheus.io/scrape: 'true'
     prometheus.io/port: '12345'
