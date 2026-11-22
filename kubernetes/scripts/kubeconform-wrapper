@@ -16,8 +16,16 @@ for file in "$@"; do
 done
 
 if [[ ${#filtered[@]} -gt 0 ]]; then
+  # The VictoriaMetrics operator's objects are checked against the CRDs of
+  # the version we run; the CRDs-catalog's copies lag behind its releases.
+  scripts_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  schema_dir="$(mktemp -d)"
+  trap 'rm -rf "$schema_dir"' EXIT
+  "$scripts_dir/crd-jsonschemas" "$schema_dir" "$scripts_dir/../vmoperator/helm/crd.yaml"
+
   kubeconform --strict --summary \
     -schema-location default \
+    -schema-location "$schema_dir/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
     -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
     "${filtered[@]}"
 fi

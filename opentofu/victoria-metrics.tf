@@ -1,8 +1,8 @@
 # Credential for writing to VictoriaMetrics through vmauth at vm.k.oneill.net.
 #
 # Reads need no credential; writes, imports and series deletes do.
-# kubernetes/victoria-metrics/externalsecret-vmauth.yaml and .secrets.tmpl
-# read the password from this item.
+# kubernetes/victoria-metrics/externalsecret-vmauth-password.yaml and
+# .secrets.tmpl read the password from this item.
 
 locals {
   vmauth_username = "vmauth"

@@ -1,0 +1,767 @@
+---
+# Source: victoria-metrics-operator/templates/webhook.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name:  vmoperator-admission
+  annotations: 
+    cert-manager.io/inject-ca-from: vmoperator/vmoperator-validation
+    certmanager.k8s.io/inject-ca-from: vmoperator/vmoperator-validation
+  labels: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: victoria-metrics-operator
+    app.kubernetes.io/version: v0.75.2
+webhooks:
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vlagent
+        port: 9443
+    failurePolicy: Fail
+    name: 'vlagents.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vlagents
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vlcluster
+        port: 9443
+    failurePolicy: Fail
+    name: 'vlclusters.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vlclusters
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1alpha1-vldistributed
+        port: 9443
+    failurePolicy: Fail
+    name: 'vldistributed.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vldistributed
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vlogs
+        port: 9443
+    failurePolicy: Fail
+    name: 'vlogs.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vlogs
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vlsingle
+        port: 9443
+    failurePolicy: Fail
+    name: 'vlsingles.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vlsingles
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmagent
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmagents.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmagents
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmalertmanagerconfig
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmalertmanagerconfigs.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmalertmanagerconfigs
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmalertmanager
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmalertmanagers.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmalertmanagers
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmalert
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmalerts.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmalerts
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vmanomaly
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmanomalies.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmanomalies
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vmanomalyconfig
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmanomalyconfigs.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmanomalyconfigs
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmauth
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmauths.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmauths
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmcluster
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmclusters.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmclusters
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1alpha1-vmdistributed
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmdistributed.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmdistributed
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmnodescrape
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmnodescrapes.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmnodescrapes
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmpodscrape
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmpodscrapes.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmpodscrapes
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmprobe
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmprobes.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmprobes
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmrule
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmrules.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmrules
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmscrapeconfig
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmscrapeconfigs.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmscrapeconfigs
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmservicescrape
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmservicescrapes.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmservicescrapes
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmsingle
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmsingles.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmsingles
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmstaticscrape
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmstaticscrapes.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmstaticscrapes
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1beta1-vmuser
+        port: 9443
+    failurePolicy: Fail
+    name: 'vmusers.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vmusers
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vtagent
+        port: 9443
+    failurePolicy: Fail
+    name: 'vtagents.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vtagents
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vtcluster
+        port: 9443
+    failurePolicy: Fail
+    name: 'vtclusters.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vtclusters
+  - clientConfig:
+      service:
+        namespace: vmoperator
+        name: vmoperator
+        path: /validate-operator-victoriametrics-com-v1-vtsingle
+        port: 9443
+    failurePolicy: Fail
+    name: 'vtsingles.operator.victoriametrics.com'
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    objectSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values: [victoria-metrics-operator]
+    rules:
+      - apiGroups:
+          - operator.victoriametrics.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - vtsingles
+
+---
+# Source: victoria-metrics-operator/templates/webhook.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vmoperator-root-ca
+  namespace: vmoperator
+  labels: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: victoria-metrics-operator
+    app.kubernetes.io/version: v0.75.2
+spec:
+  secretName: vmoperator-root-ca
+  duration: 63800h0m0s
+  issuerRef:
+    name: vmoperator-root
+  commonName: ca.validation.victoriametrics
+  isCA: true
+
+---
+# Source: victoria-metrics-operator/templates/webhook.yaml
+# actual cert part for operator
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vmoperator-validation
+  namespace: vmoperator
+  labels: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: victoria-metrics-operator
+    app.kubernetes.io/version: v0.75.2
+spec:
+  secretName: vmoperator-validation
+  duration: 45800h0m0s
+  issuerRef: 
+    name: vmoperator-issuer
+  dnsNames:
+    - vmoperator
+    - vmoperator.vmoperator
+    - vmoperator.vmoperator.svc
+    - vmoperator.vmoperator.svc.cluster.local.
+
+---
+# Source: victoria-metrics-operator/templates/webhook.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: vmoperator-root
+  namespace: vmoperator
+  labels: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: victoria-metrics-operator
+    app.kubernetes.io/version: v0.75.2
+spec:
+  selfSigned: {}
+
+---
+# Source: victoria-metrics-operator/templates/webhook.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: vmoperator-issuer
+  namespace: vmoperator
+  labels: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: victoria-metrics-operator
+    app.kubernetes.io/version: v0.75.2
+spec:
+  ca:
+    secretName: vmoperator-root-ca
+

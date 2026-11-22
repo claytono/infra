@@ -19,6 +19,12 @@
       "kubernetes/restic/cronjobs/**"
     ]
   },
+  "helm-values": {
+    "description": "Also read the VictoriaMetrics operator objects, which give their images as repository and tag keys the way Helm values files do.",
+    "managerFilePatterns": [
+      "/^kubernetes/victoria-metrics/vm(single|agent|alert|alertmanager|auth)-[a-z-]+\\.yaml$/"
+    ]
+  },
   "customDatasources": {
     "grml": {
       "description": "Grml releases from the download site's file listing. The grml/grml GitHub repository publishes no releases or tags, so the ISO names are the only version source.",

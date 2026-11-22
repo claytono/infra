@@ -6,6 +6,7 @@ namespace: cnpg-system
 
 resources:
 - namespace.yaml
+- vmrule-cnpg.yaml
 - helm/templates/config.yaml
 - helm/templates/deployment.yaml
 - helm/templates/monitoring-configmap.yaml

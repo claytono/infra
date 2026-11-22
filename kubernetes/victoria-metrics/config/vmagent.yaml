@@ -1,10 +1,8 @@
 ---
-# vmagent's scrape config. VictoriaMetrics, vmagent, vmalert and Alertmanager
-# are scraped through the prometheus.io/scrape annotations on their Services.
-global:
-  scrape_interval: 15s
-
-scrape_configs:
+# vmagent's hand-written scrape jobs (additionalScrapeConfigs in
+# vmagent-vmagent.yaml). The scrape interval is set there. The operator
+# scrapes VictoriaMetrics, vmagent, vmalert, vmauth and Alertmanager itself,
+# through the VMServiceScrapes it creates for them.
 - job_name: node resources
   static_configs:
   - targets:
@@ -30,7 +28,7 @@ scrape_configs:
   metrics_path: /probe
   basic_auth:
     username: vmagent
-    password_file: /secrets/blackbox-exporter-password
+    password_file: /etc/vm/secrets/vmagent-scrape-credentials/blackbox-exporter-password
   params:
     module: [icmp]
   static_configs:
@@ -47,7 +45,7 @@ scrape_configs:
 
 - job_name: hass
   scrape_interval: 2s
-  bearer_token_file: /secrets/hass-bearer-token
+  bearer_token_file: /etc/vm/secrets/vmagent-scrape-credentials/hass-bearer-token
   metrics_path: /api/prometheus
   static_configs:
   - targets:
@@ -321,4 +319,4 @@ scrape_configs:
   metrics_path: /api/metrics
   static_configs:
   - targets: [karakeep.karakeep:3000]
-  bearer_token_file: /secrets/karakeep-metrics-token
+  bearer_token_file: /etc/vm/secrets/vmagent-scrape-credentials/karakeep-metrics-token

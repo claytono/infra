@@ -1,0 +1,47 @@
+---
+fullnameOverride: vmoperator
+
+operator:
+  # Lets ArgoCD ignore objects the operator converts from Prometheus
+  # operator ones, so they don't show as out of sync.
+  prometheus_converter_add_argocd_ignore_annotations: true
+
+# The operator otherwise gives every component it runs built-in CPU and
+# memory requests and limits. VPA sets requests here and we run without
+# limits; the default 1500Mi VMSingle limit is below what VictoriaMetrics
+# uses.
+env:
+- name: VM_VMSINGLEDEFAULT_USEDEFAULTRESOURCES
+  value: 'false'
+- name: VM_VMAGENTDEFAULT_USEDEFAULTRESOURCES
+  value: 'false'
+- name: VM_VMALERTDEFAULT_USEDEFAULTRESOURCES
+  value: 'false'
+- name: VM_VMAUTHDEFAULT_USEDEFAULTRESOURCES
+  value: 'false'
+- name: VM_VMALERTMANAGER_USEDEFAULTRESOURCES
+  value: 'false'
+
+admissionWebhooks:
+  # cert-manager issues the webhook certificate; without it the chart
+  # generates a new one on every render.
+  certManager:
+    enabled: true
+
+# Installs the CRDs with their full schemas, so the API server rejects
+# misspelled or mistyped fields. The templated ones accept any content. The
+# largest is over the client-side apply annotation limit, so ArgoCD syncs this
+# app with server-side apply.
+crds:
+  plain: true
+
+rbac:
+  # Leaves out the ClusterRoles that add the operator's resources to the
+  # standard view and admin roles. Nothing here uses them, and view would let
+  # its holders read VMUser passwords.
+  aggregatedClusterRoles:
+    enabled: false
+
+# Scrapes the operator's own metrics through a VMServiceScrape.
+serviceMonitor:
+  enabled: true

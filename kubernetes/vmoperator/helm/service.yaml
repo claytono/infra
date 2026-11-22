@@ -1,0 +1,26 @@
+---
+# Source: victoria-metrics-operator/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: vmoperator
+  labels: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: victoria-metrics-operator
+    app.kubernetes.io/version: v0.75.2
+  name: vmoperator
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+    - name: webhook
+      port: 9443
+      targetPort: webhook
+  selector: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/name: victoria-metrics-operator
+

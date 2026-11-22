@@ -1,0 +1,20 @@
+---
+# Source: victoria-metrics-operator/templates/rb.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: vmoperator
+  namespace: vmoperator
+  labels: 
+    app.kubernetes.io/instance: vmoperator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: victoria-metrics-operator
+    app.kubernetes.io/version: v0.75.2
+subjects:
+- kind: ServiceAccount
+  name: vmoperator
+  namespace: vmoperator
+roleRef:
+  kind: Role
+  name: vmoperator
+  apiGroup: rbac.authorization.k8s.io

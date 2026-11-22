@@ -4,12 +4,10 @@ global:
   smtp_smarthost: smtp.k.oneill.net:587
   smtp_from: alertmanager@oneill.net
   smtp_auth_username: relay@oneill.net
-  smtp_auth_password_file: /secrets/SMTP_PASSWORD
+  smtp_auth_password_file: /etc/vm/secrets/alertmanager/SMTP_PASSWORD
   smtp_require_tls: true
 
-#  # The directory from which notification templates are read.
-templates:
-- /etc/alertmanager-templates/*.tmpl
+# The operator adds the templates listed in vmalertmanager-alertmanager.yaml.
 
 # The root route on which each incoming alert enters.
 route:
@@ -40,11 +38,11 @@ route:
 receivers:
 - name: healthchecks-watchdog
   webhook_configs:
-  - url_file: /secrets/HEALTHCHECKS_WATCHDOG_URL
+  - url_file: /etc/vm/secrets/alertmanager/HEALTHCHECKS_WATCHDOG_URL
     send_resolved: false
 - name: default
   slack_configs:
-  - api_url_file: /secrets/SLACK_WEBHOOK_URL
+  - api_url_file: /etc/vm/secrets/alertmanager/SLACK_WEBHOOK_URL
     channel: '#alerts'
     send_resolved: true
     color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'

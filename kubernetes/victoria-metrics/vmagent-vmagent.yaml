@@ -1,0 +1,45 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAgent
+
+metadata:
+  name: vmagent
+
+spec:
+  # Names the Deployment and Service vmagent, as before the operator, instead
+  # of vmagent-vmagent.
+  useLegacyNaming: true
+  image:
+    repository: victoriametrics/vmagent
+    tag: v1.155.0@sha256:8e3c03905be15bba8312d4868e8ae6f9fc2fefee0a41d544472034249ca42bb4
+  priorityClassName: monitoring
+  # The buffer volume can be mounted by one pod at a time.
+  updateStrategy: Recreate
+  scrapeInterval: 15s
+  # Scrapes every VMServiceScrape, VMPodScrape, VMNodeScrape, VMProbe,
+  # VMStaticScrape and VMScrapeConfig in the cluster, including the ones the
+  # operator creates for its own components.
+  selectAllByDefault: true
+  # Leaves out the operator's default prometheus=<namespace>/<name> label,
+  # which would give every series a new identity.
+  externalLabelName: ''
+  # The hand-written jobs: node exporters, blackbox, Home Assistant, the
+  # kubelets and the prometheus.io annotation discovery.
+  additionalScrapeConfigs:
+    name: vmagent-scrape-configs
+    key: vmagent.yaml
+  # Mounted at /etc/vm/secrets/vmagent-scrape-credentials, where the scrape
+  # config reads its passwords and tokens.
+  secrets:
+  - vmagent-scrape-credentials
+  remoteWrite:
+  - url: http://victoria-metrics:8428/api/v1/write
+  remoteWriteSettings:
+    # NFS doesn't enforce the PVC's size, so cap the buffer to match it.
+    maxDiskUsagePerURL: 10GiB
+  # The operator always mounts the buffer volume, persistent-queue-data, at
+  # its own path; this makes that volume the existing vmagent-buffer PVC.
+  volumes:
+  - name: persistent-queue-data
+    persistentVolumeClaim:
+      claimName: vmagent-buffer
