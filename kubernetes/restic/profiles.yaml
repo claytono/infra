@@ -44,7 +44,6 @@ hetzner:
     - /source/backups/arq
     - /source/backups/restic
     - /source/k8s-pv-slow/*-resticprofile-cache*
-    - /source/k8s-pv/*-prometheus-data/
     - /source/k8s-pv/*-victoria-metrics-data/
     - /source/k8s-pv/*-vmagent-buffer/
     - /source/shared/video/tv
