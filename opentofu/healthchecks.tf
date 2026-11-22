@@ -173,12 +173,6 @@ resource "healthchecksio_check" "watchdog" {
   channels = [data.healthchecksio_channel.selfhosted_email.id]
 }
 
-# Keeps the check's UUID across the rename; remove once it is applied.
-moved {
-  from = healthchecksio_check.prometheus_watchdog
-  to   = healthchecksio_check.watchdog
-}
-
 # Kubernetes control-plane backup - runs daily
 resource "healthchecksio_check" "cluster_backup" {
   provider = healthchecksio.selfhosted
