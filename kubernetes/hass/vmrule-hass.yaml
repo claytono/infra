@@ -1,0 +1,32 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+
+metadata:
+  name: hass
+
+spec:
+  groups:
+  - name: hass.recording
+    rules:
+        # Records whether or not distance from bottom of desk to floor is greater
+        # than one meter.
+    - record: desk_up
+      expr: hass_sensor_unit_m{entity="sensor.desk_ultrasonic_sensor"} >  bool 0.9
+  - name: hass.rules
+    rules:
+    - alert: Outdoor_Sensor_Battery_Low
+      expr: >
+        (hass_sensor_voltage_v{entity=~"sensor.*(soil|rain).*battery.*"} <= 1.2)
+        or
+        ((hass_sensor_voltage_mv{entity=~"sensor.*(soil|rain).*battery.*"} / 1000)
+        <= 1.2)
+      for: 1h
+      annotations:
+        message: '{{ $labels.friendly_name }} is at {{ $value }}V - replace battery'
+    - alert: Outdoor_Sensor_Unavailable
+      expr: hass_entity_available{entity=~"sensor.*(soil.*moisture|rain_meter).*"}
+        == 0
+      for: 1d
+      annotations:
+        message: '{{ $labels.friendly_name }} has stopped reporting'

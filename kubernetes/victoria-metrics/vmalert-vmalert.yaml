@@ -1,0 +1,32 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlert
+
+metadata:
+  name: vmalert
+
+spec:
+  # Names the Deployment and Service vmalert, as before the operator, instead
+  # of vmalert-vmalert.
+  useLegacyNaming: true
+  image:
+    repository: victoriametrics/vmalert
+    tag: v1.155.0@sha256:3256cba5ddaca5974eae6141105cec4ce37871f1c213f0a5c267ec0111bc68e1
+  priorityClassName: monitoring
+  evaluationInterval: 1m
+  # Loads every VMRule in the cluster, so an app can keep its alert rules
+  # in its own folder.
+  selectAllByDefault: true
+  datasource:
+    url: http://victoria-metrics:8428
+  # Alert state is written back and restored after restarts.
+  remoteWrite:
+    url: http://victoria-metrics:8428
+  remoteRead:
+    url: http://victoria-metrics:8428
+  notifiers:
+  - url: http://alertmanager:9093
+  extraArgs:
+    # Links each alert's source to the rule's query in VMUI.
+    external.url: https://vm.k.oneill.net
+    external.alert.source: vmui/#/?g0.expr={{.Expr|queryEscape}}

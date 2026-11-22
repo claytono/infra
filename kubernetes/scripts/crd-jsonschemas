@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Write a JSON schema for each version of each CRD in the given files, in the
+layout kubeconform's -schema-location template
+{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json expects.
+
+Usage: crd-jsonschemas OUTPUT_DIR CRD_FILE...
+
+A CRD's schema allows fields it doesn't list, and kubeconform's --strict only
+rejects them when the schema says so. Every object schema that lists its
+properties, and doesn't already allow others, gets "additionalProperties":
+false, as in the CRDs-catalog schemas kubeconform otherwise uses.
+"""
+
+import json
+import os
+import sys
+
+import yaml
+
+
+def deny_unlisted(node):
+    if isinstance(node, dict):
+        if (
+            node.get("type") == "object"
+            and "properties" in node
+            and "additionalProperties" not in node
+            and not node.get("x-kubernetes-preserve-unknown-fields")
+        ):
+            node["additionalProperties"] = False
+        for value in node.values():
+            deny_unlisted(value)
+    elif isinstance(node, list):
+        for value in node:
+            deny_unlisted(value)
+
+
+def main():
+    out_dir, crd_files = sys.argv[1], sys.argv[2:]
+    for path in crd_files:
+        with open(path) as f:
+            for doc in yaml.safe_load_all(f):
+                if not doc or doc.get("kind") != "CustomResourceDefinition":
+                    continue
+                spec = doc["spec"]
+                group_dir = os.path.join(out_dir, spec["group"])
+                os.makedirs(group_dir, exist_ok=True)
+                kind = spec["names"]["kind"].lower()
+                for version in spec["versions"]:
+                    schema = version["schema"]["openAPIV3Schema"]
+                    deny_unlisted(schema)
+                    name = f"{kind}_{version['name']}.json"
+                    with open(os.path.join(group_dir, name), "w") as out:
+                        json.dump(schema, out)
+
+
+if __name__ == "__main__":
+    main()

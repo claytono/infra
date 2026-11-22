@@ -1,0 +1,72 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+
+metadata:
+  name: cluster
+
+spec:
+  groups:
+  - name: cluster.rules
+    rules:
+    - alert: Watchdog
+      expr: vector(1)
+      annotations:
+        message: Always firing; Alertmanager forwards it to Healthchecks as a heartbeat
+    - alert: NodeDown
+      expr: up{job="node resources", instance!="xtal:9100"} == 0
+      for: 5m
+    - alert: XtalNodeExporterDown
+      expr: >
+        (up{job="node resources", instance="xtal:9100"} == 0)
+        and on()
+        (
+          increase(smokeping_response_duration_seconds_count{host="xtal.oneill.net"}[5m])
+          > 0
+        )
+      for: 35m
+      annotations:
+        message: xtal is reachable by LAN ICMP, but node_exporter over Tailscale has
+          not been scraped for 35 minutes
+    - alert: ICMPUnreachable
+      expr: probe_success{job="blackbox"} == 0
+      for: 20m
+    - alert: ExporterDown
+      expr: up{job!="node resources", job!="hwinfo gaming pc", resticprofile!~".+"}
+        == 0
+      for: 1h
+    - alert: PodStuckNotRunning
+      expr: >
+        (kube_pod_status_phase{phase!="Running", phase!="Succeeded"} == 1)
+        unless on(namespace,pod) kube_pod_owner{owner_kind="Job"}
+      for: 15m
+      annotations:
+        message: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in {{ $labels.phase }}
+          phase for more than 15 minutes
+    - alert: PodNotReady
+      expr: >
+        (kube_pod_status_ready{condition="true"} == 0)
+        and on(namespace,pod) (kube_pod_status_phase{phase="Running"} == 1)
+        unless on(namespace,pod) kube_pod_owner{owner_kind="Job"}
+        unless on(namespace,pod) kube_pod_deletion_timestamp
+      for: 15m
+      annotations:
+        message: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been running but
+          not ready for more than 15 minutes
+    - alert: AptUpgradesPending
+      expr: sum by (instance) (apt_upgrades_pending{origin=~".*Debian:.*"}) > 0
+      for: 10d
+      annotations:
+        message: '{{ $labels.instance }} has had {{ $value }} Debian upgrade(s) pending
+          for more than 10 days'
+    - alert: AptPackageListsStale
+      expr: time() - apt_package_cache_timestamp_seconds > 3 * 86400
+      for: 1d
+      annotations:
+        message: '{{ $labels.instance }} has not refreshed its apt package lists in
+          more than 3 days'
+    - alert: NodeRebootRequired
+      expr: node_reboot_required == 1
+      for: 10d
+      annotations:
+        message: '{{ $labels.instance }} has needed a reboot for more than 10 days'

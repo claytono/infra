@@ -1,0 +1,27 @@
+---
+# The login for writes, imports and series deletes through
+# vm.k.oneill.net/api/. It can also read, with the same paths that are open
+# without a login (vmauth-vmauth.yaml).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMUser
+
+metadata:
+  name: vmauth
+
+spec:
+  username: vmauth
+  passwordRef:
+    name: vmauth-password
+    key: password
+  targetRefs:
+  - crd:
+      kind: VMSingle
+      name: victoria-metrics
+      namespace: victoria-metrics
+    paths:
+    - /api/v1/(query|query_range|query_exemplars|series|series/count|labels|label/[^/]+/values|metadata|rules|alerts|notifiers)
+    - /api/v1/export(/csv|/native)?
+    - /api/v1/status/.*
+    - /api/v1/write
+    - /api/v1/import.*
+    - /api/v1/admin/tsdb/delete_series

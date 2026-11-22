@@ -11,6 +11,7 @@ resources:
 - namespace.yaml
 - hass-externalsecrets.yaml
 - hass-postgres-cluster.yaml
+- vmrule-hass.yaml
 - config
 - helm/ingress.yaml
 - helm/service.yaml

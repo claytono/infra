@@ -1,0 +1,27 @@
+---
+# The vm Ingress sends only /api/ here, without the Authentik login. Reads
+# are open; writes, imports and series deletes need the vmauth user
+# (vmuser-vmauth.yaml). src_paths must match the whole path, and anything
+# not listed is refused.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAuth
+
+metadata:
+  name: vmauth
+
+spec:
+  # Names the Deployment and Service vmauth, as before the operator, instead
+  # of vmauth-vmauth.
+  useLegacyNaming: true
+  image:
+    repository: victoriametrics/vmauth
+    tag: v1.155.0@sha256:dfeb63e5eff4bc32ed0fa2d43d8e85b717e8442c8b5c753e83c216669665a7de
+  priorityClassName: monitoring
+  selectAllByDefault: true
+  unauthorizedUserAccessSpec:
+    url_map:
+    - src_paths:
+      - /api/v1/(query|query_range|query_exemplars|series|series/count|labels|label/[^/]+/values|metadata|rules|alerts|notifiers)
+      - /api/v1/export(/csv|/native)?
+      - /api/v1/status/.*
+      url_prefix: http://victoria-metrics:8428

@@ -12,48 +12,41 @@ commonAnnotations:
 
 resources:
 - namespace.yaml
-- deploy-alertmanager.yaml
-- deploy-victoria-metrics.yaml
-- deploy-vmagent.yaml
-- deploy-vmalert.yaml
-- deploy-vmauth.yaml
 - externalsecret-alertmanager.yaml
-- externalsecret-vmagent.yaml
-- externalsecret-vmauth.yaml
+- externalsecret-vmagent-scrape-credentials.yaml
+- externalsecret-vmauth-password.yaml
 - ingress-alertmanager.yaml
 - ingress-vm.yaml
-- pvc-alertmanager-data.yaml
 - pvc-victoria-metrics-data.yaml
 - pvc-vmagent-buffer.yaml
 - rbac.yaml
-- service-alertmanager.yaml
-- service-victoria-metrics.yaml
-- service-vmagent.yaml
-- service-vmalert.yaml
-- service-vmauth.yaml
+- vmagent-vmagent.yaml
+- vmalert-vmalert.yaml
+- vmalertmanager-alertmanager.yaml
+- vmauth-vmauth.yaml
+- vmrule-cluster.yaml
+- vmrule-victoriametrics.yaml
+- vmsingle-victoria-metrics.yaml
+- vmuser-vmauth.yaml
 
 configMapGenerator:
-- name: vmagent
-  files:
-  - config/vmagent.yaml
-  options:
-    disableNameSuffixHash: true
-- name: vmalert-rules
-  files:
-  - config/rules.yaml
-  - config/cnpg-rules.yaml
-  - config/victoriametrics-rules.yaml
-  options:
-    disableNameSuffixHash: true
-- name: alertmanager
-  files:
-  - config.yaml=config/alertmanager.yaml
-  options:
-    disableNameSuffixHash: true
 - name: alertmanager-templates
   files:
   - config/alertmanager-templates/default.tmpl
   - config/alertmanager-templates/slack.tmpl
+  options:
+    disableNameSuffixHash: true
+
+# Neither holds a secret; the operator reads these settings from Secrets.
+secretGenerator:
+- name: vmagent-scrape-configs
+  files:
+  - config/vmagent.yaml
+  options:
+    disableNameSuffixHash: true
+- name: alertmanager-base-config
+  files:
+  - alertmanager.yaml=config/alertmanager.yaml
   options:
     disableNameSuffixHash: true
 

@@ -1,0 +1,80 @@
+---
+# VictoriaMetrics self-monitoring, adapted from VictoriaMetrics' published
+# rules for v1.155.0 (deployment/docker/rules/*.yml).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+
+metadata:
+  name: victoriametrics
+
+spec:
+  groups:
+  - name: victoriametrics
+    rules:
+    - alert: VMAgentDown
+      # vmagent scrapes everything, itself included. Without it no data
+      # arrives, but vmalert keeps sending the Watchdog heartbeat. Also fires
+      # when vmagent's scrape of itself keeps failing.
+      expr: >
+        absent_over_time(up{job="vmagent"}[5m])
+        or max_over_time(up{job="vmagent"}[5m]) == 0
+      for: 5m
+      annotations:
+        message: vmagent has sent no samples, or failed to scrape itself, for 10 minutes
+    - alert: VMAgentConfigReloadFailed
+      expr: vm_promscrape_config_last_reload_successful{job="vmagent"} != 1
+      for: 5m
+      annotations:
+        message: vmagent failed to reload its scrape config and is still using the
+          previous one
+    - alert: VMAlertConfigReloadFailed
+      expr: vmalert_config_last_reload_successful{job="vmalert"} != 1
+      for: 5m
+      annotations:
+        message: vmalert failed to reload its rule files and is still evaluating the
+          previous rules
+    - alert: VMDiskRunsOutOfSpaceIn3Days
+      # Subtracts only samples deduplicated in storage (type="merge"); query-time
+      # dedup (type="select") counts the 2026-11-08 duplicates on every query
+      # that reads them, which has nothing to do with disk growth.
+      expr: |
+        sum(vm_free_disk_space_bytes) without(path) /
+        (
+          (rate(vm_rows_added_to_storage_total[1d]) - sum(rate(vm_deduplicated_samples_total{type="merge"}[1d])) without(type)) * (
+            sum(vm_data_size_bytes{type!~"indexdb.*"}) without(type) /
+            sum(vm_rows{type!~"indexdb.*"}) without(type)
+          )
+          +
+          rate(vm_new_timeseries_created_total[1d]) * (
+            sum(vm_data_size_bytes{type="indexdb/file"}) without(type) /
+            sum(vm_rows{type="indexdb/file"}) without(type)
+          )
+        ) < 3 * 24 * 3600 > 0
+      for: 30m
+      annotations:
+        message: VictoriaMetrics storage will be full in {{ $value | humanizeDuration }}
+          at the current ingestion rate
+    - alert: VMRowsRejectedOnIngestion
+      expr: rate(vm_rows_ignored_total[5m]) > 0
+      for: 15m
+      annotations:
+        message: VictoriaMetrics is rejecting ingested rows ({{ $labels.reason }})
+    - alert: VMAlertRulesError
+      expr: sum(increase(vmalert_alerting_rules_errors_total[5m])) without(id) > 0
+        or sum(increase(vmalert_recording_rules_errors_total[5m])) without(id) > 0
+      for: 5m
+      annotations:
+        message: vmalert rule group {{ $labels.group }} in {{ $labels.file }} is failing
+          to evaluate
+    - alert: VMAlertNotifierErrors
+      expr: increase(vmalert_alerts_send_errors_total[5m]) > 0
+      for: 15m
+      annotations:
+        message: vmalert is failing to send alerts to {{ $labels.addr }}
+    - alert: VMAgentRemoteWriteDropping
+      expr: sum(increase(vm_persistentqueue_bytes_dropped_total[5m])) without(path,
+        name) > 0 or sum(increase(vmagent_remotewrite_packets_dropped_total[5m]))
+        without(url) > 0
+      for: 10m
+      annotations:
+        message: vmagent is dropping data it could not write to VictoriaMetrics

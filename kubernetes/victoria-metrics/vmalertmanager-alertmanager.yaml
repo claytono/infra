@@ -1,0 +1,46 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlertmanager
+
+metadata:
+  name: alertmanager
+
+spec:
+  # Names the StatefulSet and Service alertmanager, as before the operator,
+  # instead of vmalertmanager-alertmanager.
+  useLegacyNaming: true
+  image:
+    repository: prom/alertmanager
+    tag: v0.34.2@sha256:39d8bb3966c694a124428a3a88fbcffd40bd069129ecd47c059f8a3f17c55f3b
+  priorityClassName: monitoring
+  externalURL: https://alertmanager.k.oneill.net
+  # config/alertmanager.yaml, from the kustomization's secretGenerator. The
+  # operator merges any VMAlertmanagerConfig objects into it.
+  configSecret: alertmanager-base-config
+  selectAllByDefault: true
+  # Mounted at /etc/vm/secrets/alertmanager, where the config reads the SMTP
+  # password, the Slack webhook and the Healthchecks URL.
+  secrets:
+  - alertmanager
+  templates:
+  - name: alertmanager-templates
+    key: default.tmpl
+  - name: alertmanager-templates
+    key: slack.tmpl
+  # Silences and notification state. The image runs as nobody; fsGroup makes
+  # the NFS volume writable for it.
+  securityContext:
+    fsGroup: 65534
+    fsGroupChangePolicy: OnRootMismatch
+  storage:
+    volumeClaimTemplate:
+      # Names the volume data-alertmanager-0.
+      metadata:
+        name: data
+      spec:
+        storageClassName: nfs-csi
+        accessModes:
+        - ReadWriteOncePod
+        resources:
+          requests:
+            storage: 5Gi
