@@ -4,3 +4,4 @@
 /.esphome/
 /.platformio/
 /secrets.yaml
+/secrets.tmpl.hash
