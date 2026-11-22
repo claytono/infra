@@ -13,6 +13,12 @@ controller:
     - apiGroups: [postgresql.cnpg.io]
       resources: [clusters]
       verbs: [get, list, watch]
+    # VMAgent has a scale subresource, so VPA only accepts a VPA aimed at
+    # it, not at its Deployment. Only vmagents: the other operator kinds
+    # aren't scalable, so their Deployments are the right VPA targets.
+    - apiGroups: [operator.victoriametrics.com]
+      resources: [vmagents]
+      verbs: [get, list, watch]
   resources:
     limits:
       memory: 256Mi
