@@ -31,9 +31,6 @@ spec:
         - name: web-config
           mountPath: /web-config
           readOnly: true
-        - name: qbittorrent-api-key
-          mountPath: /secrets
-          readOnly: true
         ports:
         - containerPort: 9115
       volumes:
@@ -43,9 +40,3 @@ spec:
       - name: web-config
         secret:
           secretName: blackbox-exporter-web-config
-      - name: qbittorrent-api-key
-        secret:
-          secretName: qbittorrent
-          items:
-          - key: api-key
-            path: qbittorrent-api-key
