@@ -65,6 +65,14 @@
       "transformTemplates": [
         "( $l := releases.version; $v := $map([0..($count($l)-2)], function($i) { $l[$i] = \"Package: kubernetes-cni\" ? $substringAfter($l[$i+1], \"Version: \") : \"\" }); { \"releases\": $append([], $map($distinct($v[$ != \"\"]), function($x) { {\"version\": $x} })) } )"
       ]
+    },
+    "grafana-plugins": {
+      "description": "Versions of a Grafana plugin from the grafana.com catalog, which Grafana installs plugins from. The plugins' GitHub releases run ahead of the catalog and include versions it never publishes, which Grafana cannot install.",
+      "defaultRegistryUrlTemplate": "https://grafana.com/api/plugins/{{packageName}}/versions",
+      "format": "json",
+      "transformTemplates": [
+        "{ \"releases\": [items.{ \"version\": version, \"releaseTimestamp\": createdAt }] }"
+      ]
     }
   },
   "customManagers": [
@@ -298,6 +306,20 @@
       "datasourceTemplate": "github-tags",
       "extractVersionTemplate": "^v(?<version>\\d+\\.\\d+)\\.\\d+$",
       "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "Grafana plugin pins, the id@version entries under plugins: in the Grafana chart values",
+      "managerFilePatterns": [
+        "kubernetes/grafana/values.yaml"
+      ],
+      "matchStringsStrategy": "recursive",
+      "matchStrings": [
+        "(?:^|\\n)plugins:\\n(?:- [^\\n]+\\n)+",
+        "- (?<depName>[a-z0-9-]+)@(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "custom.grafana-plugins",
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
