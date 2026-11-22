@@ -54,4 +54,12 @@ rules:
     - get
     - list
     - watch
+  - apiGroups:
+    - operator.victoriametrics.com
+    resources:
+    - vmagents
+    verbs:
+    - get
+    - list
+    - watch
 
