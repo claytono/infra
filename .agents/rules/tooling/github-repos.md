@@ -171,6 +171,19 @@ list=$(gh variable get REPOSITORIES -R claytono/renovate-docker-datasource) &&
 gh variable get REPOSITORIES -R claytono/renovate-docker-datasource
 ```
 
+Evaluate the repo's Renovate pull requests. Copy
+`.github/workflows/renovate-eval.yaml` from claytono/health-hub unchanged; it
+starts a pass when the workflow named `CI` finishes, so the repo's CI workflow
+must have that name. Add the repo to `cachix_github_repositories` and
+`renovate_eval_github_repositories` in `opentofu/github-repos.tf` and apply it,
+which sets the `CACHIX_AUTH_TOKEN` and `CLAUDE_CODE_OAUTH_TOKEN` secrets and the
+`RENOVATE_EVAL_PROVIDER` variable.
+
+```bash
+gh secret list -R $repo
+gh variable get RENOVATE_EVAL_PROVIDER -R $repo
+```
+
 ## Main Repos Only
 
 infra, dotfiles, github-actions and go-unifi-mcp require SHA pinning. Once
