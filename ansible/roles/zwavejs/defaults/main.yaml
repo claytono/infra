@@ -1,6 +1,6 @@
 ---
 # renovate: datasource=docker
-zwavejs_image: "zwavejs/zwave-js-ui:11.24.3@sha256:3fef66d575ea0ea9d50aad3e05c36619228557cfa888557eac2035215a29a321"
+zwavejs_image: "zwavejs/zwave-js-ui:11.26.0@sha256:d84a68148e9d93be78ab73f19c8d547ad92874e2f02299aacd7538fddb2b1d99"
 zwavejs_data_dir: /etc/zwavejs
 zwavejs_device: /dev/serial/by-id/usb-Silicon_Labs_Zooz_ZST10_700_Z-Wave_Stick_26b0d03ffcc9ec1191cf65a341be1031-if00-port0
 zwavejs_hostname: zwavejs.oneill.net
