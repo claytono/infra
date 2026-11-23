@@ -5,6 +5,8 @@ locals {
     "dotfiles",
     "go-unifi-mcp",
     "health-hub",
+    "pybirdfy",
+    "readest-hardcover-sync",
   ])
 
   # Repositories that run the shared claytono-renovate-eval workflow. Its
@@ -16,6 +18,8 @@ locals {
     "go-unifi-mcp",
     "github-actions",
     "health-hub",
+    "pybirdfy",
+    "readest-hardcover-sync",
   ])
 
   tailscale_ssh_github_repositories = toset([
