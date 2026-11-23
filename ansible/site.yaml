@@ -221,6 +221,9 @@
   roles:
     - role: boutetnico.fail2ban
       tags: fail2ban
+    - role: ufw
+      when: "enable_ufw | bool"
+      tags: ufw
 
 - name: ZRAM swap
   hosts: all
