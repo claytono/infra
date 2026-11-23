@@ -2,7 +2,8 @@
 timezone: America/New_York
 system_locale: en_US.UTF-8
 
-# Used by chrony role to conditionally configure UFW firewall rules
+# Hosts that set this run the ufw role: inbound traffic is dropped except
+# ufw_allowed_tcp_ports and Tailscale.
 enable_ufw: false
 
 # Disable rfkill unblock globally - wifi is not soft-blocked on any host

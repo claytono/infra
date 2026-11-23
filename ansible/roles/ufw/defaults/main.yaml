@@ -1,0 +1,6 @@
+---
+# Inbound TCP ports open on every address. Everything else inbound is
+# dropped, apart from Tailscale, whose own chain accepts tailnet traffic
+# before UFW's rules run.
+ufw_allowed_tcp_ports:
+  - 22

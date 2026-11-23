@@ -1,0 +1,33 @@
+---
+- name: Install ufw
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+
+# Open the allowed ports before the deny policy is enforced, so enabling UFW
+# never cuts off the SSH session Ansible is using.
+- name: Allow inbound TCP ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item | string }}"
+    proto: tcp
+  loop: "{{ ufw_allowed_tcp_ports }}"
+
+- name: Set default policies
+  community.general.ufw:
+    default: "{{ item.policy }}"
+    direction: "{{ item.direction }}"
+  loop:
+    - { direction: incoming, policy: deny }
+    - { direction: outgoing, policy: allow }
+    # Tailscale's ts-forward chain runs first, so exit-node traffic is
+    # unaffected.
+    - { direction: routed, policy: deny }
+
+- name: Log blocked packets at the low level
+  community.general.ufw:
+    logging: low
+
+- name: Enable ufw
+  community.general.ufw:
+    state: enabled
