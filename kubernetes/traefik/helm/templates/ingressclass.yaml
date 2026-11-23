@@ -8,6 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik-traefik
+    app.kubernetes.io/version: "v3.7.17"
     app.kubernetes.io/managed-by: Helm
   name: traefik
 spec:

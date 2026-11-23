@@ -8,6 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik-traefik
+    app.kubernetes.io/version: "v3.7.17"
     app.kubernetes.io/managed-by: Helm
   annotations:
 spec:
@@ -33,6 +34,7 @@ spec:
         app.kubernetes.io/instance: traefik-traefik
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: traefik
+        app.kubernetes.io/version: v3.7.17
     spec:
       affinity:
         nodeAffinity:
@@ -86,7 +88,7 @@ spec:
               fieldPath: metadata.namespace
         - name: USER
           value: traefik
-        image: docker.io/traefik:v3.7.16
+        image: docker.io/traefik:v3.7.17
         imagePullPolicy: IfNotPresent
         lifecycle: null
         livenessProbe:
