@@ -8,11 +8,15 @@ metadata:
   labels:
     app.kubernetes.io/name: mail
     app.kubernetes.io/instance: smtp
-    app.kubernetes.io/version: "5.1.0"
+    app.kubernetes.io/version: "5.2.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
-    # Auto-reload postfix if somebody changes config map directly in Kuberentes.
-    # Uses: https://github.com/stakater/Reloader
+    
+    # Auto-reload postfix if somebody changes a mounted config map or secret directly
+    # in Kubernetes. Uses: https://github.com/stakater/Reloader
+    # NOTE: only resources actually rendered are listed, and the cert secret is
+    # intentionally excluded (see the note in "mail.checksums" above): it uses
+    # genSignedCert and would force a reload on every upgrade.
     configmap.reloader.stakater.com/reload: "smtp"
 spec:
   serviceName: smtp
@@ -28,6 +32,14 @@ spec:
         app.kubernetes.io/name: mail
         app.kubernetes.io/instance: smtp
       annotations:
+        # Reload the Statefulset when any mounted config/secret changes on deployment.
+        # Templates whose guard condition is false render empty, so their checksum is
+        # stable and only changes once the resource actually starts being emitted.
+        # NOTE: secret-cert.yaml is intentionally excluded: it uses genSignedCert, which
+        # regenerates on every render and would force a pod restart on every upgrade.
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap-metrics: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        checksum/secret-mount: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     spec:
       serviceAccountName: "smtp"
       
@@ -42,7 +54,7 @@ spec:
       terminationGracePeriodSeconds: 120
       containers:
         - name: mail
-          image: "boky/postfix:5.1.0"
+          image: "ghcr.io/bokysan/postfix:5.2.1"
           imagePullPolicy: IfNotPresent
           securityContext:
             {}
@@ -106,11 +118,15 @@ spec:
               mountPath: /docker-init.d/_enable_tls.sh
               readOnly: true
               subPath: _enable_tls.sh
+            - name: tmp-volume-postfix
+              mountPath: /tmp
           resources: 
             {}
       volumes:
-        - name: tmp
-          emptyDir: {}
+        - name: tmp-volume-postfix
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Mi
         - name: certs-init
           configMap:
             name: smtp
