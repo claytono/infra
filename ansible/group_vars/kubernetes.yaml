@@ -9,8 +9,6 @@ ip_forwarding_enabled: true
 
 kernel_parameters: "nofb vga=normal"
 
-node_exporter_enabled: true
-
 # iSCSI LUNs from fs2 appear as SCSI disks. Plain DEVICESCAN would monitor
 # any LUN attached when smartd starts, then alert when it detaches. Only
 # SATA and NVMe disks pass these types.

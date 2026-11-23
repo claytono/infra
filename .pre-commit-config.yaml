@@ -93,6 +93,13 @@ repos:
     additional_dependencies: [pyyaml]
     files: ^(esphome/[^/]+\.yaml|opentofu/esphome-hosts\.tf|scripts/gen-esphome-hosts)$
     pass_filenames: false
+  - id: node-exporter-targets-check
+    name: check node_exporter scrape targets are up to date
+    entry: scripts/gen-node-exporter-targets --check
+    # Needs ansible-inventory from the Nix shell.
+    language: system
+    files: ^(ansible/(inventory|group_vars|host_vars)/.*|kubernetes/victoria-metrics/vmstaticscrape-node-exporters\.yaml|scripts/gen-node-exporter-targets)$
+    pass_filenames: false
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1
   hooks:

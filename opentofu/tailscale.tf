@@ -91,6 +91,14 @@ resource "tailscale_acl" "main" {
                 "proto":  "tcp",
                 "dst":    ["claytono@github:9100"],
             },
+
+            // Allow Kubernetes egress proxies to scrape flux node_exporter
+            {
+                "action": "accept",
+                "src":    ["tag:k8s"],
+                "proto":  "tcp",
+                "dst":    ["tag:flux:9100"],
+            },
         ],
 
         // Define postures that will be applied to all rules without any specific
