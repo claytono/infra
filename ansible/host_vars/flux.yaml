@@ -11,6 +11,9 @@ common_additional_packages_to_remove:
 # This remote VPS needs MagicDNS for its backup and monitoring endpoints.
 tailscale_args: --advertise-exit-node --accept-dns=true
 tailscale_tags: ["flux"]
+# The cluster reaches flux's node_exporter over Tailscale, through the egress
+# Service in kubernetes/tailscale-operator/flux-node-exporter.yaml.
+node_exporter_scrape_address: flux-node-exporter.tailscale.svc.cluster.local:9100
 ip_forwarding_enabled: true
 # A public VPS: only SSH is open to the internet. UFW was already enabled with
 # these rules, most likely by Vultr's image, before Ansible managed it.

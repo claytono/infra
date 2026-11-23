@@ -27,6 +27,8 @@ resources:
 - vmrule-cluster.yaml
 - vmrule-victoriametrics.yaml
 - vmsingle-victoria-metrics.yaml
+- vmstaticscrape-node-exporters.yaml
+- vmstaticscrape-xtal.yaml
 - vmuser-vmauth.yaml
 
 configMapGenerator:

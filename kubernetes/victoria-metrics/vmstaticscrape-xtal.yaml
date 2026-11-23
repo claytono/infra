@@ -1,0 +1,18 @@
+---
+# xtal isn't in the Ansible inventory, so it isn't in the generated
+# vmstaticscrape-node-exporters.yaml. The cluster reaches it over Tailscale,
+# through the egress Service in
+# kubernetes/tailscale-operator/xtal-node-exporter.yaml.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+
+metadata:
+  name: xtal
+
+spec:
+  jobName: node resources
+  targetEndpoints:
+  - targets:
+    - xtal-node-exporter.tailscale.svc.cluster.local:9100
+    labels:
+      instance: xtal:9100

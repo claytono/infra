@@ -1,4 +1,10 @@
 ---
+# Every host runs node_exporter unless its host_vars or group_vars set this to
+# false. scripts/gen-node-exporter-targets reads it from the inventory to
+# build the VictoriaMetrics scrape targets, so it must be set here rather than
+# left to the role's default. A host the cluster can't reach at
+# <ansible_host>:<node_exporter_port> sets node_exporter_scrape_address.
+node_exporter_enabled: true
 # renovate: datasource=github-releases depName=prometheus/node_exporter
 node_exporter_version: 1.12.1
 node_exporter_host: 0.0.0.0

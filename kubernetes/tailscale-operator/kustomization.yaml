@@ -7,6 +7,7 @@ namespace: tailscale
 resources:
 - namespace.yaml
 - externalsecret.yaml
+- flux-node-exporter.yaml
 - xtal-node-exporter.yaml
 - helm/templates/apiserverproxy-rbac.yaml
 - helm/templates/deployment.yaml

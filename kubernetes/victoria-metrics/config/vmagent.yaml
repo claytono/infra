@@ -2,19 +2,9 @@
 # vmagent's hand-written scrape jobs (additionalScrapeConfigs in
 # vmagent-vmagent.yaml). The scrape interval is set there. The operator
 # scrapes VictoriaMetrics, vmagent, vmalert, vmauth and Alertmanager itself,
-# through the VMServiceScrapes it creates for them.
-- job_name: node resources
-  static_configs:
-  - targets:
-    - k1.oneill.net:9100
-    - k2.oneill.net:9100
-    - k3.oneill.net:9100
-    - k4.oneill.net:9100
-    - k5.oneill.net:9100
-  - targets:
-    - xtal-node-exporter.tailscale.svc.cluster.local:9100
-    labels:
-      instance: xtal:9100
+# through the VMServiceScrapes it creates for them. Node exporters are
+# scraped through VMStaticScrapes: vmstaticscrape-node-exporters.yaml,
+# generated from the Ansible inventory, and vmstaticscrape-xtal.yaml.
 
 # scrape szamar via http on port 10445
 - job_name: hwinfo gaming pc
