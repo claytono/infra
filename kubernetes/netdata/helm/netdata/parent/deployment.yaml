@@ -115,6 +115,9 @@ spec:
               mountPath: /etc/netdata/health_alarm_notify.conf
               subPath: health
             - name: configmap
+              mountPath: /etc/netdata/health.d/cpu.conf
+              subPath: health-cpu
+            - name: configmap
               mountPath: /etc/netdata/netdata.conf.tmpl
               subPath: netdata
             - name: configmap
