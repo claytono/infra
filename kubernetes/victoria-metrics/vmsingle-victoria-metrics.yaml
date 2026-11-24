@@ -11,7 +11,7 @@ spec:
   useLegacyNaming: true
   image:
     repository: victoriametrics/victoria-metrics
-    tag: v1.155.0@sha256:f60dc268b54ecf87f6e09d740c2b732838aa9193090cc741417c9f6386a130df
+    tag: v1.156.0@sha256:da8a90ac0912f16589be2b96a6441a2fca4bca415c83783d972d92e3b5b66970
   priorityClassName: monitoring
   # The operator defaults to 8429 and forwards 8428 to it; listening on 8428
   # keeps one port, as before.
