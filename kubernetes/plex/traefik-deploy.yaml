@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: traefik
-        image: docker.io/traefik:v3.7.16@sha256:1336e85aaed293bd63d005086e0dd013b04078b26aaeb1c18b26a2f928af7e65
+        image: docker.io/traefik:v3.7.17@sha256:f4bb143d1135a579b630ed491e17ec50f6f7c9c6a30585ff3d385471d2a86f5a
         args:
         - --entryPoints.traefik.address=:8080/tcp
         - --entryPoints.websecure.address=:8443/tcp
