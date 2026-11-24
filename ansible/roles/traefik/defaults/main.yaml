@@ -1,3 +1,3 @@
 ---
 # renovate: datasource=docker
-traefik_image: "traefik:v3.7.4@sha256:fcdef599e6259359833dd2e1d49f9e964f66825d69bd3dd468f51102ce013d03"
+traefik_image: "traefik:v3.7.17@sha256:f4bb143d1135a579b630ed491e17ec50f6f7c9c6a30585ff3d385471d2a86f5a"
