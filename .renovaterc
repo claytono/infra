@@ -741,6 +741,20 @@
       "groupName": "pulshealth"
     },
     {
+      "description": "VictoriaMetrics' single-node server, vmagent, vmalert and vmauth are one release, and running them at different versions mixes components the project releases together, so update them in one PR.",
+      "matchDatasources": [
+        "docker",
+        "custom.docker-first-seen"
+      ],
+      "matchPackageNames": [
+        "victoriametrics/victoria-metrics",
+        "victoriametrics/vmagent",
+        "victoriametrics/vmalert",
+        "victoriametrics/vmauth"
+      ],
+      "groupName": "VictoriaMetrics"
+    },
+    {
       "description": "PulsHealth's TimescaleDB image follows upstream PulsHealth's pinned database image and is updated by hand (.renovate-eval.md, PulsHealth Updates).",
       "matchPackageNames": [
         "docker.io/timescale/timescaledb-ha"
