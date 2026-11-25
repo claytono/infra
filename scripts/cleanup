@@ -18,6 +18,7 @@ import argparse
 import os
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -97,15 +98,48 @@ def find_dirs(
     return found
 
 
+USER_FLAGS = stat.UF_IMMUTABLE | stat.UF_APPEND
+
+
+def clear_user_flags(path: str) -> None:
+    """Clear the owner's immutable and append-only flags, where supported."""
+    st = os.lstat(path)
+    flags = getattr(st, "st_flags", 0)
+    if flags & USER_FLAGS:
+        os.chflags(path, flags & ~USER_FLAGS, follow_symlinks=False)
+
+
+def make_removable(root: Path) -> None:
+    """Unlock everything under *root* so it can be deleted, skipping symlinks.
+
+    Extracted firmware images and Go module caches contain read-only
+    directories, and nothing inside a read-only directory can be deleted.
+    Nothing locked with `chflags uchg` or `uappnd` can be deleted either.
+    """
+    clear_user_flags(str(root))
+    if root.is_dir():
+        root.chmod(root.stat().st_mode | stat.S_IRWXU)
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        for f in filenames:
+            clear_user_flags(os.path.join(dirpath, f))
+        for d in dirnames:
+            full = os.path.join(dirpath, d)
+            clear_user_flags(full)
+            if not os.path.islink(full):
+                os.chmod(full, os.stat(full).st_mode | stat.S_IRWXU)
+
+
 def remove(p: Path) -> None:
     """Remove a path (file or dir), skipping symlinks."""
     if p.is_symlink():
         return
+    delete = shutil.rmtree if p.is_dir() else Path.unlink
     try:
-        if p.is_dir():
-            shutil.rmtree(p)
-        else:
-            p.unlink()
+        try:
+            delete(p)
+        except PermissionError:
+            make_removable(p)
+            delete(p)
     except FileNotFoundError:
         pass
     except OSError as e:
