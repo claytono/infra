@@ -1,0 +1,16 @@
+---
+# fs2 is a Synology NAS and isn't in the Ansible inventory, so it isn't in the
+# generated vmstaticscrape-node-exporters.yaml. Its node_exporter is the
+# SynoCommunity "Node Exporter" DSM package, installed and updated through
+# Package Center.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+
+metadata:
+  name: fs2
+
+spec:
+  jobName: node resources
+  targetEndpoints:
+  - targets:
+    - fs2.oneill.net:9100
