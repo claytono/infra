@@ -1,0 +1,9 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description=Write ext4 error counts for the node_exporter textfile collector
+
+[Service]
+Type=oneshot
+User=node_exporter
+Group=node_exporter
+ExecStart=/bin/sh -c '/usr/local/libexec/ext4_errors.sh >/var/lib/node_exporter/textfile_collector/ext4.prom.tmp && mv /var/lib/node_exporter/textfile_collector/ext4.prom.tmp /var/lib/node_exporter/textfile_collector/ext4.prom'

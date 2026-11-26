@@ -1,0 +1,38 @@
+---
+- name: Create /usr/local/libexec
+  ansible.builtin.file:
+    path: /usr/local/libexec
+    state: directory
+    mode: "0755"
+
+# The play creates this directory too, but only after its roles run,
+# and the timer below must have somewhere to write on a new host.
+- name: Create textfile collector directory
+  ansible.builtin.file:
+    path: /var/lib/node_exporter/textfile_collector
+    state: directory
+    mode: "0755"
+    owner: node_exporter
+    group: node_exporter
+
+- name: Install ext4_errors.sh
+  ansible.builtin.copy:
+    src: ext4_errors.sh
+    dest: /usr/local/libexec/ext4_errors.sh
+    mode: "0755"
+
+- name: Install ext4 metrics service and timer
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    mode: "0644"
+  loop:
+    - ext4-errors-textfile.service
+    - ext4-errors-textfile.timer
+
+- name: Enable ext4 metrics timer
+  ansible.builtin.systemd:
+    name: ext4-errors-textfile.timer
+    daemon_reload: true
+    enabled: true
+    state: started

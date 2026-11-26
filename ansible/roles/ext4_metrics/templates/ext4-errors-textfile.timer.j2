@@ -1,0 +1,10 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description=Write ext4 error counts for the node_exporter textfile collector
+
+[Timer]
+OnBootSec=1min
+OnCalendar=minutely
+
+[Install]
+WantedBy=timers.target
