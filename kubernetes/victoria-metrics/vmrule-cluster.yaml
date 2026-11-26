@@ -53,6 +53,29 @@ spec:
       annotations:
         message: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been running but
           not ready for more than 15 minutes
+    # A pod that restarts on every liveness failure stays Running and,
+    # without a readiness probe, Ready, so PodNotReady never sees it.
+    # This fires when a container has never gone 30 minutes without a
+    # restart for 2 hours, which skips the bursts that node reboots and
+    # upgrades cause. Keep the 30-minute window: one at or near the
+    # 5-minute step misses loops at the CrashLoopBackOff cap, and Plex's
+    # liveness restarts came about every 6 minutes.
+    - alert: ContainerRestartLoop
+      expr: >
+        count_over_time((increase(kube_pod_container_status_restarts_total[30m]) >
+        0)[2h:5m])
+        >= 24
+      annotations:
+        message: Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod
+          }} has been restarting continuously for 2 hours
+    - alert: Ext4FilesystemErrors
+      expr: node_ext4_errors > 0
+      annotations:
+        message: 'ext4 on {{ $labels.instance }} {{ $labels.device }} {{ with $labels.pv }}(PV
+          {{ . }}) {{ end }}has recorded {{ $value }} error(s); an aborted journal
+          fails every read and write while the mount still shows rw. Unmount it (for
+          a PV, scale its workload to 0), run e2fsck on the device, then mount it
+          again; only e2fsck clears the count'
     - alert: AptUpgradesPending
       expr: sum by (instance) (apt_upgrades_pending{origin=~".*Debian:.*"}) > 0
       for: 10d

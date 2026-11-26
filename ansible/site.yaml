@@ -316,6 +316,8 @@
   roles:
     - role: geerlingguy.node_exporter
       when: "node_exporter_enabled | default(false)"
+    - role: ext4_metrics
+      when: "node_exporter_enabled | default(false)"
 
   tasks:
     - name: Create textfile collector directory
