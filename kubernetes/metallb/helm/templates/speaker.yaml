@@ -8,12 +8,13 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.16.1"
+    app.kubernetes.io/version: "v0.16.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: speaker
 spec:
   updateStrategy:
     type: RollingUpdate
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: metallb
@@ -36,7 +37,7 @@ spec:
             defaultMode: 420
         - name: metallb-excludel2
           configMap:
-            defaultMode: 256
+            defaultMode: 292
             name: metallb-excludel2
         - name: memberlist-config
           configMap:
@@ -44,9 +45,10 @@ spec:
             optional: true
       containers:
       - name: speaker
-        image: quay.io/metallb/speaker:v0.16.1
+        image: quay.io/metallb/speaker:v0.16.2
         args:
         - --port=7472
+        - --health-probe-port=17472
         - --log-level=info
         env:
         - name: METALLB_NODE_NAME

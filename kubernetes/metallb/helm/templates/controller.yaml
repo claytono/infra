@@ -8,12 +8,13 @@ metadata:
   labels:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/instance: metallb
-    app.kubernetes.io/version: "v0.16.1"
+    app.kubernetes.io/version: "v0.16.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: controller
 spec:
   strategy:
     type: RollingUpdate
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: metallb
@@ -34,9 +35,10 @@ spec:
         runAsUser: 65534
       containers:
       - name: controller
-        image: quay.io/metallb/controller:v0.16.1
+        image: quay.io/metallb/controller:v0.16.2
         args:
         - --port=7472
+        - --health-probe-port=17472
         - --log-level=info
         - --webhook-mode=enabled
         env:
