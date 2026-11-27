@@ -1,17 +1,65 @@
-#!/bin/sh
+#!/bin/bash
 {{ ansible_managed | comment }}
-# watchdog test: fail only when no target answers. watchdog calls "repair"
-# once the failure has lasted retry-timeout; a non-zero exit makes it reboot.
+# watchdog test: fail only when no target accepts a TCP connection. watchdog
+# calls "repair" once the failure has lasted retry-timeout; a non-zero exit
+# makes it reboot. The check uses TCP rather than ping because the Wi-Fi Pis
+# can stay associated and keep answering ping while every TCP and UDP packet
+# sent to them is lost.
+
+tcp_check() {
+  timeout 5 bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null
+}
+
+# Record the network state in the journal before any repair or reboot, so a
+# failure can be diagnosed afterwards. The capture runs while every target
+# gets a ping and a TCP connection attempt, and shows which replies arrive.
+snapshot() {
+  {
+    echo "== network check failed (watchdog error ${1:-unknown})"
+    iface=$(ip -o route show default | awk '{print $5; exit}')
+    if [ -n "$iface" ]; then
+      ip -s -s link show "$iface"
+    else
+      echo "no IPv4 default route"
+      ip -s link
+    fi
+    ip -br addr
+    ip route
+    ip -6 route
+    ip neigh
+{% if wifi_ssid is defined %}
+    iw dev {{ network_watchdog_wifi_interface }} link
+    wpa_cli -i {{ network_watchdog_wifi_interface }} status
+{% endif %}
+    grep -E '^(Ip|Icmp|Tcp|Udp):' /proc/net/snmp
+    ss -s
+    # Only the probes' own traffic, so other traffic to the targets cannot
+    # fill the packet limit, and long enough to outlast every probe below.
+    timeout 30 tcpdump -nni any -c 200 \
+      '{% for target in network_watchdog_targets %}(host {{ target.address }} and (icmp or tcp port {{ target.port }})){{ "" if loop.last else " or " }}{% endfor %}' &
+    sleep 2
+{% for target in network_watchdog_targets %}
+    echo "== {{ target.description }}"
+    ping -c 3 -W 2 {{ target.address }}
+    tcp_check {{ target.address }} {{ target.port }}
+    echo "tcp {{ target.address }}:{{ target.port }} exit: $?"
+{% endfor %}
+    host -W 3 deb.debian.org
+    wait
+    nft list ruleset | head -200
+  } 2>&1 | systemd-cat -t network-watchdog
+}
 
 case "$1" in
   test)
 {% for target in network_watchdog_targets %}
     # {{ target.description }}
-    ping -c 3 -W 5 {{ target.address }} >/dev/null 2>&1 && exit 0
+    tcp_check {{ target.address }} {{ target.port }} && exit 0
 {% endfor %}
     exit 1
     ;;
   repair)
+    snapshot "$2"
 {% if wifi_ssid is defined %}
     # Restart Wi-Fi and report success so watchdog tests again. If ifup fails,
     # fall through and let watchdog reboot now.
