@@ -1,6 +1,6 @@
 ---
-# Reboot when every target has been unreachable for this many seconds. Any
-# successful check resets the timer, so intermittent loss never reboots.
+# Reboot when no target has accepted a TCP connection for this many seconds.
+# Any successful check resets the timer, so intermittent loss never reboots.
 network_watchdog_timeout: 900
 
 # Seconds between checks
@@ -12,6 +12,8 @@ network_watchdog_wifi_interface: wlan0
 # Static IPs so a DNS failure cannot look like a network failure
 network_watchdog_targets:
   - address: 172.19.74.1
-    description: UDMP (gateway)
+    port: 22
+    description: UDMP (gateway) SSH
   - address: 172.19.74.31
-    description: infra1 (static IP, wired)
+    port: 22
+    description: infra1 (static IP, wired) SSH
