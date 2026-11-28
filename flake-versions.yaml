@@ -10,7 +10,7 @@ bats: 1.14.0
 ccache: 4.14.3
 curl: 8.23.0
 efficient-compression-tool: 0.9.5
-go-unifi-mcp: 5a27a8d3501698fdf7a2a3b0ad2384417aa49a56
+go-unifi-mcp: 01a637fe776394aa244cd8e2279f8f56c8c7a67b
 jq: 1.8.2
 kopia: 0.23.1
 kubecolor: 0.8.0
@@ -30,7 +30,7 @@ python3: 3.14.10-env
 rclone: 1.76.0
 skopeo: 1.25.1
 tflint: 0.66.0
-uv: 0.13.7
-velero: 1.18.3
+uv: 0.13.9
+velero: 1.18.4
 yamlfix: 1.19.1
 yq-go: 4.54.1
