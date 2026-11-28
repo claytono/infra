@@ -10,18 +10,31 @@ tcp_check() {
   timeout 5 bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null
 }
 
+# Received-packet counts, taken before and after the capture. On Wi-Fi the
+# chip's count comes from its per-AP counters (station dump), the kernel's
+# from the interface. The chip normally runs a steady few frames a second
+# ahead; a larger gap means the chip received frames it did not hand over.
+rx_counts() {
+  echo "$(date +%s) chip=$(
+{%- if wifi_ssid is defined -%}
+    iw dev {{ network_watchdog_wifi_interface }} station dump | awk '/rx packets/ {print $3; exit}'
+{%- endif -%}
+  ) kernel=$(cat "/sys/class/net/$1/statistics/rx_packets")"
+}
+
 # Record the network state in the journal before any repair or reboot, so a
 # failure can be diagnosed afterwards. The capture runs while every target
 # gets a ping and a TCP connection attempt, and shows which replies arrive.
 snapshot() {
   {
-    echo "== network check failed (watchdog error ${1:-unknown})"
+    echo "== $1"
     iface=$(ip -o route show default | awk '{print $5; exit}')
     if [ -n "$iface" ]; then
       ip -s -s link show "$iface"
     else
       echo "no IPv4 default route"
       ip -s link
+      iface={{ network_watchdog_wifi_interface if wifi_ssid is defined else 'eth0' }}
     fi
     ip -br addr
     ip route
@@ -33,6 +46,21 @@ snapshot() {
 {% endif %}
     grep -E '^(Ip|Icmp|Tcp|Udp):' /proc/net/snmp
     ss -s
+    before=$(rx_counts "$iface")
+    # Every packet the kernel drops during the capture, with the function
+    # that dropped it and why. A tracing instance of this run's own leaves
+    # any other tracing, and any other snapshot, untouched.
+    trace=/sys/kernel/tracing/instances/network-watchdog-$$
+    # Everything arriving on the interface, with link headers, written to a
+    # file so it cannot interleave with the probe capture's output
+    inbound=$(mktemp)
+    # Remove both however the snapshot ends, including when it is killed.
+    # PIPE as well: a kill that also stops systemd-cat makes the next write
+    # raise SIGPIPE, which would otherwise end the shell without cleanup.
+    trap 'echo 0 > "$trace/events/skb/kfree_skb/enable"; rmdir "$trace"; rm -f "$inbound"' EXIT
+    trap 'exit 143' TERM INT HUP PIPE
+    mkdir "$trace" && echo 1 > "$trace/events/skb/kfree_skb/enable"
+    timeout 30 tcpdump -nnei "$iface" -Q in -c 300 > "$inbound" 2>&1 &
     # Only the probes' own traffic, so other traffic to the targets cannot
     # fill the packet limit, and long enough to outlast every probe below.
     timeout 30 tcpdump -nni any -c 200 \
@@ -46,6 +74,17 @@ snapshot() {
 {% endfor %}
     host -W 3 deb.debian.org
     wait
+    after=$(rx_counts "$iface")
+    echo "== received packets before: $before"
+    echo "== received packets after:  $after"
+    echo 0 > "$trace/events/skb/kfree_skb/enable"
+    echo "== kernel drops during the capture (count, protocol, function, reason)"
+    # A function in a module is followed by the module's name, as in
+    # "brcmf_netif_rx+0x20/0x100 [brcmfmac]"; keep the name
+    sed -n 's/.*protocol=\([0-9]*\) location=\([^+ ]*\)[^ ]*\( \[[^]]*\]\)\{0,1\} reason: \(.*\)/\1 \2\3 \4/p' \
+      "$trace/trace" | sort | uniq -c | sort -rn | head -40
+    echo "== all inbound on $iface"
+    cat "$inbound"
     nft list ruleset | head -200
   } 2>&1 | systemd-cat -t network-watchdog
 }
@@ -58,13 +97,20 @@ case "$1" in
 {% endfor %}
     exit 1
     ;;
+  # Record a snapshot without repairing, to check what it records
+  snapshot)
+    snapshot "manual snapshot"
+    ;;
   repair)
-    snapshot "$2"
+    snapshot "network check failed (watchdog error ${2:-unknown})"
 {% if wifi_ssid is defined %}
     # Restart Wi-Fi and report success so watchdog tests again. If ifup fails,
-    # fall through and let watchdog reboot now.
+    # fall through and let watchdog reboot now. ifup runs in a scope of its
+    # own so the wpa_supplicant it starts is not in watchdog.service's cgroup,
+    # where the next watchdog restart would kill it.
     ifdown {{ network_watchdog_wifi_interface }}
-    ifup {{ network_watchdog_wifi_interface }} && exit 0
+    systemd-run --scope --quiet --description="Wi-Fi restarted by network watchdog" \
+      ifup {{ network_watchdog_wifi_interface }} && exit 0
 {% endif %}
     exit "${2:-1}"
     ;;
