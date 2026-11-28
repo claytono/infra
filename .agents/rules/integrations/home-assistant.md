@@ -4,81 +4,74 @@ paths: ["kubernetes/hass/**/*", "esphome/**/*"]
 
 # Home Assistant
 
-## Entity Discovery & Troubleshooting
+## REST API
 
-Use the **mcp-cli** skill to query Home Assistant. The `hass` server is
-configured in `.mcp_servers.json`.
+Query and change Home Assistant through its REST API at
+`https://hass.k.oneill.net/api/`. `$HASS_BEARER_TOKEN` is available in the
+environment (loaded from 1Password via `.secrets.tmpl` / `.envrc`).
 
-### Common Tasks
+```bash
+H="Authorization: Bearer $HASS_BEARER_TOKEN"
+U=https://hass.k.oneill.net/api
+```
 
 **Find entities:**
 
 ```bash
-mcp-cli call hass/search_entities_tool '{"query":"temperature"}'
-mcp-cli call hass/list_entities '{"domain":"light"}'
+curl -s -H "$H" $U/states | jq -r '.[].entity_id | select(test("temperature"))'
+curl -s -H "$H" $U/states | jq -r '.[].entity_id | select(startswith("light."))'
 ```
 
-**Get entity state:**
+**Get entity state and attributes:**
 
 ```bash
-mcp-cli call hass/get_entity '{"entity_id":"sensor.office_temperature"}'
-mcp-cli call hass/get_entity '{"entity_id":"light.kitchen", "detailed":true}'
+curl -s -H "$H" $U/states/climate.office_thermostat
 ```
 
-**Check history:**
+**Check history** (state changes between two times; without `end_time` both
+calls return only the first day after `start`; `date -d` is GNU date from the
+dev shell):
 
 ```bash
-mcp-cli call hass/get_history '{"entity_id":"climate.office", "hours":24}'
+start=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+end=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+curl -s -H "$H" \
+  "$U/history/period/$start?end_time=$end&filter_entity_id=climate.office_thermostat&minimal_response&no_attributes"
+curl -s -H "$H" "$U/logbook/$start?end_time=$end&entity=climate.office_thermostat"
 ```
 
 **Debug issues:**
 
 ```bash
-mcp-cli call hass/get_error_log '{}'
-mcp-cli call hass/list_automations '{}'
+curl -s -H "$H" $U/error_log | tail -100
+curl -s -H "$H" $U/states | jq -r '.[] | select(.entity_id | startswith("automation.")) | "\(.entity_id) \(.state) \(.attributes.last_triggered)"'
 ```
 
-**System overview:**
+**Evaluate a template** (read-only; useful for counts and lookups across
+entities):
 
 ```bash
-mcp-cli call hass/system_overview '{}'
+curl -s -H "$H" -H "Content-Type: application/json" \
+  -d '{"template":"{{ states.light | selectattr(\"state\", \"eq\", \"on\") | list | count }}"}' \
+  $U/template
 ```
 
-### Available Tools
-
-| Tool                   | Purpose                      |
-| ---------------------- | ---------------------------- |
-| `get_entity`           | Get state of specific entity |
-| `search_entities_tool` | Search entities by query     |
-| `list_entities`        | List entities by domain      |
-| `domain_summary_tool`  | Summary of domain's entities |
-| `system_overview`      | Full HA system overview      |
-| `list_automations`     | List all automations         |
-| `get_history`          | Entity state history         |
-| `get_error_log`        | HA error log                 |
-| `call_service_tool`    | Call any HA service          |
-
-## REST API (Direct Access)
-
-`$HASS_BEARER_TOKEN` is available in the environment (loaded from 1Password via
-`.secrets.tmpl` / `.envrc`). Use it for operations not covered by mcp-cli, such
-as creating automations:
+**Create or update a UI automation, then reload automations:**
 
 ```bash
-# Create/update a UI automation
 curl -s -X POST \
-  -H "Authorization: Bearer $HASS_BEARER_TOKEN" \
+  -H "$H" \
   -H "Content-Type: application/json" \
   -d '{ ... }' \
-  https://hass.k.oneill.net/api/config/automation/config/<automation_id>
+  "$U/config/automation/config/<automation_id>"
 
-# Reload automations after creating/updating
-curl -s -X POST \
-  -H "Authorization: Bearer $HASS_BEARER_TOKEN" \
-  https://hass.k.oneill.net/api/services/automation/reload
+curl -s -X POST -H "$H" $U/services/automation/reload
 ```
 
-API base URL: `https://hass.k.oneill.net/api/`
+`$U/services` lists every service; call one with
+`curl -s -X POST -H "$H" -H "Content-Type: application/json" -d '{...}' "$U/services/<domain>/<service>"`.
+A service that returns data, such as `weather.get_forecasts`, answers HTTP 400
+unless the URL ends in `?return_response`.
 
 ## Prometheus Metrics (Alternative)
 
@@ -91,4 +84,4 @@ Cache output to avoid repeated API calls:
 grep -i "keyword" /tmp/hass-metrics.txt
 ```
 
-Use for numeric metrics; use mcp-cli for entity state and troubleshooting.
+Use for numeric metrics; use the REST API for entity state and troubleshooting.
